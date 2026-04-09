@@ -75,11 +75,12 @@ Error:              #FF3B3B  (closed, errors)
 - **Stack**: Next.js + TypeScript + Tailwind + shadcn/ui + Redux Toolkit (RTK Query)
 - **Frankie completed**: 100% rebranded to PP dark theme, all auth pages, all admin pages, all venue manager pages, venue management CRUD
 
-### Mobile App — Legacy Flutter (DONE but strategically rejected)
+### Mobile App — Flutter (LIVE on App Store + Google Play)
 - **Location**: `projects/pink-pineapple/app/`
 - **Stack**: Flutter/Dart + GetX
+- **App Store ID**: `id6758339469`
 - **Frankie completed**: Full UI reskin, 5 main tabs, venue detail + booking, venue favorites, all auth screens, area filtering
-- **Decision**: Rebuild from scratch in React Native + Expo. The app works but the product direction is wrong (social media features, forced account creation, generic discovery). Keep as reference only.
+- **Status**: Live and deployed. The social features (newsfeed, followers, posts) remain in the build but are not part of the long-term product direction. Future iterations should move toward curated discovery and away from social.
 
 ### Content Assets
 - **Location**: `projects/pink-pineapple/assets/`
@@ -106,7 +107,7 @@ All in `projects/pink-pineapple/docs/`:
 
 ## Current Phase
 
-**Code complete, awaiting deployment.** Frankie completed ALL code work — backend security fixes, venue API, 38 venues seeded, full mobile + dashboard rebrand. Pink (Troy's agent) was tasked with deployment only. The React Native rebuild is the strategic next move after deployment.
+**LIVE — deployment and growth.** The app is live on the App Store and Google Play. Backend API is live at `api.pinkpineapple.app`. Dashboard is live at `dashboard.pinkpineapple.app`. 38 venues seeded. Focus is now on user acquisition, real venue photography, payment integration, and iterating on the live product.
 
 ## Core User Journey (new app — for React Native rebuild)
 
@@ -121,16 +122,16 @@ All in `projects/pink-pineapple/docs/`:
 
 ## Goals
 
-1. Deploy current codebase to DigitalOcean (backend + dashboard)
-2. Build and submit Flutter app to App Store + Google Play (or rebuild in React Native first)
-3. Source real venue photography (Sascha in Bali)
-4. Rotate all credentials (see AUDIT-REPORT.md critical items)
-5. Set up proper Firebase project for push notifications
-6. Extend with payment integration (Stripe)
+1. Source real venue photography for all 38 venues (Sascha in Bali)
+2. Rotate all credentials (see AUDIT-REPORT.md critical items)
+3. Set up proper Firebase project for push notifications
+4. Integrate Stripe for payments
+5. User acquisition and growth in Bali market
+6. Iterate on live product based on user feedback
 
 ## Key Decisions
 
 - Brand and design system are LOCKED — do not change without Sascha's approval
-- Flutter social features (newsfeed, followers, posts, likes) are NOT part of PP's direction
-- React Native + Expo is the target stack for mobile rebuild (same as LMC)
+- Flutter social features (newsfeed, followers, posts, likes) are NOT part of PP's long-term direction
+- Future mobile evolution may move to React Native + Expo (same stack as LMC), but the current Flutter app is live and serving users
 - This project is SEPARATE from Agape 26 — do not conflate
