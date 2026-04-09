@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Pink Pineapple Design System
+ * Dark-first aesthetic with rose-to-pink gradient accents
+ * Background: #000000 | Gradient: #8B4060 → #C4707E → #E8A0B0
+ */
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Core backgrounds — pure black */
+    --background: 0 0% 0%;          /* #000000 */
+    --foreground: 0 0% 100%;        /* #FFFFFF */
+
+    --card: 0 0% 10%;               /* #1A1A1A surface */
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 16%;            /* #2A2A2A elevated */
+    --popover-foreground: 0 0% 100%;
+
+    /* Rose primary */
+    --primary: 342 35% 37%;         /* #8B4060 deep rose */
+    --primary-foreground: 0 0% 100%;
+
+    /* Muted surfaces */
+    --secondary: 0 0% 10%;          /* #1A1A1A */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 16%;              /* #2A2A2A */
+    --muted-foreground: 0 0% 69%;   /* #B0B0B0 */
+
+    /* Accent — soft pink */
+    --accent: 342 50% 80%;          /* #E8A0B0 */
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 100% 62%;      /* #FF3B3B */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 17%;             /* #2A2A2A */
+    --input: 0 0% 17%;
+    --ring: 342 35% 37%;            /* rose focus ring */
+
+    /* Charts */
+    --chart-1: 342 35% 37%;
+    --chart-2: 342 50% 80%;
+    --chart-3: 342 30% 55%;
+    --chart-4: 342 40% 65%;
+    --chart-5: 0 100% 62%;
+
+    /* Sidebar — pure black */
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 342 35% 37%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 17%;
+    --sidebar-ring: 342 35% 37%;
+  }
+
+  /* Dashboard is always dark — no separate .dark override needed */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', system-ui, sans-serif;
+  }
+
+  /* Headings use Cormorant Garamond — luxury editorial */
+  h1, h2, h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* Pink Pineapple gradient utilities */
+@layer utilities {
+  .pp-gradient {
+    background: linear-gradient(135deg, #8B4060 0%, #C4707E 50%, #E8A0B0 100%);
+  }
+
+  .pp-gradient-text {
+    background: linear-gradient(135deg, #8B4060 0%, #C4707E 50%, #E8A0B0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .pp-card {
+    @apply rounded-xl border border-border bg-card;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .pp-btn {
+    background: linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%);
+    @apply text-black font-semibold rounded-xl;
+    box-shadow: 0 4px 16px rgba(139, 64, 96, 0.25);
+  }
+
+  .pp-btn:hover {
+    box-shadow: 0 6px 24px rgba(139, 64, 96, 0.4);
+  }
+}

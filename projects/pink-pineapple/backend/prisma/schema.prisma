@@ -1,0 +1,378 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String               @id @default(auto()) @map("_id") @db.ObjectId
+  fullName           String
+  email              String               @unique
+  username           String               @default("")
+  dob                DateTime             @default(now())
+  profilePrivacy     ProfilePrivacyStatus @default(VIEWABLE)
+  fullAddress        String               @default("")
+  bio                String               @default("")
+  phoneNumber        String
+  typeOfVenue        String               @default("")
+  taxId              String               @default("")
+  businessLicense    String ?              @default("")
+  profileImage       String               @default("")
+  expirationOtp      DateTime?
+  otp                Int?
+  password           String?
+  isApproved         Boolean              @default(false)
+  isCompleteProfile  Boolean              @default(false)
+  fcmToken           String?
+  role               UserRole             @default(USER)
+  status             UserStatus           @default(INACTIVE)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  receiver           Notification[]       @relation("Receiver")
+  sender             Notification[]       @relation("Sender")
+  post               Post[]
+  like               Like[]
+  comment            Comment[]
+  followers          Follower[]           @relation("FollowedUsers")
+  following          Follower[]           @relation("FollowingUsers")
+  clubAvailableDays  ClubAvailableDays[]  @relation("Club")
+  clubAvailableTimes ClubAvailableTimes[] @relation("Club")
+  clubFavorite       ClubFavorite[]       @relation("club")
+  userFavorite       ClubFavorite[]       @relation("user")
+  eventFavorite      EventFavorite[]
+  booking            Booking[]
+  FavoritePost       FavoritePost[]
+  roomsSent          Room[]               @relation("SenderRelation")
+  roomsReceived      Room[]               @relation("ReceiverRelation")
+  chatsSent          Chat[]               @relation("SenderRelation")
+  chatsReceived      Chat[]               @relation("ReceiverRelation")
+  Events             Events[]
+
+  blocker   BlockUser[] @relation("blocker")
+  blocked   BlockUser[] @relation("blocked")
+  
+
+  @@map("users")
+}
+
+model Notification {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  receiverId String   @db.ObjectId
+  senderId   String   @db.ObjectId
+  receiver   User     @relation("Receiver", fields: [receiverId], references: [id])
+  sender     User     @relation("Sender", fields: [senderId], references: [id])
+  title      String
+  body       String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("notifications")
+}
+
+model Post {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  text         String?
+  photos       Json?
+  videos       Json?
+  isHidden     Boolean        @default(false)
+  likeCount    Int?           @default(0)
+  userId       String         @db.ObjectId
+  user         User           @relation(fields: [userId], references: [id])
+  likes        Like[]         @relation("PostLikes")
+  comments     Comment[]      @relation("PostComments")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  FavoritePost FavoritePost[]
+
+  @@map("posts")
+}
+
+model Like {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation("PostLikes", fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  text      String
+  userId    String   @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation("PostComments", fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("comments")
+}
+
+model Follower {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  followerId  String         @db.ObjectId
+  follower    User           @relation("FollowingUsers", fields: [followerId], references: [id])
+  followingId String         @db.ObjectId
+  following   User           @relation("FollowedUsers", fields: [followingId], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  status      FollowerStatus @default(PENDING)
+
+  @@map("followers")
+}
+
+model AvailableDays {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  day               String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  clubAvailableDays ClubAvailableDays[] @relation("availableDays")
+}
+
+model AvailableTime {
+  id                 String               @id @default(auto()) @map("_id") @db.ObjectId
+  time               String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  clubAvailableTimes ClubAvailableTimes[] @relation("availableTimes")
+}
+
+model ClubAvailableDays {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  clubId          String        @db.ObjectId
+  club            User          @relation("Club", fields: [clubId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  availableDaysId String        @db.ObjectId
+  availableDays   AvailableDays @relation("availableDays", fields: [availableDaysId], references: [id])
+}
+
+model ClubAvailableTimes {
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
+  clubId           String        @db.ObjectId
+  club             User          @relation("Club", fields: [clubId], references: [id])
+  availableTimesId String        @db.ObjectId
+  availableTimes   AvailableTime @relation("availableTimes", fields: [availableTimesId], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Events {
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  eventName         String
+  descriptions      String
+  startDate         DateTime
+  endDate           DateTime
+  startTime         String
+  endTime           String
+  lastRegDate       DateTime
+  lastRegTime       String
+  arriveDate        DateTime
+  arriveTime        String
+  additionalGuests  Int
+  extraRequirements String
+  userId            String          @db.ObjectId
+  user              User            @relation(fields: [userId], references: [id])
+  eventImages       String[]
+  eventStatus       EventStatus     @default(PENDING)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  eventTickets      EventTickets[]
+  eventTable        EventTable[]
+  eventFavorite     EventFavorite[]
+  booking           Booking[]
+}
+
+model EventTickets {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  maleAdmission    Int
+  femaleAdmission  Int
+  ticketLimitation Int
+  eventId          String          @db.ObjectId
+  event            Events          @relation(fields: [eventId], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  ticketCharges    TicketCharges[]
+  booking          Booking[]
+}
+
+model TicketCharges {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  feeName       String
+  feeAmount     String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  eventTicketId String       @db.ObjectId
+  eventTicket   EventTickets @relation(fields: [eventTicketId], references: [id])
+}
+
+model EventTable {
+  id                     String         @id @default(auto()) @map("_id") @db.ObjectId
+  tableName              String
+  tableDetails           String
+  maxAdditionGuest       Int
+  minimumSpentAmount     Int
+  isIncludedFoodBeverage Boolean
+  tableImages            String[]
+  eventId                String         @db.ObjectId
+  event                  Events         @relation(fields: [eventId], references: [id])
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  tableCharges           TableCharges[]
+  booking                Booking[]
+}
+
+model TableCharges {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  eventTableId String     @db.ObjectId
+  eventTable   EventTable @relation(fields: [eventTableId], references: [id])
+  feeName      String
+  feeAmount    String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model ClubFavorite {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  clubId    String   @db.ObjectId
+  club      User     @relation("club", fields: [clubId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation("user", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EventFavorite {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  eventId   String   @db.ObjectId
+  event     Events   @relation(fields: [eventId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FavoritePost {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Booking {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String        @db.ObjectId
+  user           User          @relation(fields: [userId], references: [id])
+  bookingType    BookingType
+  tableId        String?       @db.ObjectId
+  table          EventTable?   @relation(fields: [tableId], references: [id])
+  ticketId       String?       @db.ObjectId
+  ticket         EventTickets? @relation(fields: [ticketId], references: [id])
+  eventId        String        @db.ObjectId
+  event          Events        @relation(fields: [eventId], references: [id])
+  guest          Int
+  status         BookingStatus @default(PENDING)
+  numberOfFemale Int
+  numberOfMale   Int
+  paidAmount     Int
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Chat {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String   @db.ObjectId
+  receiverId String   @db.ObjectId
+  message    String
+  roomId     String   @db.ObjectId
+  images     String[]
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  sender     User     @relation("SenderRelation", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceiverRelation", fields: [receiverId], references: [id])
+  room       Room     @relation(fields: [roomId], references: [id])
+
+  @@map("chats")
+}
+
+model Room {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String   @db.ObjectId
+  receiverId String   @db.ObjectId
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  sender     User     @relation("SenderRelation", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceiverRelation", fields: [receiverId], references: [id])
+  chat       Chat[]
+
+  @@map("rooms")
+}
+
+model BlockUser {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  blockerId String @db.ObjectId
+  blockedId String @db.ObjectId
+  blocker   User   @relation("blocker", fields: [blockerId], references: [id])
+  blocked   User   @relation("blocked", fields: [blockedId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+
+  
+}
+
+enum BookingType {
+  TABLE
+  TICKET
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum FollowerStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+enum EventStatus {
+  ONGOING
+  UPCOMING
+  APPROVED
+  COMPLETED
+  PENDING
+  REJECTED
+}
+
+enum UserRole {
+  ADMIN
+  CLUB
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  INACTIVE
+  BLOCKED
+}
+
+enum ProfilePrivacyStatus {
+  VIEWABLE
+  HIDDEN
+}
