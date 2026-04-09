@@ -14,9 +14,10 @@ This studio is run by two humans and has been shaped by two AI agents:
 ### Agents
 
 - **Troy (Claude Code)** — runs locally on Troy's MacBook Air via Claude Code CLI. This is the current active agent for the studio. Handles development, architecture, and project management.
-- **Frankie / Pink** — Sascha's AI agents that ran in the cloud on a VPS via OpenClaw. Always-on, handled brand work, content creation, Flutter reskins, HeyGen avatar management, voice testing, and Telegram integrations. The `docs/` folder contains Frankie/Pink's original workspace files (FRANKIE-SOUL.md, FRANKIE-IDENTITY.md, AGENTS.md, TOOLS.md, USER.md, etc.) preserved for reference and continuity.
+- **Frankie** (she/her, ⚡) — Sascha's dedicated AI assistant. Ran on a VPS via OpenClaw (always-on, 24/7). Sharp, direct, resourceful strategist. Did the heavy lifting on Pink Pineapple (full code audit, security fixes, venue API, Flutter + dashboard rebrand, brand guidelines, design system), Agape 26 (brand manifesto, ambassador program, HeyGen avatars, content calendar), and Peptide Talk Show (story bible, character design, episode scripts).
+- **Pink** (he/him, 🌸) — Troy's AI assistant, also on OpenClaw. Ran on Troy's MacBook. Handled the Pink Pineapple Flutter UI reskin and collaborated with Frankie in a shared group chat.
 
-Both agents collaborated on the same projects. Frankie/Pink did the Pink Pineapple Flutter reskin, Agape 26 brand development, avatar creation, content calendars, and Peptide Talk character design. This studio repo consolidates all that prior work into one place.
+Both agents collaborated on the same projects via a "Frankie and Pink Group Chat" on Telegram alongside Troy and Sascha. The `docs/` folder preserves their original workspace files (FRANKIE-IDENTITY.md, FRANKIE-SOUL.md, FRANKIE-MEMORY.md, FRANKIE-PROJECTS.md, AGENTS.md, TOOLS.md, USER.md, etc.) for reference and continuity. This studio repo consolidates all prior work into one place.
 
 ## Studio Structure
 
@@ -32,9 +33,11 @@ studio/
       backend/        # Node.js + Prisma + MongoDB API
       dashboard/      # Next.js admin dashboard
       assets/         # Character art, voice files, style explorations
-    agape/            # Brand/content project
-      assets/         # Logos, brand imagery, audio
-    ideas/            # General ideas and research
+    agape/            # Premium lifestyle brand
+      assets/         # Logos, brand imagery, avatar videos, audio
+      ambassadors/    # Global Citizens ambassador images + scripts
+    ideas/            # General ideas, research, and incubating projects
+      peptide-talk-show/  # AI debate show (Pep & Tide) — story bible, scripts
   skills/             # Per-project Claude Code skills
     let-me-check/     # LMC skill (brand, stack, phase, goals)
     pink-pineapple/   # Pink Pineapple skill

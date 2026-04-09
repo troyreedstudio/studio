@@ -4,117 +4,133 @@
 
 - **Name**: Pink Pineapple
 - **Concept**: Premium Bali lifestyle guide — curated discovery and instant booking for clubs, restaurants, bars, beach clubs, and gyms
-- **Positioning**: Monocle meets Time Out meets a local insider's WhatsApp group — beautifully designed and bookable
-- **Audience**: Tourists and expats in Bali who want curated, high-quality venue discovery
-- **Tone**: Warm, premium, editorial — tropical luxury, not cold tech
-- **Areas**: Canggu, Uluwatu, Seminyak
+- **Positioning**: Curated, not crowdsourced. Every venue is hand-picked. Quality over quantity.
+- **Audience**: Expats, digital nomads, and high-end tourists (25-45) in Bali
+- **Tone**: Luxurious but approachable. Nightlife energy meets editorial polish. Bali-native, not tourist-generic.
+- **Areas**: Canggu, Uluwatu, Seminyak (Ubud planned)
+- **App Store ID**: `id6758339469`
 
-## Design System
+## Logo (LOCKED)
 
-### New Design Language (for React Native rebuild)
+- **"PINK"** — Bold geometric sans-serif, heavy weight (Black/900), metallic rose-gold gradient
+- **"PINEAPPLE"** — Thin, wide letter-spacing (0.2em+), elegant sans-serif, Light/300, white on dark
+- Primary on black background (dark-first brand)
+- Logo file: `projects/pink-pineapple/assets/logo_primary_dark.jpg`
 
+## Design System (LOCKED — from Frankie, confirmed by Sascha 2026-03-29)
+
+Full specs in `projects/pink-pineapple/docs/DESIGN-SYSTEM.md` and `docs/BRAND-GUIDELINES.md`.
+
+### Colours
 ```
-Background:    #0A0A0A  (warm black — not cold navy)
-Primary:       #F4C97A  (warm gold — tropical luxury)
-Secondary:     #E8A87C  (warm coral — Bali sunset energy)
-Text primary:  #FFFFFF
-Text secondary: #888888
-Cards:         #1A1A1A
-```
+Background:         #000000  (black)
+Surface:            #1A1A1A  (cards, inputs, overlays)
+Surface elevated:   #2A2A2A  (modals, elevated cards)
 
-Aesthetic: Four Seasons Bali meets Deus Ex Machina meets premium travel magazine.
+Rose-gold gradient: #8B4060 → #E8A0B0  (135°, CTAs, buttons, highlights, logo)
+Rose-gold solid:    #C4707E  (mid-gradient, buttons, active states)
 
-### Legacy Flutter Design System (applied during reskin)
+Text primary:       #FFFFFF
+Text secondary:     #B0B0B0
+Text muted:         #6B6B6B
 
-```
-Background:    #0A0A0F  (near-black)
-Cards:         #141420
-Surface:       #1C1C2E
-Elevated:      #252538
-Border:        #2A2A3C
-
-Rose-gold:     #D4A574  (primary accent)
-Champagne:     #E8C99A  (gradient end)
-Deep rose:     #C4956A  (hover/pressed)
-
-Text primary:  #F5F5F0
-Text secondary: #B8B8C8
-Text muted:    #6B6B80
-
-Heading font:  Cormorant Garamond (luxury editorial)
-Body font:     Poppins (clean, modern)
+Success:            #00C853  (open status)
+Warning:            #FFB800  (closing soon, ratings)
+Error:              #FF3B3B  (closed, errors)
 ```
 
-Note: The assessment proposed a slightly different palette for the rebuild (gold/coral). The Flutter reskin used rose-gold. Final direction for the React Native rebuild should align on one palette.
+### Typography
+- **Venue names**: Bodoni Moda / Playfair Display (serif), Bold, 32-40px
+- **"PINK" logo**: Geometric sans, Black/900
+- **Labels/categories**: Sans-serif, Light/300, 12-14px, wide tracking (0.2em+), UPPERCASE, rose-gold
+- **Section headers**: Montserrat/Inter, Semi-bold, 20-24px
+- **Body**: Inter / DM Sans, Regular, 14-16px
+- **Category format**: `BEACH CLUB · ULUWATU` (centered dot separator)
+
+### Design Principles
+1. Dark-first — dark backgrounds make venue photography pop
+2. Photography-forward — hero images sell; text supports
+3. Minimal chrome — thin borders, subtle shadows, let content breathe
+4. Location-aware — always show which area the user is browsing
+5. Bali-native — warm, golden, luxurious but relaxed
+
+## Live Infrastructure
+
+- **API**: `https://api.pinkpineapple.app/api/v1`
+- **Dashboard**: `https://dashboard.pinkpineapple.app`
+- **Database**: MongoDB (via Prisma)
+- **Hosting**: DigitalOcean
+- **File storage**: DigitalOcean Spaces + Cloudinary
 
 ## Tech Stack
 
-### Mobile App — Legacy Flutter (to be rebuilt)
-- **Location**: `projects/pink-pineapple/app/`
-- **Stack**: Flutter/Dart + GetX state management
-- **Status**: Full UI reskin complete (all auth, core, and secondary screens branded to dark luxury theme)
-- **Decision**: Rebuild from scratch in React Native + Expo (same stack as LMC). The Flutter app was built by a Fiverr team with the wrong product direction (social media app instead of curated booking app). UI reskin was completed but the fundamental UX and feature set are wrong.
-- **What's wrong**: Forced account creation before browsing, social features (newsfeed/followers/posts/likes) that aren't part of PP's direction, wrong user flow for a tourist discovery app
-
-### Backend (keep + extend)
+### Backend (DONE — keep + extend)
 - **Location**: `projects/pink-pineapple/backend/`
-- **Stack**: Node.js + TypeScript + Prisma ORM + MongoDB + Vercel
-- **Has**: Users, Events, Bookings (TABLE + TICKET types), Tables (VIP with min spend), Chat (WebSocket), Notifications (FCM), Auth (OTP), Roles (ADMIN/CLUB/USER)
-- **Needs**: Location/area filtering (Canggu/Uluwatu/Seminyak), venue categories (club/restaurant/bar/gym), gym bookings (day passes, weekly subs), payment integration (Stripe/PayPal), search/discovery endpoints
-- **Verdict**: Schema is 70% of what's needed. Extend, don't replace.
+- **Stack**: Node.js + Express + Prisma ORM + MongoDB
+- **Frankie completed**: Security fixes, code cleanup, venue API (full CRUD with areas + categories), 38 venues seeded, venue favorites, booking API, database indexes, upload validation
+- **Still needs**: Payment integration (Stripe), proper Firebase project for push notifications
 
-### Dashboard (keep + redesign UI)
+### Dashboard (DONE — fully rebranded)
 - **Location**: `projects/pink-pineapple/dashboard/`
 - **Stack**: Next.js + TypeScript + Tailwind + shadcn/ui + Redux Toolkit (RTK Query)
-- **Has**: Club/venue management, event management, bookings, messages, admin approvals, auth (login/register/OTP/password reset)
-- **Status**: Full UI reskin complete (dark theme, rose-gold accents, Cormorant Garamond + Poppins typography)
-- **Verdict**: Functionally right, visually reskinned. May need further redesign to match final brand direction.
+- **Frankie completed**: 100% rebranded to PP dark theme, all auth pages, all admin pages, all venue manager pages, venue management CRUD
+
+### Mobile App — Legacy Flutter (DONE but strategically rejected)
+- **Location**: `projects/pink-pineapple/app/`
+- **Stack**: Flutter/Dart + GetX
+- **Frankie completed**: Full UI reskin, 5 main tabs, venue detail + booking, venue favorites, all auth screens, area filtering
+- **Decision**: Rebuild from scratch in React Native + Expo. The app works but the product direction is wrong (social media features, forced account creation, generic discovery). Keep as reference only.
 
 ### Content Assets
 - **Location**: `projects/pink-pineapple/assets/`
-- **Contains**: Character art (Pep, Tide, Shock), voice iterations (ElevenLabs tests), style explorations — these are for the Peptide Talk side project, not the main PP app
+- **Contains**: Logo, wireframe, Peptide Talk character art and voice files (side project assets stored here)
 
-## Reskin Status (Flutter + Dashboard)
+## Documentation (from Frankie)
 
-Both the Flutter app and Next.js dashboard have been fully reskinned by Pink (Frankie's partner agent):
-- All auth screens (splash, login, signup, OTP, password reset, profile setup)
-- All core screens (home/discover, explore, bookings, profile, event details, free user home, newsfeed)
-- All secondary screens (blocked users, followers, favourites, saved/hidden posts)
-- Dashboard (login, sidebar, navbar, settings, approvals, users, all inner pages)
-- Pending: final logo asset (`splash_logo_v2.png` is placeholder)
+All in `projects/pink-pineapple/docs/`:
+- `BRAND-GUIDELINES.md` — full brand bible (LOCKED)
+- `DESIGN-SYSTEM.md` — colour tokens, typography, components (LOCKED)
+- `AUDIT-REPORT.md` — full code audit of all 3 codebases (critical security issues identified + fixed)
+- `UI-UX-REDESIGN-ROADMAP.md` — complete redesign plan with screen specs
+- `PROJECT-STATUS.md` — deployment handoff doc from Frankie to Pink
+- `CHANGES-LOG.md`, `FIXES-APPLIED.md`, `VENUE-BUILD-LOG.md`, `MOBILE-BUILD-LOG*.md` — work logs
+
+## Venue Database
+
+38 venues seeded across 3 areas, 5 categories:
+- **Canggu**: Miss Fish, Desa/Kitsune, Atlas, Jade, Saya Club, Muda By/Suka (one venue), etc.
+- **Uluwatu**: Savaya, El Kabron, Sundays, etc.
+- **Seminyak**: Da Maria (restaurant, also listed under Canggu for Hip Hop Wed), etc.
+- **Categories**: Beach Clubs, Restaurants, Nightlife, Wellness, Events
+- **Note**: ALL nightlife venues are in Canggu (confirmed by Sascha 2026-03-30)
 
 ## Current Phase
 
-**Assessment complete, rebuild planned.** Flutter app fully reskinned but strategically rejected — wrong product direction. Backend is solid. Next step is React Native rebuild.
+**Code complete, awaiting deployment.** Frankie completed ALL code work — backend security fixes, venue API, 38 venues seeded, full mobile + dashboard rebrand. Pink (Troy's agent) was tasked with deployment only. The React Native rebuild is the strategic next move after deployment.
 
-## Core User Journey (new app)
+## Core User Journey (new app — for React Native rebuild)
 
 1. Land at Bali airport, download Pink Pineapple
 2. Select area: Canggu / Uluwatu / Seminyak
-3. See tonight's curated picks — what's happening, where, who's going
-4. Browse venues with rich video content and editorial write-ups
+3. See tonight's curated picks
+4. Browse venues with rich photography and editorial write-ups
 5. Book instantly — table, VIP, ticket, day pass
-6. Save favourites, follow venues for updates
+6. Save favourites, follow venues
 
-**Key principle**: Browse-first, sign-up-at-booking. No forced account creation upfront.
-
-## New App Screens (~15 total)
-
-**Onboarding**: Splash, area selector, browse without signing in
-**Discovery**: Home ("Tonight in Canggu"), venue profile, event detail, explore (by category), search
-**Booking**: Ticket flow, VIP table flow, gym day pass/sub, confirmation, my bookings
-**Account** (optional at first): Sign up/in, profile
+**Key principle**: Browse-first, sign-up-at-booking. No forced account creation.
 
 ## Goals
 
-1. Extend backend schema for areas, venue categories, gyms, payment integration
-2. Build new React Native + Expo app (~15 screens)
-3. Connect to existing backend API
-4. Test on device via Expo Go
-5. Submit to App Store + Google Play
+1. Deploy current codebase to DigitalOcean (backend + dashboard)
+2. Build and submit Flutter app to App Store + Google Play (or rebuild in React Native first)
+3. Source real venue photography (Sascha in Bali)
+4. Rotate all credentials (see AUDIT-REPORT.md critical items)
+5. Set up proper Firebase project for push notifications
+6. Extend with payment integration (Stripe)
 
 ## Key Decisions
 
-- Flutter app social features (newsfeed, followers, posts, likes) are NOT part of Pink Pineapple's direction
-- The Fiverr-built Flutter app is kept in `app/` for reference but should not be used as a base for the rebuild
-- React Native + Expo chosen to share stack with LMC (faster development, single codebase expertise)
+- Brand and design system are LOCKED — do not change without Sascha's approval
+- Flutter social features (newsfeed, followers, posts, likes) are NOT part of PP's direction
+- React Native + Expo is the target stack for mobile rebuild (same as LMC)
+- This project is SEPARATE from Agape 26 — do not conflate

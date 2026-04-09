@@ -49,6 +49,33 @@ Margins: ~5-8x on caps/singlets. Strong for DTC + live commerce.
 - Embroidery contacts for prototypes already lined up
 - Sascha has personal network in the industry
 
+## Brand Manifesto
+
+Full manifesto in `projects/agape/BRAND-MANIFESTO.md`.
+
+**Core beliefs**: Love is a practice not a feeling. Silence is power. True luxury is freedom. Intentional living is non-negotiable.
+
+**Five pillars**: Love, Balance, Creation, Legacy, Silence.
+
+**The Agape Promise**: "We don't sell products. We create tools for intentional living."
+
+## Global Citizens — Ambassador Program
+
+40 people. 40 voices. One philosophy. NOT influencers selling a lifestyle — people who turned inward and found everything they were looking for outside.
+
+- Each ambassador shares a 15-second video script about choosing self over noise
+- All scripts end with "Agape 26." (not just "26")
+- Target: 35-40 words per script (~15 seconds at natural pace)
+- Style: clean, direct, conversational — no forced pauses, no filler words
+- 20 scripts written (see `projects/agape/BRAND-MANIFESTO.md`)
+- Ambassador images generated via DALL-E 3 (white background, centered portrait, full head visible)
+- Ambassador docs: `projects/agape/ambassadors/SCRIPTS.md`, `AMBASSADOR-IMAGE-BRIEF.md`
+
+### HeyGen Avatars (confirmed IDs)
+- **Billie** (formerly 26): `35724036d05443ddb13a12482fae09d1` (female, long dark hair)
+- **Monaco** (formerly Pink): `0691c6f795bb4c2ea63b7558c9c94763` (male, albino)
+- **Rocco** (new, Indian): group_id `48304a8a760048418b3ef40705950702` (needs voice cloning)
+
 ## Brand Avatar: 26
 
 - **Name**: 26
