@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Story — AGAPĒ 26</title>
+  <link rel="stylesheet" href="css/style.css?v=14">
+  <style>
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.9s cubic-bezier(0.25,0.1,0.25,1), transform 0.9s cubic-bezier(0.25,0.1,0.25,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.15s; }
+    .reveal-delay-2 { transition-delay: 0.3s; }
+
+    .story-hero {
+      height: 75vh;
+      position: relative;
+      overflow: hidden;
+      margin-top: var(--nav-h);
+    }
+    .story-hero img { object-position: center 20%; }
+    .story-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.55));
+      display: flex; align-items: flex-end; padding: 72px 52px;
+    }
+    .story-hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(42px, 6vw, 88px);
+      font-weight: 300;
+      
+      color: var(--white);
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+    }
+
+    .manifesto-body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 120px 52px;
+    }
+    .manifesto-body h2 {
+      font-family: var(--serif);
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 300;
+      line-height: 1.3;
+      color: var(--dark);
+      margin-bottom: 40px;
+    }
+    .manifesto-body p {
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.95;
+      color: #444;
+      margin-bottom: 28px;
+    }
+    .manifesto-body .pull-quote {
+      font-family: var(--serif);
+      font-size: clamp(22px, 2.5vw, 34px);
+      
+      font-weight: 300;
+      color: var(--dark);
+      border-left: 2px solid var(--dark);
+      padding-left: 32px;
+      margin: 60px 0;
+      line-height: 1.5;
+    }
+    .manifesto-body .divider {
+      width: 48px; height: 1px;
+      background: var(--mid);
+      margin: 60px 0;
+    }
+
+    .founders-section {
+      background: var(--black);
+      color: var(--white);
+      padding: 120px 52px;
+      text-align: center;
+    }
+    .founders-section h3 {
+      font-family: var(--serif);
+      font-size: clamp(28px, 3vw, 44px);
+      font-weight: 300;
+      
+      margin-bottom: 24px;
+      color: var(--cream);
+    }
+    .founders-section p {
+      font-size: 13px;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.5);
+      line-height: 2;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .story-hero-overlay { padding: 48px 24px; }
+      .manifesto-body { padding: 80px 24px; }
+      .founders-section { padding: 80px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="nav-logo">
+      <img src="images/logo_black.svg" alt="AGAPĒ">
+    </a>
+    <ul class="nav-links">
+      <li><a href="story.html">Story</a></li>
+      <li><a href="collection.html">Collection</a></li>
+      <li><a href="home.html">Home / Lifestyle</a>
+        <a href="gallery.html">Gallery</a></li>
+      <li><a href="gallery.html">Gallery</a></li>
+      <li><a href="#contact" class="nav-cta">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- Story Hero -->
+  <div class="story-hero">
+    <img src="images/editorial_2.jpg" alt="Agape 26 — Our Story">
+    <div class="story-hero-overlay">
+      <h1>A New Code<br>of Love.</h1>
+    </div>
+  </div>
+
+  <!-- Manifesto Body -->
+  <div class="manifesto-body">
+    <p class="section-label reveal">The Story</p>
+
+    <h2 class="reveal reveal-delay-1">
+      We didn't set out to build a brand.<br>
+      We set out to build a way of being.
+    </h2>
+
+    <p class="reveal">
+      Agape — the ancient Greek word for unconditional love. Not romantic love, not love that depends on what you receive in return. Agape is the kind of love that exists without reason, without condition, without end. It is the highest expression of what it means to be human.
+    </p>
+
+    <p class="reveal">
+      26 is the frequency of that love made visible. A number that carries weight — the weight of consciousness, of intention, of choosing depth over distraction in a world that profits from your noise.
+    </p>
+
+    <div class="pull-quote reveal">
+      "We live in an age of infinite content and near-zero meaning. Agape 26 exists for those who choose differently."
+    </div>
+
+    <p class="reveal">
+      This is not about clothing. It is about a commitment to a different way of moving through the world. To be present. To love boldly. To create things that last. To leave silence where others leave noise.
+    </p>
+
+    <p class="reveal">
+      Everything we make — every piece of clothing, every object for your home — is made to slow you down. To remind you what matters. To carry the code.
+    </p>
+
+    <div class="divider reveal"></div>
+
+    <h2 class="reveal">The Five Pillars</h2>
+
+    <p class="reveal"><strong>Love.</strong> Every decision begins here. Love of craft, love of people, love as the only viable code for a life worth living.</p>
+    <p class="reveal"><strong>Balance.</strong> Between stillness and movement. Between black and white. Between the self and the world.</p>
+    <p class="reveal"><strong>Creation.</strong> We make things. We make them with intention. We make them to outlast the trend.</p>
+    <p class="reveal"><strong>Legacy.</strong> What we leave behind matters more than what we acquire. We build for what endures.</p>
+    <p class="reveal"><strong>Silence.</strong> The loudest thing you will ever hear. The space where everything becomes clear.</p>
+  </div>
+
+  <!-- Founders -->
+  <div class="founders-section" id="contact">
+    <p class="section-label" style="color: rgba(255,255,255,0.35); margin-bottom: 32px;">Agape 26</p>
+    <h3>Founded with love.</h3>
+    <p>A brand built on intention, not ambition. On meaning, not market share. If you feel the frequency — welcome.</p>
+  </div>
+
+  <!-- Full-bleed image -->
+  <div style="height: 65vh; overflow: hidden;">
+    <img src="images/editorial_3.jpg" alt="Agape 26" style="width:100%;height:100%;object-fit:cover;object-position:center 40%;">
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">
+          <img src="images/logo_stack_white.svg" alt="AGAPĒ 26">
+        </div>
+        <p class="footer-tagline">The Code of Love.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Navigate</h5>
+        <a href="story.html">Our Story</a>
+        <a href="collection.html">Collection</a>
+        <a href="home.html">Home / Lifestyle</a>
+        <a href="gallery.html">Gallery</a>
+      </div>
+      <div class="footer-col">
+        <h5>Connect</h5>
+        <a href="#">Instagram</a>
+        <a href="#">TikTok</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Agape 26. All rights reserved.</p>
+      <p>Made with love.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

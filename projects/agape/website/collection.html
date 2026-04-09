@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collection — AGAPĒ 26</title>
+  <link rel="stylesheet" href="css/style.css?v=14">
+  <style>
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.9s cubic-bezier(0.25,0.1,0.25,1), transform 0.9s cubic-bezier(0.25,0.1,0.25,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.15s; }
+
+    .page-header {
+      padding: calc(var(--nav-h) + 80px) 52px 60px;
+      background: var(--cream);
+    }
+    .page-header h1 {
+      font-family: var(--serif);
+      font-size: clamp(42px, 6vw, 80px);
+      font-weight: 300;
+      
+      color: var(--dark);
+      line-height: 1.1;
+    }
+    .page-header p {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--mid);
+      letter-spacing: 0.1em;
+      margin-top: 20px;
+      text-transform: uppercase;
+    }
+
+    .coming-soon {
+      padding: 80px 52px 140px;
+      background: var(--cream);
+      max-width: 600px;
+    }
+    .coming-soon p {
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.9;
+      color: #555;
+      margin-bottom: 20px;
+    }
+    .coming-soon .notify-form {
+      margin-top: 48px;
+      display: flex;
+      gap: 0;
+      max-width: 440px;
+    }
+    .coming-soon input[type="email"] {
+      flex: 1;
+      padding: 14px 20px;
+      font-family: var(--sans);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      border: 1px solid #ccc;
+      border-right: none;
+      background: var(--white);
+      outline: none;
+    }
+    .coming-soon input[type="email"]:focus { border-color: var(--dark); }
+    .coming-soon button {
+      padding: 14px 28px;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      background: var(--dark);
+      color: var(--white);
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .coming-soon button:hover { background: var(--black); }
+
+    .full-editorial {
+      height: 90vh;
+      overflow: hidden;
+    }
+    .full-editorial img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 25%;
+    }
+
+    @media (max-width: 900px) {
+      .page-header { padding: calc(var(--nav-h) + 48px) 24px 40px; }
+      .coming-soon { padding: 48px 24px 80px; }
+      .coming-soon .notify-form { flex-direction: column; max-width: 100%; }
+      .coming-soon input[type="email"] { border-right: 1px solid #ccc; border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="nav-logo">
+      <img src="images/logo_black.svg" alt="AGAPĒ">
+    </a>
+    <ul class="nav-links">
+      <li><a href="story.html">Story</a></li>
+      <li><a href="collection.html">Collection</a></li>
+      <li><a href="home.html">Home / Lifestyle</a>
+        <a href="gallery.html">Gallery</a></li>
+      <li><a href="gallery.html">Gallery</a></li>
+      <li><a href="story.html#contact" class="nav-cta">Contact</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <p class="section-label">Spring / Summer 2026</p>
+    <h1 class="reveal">Collection</h1>
+    <p class="reveal reveal-delay-1">Unisex · Made with intention</p>
+  </div>
+
+  <div class="coming-soon">
+    <p class="reveal" style="font-size:13px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);">Coming Soon</p>
+    <p class="reveal" style="margin-top:16px;">Our first collection is being crafted with care. Each piece carries the code — designed for those who choose presence over noise, depth over distraction.</p>
+    <p class="reveal">Unisex. Considered. Built to last.</p>
+    <div class="notify-form reveal">
+      <input type="email" placeholder="Your email address">
+      <button type="button">Notify Me</button>
+    </div>
+  </div>
+
+
+
+  <footer>
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">
+          <img src="images/logo_white.svg" alt="AGAPĒ">
+        </div>
+        <p class="footer-tagline">The Code of Love.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Navigate</h5>
+        <a href="story.html">Our Story</a>
+        <a href="collection.html">Collection</a>
+        <a href="home.html">Home / Lifestyle</a>
+        <a href="gallery.html">Gallery</a>
+      </div>
+      <div class="footer-col">
+        <h5>Connect</h5>
+        <a href="#">Instagram</a>
+        <a href="#">TikTok</a>
+        <a href="story.html#contact">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Agape 26. All rights reserved.</p>
+      <p>Made with love.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

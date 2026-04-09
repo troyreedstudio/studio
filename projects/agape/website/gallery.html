@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery — AGAPĒ 26</title>
+  <link rel="stylesheet" href="css/style.css?v=14">
+  <style>
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.9s cubic-bezier(0.25,0.1,0.25,1), transform 0.9s cubic-bezier(0.25,0.1,0.25,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.12s; }
+    .reveal-delay-2 { transition-delay: 0.24s; }
+    .reveal-delay-3 { transition-delay: 0.36s; }
+
+    .page-header {
+      padding: calc(var(--nav-h) + 80px) 52px 60px;
+      background: var(--cream);
+    }
+    .page-header h1 {
+      font-family: var(--serif);
+      font-size: clamp(42px, 6vw, 80px);
+      font-weight: 300;
+      
+      color: var(--dark);
+      line-height: 1.1;
+    }
+    .page-header p {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--mid);
+      letter-spacing: 0.1em;
+      margin-top: 20px;
+      text-transform: uppercase;
+    }
+
+    /* Masonry-style gallery grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: 80px;
+      gap: 6px;
+      padding: 0 6px 6px;
+      background: var(--white);
+    }
+
+    .gallery-item {
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 1s cubic-bezier(0.25,0.1,0.25,1), opacity 0.4s;
+    }
+
+    .gallery-item:hover img { transform: scale(1.05); }
+
+    /* Grid layout — editorial sizing */
+    .gallery-item:nth-child(1) { grid-column: 1 / 6;  grid-row: 1 / 7;  } /* portrait tall */
+    .gallery-item:nth-child(2) { grid-column: 6 / 13; grid-row: 1 / 5;  } /* landscape wide */
+    .gallery-item:nth-child(3) { grid-column: 6 / 9;  grid-row: 5 / 9;  } /* square-ish */
+    .gallery-item:nth-child(4) { grid-column: 9 / 13; grid-row: 5 / 9;  } /* square-ish */
+    .gallery-item:nth-child(5) { grid-column: 1 / 5;  grid-row: 7 / 13; } /* square */
+    .gallery-item:nth-child(6) { grid-column: 5 / 13; grid-row: 9 / 13; } /* landscape */
+
+    /* Caption overlay */
+    .gallery-caption {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 24px;
+      background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+    .gallery-item:hover .gallery-caption { opacity: 1; }
+    .gallery-caption span {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0,0,0,0.95);
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox.active { display: flex; }
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 28px; right: 36px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .lightbox-close:hover { color: #fff; }
+
+    @media (max-width: 900px) {
+      .page-header { padding: calc(var(--nav-h) + 48px) 24px 40px; }
+      .gallery-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: 45vw;
+        gap: 4px;
+        padding: 0 4px 4px;
+      }
+      .gallery-item:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
+      .gallery-item:nth-child(2) { grid-column: 1;     grid-row: 2; }
+      .gallery-item:nth-child(3) { grid-column: 2;     grid-row: 2; }
+      .gallery-item:nth-child(4) { grid-column: 1 / 3; grid-row: 3; }
+      .gallery-item:nth-child(5) { grid-column: 1;     grid-row: 4; }
+      .gallery-item:nth-child(6) { grid-column: 2;     grid-row: 4; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="nav-logo">
+      <img src="images/logo_black.svg" alt="AGAPĒ">
+    </a>
+    <ul class="nav-links">
+      <li><a href="story.html">Story</a></li>
+      <li><a href="collection.html">Collection</a></li>
+      <li><a href="home.html">Home / Lifestyle</a></li>
+      <li><a href="gallery.html">Gallery</a></li>
+      <li><a href="story.html#contact" class="nav-cta">Contact</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <p class="section-label">Spring / Summer 2026</p>
+    <h1 class="reveal">Gallery</h1>
+    <p class="reveal reveal-delay-1">Editorial · Campaign · Life</p>
+  </div>
+
+  <!-- Gallery Grid -->
+  <div class="gallery-grid">
+    <div class="gallery-item reveal" onclick="openLightbox('images/editorial_3.jpg')">
+      <img src="images/editorial_3.jpg" alt="Agape 26 — editorial">
+      <div class="gallery-caption"><span>SS26 — Editorial</span></div>
+    </div>
+    <div class="gallery-item reveal reveal-delay-1" onclick="openLightbox('images/editorial_1.jpg')">
+      <img src="images/editorial_1.jpg" alt="Agape 26 — editorial">
+      <div class="gallery-caption"><span>SS26 — Campaign</span></div>
+    </div>
+    <div class="gallery-item reveal reveal-delay-2" onclick="openLightbox('images/editorial_2.jpg')">
+      <img src="images/editorial_2.jpg" alt="Agape 26 — editorial">
+      <div class="gallery-caption"><span>SS26 — Editorial</span></div>
+    </div>
+    <div class="gallery-item reveal reveal-delay-3" onclick="openLightbox('images/editorial_3.jpg')">
+      <img src="images/editorial_3.jpg" alt="Agape 26 — editorial" style="object-position: center 70%;">
+      <div class="gallery-caption"><span>SS26 — Campaign</span></div>
+    </div>
+    <div class="gallery-item reveal reveal-delay-1" onclick="openLightbox('images/editorial_1.jpg')">
+      <img src="images/editorial_1.jpg" alt="Agape 26 — editorial" style="object-position: center 60%;">
+      <div class="gallery-caption"><span>SS26 — Editorial</span></div>
+    </div>
+    <div class="gallery-item reveal reveal-delay-2" onclick="openLightbox('images/editorial_2.jpg')">
+      <img src="images/editorial_2.jpg" alt="Agape 26 — editorial">
+      <div class="gallery-caption"><span>SS26 — Campaign</span></div>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close">Close</span>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo"><img src="images/logo_stack_white.svg" alt="AGAPĒ 26"></div>
+        <p class="footer-tagline">The Code of Love.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Navigate</h5>
+        <a href="story.html">Our Story</a>
+        <a href="collection.html">Collection</a>
+        <a href="home.html">Home / Lifestyle</a>
+        <a href="gallery.html">Gallery</a>
+      </div>
+      <div class="footer-col">
+        <h5>Connect</h5>
+        <a href="#">Instagram</a>
+        <a href="#">TikTok</a>
+        <a href="story.html#contact">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Agape 26. All rights reserved.</p>
+      <p>Made with love.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    function openLightbox(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+  </script>
+</body>
+</html>

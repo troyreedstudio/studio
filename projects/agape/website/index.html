@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Agape 26 — A new code of love. Luxury lifestyle brand for those who live with intention.">
+  <title>AGAPĒ 26</title>
+  <link rel="stylesheet" href="css/style.css?v=14">
+  <style>
+    /* Reveal animation */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.9s cubic-bezier(0.25,0.1,0.25,1), transform 0.9s cubic-bezier(0.25,0.1,0.25,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.15s; }
+    .reveal-delay-2 { transition-delay: 0.3s; }
+    .reveal-delay-3 { transition-delay: 0.45s; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="dark-nav">
+    <a href="/" class="nav-logo">
+      <img src="images/logo_white.svg" alt="AGAPĒ" id="nav-logo-img">
+    </a>
+    <ul class="nav-links">
+      <li><a href="story.html">Story</a></li>
+      <li><a href="collection.html">Collection</a></li>
+      <li><a href="home.html">Home / Lifestyle</a>
+        <a href="gallery.html">Gallery</a></li>
+      <li><a href="gallery.html">Gallery</a></li>
+      <li><a href="story.html#contact" class="nav-cta">Contact</a></li>
+    </ul>
+    <div class="nav-hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-image">
+      <img src="images/hero_v6.jpg" alt="Agape 26 — editorial" loading="eager" style="object-position: center 40%;">
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-tagline reveal visible">Silence is the loudest thing you will ever hear.</p>
+
+    </div>
+  </section>
+
+  <!-- Brand Intro -->
+  <section class="ghost-logo-section" style="background: var(--cream); padding: 140px 52px;">
+    <div class="story-block">
+      <div class="story-text">
+        <p class="section-label reveal">The Code</p>
+        <h2 class="reveal reveal-delay-1">
+          Not a brand.<br>
+          A way of being.
+        </h2>
+        <p class="reveal reveal-delay-2">
+          Agape — the highest form of love. Unconditional. Universal. 
+          Without condition or expectation. It is the code we live by.
+        </p>
+        <p class="reveal reveal-delay-2">
+          26 is not a number. It is a frequency. A vibration that resonates 
+          with those who choose to live with intention, presence, and depth.
+        </p>
+        <a href="story.html" class="read-more reveal reveal-delay-3">Read the Story</a>
+      </div>
+      <div class="story-image reveal reveal-delay-1">
+        <img src="images/story_v7.jpg" alt="Agape 26 — editorial" loading="lazy" style="object-position: center bottom;">
+      </div>
+    </div>
+  </section>
+
+  <!-- Editorial Image Grid -->
+  <div class="editorial-grid">
+    <div class="grid-item">
+      <img src="images/editorial_bath.jpg" alt="Agape 26" loading="lazy" style="object-position: center 30%;">
+    </div>
+    <div class="grid-item">
+      <img src="images/story_arch.jpg" alt="Agape 26" loading="lazy" style="object-position: center center;">
+    </div>
+    <div class="grid-item">
+      <img src="images/editorial_tub_bamboo.jpg" alt="Agape 26" loading="lazy" style="object-position: center 30%;">
+    </div>
+  </div>
+
+  <!-- Manifesto -->
+  <section class="manifesto ghost-logo-section ghost-logo-dark">
+    <div class="logo-display reveal">
+      <img src="images/logo_white.svg" alt="AGAPĒ">
+    </div>
+    <p class="logo-26 reveal">26</p>
+    <h2 class="reveal reveal-delay-1">
+      "Choose presence over noise.<br>
+      Depth over distraction.<br>
+      Love as the only code."
+    </h2>
+    <p class="reveal reveal-delay-2">
+      Love &nbsp;·&nbsp; Balance &nbsp;·&nbsp; Creation &nbsp;·&nbsp; Legacy &nbsp;·&nbsp; Silence
+    </p>
+  </section>
+
+  <!-- Category Teasers -->
+  <div class="categories">
+    <a href="collection.html" class="category-panel">
+      <img src="images/collection_hero_v2.jpg" alt="Collection" loading="lazy" style="object-position: center 30%;">
+      <div class="category-overlay">
+        <h3>Explore</h3>
+        <span class="cat-link">Collection</span>
+        <span class="arrow-link">Coming Soon</span>
+      </div>
+    </a>
+    <a href="home.html" class="category-panel">
+      <img src="images/home_towel_v2.jpg" alt="Home / Lifestyle" loading="lazy" style="object-position: center 40%;">
+      <div class="category-overlay">
+        <h3>Explore</h3>
+        <span class="cat-link">Home / Lifestyle</span>
+        <span class="arrow-link">Objects &amp; Living</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Five Pillars -->
+  <section class="pillars ghost-logo-section">
+    <p class="section-label">The Five Pillars</p>
+    <div class="pillars-grid">
+      <div class="pillar reveal">
+        <h4>Love</h4>
+        <p>The foundation of everything we create.</p>
+      </div>
+      <div class="pillar reveal reveal-delay-1">
+        <h4>Balance</h4>
+        <p>Between stillness and movement. Light and dark.</p>
+      </div>
+      <div class="pillar reveal reveal-delay-2">
+        <h4>Creation</h4>
+        <p>To build something that outlasts the moment.</p>
+      </div>
+      <div class="pillar reveal reveal-delay-1">
+        <h4>Legacy</h4>
+        <p>What we leave behind. What endures.</p>
+      </div>
+      <div class="pillar reveal reveal-delay-2">
+        <h4>Silence</h4>
+        <p>The space where everything becomes clear.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">
+          <img src="images/logo_stack_white.svg" alt="AGAPĒ 26">
+        </div>
+        <p class="footer-tagline">The Code of Love.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Navigate</h5>
+        <a href="story.html">Our Story</a>
+        <a href="collection.html">Collection</a>
+        <a href="home.html">Home / Lifestyle</a>
+        <a href="gallery.html">Gallery</a>
+      </div>
+      <div class="footer-col">
+        <h5>Connect</h5>
+        <a href="#">Instagram</a>
+        <a href="#">TikTok</a>
+        <a href="story.html#contact">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Agape 26. All rights reserved.</p>
+      <p>Made with love.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    // Swap nav logo on scroll
+    const logo = document.getElementById('nav-logo-img');
+    const navEl = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > window.innerHeight * 0.85) {
+        navEl.classList.remove('dark-nav');
+        logo.src = 'images/logo_black.svg';
+      } else {
+        navEl.classList.add('dark-nav');
+        logo.src = 'images/logo_white.svg';
+      }
+    }, { passive: true });
+  </script>
+</body>
+</html>
