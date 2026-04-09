@@ -2,6 +2,22 @@
 
 Multi-project creative and development studio. We take ideas from initial research all the way through to deployed products — covering research, ideation, brand, content, app development, website building, and deployment.
 
+## People & Agents
+
+This studio is run by two humans and has been shaped by two AI agents:
+
+### Humans
+
+- **Troy Reed** — co-founder of Agape 26, production/content background, runs Black Malibu clothing label, created Street Stars documentary (Warner Brothers). Based in Bali/Singapore with Sascha.
+- **Sascha Gray** — co-founder of Agape 26, works in technology and sales at Amazon. Lives between Singapore and Bali. Fashion, wellness, e-commerce. Goal: side hustles to passive income to financial freedom.
+
+### Agents
+
+- **Troy (Claude Code)** — runs locally on Troy's MacBook Air via Claude Code CLI. This is the current active agent for the studio. Handles development, architecture, and project management.
+- **Frankie / Pink** — Sascha's AI agents that ran in the cloud on a VPS via OpenClaw. Always-on, handled brand work, content creation, Flutter reskins, HeyGen avatar management, voice testing, and Telegram integrations. The `docs/` folder contains Frankie/Pink's original workspace files (FRANKIE-SOUL.md, FRANKIE-IDENTITY.md, AGENTS.md, TOOLS.md, USER.md, etc.) preserved for reference and continuity.
+
+Both agents collaborated on the same projects. Frankie/Pink did the Pink Pineapple Flutter reskin, Agape 26 brand development, avatar creation, content calendars, and Peptide Talk character design. This studio repo consolidates all that prior work into one place.
+
 ## Studio Structure
 
 ```
@@ -46,12 +62,13 @@ Premium Bali lifestyle guide and booking app. Think Monocle meets Time Out — c
 - **Design language**: Warm black (`#0A0A0A`), gold accent (`#F4C97A`), coral accent (`#E8A87C`) — tropical luxury aesthetic
 - **Next**: Extend backend schema (areas, venue categories, gyms), build new React Native app, connect to existing API
 
-### Agape
+### Agape 26
 
-Brand and content project. Agape26 — visual identity, content calendar, and creative assets in development.
+Premium lifestyle brand — 50/50 partnership between Sascha Gray and Troy Reed. Anchored in high consciousness and unconditional love. Product lineup: caps, vest tops, premium hoodies. Strong margins (5-8x on caps/singlets).
 
-- **Phase**: Brand development — logos, content calendar, social posts, and audio content created
-- **Assets**: Multiple logo iterations, Bondi post series, avatar concepts, opening script audio
+- **Logo**: AGAP3 wordmark (Didot/Bodoni serif, forward 3) + 26 in thin circle — concept locked
+- **Phase**: Brand development — logo locked, content calendar written, avatar "26" live on HeyGen, Instagram @agape26collection launched, domain agape26.com purchased
+- **Next**: Vector logo production, manufacturing sourcing (China/Vietnam), Shopify store, TikTok handle
 
 ### Ideas
 
