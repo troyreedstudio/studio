@@ -1,0 +1,18 @@
+{
+  "name": "telegram-bridge",
+  "version": "1.0.0",
+  "description": "Telegram bot bridge to Claude Code CLI for ~/studio",
+  "main": "bridge.js",
+  "scripts": {
+    "start": "node bridge.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop telegram-bridge",
+    "pm2:restart": "pm2 restart telegram-bridge",
+    "pm2:logs": "pm2 logs telegram-bridge"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "dotenv": "^16.4.7"
+  },
+  "private": true
+}
