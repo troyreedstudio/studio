@@ -111,23 +111,25 @@ All auth screens reskinned to luxury dark theme:
 
 ---
 
-## Design System Applied
+## Design System Applied (LOCKED — see ~/BRAND-GUIDELINES.pdf)
 
 ```
-Background:    #0A0A0F (near-black)
-Cards:         #141420
-Surface:       #1C1C2E
-Elevated:      #252538
-Border:        #2A2A3C
+Background:    #000000  (pure black)
+Surface:       #1A1A1A  (cards, overlays, input fields)
+Elevated:      #2A2A2A  (modals, elevated cards)
 
-Rose-gold:     #D4A574  ← primary accent
-Champagne:     #E8C99A  ← gradient end
-Deep rose:     #C4956A  ← hover/pressed
+Rose-gold:     #8B4060 -> #C4707E -> #E8A0B0  (135deg gradient)
+Solid accent:  #C4707E  (buttons, active states)
 
-Text primary:  #F5F5F0
-Text secondary: #B8B8C8
-Text muted:    #6B6B80
+Text primary:  #FFFFFF
+Text secondary: #B0B0B0
+Text muted:    #6B6B6B
 
-Heading font:  Cormorant Garamond (luxury editorial)
-Body font:     Poppins (clean, modern)
+Success:       #00C853
+Warning:       #FFB800
+Error:         #FF3B3B
+
+Venue names:   Playfair Display (serif, bold, 32-40px)
+Body font:     Inter / DM Sans (regular, 14-16px)
+Labels:        Sans-serif (light/300, 12-14px, UPPERCASE, 0.2em+ tracking)
 ```
