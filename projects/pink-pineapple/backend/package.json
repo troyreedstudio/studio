@@ -10,6 +10,7 @@
     "postinstall": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed:venues": "ts-node src/scripts/seed-venues.ts",
+    "seed:photos": "ts-node src/scripts/fetch-venue-photos.ts",
     "clean:testdata": "ts-node src/scripts/clean-test-data.ts"
   },
   "keywords": [],
