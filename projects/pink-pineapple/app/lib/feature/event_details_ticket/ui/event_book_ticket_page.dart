@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/const/app_colors.dart';
 import '../../../core/global_widgets/app_network_image.dart'
@@ -398,11 +399,10 @@ class BookTicketsPage extends StatelessWidget {
         children: [
           Text(
             'Tickets',
-            style: TextStyle(
+            style: GoogleFonts.playfairDisplay(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
-              fontFamily: 'Cormorant Garamond',
             ),
           ),
           SizedBox(height: 20.h),

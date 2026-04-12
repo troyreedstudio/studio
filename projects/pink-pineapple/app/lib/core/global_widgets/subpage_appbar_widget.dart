@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../const/app_colors.dart';
 
@@ -35,8 +36,7 @@ class SubPageAppbarWidget extends StatelessWidget {
         // SizedBox(width: 10.w),
         Text(
           appbarTitle,
-          style: TextStyle(
-            fontFamily: 'Cormorant Garamond',
+          style: GoogleFonts.playfairDisplay(
             fontWeight: FontWeight.w500,
             fontSize: 20.sp,
             color: AppColors.textPrimary,

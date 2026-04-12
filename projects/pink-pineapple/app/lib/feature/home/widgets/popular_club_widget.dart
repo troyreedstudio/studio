@@ -103,7 +103,7 @@ class PopularClubsWidget extends StatelessWidget {
                       Expanded(
                         child: Text(
                           event.eventName ?? 'Venue',
-                          style: GoogleFonts.cormorantGaramond(
+                          style: GoogleFonts.playfairDisplay(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,

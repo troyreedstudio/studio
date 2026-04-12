@@ -39,7 +39,7 @@ class BookingsListPage extends StatelessWidget {
           const Spacer(),
           Text(
             'MY BOOKINGS',
-            style: GoogleFonts.cormorantGaramond(
+            style: GoogleFonts.playfairDisplay(
               fontSize: 20.sp,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
@@ -282,7 +282,7 @@ class BookingsListPage extends StatelessWidget {
                 children: [
                   Text(
                     booking.event?.eventName ?? 'Event Name',
-                    style: GoogleFonts.cormorantGaramond(
+                    style: GoogleFonts.playfairDisplay(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -375,7 +375,7 @@ class BookingsListPage extends StatelessWidget {
                                 AppColors.gradientPrimary.createShader(bounds),
                             child: Text(
                               '\$${booking.paidAmount?.toStringAsFixed(2) ?? '0.00'}',
-                              style: GoogleFonts.cormorantGaramond(
+                              style: GoogleFonts.playfairDisplay(
                                 fontSize: 18.sp,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
@@ -471,7 +471,7 @@ class BookingsListPage extends StatelessWidget {
           SizedBox(height: 20.h),
           Text(
             isPending ? 'No Pending Bookings' : 'No Accepted Bookings',
-            style: GoogleFonts.cormorantGaramond(
+            style: GoogleFonts.playfairDisplay(
               fontSize: 20.sp,
               fontWeight: FontWeight.w600,
               color: AppColors.textSecondary,

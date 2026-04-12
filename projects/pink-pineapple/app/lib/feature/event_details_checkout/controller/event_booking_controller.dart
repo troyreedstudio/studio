@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:pineapple/core/network_caller/network_config.dart';
 import 'package:pineapple/feature/home_bottom_nav/controller/home_nav_controller.dart';
 import 'package:pineapple/feature/home_bottom_nav/ui/home_bottom_nav.dart';
@@ -301,17 +302,97 @@ class EventBookingCheckoutController extends GetxController {
       );
 
       if (response != null && response['success'] == true) {
+        // Extract booking ID from response
+        final bookingId = response['data']?['_id'] ??
+            response['data']?['id'] ??
+            response['booking']?['_id'] ??
+            response['booking']?['id'] ??
+            '';
+
+        if (bookingId.toString().isNotEmpty) {
+          // Initiate Stripe checkout session
+          await _initiateStripeCheckout(bookingId.toString());
+        } else {
+          // Fallback: booking created but no ID returned for payment
+          Get.snackbar(
+            'Booking Created',
+            'Booking confirmed! Total: $finalTotalText',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppColors.primaryColor,
+            colorText: Colors.white,
+          );
+          Get.find<HomeNavController>().changeIndex(2);
+        }
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Call the Stripe checkout endpoint and open the returned URL.
+  Future<void> _initiateStripeCheckout(String bookingId) async {
+    try {
+      final payload = jsonEncode({"bookingId": bookingId});
+
+      final checkoutResponse = await netConfig.ApiRequestHandler(
+        RequestMethod.POST,
+        Urls.createCheckout,
+        payload,
+        is_auth: true,
+      );
+
+      if (checkoutResponse != null && checkoutResponse['success'] == true) {
+        final checkoutUrl = checkoutResponse['data']?['url'] ??
+            checkoutResponse['url'] ??
+            '';
+
+        if (checkoutUrl.toString().isNotEmpty) {
+          final uri = Uri.parse(checkoutUrl.toString());
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            Get.snackbar(
+              'Error',
+              'Could not open payment page',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: AppColors.errorColor,
+              colorText: Colors.white,
+            );
+          }
+          // Navigate to bookings tab after launching checkout
+          Get.find<HomeNavController>().changeIndex(2);
+        } else {
+          logger.w('Stripe checkout URL was empty');
+          Get.snackbar(
+            'Payment',
+            'Booking created but payment link unavailable. Check My Bookings.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppColors.primaryColor,
+            colorText: Colors.white,
+          );
+          Get.find<HomeNavController>().changeIndex(2);
+        }
+      } else {
+        logger.w('Stripe checkout request failed');
         Get.snackbar(
-          'Success',
-          'Booking confirmed! Total: ${finalTotalText}',
+          'Payment',
+          'Booking created. Payment will be available shortly.',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: AppColors.primaryColor,
           colorText: Colors.white,
         );
         Get.find<HomeNavController>().changeIndex(2);
       }
-    } finally {
-      isLoading.value = false;
+    } catch (e) {
+      logger.e('Stripe checkout error: $e');
+      Get.snackbar(
+        'Payment',
+        'Booking created but could not start payment. Check My Bookings.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.primaryColor,
+        colorText: Colors.white,
+      );
+      Get.find<HomeNavController>().changeIndex(2);
     }
   }
 

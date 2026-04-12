@@ -65,6 +65,10 @@ class Urls {
   static const String getAllBlockUser = '$baseUrl/block'; // GET
   static const String toggleBlockUnblock = '$baseUrl/block'; // POST
 
+  /// payments
+  static const String createCheckout = '$baseUrl/payments/checkout'; // POST
+  static const String paymentStatus = '$baseUrl/payments/status'; // GET — append /:bookingId
+
   /// venues
   static const String allVenues = '$baseUrl/venues'; // GET
   static const String featuredVenues = '$baseUrl/venues/featured'; // GET

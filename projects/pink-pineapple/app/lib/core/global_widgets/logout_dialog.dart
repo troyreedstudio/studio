@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../const/app_colors.dart';
 import 'custom_text.dart';
@@ -21,8 +22,7 @@ class LogOutDialog extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Are You Sure?',
-              style: TextStyle(
-                fontFamily: 'Cormorant Garamond',
+              style: GoogleFonts.playfairDisplay(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,

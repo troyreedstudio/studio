@@ -36,7 +36,7 @@ class ExploreScreen extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 8.w),
                 child: Text(
                   'EXPLORE',
-                  style: GoogleFonts.cormorantGaramond(
+                  style: GoogleFonts.playfairDisplay(
                     fontSize: 22.sp,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -108,7 +108,7 @@ class ExploreScreen extends StatelessWidget {
                           SizedBox(height: 20.h),
                           Text(
                             'No events found',
-                            style: GoogleFonts.cormorantGaramond(
+                            style: GoogleFonts.playfairDisplay(
                               color: AppColors.textSecondary,
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w600,
@@ -353,7 +353,7 @@ class _EventSearchCard extends StatelessWidget {
                     event.eventName ?? 'Untitled Event',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.cormorantGaramond(
+                    style: GoogleFonts.playfairDisplay(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
