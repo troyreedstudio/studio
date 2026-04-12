@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // All photos are free for commercial use (Unsplash license)
 const PHOTO_URLS: Record<VenueCategory, string[]> = {
   BEACH_CLUB: [
-    "https://images.unsplash.com/photo-1540541338287-41700c73c306?w=1920&q=80",
+    "https://images.unsplash.com/photo-1520483601560-389dff434fdf?w=1920&q=80",
     "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1920&q=80",
     "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80",
     "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1920&q=80",
@@ -23,7 +23,7 @@ const PHOTO_URLS: Record<VenueCategory, string[]> = {
     "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&q=80",
     "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=80",
     "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1920&q=80",
-    "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=1920&q=80",
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80",
     "https://images.unsplash.com/photo-1544148103-0773bf10d330?w=1920&q=80",
     "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=1920&q=80",
     "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1920&q=80",
@@ -38,13 +38,13 @@ const PHOTO_URLS: Record<VenueCategory, string[]> = {
     "https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=1920&q=80",
     "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=1920&q=80",
     "https://images.unsplash.com/photo-1571204829887-3b8d69e4094d?w=1920&q=80",
-    "https://images.unsplash.com/photo-1575444758702-4a6b9222c016?w=1920&q=80",
+    "https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8?w=1920&q=80",
     "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1920&q=80",
-    "https://images.unsplash.com/photo-1598899247038-b824cc3ad96c?w=1920&q=80",
+    "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=1920&q=80",
     "https://images.unsplash.com/photo-1586105449897-20b5efeb3233?w=1920&q=80",
   ],
   WELLNESS: [
-    "https://images.unsplash.com/photo-1540555700478-4be289fbec6a?w=1920&q=80",
+    "https://images.unsplash.com/photo-1583416750470-965b2707b355?w=1920&q=80",
     "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1920&q=80",
     "https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=1920&q=80",
     "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1920&q=80",
