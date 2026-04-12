@@ -6,7 +6,8 @@ export type IEventFilterRequest = {
 }
 
 export const eventFilterableFields=[
-    "eventStatus"
+    "eventStatus",
+    "venueId"
 ]
 export const eventSearchableFields=[
     "eventName"

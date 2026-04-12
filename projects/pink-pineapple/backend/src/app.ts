@@ -45,6 +45,12 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Stripe webhook needs raw body BEFORE json parser
+app.use(
+  "/api/v1/payments/webhook",
+  express.raw({ type: "application/json" })
+);
+
 // Middleware setup
 app.use(cors(corsOptions));
 app.use(cookieParser());

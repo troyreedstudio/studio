@@ -15,8 +15,9 @@ import { LikeRouter } from "../modules/Like/like.routes";
 import { CommentRoutes } from "../modules/Comment/Comment.routes";
 import { FollowRoutes } from "../modules/Follow/Follow.routes";
 import { BlockUserRoutes } from "../modules/BlockUser/BlockUser.routes";
-
-
+import { VenueRoutes } from "../modules/Venue/Venue.routes";
+import { VenueFavoriteRoutes } from "../modules/VenueFavorite/VenueFavorite.routes";
+import { PaymentRoutes } from "../modules/Payment/Payment.routes";
 
 const router = express.Router();
 
@@ -85,8 +86,18 @@ const moduleRoutes = [
     path: "/block",
     route: BlockUserRoutes,
   },
-
-
+  {
+    path: "/venues",
+    route: VenueRoutes,
+  },
+  {
+    path: "/venue-favorites",
+    route: VenueFavoriteRoutes,
+  },
+  {
+    path: "/payments",
+    route: PaymentRoutes,
+  },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

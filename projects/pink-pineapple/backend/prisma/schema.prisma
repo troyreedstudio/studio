@@ -50,10 +50,12 @@ model User {
   chatsSent          Chat[]               @relation("SenderRelation")
   chatsReceived      Chat[]               @relation("ReceiverRelation")
   Events             Events[]
+  venues             Venue[]          @relation("VenueOwner")
+  venueFavorites     VenueFavorite[]  @relation("VenueFavorites")
 
   blocker   BlockUser[] @relation("blocker")
   blocked   BlockUser[] @relation("blocked")
-  
+
 
   @@map("users")
 }
@@ -180,6 +182,8 @@ model Events {
   extraRequirements String
   userId            String          @db.ObjectId
   user              User            @relation(fields: [userId], references: [id])
+  venueId           String?         @db.ObjectId
+  venue             Venue?          @relation("VenueEvents", fields: [venueId], references: [id])
   eventImages       String[]
   eventStatus       EventStatus     @default(PENDING)
   createdAt         DateTime        @default(now())
@@ -331,6 +335,64 @@ model BlockUser {
 
 
   
+}
+
+enum VenueArea {
+  CANGGU
+  ULUWATU
+  SEMINYAK
+  UBUD
+}
+
+enum VenueCategory {
+  BEACH_CLUB
+  RESTAURANT
+  NIGHTLIFE
+  WELLNESS
+  EVENTS
+}
+
+model Venue {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  slug            String         @unique
+  description     String         @default("")
+  editorial       String         @default("")
+  area            VenueArea
+  category        VenueCategory
+  address         String         @default("")
+  latitude        Float?
+  longitude       Float?
+  phone           String         @default("")
+  website         String         @default("")
+  instagram       String         @default("")
+  priceRange      Int            @default(2)
+  openingHours    Json?
+  photos          String[]
+  heroImage       String         @default("")
+  isActive        Boolean        @default(true)
+  isFeatured      Boolean        @default(false)
+  rating          Float          @default(0)
+  ownerId         String         @db.ObjectId
+  owner           User           @relation("VenueOwner", fields: [ownerId], references: [id])
+  events          Events[]       @relation("VenueEvents")
+  favorites       VenueFavorite[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("venues")
+}
+
+model VenueFavorite {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  venueId   String   @db.ObjectId
+  venue     Venue    @relation(fields: [venueId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation("VenueFavorites", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("venue_favorites")
 }
 
 enum BookingType {
