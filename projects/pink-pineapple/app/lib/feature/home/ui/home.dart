@@ -7,14 +7,16 @@ import 'package:pineapple/core/global_widgets/app_loading.dart';
 import 'package:pineapple/core/global_widgets/bg_screen_widget.dart';
 import 'package:pineapple/feature/home/controller/home_controller.dart';
 import 'package:pineapple/feature/home/widgets/trending_event_widget.dart';
-import 'package:pineapple/feature/home/widgets/popular_club_widget.dart';
 import 'package:pineapple/feature/home/widgets/tonight_event_widget.dart';
 import 'package:pineapple/feature/home_bottom_nav/controller/home_nav_controller.dart';
+import 'package:pineapple/feature/venue/controller/venue_controller.dart';
+import 'package:pineapple/feature/venue/widgets/venue_card_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
 
   final homeController = Get.put(HomeController());
+  final venueController = Get.put(VenueController());
 
   @override
   Widget build(BuildContext context) {
@@ -277,27 +279,32 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 28.h),
 
-          // Trending Venues
+          // Popular Venues — from venue API
           _SectionHeader(
-            title: 'Trending Venues',
+            title: 'Popular Venues',
             subtitle: 'Most popular right now',
             onSeeAll: () {},
           ),
           SizedBox(height: 12.h),
           SizedBox(
-            height: 200.h,
+            height: 220.h,
             child: Obx(() {
-              final events = homeController.allEventList;
-              return homeController.isTrendingLoading.value
+              final venueCtrl = Get.find<VenueController>();
+              final venueList = venueCtrl.featuredVenues.isNotEmpty
+                  ? venueCtrl.featuredVenues
+                  : venueCtrl.venues;
+              return venueCtrl.isFeaturedLoading.value ||
+                      venueCtrl.isLoading.value
                   ? loading()
-                  : events.isEmpty
+                  : venueList.isEmpty
                       ? _EmptySection(message: 'No venues available')
                       : ListView.builder(
                           scrollDirection: Axis.horizontal,
                           padding: EdgeInsets.symmetric(horizontal: 20.w),
-                          itemCount: events.length > 5 ? 5 : events.length,
+                          itemCount:
+                              venueList.length > 8 ? 8 : venueList.length,
                           itemBuilder: (context, index) {
-                            return PopularClubsWidget(event: events[index]);
+                            return VenueCardWidget(venue: venueList[index]);
                           },
                         );
             }),

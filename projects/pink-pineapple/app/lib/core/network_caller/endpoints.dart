@@ -64,4 +64,12 @@ class Urls {
   /// block
   static const String getAllBlockUser = '$baseUrl/block'; // GET
   static const String toggleBlockUnblock = '$baseUrl/block'; // POST
+
+  /// venues
+  static const String allVenues = '$baseUrl/venues'; // GET
+  static const String featuredVenues = '$baseUrl/venues/featured'; // GET
+  static const String venuesByArea = '$baseUrl/venues/area'; // GET — append /:area
+  static const String searchVenues = '$baseUrl/venues/search'; // GET
+  static const String venueDetails = '$baseUrl/venues'; // GET — append /:id
+  static const String toggleVenueFavorite = '$baseUrl/venues'; // POST — append /:id/favorite
 }
