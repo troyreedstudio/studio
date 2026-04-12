@@ -109,7 +109,7 @@ All in `projects/pink-pineapple/docs/`:
 
 **LIVE — deployment and growth.** The app is live on the App Store and Google Play. Backend API is live at `api.pinkpineapple.app`. Dashboard is live at `dashboard.pinkpineapple.app`. 38 venues seeded. Focus is now on user acquisition, real venue photography, payment integration, and iterating on the live product.
 
-## Core User Journey (new app — for React Native rebuild)
+## Core User Journey (target experience for the live Flutter app)
 
 1. Land at Bali airport, download Pink Pineapple
 2. Select area: Canggu / Uluwatu / Seminyak
@@ -133,5 +133,5 @@ All in `projects/pink-pineapple/docs/`:
 
 - Brand and design system are LOCKED — do not change without Sascha's approval
 - Flutter social features (newsfeed, followers, posts, likes) are NOT part of PP's long-term direction
-- Future mobile evolution may move to React Native + Expo (same stack as LMC), but the current Flutter app is live and serving users
+- **Pink Pineapple stays on Flutter.** Do not propose a React Native rewrite. Iterate on the live Flutter codebase in `projects/pink-pineapple/app/` — apply the locked design system there.
 - This project is SEPARATE from Agape 26 — do not conflate

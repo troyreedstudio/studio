@@ -8,8 +8,21 @@ import 'package:pineapple/feature/home/controller/home_controller.dart';
 import '../../../core/const/app_colors.dart';
 import '../../../core/const/user_info/user_info_controller.dart';
 import '../../../core/global_widgets/app_network_image.dart';
+import '../../../core/global_widgets/pp_button.dart';
 import '../../event_details/UI/event_details_page.dart';
 import '../model/event_model.dart';
+
+String? _extractArea(String? fullAddress) {
+  if (fullAddress == null || fullAddress.trim().isEmpty) return null;
+  final parts = fullAddress
+      .split(',')
+      .map((p) => p.trim())
+      .where((p) => p.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return null;
+  if (parts.length >= 2) return parts[parts.length - 2];
+  return parts.last;
+}
 
 class PopularClubsWidget extends StatelessWidget {
   const PopularClubsWidget({super.key, required this.event});
@@ -143,28 +156,14 @@ class PopularClubsWidget extends StatelessWidget {
                     ],
                   ),
 
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 6.h),
 
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 10.sp,
-                        color: AppColors.accentRoseGold,
-                      ),
-                      SizedBox(width: 3.w),
-                      Expanded(
-                        child: Text(
-                          event.user?.fullAddress ?? '',
-                          style: GoogleFonts.poppins(
-                            fontSize: 10.sp,
-                            color: AppColors.textMuted,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  // Design system: CATEGORY · AREA — uppercase, wide-tracked,
+                  // rose-gold gradient. Falls back gracefully when no address.
+                  PpCategoryAreaLabel(
+                    category: 'Venue',
+                    area: _extractArea(event.user?.fullAddress) ?? 'Bali',
+                    fontSize: 9,
                   ),
                 ],
               ),
