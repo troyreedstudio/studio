@@ -763,7 +763,6 @@ void _showPostOptionsMenu(
     if (selected == null) return;
     switch (selected) {
       case 'edit':
-        // TODO: navigate to edit
         break;
       case 'hide':
         controller.hideUnhidePost(post.id!);

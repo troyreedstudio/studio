@@ -5,11 +5,8 @@ import 'package:pineapple/core/local/local_data.dart';
 import 'package:pineapple/feature/auth/ui/9.change_password_page.dart';
 import 'package:pineapple/feature/blocked_user/ui/blocked_user_ui.dart';
 import 'package:pineapple/feature/free_user/ui/free_user_home_page.dart';
-import 'package:pineapple/feature/hidden_posts/ui/hidden_post_screen.dart';
 
 import '../../favorites/ui/favorite_event_screen.dart';
-import '../../follwing_followers/ui/following_followup.dart';
-import '../../saved_posts/ui/saved_post_screen.dart';
 import '../ui/privacy_policy_page.dart';
 import '../ui/terms_conditions_page.dart';
 
@@ -24,7 +21,7 @@ class ProfileTabController extends GetxController {
   final RxInt followersCount = 199.obs;
   final local = LocalService();
 
-  // Menu items dataave
+  // Menu items
   final List<ProfileMenuItem> menuItems = [
     ProfileMenuItem(
       title: 'Favorites',
@@ -35,21 +32,6 @@ class ProfileTabController extends GetxController {
       title: 'Change Password',
       iconPath: 'assets/icons/lock.png',
       onTap: () => _onChangePasswordTap(),
-    ),
-    ProfileMenuItem(
-      title: 'Following and Followers',
-      iconPath: 'assets/icons/people.png',
-      onTap: () => _onFollowingFollowersTap(),
-    ),
-    ProfileMenuItem(
-      title: 'Saved Posts',
-      iconPath: 'assets/icons/save.png',
-      onTap: () => _onSavedPostTap(),
-    ),
-    ProfileMenuItem(
-      title: 'Hidden Posts',
-      iconPath: 'assets/icons/hidden.png',
-      onTap: () => _onHiddenPostTap(),
     ),
     ProfileMenuItem(
       title: 'Blocked Users',
@@ -88,26 +70,6 @@ class ProfileTabController extends GetxController {
       // () => UnifiedPostsPage(postType: PostType.favourites),
       () => FavoriteEventScreen(),
     ); // Add navigation logic here
-  }
-
-  static void _onMotivationalSpeechTap() {
-    Get.snackbar('Navigation', 'Motivational Speech tapped');
-    // Add navigation logic here
-  }
-
-  static void _onFollowingFollowersTap() {
-    Get.to(FollowingsFollowersPage(), transition: Transition.rightToLeft);
-  }
-
-  static void _onSavedPostTap() {
-    Get.to(
-      // () => UnifiedPostsPage(postType: PostType.saved),
-      () => SavedPostsPage(),
-    ); // Add navigation logic here
-  }
-
-  static void _onHiddenPostTap() {
-    Get.to(() => HiddenPostsPage());
   }
 
   static void _onBlockedUsersTap() {

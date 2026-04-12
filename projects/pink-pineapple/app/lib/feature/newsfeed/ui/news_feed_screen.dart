@@ -240,11 +240,10 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
                   children: [
                     Text(
                       post.user?.fullName ?? "User",
-                      style: globalTextStyle(
+                      style: brandHeadingStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
-                        fontFamily: 'Cormorant Garamond',
                       ),
                     ),
                     Row(
@@ -515,7 +514,6 @@ class _NewsFeedPageState extends State<NewsFeedPage> {
       if (selected == null) return;
       switch (selected) {
         case 'edit':
-          // TODO: navigate to edit
           break;
         case 'hide':
           controller.hideUnhidePost(post.id!);

@@ -4,6 +4,7 @@ import 'package:pineapple/core/const/app_colors.dart';
 import 'package:pineapple/feature/explore/ui/explore_screen.dart';
 import 'package:pineapple/feature/home/ui/home.dart';
 import 'package:pineapple/feature/profile_tab/ui/profile_tab.dart';
+import 'package:pineapple/feature/tonight/ui/tonight_screen.dart';
 import '../../bookings/ui/bookings_list_page.dart';
 import '../controller/home_nav_controller.dart';
 
@@ -15,7 +16,7 @@ class HomeBottomNav extends StatelessWidget {
   final List<Widget> pages = [
     HomeScreen(),       // Discover
     ExploreScreen(),    // Explore
-    BookingsListPage(), // Tonight (repurposed)
+    TonightScreen(),    // Tonight
     BookingsListPage(), // Bookings
     ProfileTabPage(),   // Profile
   ];
