@@ -3,7 +3,7 @@ import { TQueryParams } from "@/types/user.type";
 
 export const venuesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getAllVenues: builder.query({
+    getVenues: builder.query({
       query: (args) => {
         const params = new URLSearchParams();
 
@@ -21,6 +21,22 @@ export const venuesApi = baseApi.injectEndpoints({
       providesTags: ["Venue"],
     }),
 
+    getFeaturedVenues: builder.query({
+      query: () => ({
+        url: "/venues/featured",
+        method: "GET",
+      }),
+      providesTags: ["Venue"],
+    }),
+
+    getVenue: builder.query({
+      query: (id) => ({
+        url: `/venues/${id}`,
+        method: "GET",
+      }),
+      providesTags: ["Venue"],
+    }),
+
     createVenue: builder.mutation({
       query: (data) => ({
         url: "/venues",
@@ -33,7 +49,7 @@ export const venuesApi = baseApi.injectEndpoints({
     updateVenue: builder.mutation({
       query: (args) => ({
         url: `/venues/${args.id}`,
-        method: "PATCH",
+        method: "PUT",
         body: args.data,
       }),
       invalidatesTags: ["Venue"],
@@ -46,21 +62,14 @@ export const venuesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Venue"],
     }),
-
-    getSingleVenue: builder.query({
-      query: (id) => ({
-        url: `/venues/${id}`,
-        method: "GET",
-      }),
-      providesTags: ["Venue"],
-    }),
   }),
 });
 
 export const {
-  useGetAllVenuesQuery,
+  useGetVenuesQuery,
+  useGetFeaturedVenuesQuery,
+  useGetVenueQuery,
   useCreateVenueMutation,
   useUpdateVenueMutation,
   useDeleteVenueMutation,
-  useGetSingleVenueQuery,
 } = venuesApi;
