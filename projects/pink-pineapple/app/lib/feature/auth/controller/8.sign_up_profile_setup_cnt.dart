@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../core/global_widgets/app_snackbar.dart';
 import '../../../core/local/local_data.dart';
 import '../../../core/network_caller/endpoints.dart';
@@ -17,6 +18,19 @@ class SignUpProfileSetup extends GetxController {
   // Add these observables to store profile data
   final RxString profileName = ''.obs;
   final RxString profileImageUrl = ''.obs;
+
+  // Country, city, date of birth, and Instagram
+  final RxnString selectedCountry = RxnString(null);
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController instagramController = TextEditingController();
+  final Rxn<DateTime> selectedDob = Rxn<DateTime>(null);
+
+  /// Formatted DOB for display (e.g. "15 March 1992")
+  String get formattedDob {
+    final dob = selectedDob.value;
+    if (dob == null) return '';
+    return DateFormat('d MMMM yyyy').format(dob);
+  }
 
   // Get the image picker controller to populate data
   late final ImagePickerController imagePicker;
@@ -74,6 +88,31 @@ class SignUpProfileSetup extends GetxController {
           if (img != null && img.toString().isNotEmpty) {
             profileImageUrl.value = img.toString();
           }
+
+          // Set country
+          final country = profileData['country'];
+          if (country != null && country.toString().isNotEmpty) {
+            selectedCountry.value = country.toString();
+          }
+
+          // Set city
+          final city = profileData['city'];
+          if (city != null && city.toString().isNotEmpty) {
+            cityController.text = city.toString();
+          }
+
+          // Set date of birth
+          final dob = profileData['dob'];
+          if (dob != null && dob.toString().isNotEmpty) {
+            final parsed = DateTime.tryParse(dob.toString());
+            if (parsed != null) {
+              // Only set if it looks like a real DOB (not the default now() value)
+              final now = DateTime.now();
+              if (parsed.isBefore(now.subtract(const Duration(days: 365 * 5)))) {
+                selectedDob.value = parsed;
+              }
+            }
+          }
         }
 
         return true;
@@ -95,8 +134,8 @@ class SignUpProfileSetup extends GetxController {
 
       if (isTokenAvailable.value) {
         // UPDATE MODE
+        final Map<String, dynamic> requestBody = _buildRequestBody(name);
         if (imagePath.isNotEmpty) {
-          final Map<String, dynamic> requestBody = {"fullName": name};
           final response = await _networkConfig.ApiRequestHandler(
             RequestMethod.MULTIPART,
             Urls.profile,
@@ -108,7 +147,7 @@ class SignUpProfileSetup extends GetxController {
           );
 
           if (response != null && response['success'] == true) {
-            Get.back(); // ✅ FIXED (no context)
+            Get.back();
             AppSnackbar.show(
               message: "Profile Updated Successfully.",
               isSuccess: true,
@@ -118,8 +157,6 @@ class SignUpProfileSetup extends GetxController {
           return false;
         } else {
           // Update without image using PUT_V2
-          final Map<String, dynamic> requestBody = {"fullName": name};
-
           final response = await _networkConfig.ApiRequestHandler(
             RequestMethod.PUT_V2,
             Urls.profile,
@@ -128,7 +165,7 @@ class SignUpProfileSetup extends GetxController {
           );
 
           if (response != null && response['success'] == true) {
-            Get.back(); // ✅ FIXED (no context)
+            Get.back();
             AppSnackbar.show(
               message: "Profile Updated Successfully.",
               isSuccess: true,
@@ -139,7 +176,7 @@ class SignUpProfileSetup extends GetxController {
         }
       } else {
         // CREATE MODE
-        final Map<String, dynamic> requestBody = {"fullName": name};
+        final Map<String, dynamic> requestBody = _buildRequestBody(name);
 
         final response = await _networkConfig.ApiRequestHandler(
           RequestMethod.MULTIPART,
@@ -172,5 +209,39 @@ class SignUpProfileSetup extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Build the JSON request body including country, city, and dob.
+  Map<String, dynamic> _buildRequestBody(String name) {
+    final Map<String, dynamic> body = {"fullName": name};
+
+    if (selectedCountry.value != null &&
+        selectedCountry.value!.isNotEmpty) {
+      body["country"] = selectedCountry.value;
+    }
+
+    if (cityController.text.trim().isNotEmpty) {
+      body["city"] = cityController.text.trim();
+    }
+
+    if (selectedDob.value != null) {
+      body["dob"] = selectedDob.value!.toIso8601String();
+    }
+
+    if (instagramController.text.trim().isNotEmpty) {
+      // Strip @ prefix if user included it
+      String handle = instagramController.text.trim();
+      if (handle.startsWith('@')) handle = handle.substring(1);
+      body["instagram"] = handle;
+    }
+
+    return body;
+  }
+
+  @override
+  void onClose() {
+    cityController.dispose();
+    instagramController.dispose();
+    super.onClose();
   }
 }

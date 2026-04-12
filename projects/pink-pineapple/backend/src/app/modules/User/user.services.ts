@@ -300,6 +300,9 @@ const updateProfile = async (req: Request) => {
       dob: dobToSave || existingUser.dob,
       profilePrivacy: parseData.profilePrivacy || existingUser.profilePrivacy,
       fullAddress: parseData.fullAddress || existingUser.fullAddress,
+      country: parseData.country ?? existingUser.country,
+      city: parseData.city ?? existingUser.city,
+      instagram: parseData.instagram ?? existingUser.instagram,
       isCompleteProfile:parseData.isCompleteProfile|| existingUser.isCompleteProfile,
       bio: parseData.bio || existingUser.bio,
       phoneNumber: parseData.phoneNumber || existingUser.phoneNumber,
@@ -307,7 +310,7 @@ const updateProfile = async (req: Request) => {
       typeOfVenue: parseData.typeOfVenue || existingUser.typeOfVenue,
       taxId: parseData.taxId || existingUser.taxId,
       businessLicense: uploadedLicenseImage || existingUser.businessLicense,
-      updatedAt: new Date(), // Assuming your model has an `updatedAt` field
+      updatedAt: new Date(),
     },
     select: {
       fullName: parseData.fullName ? true : false,
@@ -316,6 +319,9 @@ const updateProfile = async (req: Request) => {
       dob: parseData.dob ? true : false,
       profilePrivacy: parseData.profilePrivacy ? true : false,
       fullAddress: parseData.fullAddress ? true : false,
+      country: parseData.country != null ? true : false,
+      city: parseData.city != null ? true : false,
+      instagram: parseData.instagram != null ? true : false,
       bio: parseData.bio ? true : false,
       phoneNumber: parseData.phoneNumber ? true : false,
       profileImage: uploadedProfileImage ? true : false,
