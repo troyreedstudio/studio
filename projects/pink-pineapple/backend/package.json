@@ -8,7 +8,9 @@
     "build": "tsc",
     "generate": "ts-node src/generate-module.js",
     "postinstall": "prisma generate",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed:venues": "ts-node src/scripts/seed-venues.ts",
+    "clean:testdata": "ts-node src/scripts/clean-test-data.ts"
   },
   "keywords": [],
   "author": "",
