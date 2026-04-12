@@ -19,36 +19,30 @@ async function main() {
     if (server) {
       server.close(() => {
         console.info("Server closed!");
-        restartServer(); 
+        process.exit(0);
       });
     } else {
       process.exit(1);
     }
   };
 
-  const restartServer = () => {
-    console.info("Restarting server...");
-    // main();
-  };
-
   process.on("uncaughtException", (error) => {
-    console.log("Uncaught Exception: ", error);
+    console.error("Uncaught Exception: ", error);
     exitHandler();
   });
 
   process.on("unhandledRejection", (error) => {
-    console.log("Unhandled Rejection: ", error);
+    console.error("Unhandled Rejection: ", error);
     exitHandler();
   });
 
-  // Handling the server shutdown with SIGTERM and SIGINT
   process.on("SIGTERM", () => {
-    console.log("SIGTERM signal received. Shutting down gracefully...");
+    console.info("SIGTERM signal received. Shutting down gracefully...");
     exitHandler();
   });
 
   process.on("SIGINT", () => {
-    console.log("SIGINT signal received. Shutting down gracefully...");
+    console.info("SIGINT signal received. Shutting down gracefully...");
     exitHandler();
   });
 }

@@ -175,7 +175,7 @@ const uploadDir = path.join(__dirname, "..", "..", "uploads");
 const checkAndCreateUploadDir = () => {
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
-    console.log("Upload directory created.");
+    console.info("Upload directory created.");
   }
 };
 

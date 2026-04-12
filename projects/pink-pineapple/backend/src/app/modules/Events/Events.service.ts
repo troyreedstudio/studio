@@ -1,106 +1,12 @@
-import { fileUploader } from "./../../../helpars/fileUploader";
+import { fileUploader } from "./../../../helpers/fileUploader";
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import e, { Request } from "express";
 import { EventStatus, EventTable, Prisma, TicketCharges } from "@prisma/client";
-import { paginationHelper } from "../../../helpars/paginationHelper";
+import { paginationHelper } from "../../../helpers/paginationHelper";
 import { eventSearchableFields, IEventFilterRequest } from "./Events.interface";
 import { IPaginationOptions } from "../../../interfaces/paginations";
-
-// const createIntoDb = async (req: Request) => {
-//   const files = req.files as any;
-//   const eventData = req.body.eventData ? JSON.parse(req.body.eventData) : null;
-//   const tableData = req.body.tableData ? JSON.parse(req.body.tableData) : null;
-//   const { maleAdmission, femaleAdmission, ticketCharges, ticketLimitation } =
-//     req.body.ticketData ? JSON.parse(req.body.ticketData) : null;
-//   const eventImages = files.eventImages;
-//   const tableImages = files.tableImages;
-//   if (!eventImages) {
-//     throw new ApiError(httpStatus.NOT_FOUND, "Event images not found");
-//   }
-//   if (!tableImages) {
-//     throw new ApiError(httpStatus.NOT_FOUND, "table images not found");
-//   }
-//   if (!eventData) {
-//     throw new ApiError(httpStatus.NOT_FOUND, "Event data not found");
-//   }
-//   if (!req.body.ticketData) {
-//     throw new ApiError(httpStatus.NOT_FOUND, "ticket data not found");
-//   }
-//   if (!tableData || tableData.length <= 0) {
-//     throw new ApiError(httpStatus.NOT_FOUND, "table data not found");
-//   }
-//   const eventImageUrl = await Promise.all(
-//     eventImages.map(async (eventImage: any) => {
-//       return (await fileUploader.uploadToDigitalOcean(eventImage)).Location;
-//     })
-//   );
-//   const tableImageUrl = await Promise.all(
-//     tableImages.map(async (tableImage: any) => {
-//       return (await fileUploader.uploadToDigitalOcean(tableImage)).Location;
-//     })
-//   );
-
-//   const event = await prisma.events.create({
-//     data: {
-//       eventName: eventData.eventName,
-//       descriptions: eventData.descriptions,
-//       startDate: eventData.startDate,
-//       endDate: eventData.endDate,
-//       startTime: eventData.startTime,
-//       endTime: eventData.endTime,
-//       lastRegDate: eventData.lastRegDate,
-//       lastRegTime: eventData.lastRegTime,
-//       arriveDate: eventData.arriveDate,
-//       arriveTime: eventData.arriveTime,
-//       additionalGuests: eventData.additionalGuests,
-//       extraRequirements: eventData.extraRequirements,
-//       eventImages: eventImageUrl,
-//     },
-//   });
-
-//   const eventTicket = await prisma.eventTickets.create({
-//     data: {
-//       eventId: event.id,
-//       maleAdmission: maleAdmission,
-//       femaleAdmission: femaleAdmission,
-//       ticketLimitation: ticketLimitation,
-//     },
-//   });
-
-//   const ticketChargesData = ticketCharges.map((ticketCharge: TicketCharges) => {
-//     return {
-//       eventTicketId: eventTicket.id,
-//       feeName: ticketCharge.feeName,
-//       feeAmount: ticketCharge.feeAmount,
-//     };
-//   });
-//   const ticketCharge = await prisma.ticketCharges.createMany(ticketChargesData);
-//   tableData.map(async (table: any) => {
-//     const createTable = await prisma.eventTable.create({
-//       data: {
-//         tableName: table.tableName,
-//         tableDetails: table.tableDetails,
-//         maxAdditionGuest: table.maxAdditionGuest,
-//         minimumSpentAmount: table.minimumSpentAmount,
-//         isIncludedFoodBeverage: table.isIncludedFoodBeverage,
-//         tableImages: tableImageUrl,
-//         eventId: event.id,
-//       },
-//     });
-
-//     const tableChargesData = table.tableCharges.map(async (charges: any) => {
-//       return {
-//         eventTableId: createTable.id,
-//         feeName: charges.feeName,
-//         feeAmount: charges.feeAmount,
-//       };
-//     });
-
-//     await prisma.tableCharges.createMany(tableChargesData);
-//   });
-// };
 
 const createIntoDb = async (req: Request) => {
   const files = req.files as any;
@@ -207,7 +113,6 @@ const getListFromDb = async (
 ) => {
   const { page, limit, skip } = paginationHelper.calculatePagination(options);
   const { searchTerm, ...filterData } = params;
-// await prisma.events.updateMany({data:{userId}})
   const andConditions: Prisma.EventsWhereInput[] = [];
 
   if (searchTerm) {
@@ -354,7 +259,6 @@ const myEvent = async (
 ) => {
   const { page, limit, skip } = paginationHelper.calculatePagination(options);
   const { searchTerm, ...filterData } = params;
-// await prisma.events.updateMany({data:{userId}})
   const andConditions: Prisma.EventsWhereInput[] = [{userId}];
 
   if (searchTerm) {
@@ -501,7 +405,6 @@ tonightStart.setUTCHours(18, 0, 0, 0); // 6 PM UTC
 const tonightEnd = new Date();
 tonightEnd.setUTCHours(23, 59, 59, 999); // 11:59 PM UTC
 
-console.log(tonightStart,tonightEnd);
 const tonightEvents = await prisma.events.findMany({
   where: {
     OR: [

@@ -2,7 +2,7 @@ import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import { Prisma, VenueArea } from "@prisma/client";
-import { paginationHelper } from "../../../helpars/paginationHelper";
+import { paginationHelper } from "../../../helpers/paginationHelper";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import {
   IVenueFilterRequest,

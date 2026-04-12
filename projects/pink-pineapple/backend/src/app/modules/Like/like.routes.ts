@@ -1,6 +1,6 @@
 
 import { Router } from "express";
-import { fileUploader } from "../../../helpars/fileUploader";
+import { fileUploader } from "../../../helpers/fileUploader";
 import auth from "../../middlewares/auth";
 import { UserRole } from "@prisma/client";
 import { likeController } from "./like.controller";

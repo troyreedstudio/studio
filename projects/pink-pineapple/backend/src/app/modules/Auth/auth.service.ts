@@ -1,6 +1,6 @@
 import { Secret } from "jsonwebtoken";
 import config from "../../../config";
-import { jwtHelpers } from "../../../helpars/jwtHelpers";
+import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import prisma from "../../../shared/prisma";
 import * as bcrypt from "bcrypt";
 import ApiError from "../../../errors/ApiErrors";

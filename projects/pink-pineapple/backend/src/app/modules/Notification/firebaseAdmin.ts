@@ -9,7 +9,7 @@ try {
     }),
   });
 
-  console.log('Firebase Admin SDK initialized successfully!');
+  console.info('Firebase Admin SDK initialized successfully!');
 } catch (error: any) {
   console.error('Error initializing Firebase Admin SDK:', error.message);
 }

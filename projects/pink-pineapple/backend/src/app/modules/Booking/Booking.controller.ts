@@ -5,7 +5,6 @@ import { bookingService } from "./Booking.service";
 import pick from "../../../shared/pick";
 
 const createBooking = catchAsync(async (req, res) => {
-  // console.log(req.body);
   const result = await bookingService.createIntoDb(req.body, req.user.id);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

@@ -31,7 +31,6 @@ const createIntoDb = async (data: any[], userId: string) => {
 
   const formattedData = await Promise.all(formattedDataPromises);
 
-  console.log(formattedData);
   const validData = formattedData.filter((item) => !item.error);
   const errors = formattedData.filter((item) => item.error);
 

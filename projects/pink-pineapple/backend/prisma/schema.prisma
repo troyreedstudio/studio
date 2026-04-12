@@ -210,6 +210,7 @@ model EventTickets {
 model TicketCharges {
   id            String       @id @default(auto()) @map("_id") @db.ObjectId
   feeName       String
+  // TODO: Should be Float — stored as String by Fiverr team. Fix during data migration.
   feeAmount     String
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -238,6 +239,7 @@ model TableCharges {
   eventTableId String     @db.ObjectId
   eventTable   EventTable @relation(fields: [eventTableId], references: [id])
   feeName      String
+  // TODO: Should be Float — stored as String by Fiverr team. Fix during data migration.
   feeAmount    String
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt

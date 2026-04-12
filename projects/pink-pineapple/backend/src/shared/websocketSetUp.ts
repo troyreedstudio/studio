@@ -2,7 +2,7 @@ import { Server } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import config from "../config";
 import prisma from "../shared/prisma";
-import { jwtHelpers } from "../helpars/jwtHelpers";
+import { jwtHelpers } from "../helpers/jwtHelpers";
 import ApiError from "../errors/ApiErrors";
 import httpStatus from "http-status";
 
@@ -17,10 +17,10 @@ const userSockets = new Map<string, ExtendedWebSocket>();
 
 export async function setupWebSocket(server: Server) {
   const wss = new WebSocketServer({ server });
-  console.log("WebSocket server is running");
+  console.info("WebSocket server is running");
 
   wss.on("connection", (ws: ExtendedWebSocket) => {
-    console.log("A user connected");
+    console.info("A user connected");
 
     ws.on("message", async (data: string) => {
       try {
@@ -31,7 +31,7 @@ export async function setupWebSocket(server: Server) {
             const token = parsedData.token;
 
             if (!token) {
-              console.log("No token provided");
+              console.warn("No token provided");
               ws.close();
               return;
             }
@@ -42,7 +42,7 @@ export async function setupWebSocket(server: Server) {
             );
 
             if (!user) {
-              console.log("Invalid token");
+              console.warn("Invalid token");
               ws.close();
               return;
             }
@@ -74,7 +74,7 @@ export async function setupWebSocket(server: Server) {
               throw new ApiError(httpStatus.BAD_REQUEST,"You can't massage block user")
             }
             if (!ws.userId || !receiverId || !message) {
-              console.log("Invalid message payload");
+              console.warn("Invalid message payload");
               return;
             }
 
@@ -120,7 +120,7 @@ export async function setupWebSocket(server: Server) {
           case "fetchChats": {
             const { receiverId } = parsedData;
             if (!ws.userId) {
-              console.log("User not authenticated");
+              console.warn("User not authenticated");
               return;
             }
 
@@ -181,7 +181,7 @@ export async function setupWebSocket(server: Server) {
           case "unReadMessages": {
             const { receiverId } = parsedData;
             if (!ws.userId || !receiverId) {
-              console.log("Invalid unread messages payload");
+              console.warn("Invalid unread messages payload");
               return;
             }
 
@@ -294,7 +294,7 @@ export async function setupWebSocket(server: Server) {
      
 
           default:
-            console.log("Unknown event type:", parsedData.event);
+            console.warn("Unknown event type:", parsedData.event);
         }
       } catch (error) {
         console.error("Error handling WebSocket message:", error);
@@ -311,7 +311,7 @@ export async function setupWebSocket(server: Server) {
           data: { userId: ws.userId, isOnline: false },
         });
       }
-      console.log("User disconnected");
+      console.info("User disconnected");
     });
   });
 

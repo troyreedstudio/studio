@@ -2,7 +2,7 @@ import prisma from "../../../shared/prisma";
 import { BookingType, UserStatus, BookingStatus, Prisma } from "@prisma/client";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import { paginationHelper } from "../../../helpars/paginationHelper";
+import { paginationHelper } from "../../../helpers/paginationHelper";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { IBookingFilterRequest } from "./Booking.interface";
 
@@ -18,9 +18,7 @@ type CreateBookingPayload = {
   ticketId?: string | null;
 };
 const createIntoDb = async (data: CreateBookingPayload, userId: string) => {
-  // console.log(data);
   const dbData = { ...data, userId };
-  // console.log(data);
   if (data.tableId) {
     const isExist = await prisma.eventTable.findFirst({
       where: { id: data.tableId },
@@ -286,7 +284,15 @@ const getByIdFromDb = async (id: string) => {
   return result;
 };
 
-const updateIntoDb = async (id: string, data: any) => {
+type UpdateBookingPayload = {
+  status?: BookingStatus;
+  guest?: number;
+  numberOfFemale?: number;
+  numberOfMale?: number;
+  paidAmount?: number;
+};
+
+const updateIntoDb = async (id: string, data: UpdateBookingPayload) => {
   const transaction = await prisma.$transaction(async (prisma) => {
     const result = await prisma.booking.update({
       where: { id },

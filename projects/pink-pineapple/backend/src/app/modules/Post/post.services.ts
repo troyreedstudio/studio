@@ -1,12 +1,12 @@
 import { Request } from "express";
-import { fileUploader } from "../../../helpars/fileUploader";
+import { fileUploader } from "../../../helpers/fileUploader";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import prisma from "../../../shared/prisma";
 import { JwtPayload } from "jsonwebtoken";
 import { CloudFormation } from "aws-sdk";
 import { IPaginationOptions } from "../../../interfaces/paginations";
-import { paginationHelper } from "../../../helpars/paginationHelper";
+import { paginationHelper } from "../../../helpers/paginationHelper";
 import { Prisma } from "@prisma/client";
 import { IPostFilterRequest } from "./post.interface";
 import { clubFavoriteService } from "../ClubFavorite/ClubFavorite.service";
@@ -22,7 +22,6 @@ const addPost = async (req: Request) => {
       (req.files as { [fieldname: string]: Express.Multer.File[] })["photos"] ||
       [];
     let payload;
-    // console.log(req.body.data);
     if (req.body.data) {
       payload = JSON.parse(req.body.data);
     }
@@ -128,8 +127,7 @@ const getAllPosts = async (
       ],
     });
   }
-// await prisma.post.updateMany({data:{isHidden:false}})
-  // 🎯 Apply filters (e.g., category, status)
+  //🎯 Apply filters (e.g., category, status)
 if (Object.keys(filterData).length > 0) {
   const filterConditions = Object.entries(filterData).map(([key, value]) => {
     if (key === "isHidden") {
@@ -146,7 +144,7 @@ if (Object.keys(filterData).length > 0) {
 const whereConditions: Prisma.PostWhereInput = andConditions.length
 ? { AND: andConditions }
 : {};
-// console.dir(whereConditions,{depth:Infinity})
+
 
   // 📦 Fetch paginated posts
   const posts = await prisma.post.findMany({

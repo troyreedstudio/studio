@@ -3,7 +3,7 @@ import auth from "../../middlewares/auth";
 import validateRequest from "../../middlewares/validateRequest";
 import { EventsController } from "./Events.controller";
 import { EventsValidation } from "./Events.validation";
-import { fileUploader } from "../../../helpars/fileUploader";
+import { fileUploader } from "../../../helpers/fileUploader";
 
 const router = express.Router();
 

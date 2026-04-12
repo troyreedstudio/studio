@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import config from "../../../config";
 import { Secret } from "jsonwebtoken";
-import { jwtHelpers } from "../../../helpars/jwtHelpers";
+import { jwtHelpers } from "../../../helpers/jwtHelpers";
 
 /**
  * Optional auth middleware: if a valid token is present, decode and attach user.

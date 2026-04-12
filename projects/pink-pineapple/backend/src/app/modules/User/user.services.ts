@@ -5,8 +5,8 @@ import { Request } from "express";
 import httpStatus from "http-status";
 import config from "../../../config";
 import ApiError from "../../../errors/ApiErrors";
-import { fileUploader } from "../../../helpars/fileUploader";
-import { paginationHelper } from "../../../helpars/paginationHelper";
+import { fileUploader } from "../../../helpers/fileUploader";
+import { paginationHelper } from "../../../helpers/paginationHelper";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { generateOtpEmail } from "../../../shared/emaiHTMLtext";
 import emailSender from "../../../shared/emailSender";
@@ -71,7 +71,6 @@ const createUserIntoDb = async (payload: User) => {
       const html = generateOtpEmail(otp);
       await emailSender(payload.email, html, "OTP Verification");
 
-      console.log("otp", otp);
       return {
         message:
           "An OTP has been sent to your email. Please verify your account.",
@@ -122,7 +121,6 @@ const createUserIntoDb = async (payload: User) => {
   const html = generateOtpEmail(otp);
   await emailSender(payload.email, html, "OTP Verification");
 
-  console.log("otp", otp);
   return {
     message: "An OTP has been sent to your email. Please verify your account.",
     data: newUser,
@@ -234,7 +232,6 @@ const updateProfile = async (req: Request) => {
   const files = req.files as any;
   const profileImage = files.profile;
   const licenseImage = files.license;
-  // console.log(profileImage,licenseImage);
 
   const stringData = req.body.data;
   let uploadedProfileImage;

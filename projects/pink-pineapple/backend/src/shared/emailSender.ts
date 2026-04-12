@@ -19,8 +19,6 @@ import nodemailer from "nodemailer";
 //     subject: subject,
 //     html,
 //   });
-// console.log("test");
-  
 // };
 
 // export default emailSender;
