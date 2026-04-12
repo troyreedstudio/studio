@@ -8,6 +8,7 @@ import 'package:pineapple/core/const/app_colors.dart';
 import 'package:pineapple/core/global_widgets/pp_button.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
+import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
 
 class VenueCardWidget extends StatelessWidget {
   const VenueCardWidget({super.key, required this.venue});
@@ -25,9 +26,7 @@ class VenueCardWidget extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to venue detail page when it exists
-        // For now, fetch venue detail
-        venueController.fetchVenueDetail(venue.id);
+        Get.to(() => VenueDetailScreen(venueId: venue.id));
       },
       child: Container(
         width: 200.w,

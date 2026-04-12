@@ -181,11 +181,18 @@ class _AreaFilterBar extends StatelessWidget {
         itemBuilder: (context, index) {
           return Obx(() {
             final isSelected =
-                (homeController.selectedAreaIndex?.value ?? 0) == index;
+                homeController.selectedAreaIndex.value == index;
             return GestureDetector(
               onTap: () {
-                if (homeController.selectedAreaIndex != null) {
-                  homeController.selectedAreaIndex!.value = index;
+                homeController.selectedAreaIndex.value = index;
+                final venueCtrl = Get.find<VenueController>();
+                if (index == 0) {
+                  // "All Bali" — fetch all venues
+                  venueCtrl.fetchVenues();
+                  venueCtrl.selectedArea.value = '';
+                } else {
+                  final area = areas[index]['label']!.toUpperCase();
+                  venueCtrl.fetchVenuesByArea(area);
                 }
               },
               child: AnimatedContainer(
