@@ -365,6 +365,7 @@ model Venue {
   editorial       String         @default("")
   area            VenueArea
   category        VenueCategory
+  tags            String[]       @default([])
   address         String         @default("")
   latitude        Float?
   longitude       Float?

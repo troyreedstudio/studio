@@ -1,7 +1,7 @@
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import { Prisma, VenueArea } from "@prisma/client";
+import { Prisma, VenueArea, VenueCategory } from "@prisma/client";
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import {
@@ -66,6 +66,18 @@ const getListFromDb = async (
         // Handle boolean strings
         if (value === "true") value = true;
         if (value === "false") value = false;
+
+        // For category filtering, also include venues tagged with that category
+        if (key === "category" && typeof value === "string") {
+          const categoryValue = value as VenueCategory;
+          return {
+            OR: [
+              { category: { equals: categoryValue } },
+              { tags: { hasSome: [value.toLowerCase()] } },
+            ],
+          } as Prisma.VenueWhereInput;
+        }
+
         return {
           [key]: {
             equals: value,
@@ -93,6 +105,7 @@ const getListFromDb = async (
       description: true,
       area: true,
       category: true,
+      tags: true,
       address: true,
       heroImage: true,
       photos: true,
@@ -143,6 +156,7 @@ const getByArea = async (area: string, userId?: string) => {
       description: true,
       area: true,
       category: true,
+      tags: true,
       address: true,
       heroImage: true,
       photos: true,

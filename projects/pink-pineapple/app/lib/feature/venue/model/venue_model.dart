@@ -21,6 +21,7 @@ class VenueModel {
   final double rating;
   final String ownerId;
   final bool isFavorite;
+  final List<String> tags;
   final Map<String, dynamic>? weeklySchedule;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -49,6 +50,7 @@ class VenueModel {
     this.rating = 0.0,
     this.ownerId = '',
     this.isFavorite = false,
+    this.tags = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -85,6 +87,7 @@ class VenueModel {
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       ownerId: json['ownerId']?.toString() ?? '',
       isFavorite: json['isFavorite'] as bool? ?? false,
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
           DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
@@ -117,6 +120,7 @@ class VenueModel {
       'rating': rating,
       'ownerId': ownerId,
       'isFavorite': isFavorite,
+      'tags': tags,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -146,6 +150,7 @@ class VenueModel {
     double? rating,
     String? ownerId,
     bool? isFavorite,
+    List<String>? tags,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -173,6 +178,7 @@ class VenueModel {
       rating: rating ?? this.rating,
       ownerId: ownerId ?? this.ownerId,
       isFavorite: isFavorite ?? this.isFavorite,
+      tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

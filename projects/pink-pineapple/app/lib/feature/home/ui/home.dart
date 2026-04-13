@@ -253,7 +253,15 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 28.h),
 
-          // Top Beach Clubs
+          // Nightlife
+          const _CategorySection(
+            title: 'Top Nightlife',
+            category: 'NIGHTLIFE',
+          ),
+
+          SizedBox(height: 28.h),
+
+          // Beach Clubs
           const _CategorySection(
             title: 'Top Beach Clubs',
             category: 'BEACH_CLUB',
@@ -261,18 +269,10 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 28.h),
 
-          // Top Restaurants
+          // Restaurants
           const _CategorySection(
             title: 'Top Restaurants',
             category: 'RESTAURANT',
-          ),
-
-          SizedBox(height: 28.h),
-
-          // Top Nightlife
-          const _CategorySection(
-            title: 'Top Nightlife',
-            category: 'NIGHTLIFE',
           ),
 
           SizedBox(height: 28.h),
