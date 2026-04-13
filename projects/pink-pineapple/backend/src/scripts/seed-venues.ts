@@ -107,12 +107,12 @@ const venues: VenueData[] = [
     instagram: "@missfishbali",
   },
   {
-    name: "Desa Potato Head",
-    slug: "desa-potato-head",
+    name: "Desa Kitsune",
+    slug: "desa-kitsune",
     description:
       "Iconic beach club and creative village built from recycled materials with multiple dining concepts, pools, and a recording studio.",
     editorial:
-      "Desa Potato Head is less a beach club, more a cultural compound. The architecture alone — thousands of reclaimed shutters forming a jaw-dropping facade — is worth the visit. Inside you'll find multiple restaurants, a proper cocktail bar, an infinity pool, and a genuine commitment to sustainability that goes beyond marketing.",
+      "Desa Kitsune is less a beach club, more a cultural compound. The architecture alone — thousands of reclaimed shutters forming a jaw-dropping facade — is worth the visit. Inside you'll find multiple restaurants, a proper cocktail bar, an infinity pool, and a genuine commitment to sustainability that goes beyond marketing.",
     area: VenueArea.CANGGU,
     category: VenueCategory.BEACH_CLUB,
     tags: ["restaurant", "sunset", "brunch"],
@@ -1143,7 +1143,7 @@ const venues: VenueData[] = [
     description:
       "Design-forward beach club on Seminyak Beach with an iconic recycled-shutter facade, pool, and multiple F&B concepts.",
     editorial:
-      "Potato Head Seminyak is the original location that started the Desa Potato Head empire. The iconic facade made from thousands of reclaimed wooden shutters is architectural eye candy, the pool is massive, and the food and drink offering spans everything from casual poolside bites to serious cocktails. A Seminyak landmark.",
+      "Potato Head Seminyak is the original location that started the Desa Kitsune empire. The iconic facade made from thousands of reclaimed wooden shutters is architectural eye candy, the pool is massive, and the food and drink offering spans everything from casual poolside bites to serious cocktails. A Seminyak landmark.",
     area: VenueArea.SEMINYAK,
     category: VenueCategory.BEACH_CLUB,
     tags: ["restaurant", "sunset", "brunch"],

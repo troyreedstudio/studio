@@ -81,18 +81,6 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          // Search — scrolls focus to the inline search bar
-          _IconButton(
-            icon: Icons.search,
-            onTap: () {},
-          ),
-          SizedBox(width: 10.w),
-          // Notifications
-          _IconButton(
-            icon: Icons.notifications_outlined,
-            onTap: () {},
-            hasBadge: true,
-          ),
         ],
       ),
     );
@@ -277,9 +265,9 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 28.h),
 
-          // Fitness
+          // Gyms
           const _CategorySection(
-            title: 'Fitness',
+            title: 'Top Gyms',
             category: 'WELLNESS',
           ),
 
