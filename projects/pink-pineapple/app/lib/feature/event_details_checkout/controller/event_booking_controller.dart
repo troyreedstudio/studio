@@ -321,7 +321,7 @@ class EventBookingCheckoutController extends GetxController {
             backgroundColor: AppColors.primaryColor,
             colorText: Colors.white,
           );
-          Get.find<HomeNavController>().changeIndex(2);
+          Get.find<HomeNavController>().changeIndex(1);
         }
       }
     } finally {
@@ -360,7 +360,7 @@ class EventBookingCheckoutController extends GetxController {
             );
           }
           // Navigate to bookings tab after launching checkout
-          Get.find<HomeNavController>().changeIndex(2);
+          Get.find<HomeNavController>().changeIndex(1);
         } else {
           logger.w('Stripe checkout URL was empty');
           Get.snackbar(
@@ -370,7 +370,7 @@ class EventBookingCheckoutController extends GetxController {
             backgroundColor: AppColors.primaryColor,
             colorText: Colors.white,
           );
-          Get.find<HomeNavController>().changeIndex(2);
+          Get.find<HomeNavController>().changeIndex(1);
         }
       } else {
         logger.w('Stripe checkout request failed');
@@ -381,7 +381,7 @@ class EventBookingCheckoutController extends GetxController {
           backgroundColor: AppColors.primaryColor,
           colorText: Colors.white,
         );
-        Get.find<HomeNavController>().changeIndex(2);
+        Get.find<HomeNavController>().changeIndex(1);
       }
     } catch (e) {
       logger.e('Stripe checkout error: $e');
@@ -392,7 +392,7 @@ class EventBookingCheckoutController extends GetxController {
         backgroundColor: AppColors.primaryColor,
         colorText: Colors.white,
       );
-      Get.find<HomeNavController>().changeIndex(2);
+      Get.find<HomeNavController>().changeIndex(1);
     }
   }
 

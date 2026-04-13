@@ -246,7 +246,7 @@ class _DiscoverContent extends StatelessWidget {
           _SectionHeader(
             title: 'This Week',
             subtitle: 'Which night, which venue',
-            onSeeAll: () => Get.find<HomeNavController>().changeIndex(1),
+            onSeeAll: () {},  // All content is on this page
           ),
           SizedBox(height: 12.h),
           const _ThisWeekSection(),
@@ -642,10 +642,122 @@ class _DayCard extends StatelessWidget {
     required this.venues,
   });
 
+  void _showDayDetail(BuildContext context) {
+    if (venues.isEmpty) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollCtrl) => Column(
+          children: [
+            SizedBox(height: 12.h),
+            Container(
+              width: 40.w, height: 4.h,
+              decoration: BoxDecoration(
+                color: AppColors.textMuted,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              isToday ? 'TONIGHT' : dayLabel,
+              style: GoogleFonts.outfit(
+                fontSize: 24.sp,
+                fontWeight: FontWeight.w800,
+                fontStyle: FontStyle.italic,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            Text(
+              dateLabel,
+              style: GoogleFonts.poppins(
+                fontSize: 13.sp,
+                color: AppColors.textMuted,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Expanded(
+              child: ListView.separated(
+                controller: scrollCtrl,
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                itemCount: venues.length,
+                separatorBuilder: (_, __) => Divider(color: AppColors.borderSubtle, height: 24.h),
+                itemBuilder: (context, i) {
+                  final venue = venues[i];
+                  final shortKey = dayLabel.substring(0, 3).toLowerCase();
+                  final specialName = _getSpecialNightName(venue, shortKey);
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      Get.to(() => VenueDetailScreen(venueId: venue.id));
+                    },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                venue.name,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w700,
+                                  fontStyle: FontStyle.italic,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              SizedBox(height: 2.h),
+                              if (specialName != null)
+                                Text(
+                                  specialName,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13.sp,
+                                    color: AppColors.gradientMid,
+                                  ),
+                                ),
+                              Text(
+                                '${venue.category.replaceAll("_", " ")} · ${venue.area}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.sp,
+                                  color: AppColors.textMuted,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14.sp,
+                          color: AppColors.gradientMid,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 140.w,
+    return GestureDetector(
+      onTap: () => _showDayDetail(context),
+      child: Container(
+        width: 140.w,
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -800,6 +912,7 @@ class _DayCard extends StatelessWidget {
             ),
         ],
       ),
+    ),
     );
   }
 

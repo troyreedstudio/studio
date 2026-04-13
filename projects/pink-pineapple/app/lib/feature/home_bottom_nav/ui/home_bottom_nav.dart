@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:pineapple/core/const/app_colors.dart';
 import 'package:pineapple/feature/home/ui/home.dart';
 import 'package:pineapple/feature/profile_tab/ui/profile_tab.dart';
-import 'package:pineapple/feature/tonight/ui/tonight_screen.dart';
 import '../../bookings/ui/bookings_list_page.dart';
 import '../controller/home_nav_controller.dart';
 
@@ -13,8 +12,7 @@ class HomeBottomNav extends StatelessWidget {
   final HomeNavController navigationController = Get.put(HomeNavController());
 
   final List<Widget> pages = [
-    HomeScreen(),       // Discover
-    TonightScreen(),    // Tonight
+    HomeScreen(),       // Home
     BookingsListPage(), // Bookings
     ProfileTabPage(),   // Profile
   ];
@@ -67,20 +65,15 @@ class _PinkPineappleNavBar extends StatelessWidget {
         top: false,
         child: Obx(
           () => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _NavItem(
-                  icon: Icons.explore_outlined,
-                  activeIcon: Icons.explore,
-                  label: 'Discover',
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home,
+                  label: 'Home',
                   index: 0,
-                  currentIndex: navigationController.currentIndex.value,
-                  onTap: navigationController.changeIndex,
-                ),
-                _TonightNavItem(
-                  index: 1,
                   currentIndex: navigationController.currentIndex.value,
                   onTap: navigationController.changeIndex,
                 ),
@@ -88,7 +81,7 @@ class _PinkPineappleNavBar extends StatelessWidget {
                   icon: Icons.confirmation_number_outlined,
                   activeIcon: Icons.confirmation_number,
                   label: 'Bookings',
-                  index: 2,
+                  index: 1,
                   currentIndex: navigationController.currentIndex.value,
                   onTap: navigationController.changeIndex,
                 ),
@@ -96,7 +89,7 @@ class _PinkPineappleNavBar extends StatelessWidget {
                   icon: Icons.person_outline,
                   activeIcon: Icons.person,
                   label: 'Profile',
-                  index: 3,
+                  index: 2,
                   currentIndex: navigationController.currentIndex.value,
                   onTap: navigationController.changeIndex,
                 ),
@@ -136,7 +129,7 @@ class _NavItem extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: isActive
             ? BoxDecoration(
                 gradient: AppColors.gradientPrimary,
@@ -165,80 +158,6 @@ class _NavItem extends StatelessWidget {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Special "Tonight" centre button with a more prominent design
-class _TonightNavItem extends StatelessWidget {
-  final int index;
-  final int currentIndex;
-  final Function(int) onTap;
-
-  const _TonightNavItem({
-    required this.index,
-    required this.currentIndex,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isActive = index == currentIndex;
-
-    return GestureDetector(
-      onTap: () => onTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: isActive
-                  ? AppColors.gradientPrimary
-                  : const LinearGradient(
-                      colors: [Color(0xFF2A2A2A), Color(0xFF1A1A1A)],
-                    ),
-              shape: BoxShape.circle,
-              boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: AppColors.accentRoseGold.withOpacity(0.4),
-                        blurRadius: 16,
-                        spreadRadius: 2,
-                      )
-                    ]
-                  : null,
-              border: Border.all(
-                color: isActive
-                    ? AppColors.accentChampagne
-                    : AppColors.borderSubtle,
-                width: isActive ? 1.5 : 0.5,
-              ),
-            ),
-            child: Icon(
-              Icons.nightlife,
-              size: 24,
-              color: isActive
-                  ? AppColors.backgroundDark
-                  : AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Tonight',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-              color: isActive ? AppColors.accentRoseGold : AppColors.textMuted,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
       ),
     );
   }
