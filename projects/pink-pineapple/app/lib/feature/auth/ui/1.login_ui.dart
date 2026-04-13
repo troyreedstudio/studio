@@ -62,11 +62,7 @@ class LoginPage extends StatelessWidget {
         child: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height -
-                  MediaQuery.of(context).padding.top -
-                  MediaQuery.of(context).padding.bottom,
-              child: Column(
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 40.h),
@@ -267,7 +263,7 @@ class LoginPage extends StatelessWidget {
                             ),
                           ),
                   ),
-                  const Spacer(),
+                  SizedBox(height: 32.h),
                   // Sign up link
                   Center(
                     child: RichText(
@@ -295,7 +291,6 @@ class LoginPage extends StatelessWidget {
                   SizedBox(height: 24.h),
                 ],
               ),
-            ),
           ),
         ),
       ),
