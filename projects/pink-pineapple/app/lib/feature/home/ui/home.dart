@@ -156,13 +156,7 @@ class _AreaFilterBar extends StatelessWidget {
 
   const _AreaFilterBar({required this.homeController});
 
-  static const List<Map<String, String>> areas = [
-    {'label': 'All Bali', 'emoji': '🌴'},
-    {'label': 'Canggu', 'emoji': '🏄'},
-    {'label': 'Seminyak', 'emoji': '✨'},
-    {'label': 'Uluwatu', 'emoji': '🌊'},
-    {'label': 'Kuta', 'emoji': '🎉'},
-  ];
+  static const List<String> areas = ['All Bali', 'Canggu', 'Seminyak', 'Uluwatu'];
 
   @override
   Widget build(BuildContext context) {
@@ -181,17 +175,18 @@ class _AreaFilterBar extends StatelessWidget {
                 homeController.selectedAreaIndex.value = index;
                 final venueCtrl = Get.find<VenueController>();
                 if (index == 0) {
-                  // "All Bali" — fetch all venues + all featured
+                  // "All Bali" — fetch all venues + all featured + all whats on
                   venueCtrl.selectedArea.value = '';
                   venueCtrl.selectedCategory.value = '';
                   venueCtrl.fetchVenues();
                   venueCtrl.fetchFeaturedVenues();
+                  venueCtrl.fetchWhatsOn();
                 } else {
-                  final area = areas[index]['label']!.toUpperCase();
+                  final area = areas[index].toUpperCase();
                   venueCtrl.selectedCategory.value = '';
                   venueCtrl.fetchVenuesByArea(area);
-                  // Also filter featured/trending to this area
                   venueCtrl.fetchVenues(area: area);
+                  venueCtrl.fetchWhatsOn(area: area);
                 }
               },
               child: AnimatedContainer(
@@ -209,28 +204,18 @@ class _AreaFilterBar extends StatelessWidget {
                     width: 0.5,
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      areas[index]['emoji']!,
-                      style: TextStyle(fontSize: 12.sp),
-                    ),
-                    SizedBox(width: 5.w),
-                    Text(
-                      areas[index]['label']!,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w400,
-                        color: isSelected
-                            ? AppColors.backgroundDark
-                            : AppColors.textSecondary,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  areas[index],
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.sp,
+                    fontWeight: isSelected
+                        ? FontWeight.w700
+                        : FontWeight.w400,
+                    color: isSelected
+                        ? AppColors.backgroundDark
+                        : AppColors.textSecondary,
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ),
             );
@@ -257,16 +242,6 @@ class _DiscoverContent extends StatelessWidget {
         children: [
           SizedBox(height: 12.h),
 
-          // Category filter pills
-          _CategoryFilterPills(),
-
-          SizedBox(height: 14.h),
-
-          // Search bar
-          _VenueSearchBar(),
-
-          SizedBox(height: 20.h),
-
           // This Week — horizontal day browser
           _SectionHeader(
             title: 'This Week',
@@ -278,45 +253,50 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 28.h),
 
-          // Popular Venues — from venue API, responds to category filters
-          Obx(() {
-            final venueCtrl = Get.find<VenueController>();
-            final hasFilter = venueCtrl.selectedCategory.value.isNotEmpty;
-            final title = hasFilter
-                ? venueCtrl.selectedCategory.value.replaceAll('_', ' ')
-                : 'Popular Venues';
-            return _SectionHeader(
-              title: title,
-              subtitle: hasFilter ? 'Filtered results' : 'Most popular right now',
-              onSeeAll: () {},
-            );
-          }),
-          SizedBox(height: 12.h),
-          SizedBox(
-            height: 220.h,
-            child: Obx(() {
-              final venueCtrl = Get.find<VenueController>();
-              final venueList = venueCtrl.venues;
-              return venueCtrl.isLoading.value
-                  ? loading()
-                  : venueList.isEmpty
-                      ? _EmptySection(message: 'No venues found')
-                      : ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: EdgeInsets.symmetric(horizontal: 20.w),
-                          itemCount:
-                              venueList.length > 8 ? 8 : venueList.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: EdgeInsets.only(right: 14.w),
-                              child: VenueCardWidget(venue: venueList[index]),
-                            );
-                          },
-                        );
-            }),
+          // Top Beach Clubs
+          const _CategorySection(
+            title: 'Top Beach Clubs',
+            category: 'BEACH_CLUB',
           ),
 
-          SizedBox(height: 32.h),
+          SizedBox(height: 28.h),
+
+          // Top Restaurants
+          const _CategorySection(
+            title: 'Top Restaurants',
+            category: 'RESTAURANT',
+          ),
+
+          SizedBox(height: 28.h),
+
+          // Top Nightlife
+          const _CategorySection(
+            title: 'Top Nightlife',
+            category: 'NIGHTLIFE',
+          ),
+
+          SizedBox(height: 28.h),
+
+          // Fitness
+          const _CategorySection(
+            title: 'Fitness',
+            category: 'WELLNESS',
+          ),
+
+          SizedBox(height: 28.h),
+
+          // Events
+          const _CategorySection(
+            title: 'Events',
+            category: 'EVENTS',
+          ),
+
+          SizedBox(height: 28.h),
+
+          // Search bar — at the bottom
+          _VenueSearchBar(),
+
+          SizedBox(height: 40.h),
         ],
       ),
     );
@@ -349,9 +329,10 @@ class _SectionHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: GoogleFonts.outfit(
                     fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
+                    fontStyle: FontStyle.italic,
                     color: AppColors.textPrimary,
                     letterSpacing: 0.2,
                   ),
@@ -402,79 +383,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Category Filter Pills ────────────────────────────────────────────────────
-
-class _CategoryFilterPills extends StatelessWidget {
-  static const List<Map<String, String>> categories = [
-    {'label': 'All', 'value': ''},
-    {'label': 'Beach Clubs', 'value': 'BEACH_CLUB'},
-    {'label': 'Restaurants', 'value': 'RESTAURANT'},
-    {'label': 'Nightlife', 'value': 'NIGHTLIFE'},
-    {'label': 'Wellness', 'value': 'WELLNESS'},
-    {'label': 'Events', 'value': 'EVENTS'},
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final venueCtrl = Get.find<VenueController>();
-
-    return SizedBox(
-      height: 32.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final cat = categories[index];
-          return Obx(() {
-            final isSelected = venueCtrl.selectedCategory.value ==
-                (cat['value'] ?? '');
-            return GestureDetector(
-              onTap: () {
-                final value = cat['value'] ?? '';
-                venueCtrl.selectedCategory.value = value;
-                if (value.isEmpty) {
-                  venueCtrl.fetchVenues();
-                } else {
-                  venueCtrl.fetchVenues(category: value);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: EdgeInsets.only(right: 8.w),
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
-                decoration: BoxDecoration(
-                  gradient: isSelected ? AppColors.gradientPrimary : null,
-                  color: isSelected ? null : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected
-                        ? Colors.transparent
-                        : AppColors.borderSubtle,
-                    width: 0.5,
-                  ),
-                ),
-                child: Text(
-                  cat['label']!,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected
-                        ? AppColors.backgroundDark
-                        : AppColors.textSecondary,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ),
-            );
-          });
-        },
-      ),
-    );
-  }
-}
-
 // ── Venue Search Bar ─────────────────────────────────────────────────────────
 
 class _VenueSearchBar extends StatefulWidget {
@@ -517,7 +425,7 @@ class _VenueSearchBarState extends State<_VenueSearchBar> {
             color: AppColors.textPrimary,
           ),
           decoration: InputDecoration(
-            hintText: 'Search venues, bars, restaurants...',
+            hintText: 'Looking for something specific?',
             hintStyle: GoogleFonts.poppins(
               fontSize: 13.sp,
               color: AppColors.textMuted,
@@ -594,6 +502,72 @@ class _EmptySection extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Category Section ─────────────────────────────────────────────────────────
+
+class _CategorySection extends StatelessWidget {
+  final String title;
+  final String category;
+
+  const _CategorySection({
+    required this.title,
+    required this.category,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _SectionHeader(
+          title: title,
+          onSeeAll: () {},
+        ),
+        SizedBox(height: 12.h),
+        SizedBox(
+          height: 220.h,
+          child: Obx(() {
+            final venueCtrl = Get.find<VenueController>();
+
+            if (venueCtrl.isLoading.value) {
+              return loading();
+            }
+
+            final filtered = venueCtrl.venues
+                .where((v) => v.category.toUpperCase() == category)
+                .take(5)
+                .toList();
+
+            if (filtered.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Text(
+                    'No ${title.toLowerCase()} found',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13.sp,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                return VenueCardWidget(venue: filtered[index]);
+              },
+            );
+          }),
+        ),
+      ],
     );
   }
 }
