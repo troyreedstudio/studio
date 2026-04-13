@@ -63,6 +63,16 @@ const BRUNCH_HOURS = {
   sun: "07:00-17:00",
 };
 
+const GYM_HOURS = {
+  mon: "06:00-22:00",
+  tue: "06:00-22:00",
+  wed: "06:00-22:00",
+  thu: "06:00-22:00",
+  fri: "06:00-22:00",
+  sat: "06:00-22:00",
+  sun: "06:00-22:00",
+};
+
 const venues: VenueData[] = [
   // ─────────────────────────────────────────────
   // CANGGU (12 venues)
@@ -599,6 +609,203 @@ const venues: VenueData[] = [
     phone: "+62 361 8468468",
     website: "https://ayana.com/bali/rock-bar",
     instagram: "@rockbarbali",
+  },
+
+  // ─────────────────────────────────────────────
+  // WELLNESS / FITNESS — CANGGU (4 venues)
+  // ─────────────────────────────────────────────
+  {
+    name: "Nirvana Fitness",
+    slug: "nirvana-fitness",
+    description:
+      "Premium gym in Canggu with resistance training, functional fitness, and group classes.",
+    editorial:
+      "Nirvana is the gym Canggu's serious fitness crowd gravitates to. Modern equipment, full AC, and a programming schedule that covers everything from heavy lifting to HIIT classes. The community is strong — regulars know each other by name — and the space is clean, well-maintained, and mercifully free of influencers filming content between sets.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.WELLNESS,
+    address: "Jl. Pantai Berawa, Canggu, Bali",
+    latitude: -8.6545,
+    longitude: 115.1395,
+    priceRange: 2,
+    isFeatured: false,
+    rating: 4.6,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "",
+    instagram: "@nirvanafitnessbali",
+  },
+  {
+    name: "Body Factory",
+    slug: "body-factory",
+    description:
+      "Bali's biggest gym with huge floor space, full equipment, a boxing ring, and a pool.",
+    editorial:
+      "Body Factory is sheer scale. The floor space dwarfs anything else on the island — rows of machines, a dedicated free-weight area that could host a powerlifting meet, a boxing ring, and a pool out back for recovery laps. Popular with expats and serious lifters who need more than a boutique studio can offer. Day passes are reasonable, memberships even more so.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.WELLNESS,
+    address: "Jl. Raya Canggu, Canggu, Bali",
+    latitude: -8.6488,
+    longitude: 115.1362,
+    priceRange: 2,
+    isFeatured: false,
+    rating: 4.5,
+    openingHours: { ...GYM_HOURS, mon: "06:00-23:00", tue: "06:00-23:00", wed: "06:00-23:00", thu: "06:00-23:00", fri: "06:00-23:00", sat: "06:00-23:00", sun: "06:00-23:00" },
+    weeklySchedule: null,
+    phone: "",
+    website: "",
+    instagram: "@bodyfactorybali",
+  },
+  {
+    name: "Obsidian",
+    slug: "obsidian",
+    description:
+      "Boutique fitness studio offering CrossFit, HIIT, yoga, and reformer Pilates in small classes.",
+    editorial:
+      "Obsidian is the antithesis of the mega-gym — small classes, personal attention, and programming that actually challenges you. The CrossFit and HIIT sessions are properly coached, the reformer Pilates studio is immaculate, and the yoga offering rounds it out for recovery days. Premium pricing, but you're paying for quality instruction and a space that never feels crowded.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.WELLNESS,
+    address: "Jl. Pantai Batu Bolong, Canggu, Bali",
+    latitude: -8.6515,
+    longitude: 115.1340,
+    priceRange: 3,
+    isFeatured: false,
+    rating: 4.7,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "",
+    instagram: "@obsidianbali",
+  },
+  {
+    name: "Saya Club",
+    slug: "saya-club",
+    description:
+      "Members club with gym, pool, and co-working space — designed for digital nomads who want to work and train.",
+    editorial:
+      "Saya bridges the gap between workspace and wellness in a way that actually works. The gym is well-equipped (not an afterthought), the pool is proper, and the co-working space has fast WiFi and decent coffee. The membership model keeps it curated — you won't be fighting for a squat rack at 5pm — and the crowd is a mix of entrepreneurs, remote workers, and creatives who take both their deadlines and their deadlifts seriously.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.WELLNESS,
+    address: "Jl. Subak Sari, Canggu, Bali",
+    latitude: -8.6535,
+    longitude: 115.1415,
+    priceRange: 3,
+    isFeatured: false,
+    rating: 4.4,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "",
+    instagram: "@sayaclubbali",
+  },
+
+  // ─────────────────────────────────────────────
+  // WELLNESS / FITNESS — ULUWATU (5 venues)
+  // ─────────────────────────────────────────────
+  {
+    name: "Bamboo Fitness",
+    slug: "bamboo-fitness",
+    description:
+      "Open-air bamboo gym on the Uluwatu cliffs with ocean views, functional fitness, and free weights.",
+    editorial:
+      "Bamboo Fitness is what happens when someone decides a gym should have a view. The open-air bamboo structure sits on Uluwatu's cliffs, and you'll be doing deadlifts while watching the Indian Ocean. The equipment leans functional — free weights, pull-up rigs, kettlebells — and the vibe is raw and unpretentious. No AC, no mirrors, just you and the iron and the sea breeze.",
+    area: VenueArea.ULUWATU,
+    category: VenueCategory.WELLNESS,
+    address: "Jl. Labuan Sait, Pecatu, Uluwatu, Bali",
+    latitude: -8.8155,
+    longitude: 115.0860,
+    priceRange: 1,
+    isFeatured: false,
+    rating: 4.5,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "",
+    instagram: "@bamboofitnessbali",
+  },
+  {
+    name: "Uluwatu Collective",
+    slug: "uluwatu-collective",
+    description:
+      "Community gym and wellness space with yoga, meditation, a gym floor, and a juice bar.",
+    editorial:
+      "The Collective is Uluwatu's answer to the all-in-one wellness space. Yoga in the morning, weights at lunch, meditation in the evening, and a juice bar that ties it all together. The community feel is genuine — regulars stick around after sessions, and the events calendar (full-moon yoga, sound healing, nutrition workshops) keeps things interesting beyond the gym floor.",
+    area: VenueArea.ULUWATU,
+    category: VenueCategory.WELLNESS,
+    address: "Jl. Labuansait, Pecatu, Uluwatu, Bali",
+    latitude: -8.8142,
+    longitude: 115.0875,
+    priceRange: 2,
+    isFeatured: false,
+    rating: 4.3,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "",
+    instagram: "@uluwatucollective",
+  },
+  {
+    name: "Muscle Beach Club",
+    slug: "muscle-beach-club",
+    description:
+      "Dual gym and beach club — train in the morning, beach party in the afternoon. A unique Uluwatu concept.",
+    editorial:
+      "Muscle Beach Club is a concept that shouldn't work but absolutely does. The gym side is legit — proper equipment, good programming, trainers who know what they're doing. Then you walk through to the beach club side for a post-workout smoothie by the pool, and by afternoon the DJs are playing and the whole thing transitions into a party. It's the Uluwatu lifestyle in one venue.",
+    area: VenueArea.ULUWATU,
+    category: VenueCategory.WELLNESS,
+    address: "Jl. Pantai Selatan Gau, Ungasan, Uluwatu, Bali",
+    latitude: -8.8190,
+    longitude: 115.0950,
+    priceRange: 2,
+    isFeatured: true,
+    rating: 4.4,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "",
+    instagram: "@musclebeachclubbali",
+  },
+  {
+    name: "Ulu Fit",
+    slug: "ulu-fit",
+    description:
+      "Compact but well-equipped gym with AC, modern machines, and affordable day passes.",
+    editorial:
+      "Ulu Fit is the no-nonsense gym Uluwatu needed. Compact but thoughtfully laid out — modern machines, a decent free-weight section, full air conditioning (a luxury in Bali gyms), and day passes priced low enough that you don't need to commit to a membership. It won't blow your mind, but it'll give you everything you need for a solid session without the markup.",
+    area: VenueArea.ULUWATU,
+    category: VenueCategory.WELLNESS,
+    address: "Jl. Belimbing Sari, Pecatu, Uluwatu, Bali",
+    latitude: -8.8170,
+    longitude: 115.0940,
+    priceRange: 1,
+    isFeatured: false,
+    rating: 4.2,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "",
+    instagram: "@ulufitbali",
+  },
+  {
+    name: "Raw Gym",
+    slug: "raw-gym",
+    description:
+      "Hardcore training gym with heavy free weights, strongman equipment, and a no-frills attitude.",
+    editorial:
+      "Raw Gym does exactly what the name suggests. This is where you come when you want to lift heavy and don't care about the aesthetics. Strongman equipment, heavy dumbbells that go well past what boutique gyms stock, squat racks that have seen some serious weight, and a clientele that's there to work. No smoothie bar, no playlist curation — just iron and effort.",
+    area: VenueArea.ULUWATU,
+    category: VenueCategory.WELLNESS,
+    address: "Jl. Raya Uluwatu, Pecatu, Uluwatu, Bali",
+    latitude: -8.8195,
+    longitude: 115.0930,
+    priceRange: 1,
+    isFeatured: false,
+    rating: 4.3,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "",
+    instagram: "@rawgymbali",
   },
 
   // ─────────────────────────────────────────────
