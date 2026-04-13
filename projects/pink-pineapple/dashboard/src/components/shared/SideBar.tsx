@@ -26,6 +26,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout, selectCurrentUser } from "@/redux/features/auth/authSlice";
 import { removeCookie } from "@/utils/cookies";
 import Link from "next/link";
+import Image from "next/image";
 
 const admin = [
   {
@@ -114,19 +115,14 @@ const SideBar = () => {
 
         {/* Brand header */}
         <SidebarGroupLabel className="mb-10 mt-8 mx-auto flex flex-col items-center gap-1">
-          <span
-            className="text-xl font-bold text-[#FFFFFF] tracking-widest"
-            style={{ fontFamily: 'Playfair Display, serif', letterSpacing: '0.15em' }}
-          >
-            PINK PINEAPPLE
-          </span>
-          <span
-            className="text-[#E8A0B0] tracking-[0.5em] text-xs font-light uppercase"
-            style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.5em' }}
-          >
-            BALI
-          </span>
-          <div className="w-12 h-px bg-gradient-to-r from-transparent via-[#8B4060]/60 to-transparent mt-2" />
+          <Image
+            src="/images/logo_primary_dark.jpg"
+            alt="Pink Pineapple"
+            width={180}
+            height={60}
+            className="object-contain"
+            priority
+          />
         </SidebarGroupLabel>
 
         <SidebarGroupContent>

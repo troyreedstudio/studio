@@ -3,6 +3,7 @@
 import LoginForm from "./LoginForm";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const Login = () => {
   const [state, setState] = useState<"start" | "login">("start");
@@ -16,24 +17,20 @@ const Login = () => {
         <div className="relative z-10 text-center space-y-6">
           <div className="flex flex-col items-center gap-3">
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#C4707E] to-transparent" />
-            <p className="text-[#B0B0B0] tracking-[0.4em] text-xs uppercase font-light" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            <p className="text-[#B0B0B0] tracking-[0.4em] text-xs uppercase font-light" style={{ fontFamily: 'var(--font-inter), sans-serif' }}>
               Venue Partner Portal
             </p>
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#C4707E] to-transparent" />
           </div>
-          <h1
-            className="text-5xl font-semibold text-[#FFFFFF] tracking-widest"
-            style={{ fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.15em' }}
-          >
-            PINK PINEAPPLE
-          </h1>
-          <p
-            className="text-[#C4707E] tracking-[0.6em] text-sm font-light"
-            style={{ fontFamily: 'Poppins, sans-serif' }}
-          >
-            BALI
-          </p>
-          <p className="text-[#B0B0B0] text-sm max-w-xs leading-relaxed" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          <Image
+            src="/images/logo_primary_dark.jpg"
+            alt="Pink Pineapple"
+            width={280}
+            height={90}
+            className="object-contain"
+            priority
+          />
+          <p className="text-[#B0B0B0] text-sm max-w-xs leading-relaxed" style={{ fontFamily: 'var(--font-inter), sans-serif' }}>
             Manage your events, bookings, and VIP experiences from one elegant dashboard.
           </p>
         </div>
@@ -45,15 +42,14 @@ const Login = () => {
           <div className="max-w-sm w-full space-y-8">
             {/* Mobile logo */}
             <div className="md:hidden text-center mb-8">
-              <h1
-                className="text-3xl font-semibold text-[#FFFFFF] tracking-widest"
-                style={{ fontFamily: 'Cormorant Garamond, serif' }}
-              >
-                PINK PINEAPPLE
-              </h1>
-              <p className="text-[#C4707E] tracking-[0.5em] text-xs mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                BALI
-              </p>
+              <Image
+                src="/images/logo_primary_dark.jpg"
+                alt="Pink Pineapple"
+                width={200}
+                height={65}
+                className="object-contain mx-auto"
+                priority
+              />
             </div>
 
             <div className="space-y-2">
@@ -63,7 +59,7 @@ const Login = () => {
               >
                 Welcome Back
               </h2>
-              <p className="text-[#B0B0B0] text-sm" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <p className="text-[#B0B0B0] text-sm" style={{ fontFamily: 'var(--font-inter), sans-serif' }}>
                 Sign in to your venue partner account
               </p>
             </div>
@@ -84,13 +80,13 @@ const Login = () => {
               <Link
                 href="/register"
                 className="w-full py-4 rounded-xl text-[#C4707E] font-semibold text-sm tracking-wide border border-[#2A2A2A] bg-[#1A1A1A] hover:border-[#C4707E]/50 transition-all duration-200 inline-block text-center"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
+                style={{ fontFamily: 'var(--font-inter), sans-serif' }}
               >
                 Create Account
               </Link>
             </div>
 
-            <p className="text-center text-[#6B6B6B] text-xs" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            <p className="text-center text-[#6B6B6B] text-xs" style={{ fontFamily: 'var(--font-inter), sans-serif' }}>
               Venue partners only. Consumer app available on iOS & Android.
             </p>
           </div>
