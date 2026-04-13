@@ -55,7 +55,7 @@ class _HomeHeader extends StatelessWidget {
             children: [
               Image.asset(
                 'assets/images/app_logo_dark.jpg',
-                height: 40,
+                height: 56,
                 fit: BoxFit.contain,
               ),
               SizedBox(height: 2.h),
@@ -261,7 +261,7 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 20.h),
 
-          // Trending Tonight — hero carousel
+          // Trending Tonight — featured venues with photos
           _SectionHeader(
             title: 'Trending Tonight',
             subtitle: 'Don\'t miss out',
@@ -271,17 +271,20 @@ class _DiscoverContent extends StatelessWidget {
           SizedBox(
             height: 220.h,
             child: Obx(() {
-              final events = homeController.allEventList;
-              return homeController.isTrendingLoading.value
+              final featured = venueController.featuredVenues;
+              return venueController.isFeaturedLoading.value
                   ? loading()
-                  : events.isEmpty
-                      ? _EmptySection(message: 'No events tonight')
+                  : featured.isEmpty
+                      ? _EmptySection(message: 'No venues tonight')
                       : ListView.builder(
                           scrollDirection: Axis.horizontal,
                           padding: EdgeInsets.symmetric(horizontal: 20.w),
-                          itemCount: events.length,
+                          itemCount: featured.length,
                           itemBuilder: (context, index) {
-                            return TrendingEventWidget(event: events[index]);
+                            return Padding(
+                              padding: EdgeInsets.only(right: 14.w),
+                              child: VenueCardWidget(venue: featured[index]),
+                            );
                           },
                         );
             }),
@@ -289,32 +292,39 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 28.h),
 
-          // Popular Venues — from venue API
-          _SectionHeader(
-            title: 'Popular Venues',
-            subtitle: 'Most popular right now',
-            onSeeAll: () {},
-          ),
+          // Popular Venues — from venue API, responds to category filters
+          Obx(() {
+            final venueCtrl = Get.find<VenueController>();
+            final hasFilter = venueCtrl.selectedCategory.value.isNotEmpty;
+            final title = hasFilter
+                ? venueCtrl.selectedCategory.value.replaceAll('_', ' ')
+                : 'Popular Venues';
+            return _SectionHeader(
+              title: title,
+              subtitle: hasFilter ? 'Filtered results' : 'Most popular right now',
+              onSeeAll: () {},
+            );
+          }),
           SizedBox(height: 12.h),
           SizedBox(
             height: 220.h,
             child: Obx(() {
               final venueCtrl = Get.find<VenueController>();
-              final venueList = venueCtrl.featuredVenues.isNotEmpty
-                  ? venueCtrl.featuredVenues
-                  : venueCtrl.venues;
-              return venueCtrl.isFeaturedLoading.value ||
-                      venueCtrl.isLoading.value
+              final venueList = venueCtrl.venues;
+              return venueCtrl.isLoading.value
                   ? loading()
                   : venueList.isEmpty
-                      ? _EmptySection(message: 'No venues available')
+                      ? _EmptySection(message: 'No venues found')
                       : ListView.builder(
                           scrollDirection: Axis.horizontal,
                           padding: EdgeInsets.symmetric(horizontal: 20.w),
                           itemCount:
                               venueList.length > 8 ? 8 : venueList.length,
                           itemBuilder: (context, index) {
-                            return VenueCardWidget(venue: venueList[index]);
+                            return Padding(
+                              padding: EdgeInsets.only(right: 14.w),
+                              child: VenueCardWidget(venue: venueList[index]),
+                            );
                           },
                         );
             }),
