@@ -24,7 +24,7 @@ class SplashScreenController extends GetxController {
 
   moveToLoginScreen() async {
     final uToken = await local.getValue<String>(PreferenceKey.token);
-    await Future.delayed(const Duration(seconds: 5));
+    await Future.delayed(const Duration(seconds: 2));
 
     if (uToken != null && uToken.isNotEmpty) {
       // Already logged in — go straight to home

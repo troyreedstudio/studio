@@ -10,6 +10,7 @@ import 'package:pineapple/feature/home/controller/home_controller.dart';
 import 'package:pineapple/feature/home_bottom_nav/controller/home_nav_controller.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
+import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
 import 'package:pineapple/feature/venue/widgets/venue_card_widget.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -756,41 +757,56 @@ class _DayCard extends StatelessWidget {
                       final venue = venues[i];
                       // Check for a special night name from weeklySchedule
                       final specialName = _getSpecialNightName(venue, dayLabel.toLowerCase());
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            venue.name,
-                            style: GoogleFonts.poppins(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary,
+                      return GestureDetector(
+                        onTap: () => Get.to(() => VenueDetailScreen(venueId: venue.id)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    venue.name,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                SizedBox(width: 3.w),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 9.sp,
+                                  color: AppColors.gradientMid,
+                                ),
+                              ],
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (specialName != null)
-                            Text(
-                              specialName,
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.w300,
-                                color: AppColors.gradientMid,
+                            if (specialName != null)
+                              Text(
+                                specialName,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w300,
+                                  color: AppColors.gradientMid,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            else
+                              Text(
+                                'Regular night',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w300,
+                                  color: AppColors.textMuted,
+                                ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            )
-                          else
-                            Text(
-                              'Regular night',
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.w300,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                        ],
+                          ],
+                        ),
                       );
                     },
                   ),
