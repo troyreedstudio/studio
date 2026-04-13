@@ -96,8 +96,11 @@ const venues: VenueData[] = [
     rating: 4.4,
     openingHours: RESTAURANT_HOURS,
     weeklySchedule: {
-      fri: { name: "Seafood Friday", description: "Fresh catch specials and cocktail pairings", isSpecial: true, startTime: "18:00", genre: "Dining" },
-      sat: { name: "Chef's Table Night", description: "Multi-course tasting menu with sake pairing", isSpecial: true, startTime: "19:00", genre: "Dining" },
+      tue: { name: "Miss Fish Tuesday", description: "Seafood and sounds", isSpecial: true, startTime: "19:00", genre: "Mixed" },
+      wed: { name: "Miss Fish Wednesday", description: "Mid-week seafood session", isSpecial: true, startTime: "19:00", genre: "Mixed" },
+      thu: { name: "Miss Fish Thursday", description: "Seafood Thursday", isSpecial: true, startTime: "19:00", genre: "Mixed" },
+      fri: { name: "Miss Fish Friday", description: "Friday feast", isSpecial: true, startTime: "19:00", genre: "Mixed" },
+      sat: { name: "Miss Fish Saturday", description: "Weekend dining", isSpecial: true, startTime: "19:00", genre: "Mixed" },
     },
     phone: "+62 361 907 1888",
     website: "https://missfishbali.com",
@@ -121,6 +124,8 @@ const venues: VenueData[] = [
     rating: 4.6,
     openingHours: { ...BEACH_CLUB_HOURS, mon: "11:00-22:00", tue: "11:00-22:00", wed: "11:00-22:00", thu: "11:00-22:00", fri: "11:00-00:00", sat: "11:00-00:00", sun: "11:00-22:00" },
     weeklySchedule: {
+      tue: { name: "Desa Tuesday", description: "Tuesday sessions at the Head", isSpecial: true, startTime: "17:00", genre: "Mixed" },
+      fri: { name: "Desa Friday", description: "Friday sunset party", isSpecial: true, startTime: "17:00", genre: "House" },
       sat: { name: "Sunset Sessions", description: "Curated DJ sets as the sun drops over the ocean", isSpecial: true, startTime: "16:00", genre: "Electronic" },
       sun: { name: "Sunday Brunch Party", description: "Extended brunch with live music and pool access", isSpecial: true, startTime: "11:00", genre: "Mixed" },
     },
@@ -376,6 +381,269 @@ const venues: VenueData[] = [
     phone: "",
     website: "",
     instagram: "@comobeachclub",
+  },
+
+  // ─────────────────────────────────────────────
+  // CANGGU — NEW VENUES (8 venues)
+  // ─────────────────────────────────────────────
+  {
+    name: "Bella",
+    slug: "bella",
+    description:
+      "Italian restaurant by day, EDM nightclub by night. Canggu's dual-personality venue.",
+    editorial:
+      "Bella transforms after dark. The kitchen serves refined Italian until 10pm, then the tables get pushed aside and the bass drops. Monday and Wednesday nights are the ones to hit.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.RESTAURANT,
+    tags: ["nightlife", "edm"],
+    address: "Canggu, Bali",
+    latitude: -8.6478,
+    longitude: 115.1385,
+    priceRange: 3,
+    isFeatured: false,
+    rating: 4.5,
+    openingHours: { mon: "11:00-00:00", tue: "11:00-00:00", wed: "11:00-00:00", thu: "11:00-00:00", fri: "11:00-00:00", sat: "11:00-00:00", sun: "11:00-00:00" },
+    weeklySchedule: {
+      mon: { name: "Bella Monday", description: "EDM night — tables clear, bass drops", isSpecial: true, startTime: "22:00", genre: "EDM" },
+      wed: { name: "Bella Wednesday", description: "Mid-week EDM session", isSpecial: true, startTime: "22:00", genre: "EDM" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
+  },
+  {
+    name: "Luigi",
+    slug: "luigi",
+    description:
+      "Italian restaurant and bar with a vibrant atmosphere. Popular music nights.",
+    editorial:
+      "Luigi brings the Italian charm with a party twist. Great pasta, better cocktails, and Monday nights that fill up fast.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.RESTAURANT,
+    tags: ["nightlife", "bar"],
+    address: "Canggu, Bali",
+    latitude: -8.6478,
+    longitude: 115.1385,
+    priceRange: 2,
+    isFeatured: false,
+    rating: 4.4,
+    openingHours: { mon: "11:00-00:00", tue: "11:00-00:00", wed: "11:00-00:00", thu: "11:00-00:00", fri: "11:00-00:00", sat: "11:00-00:00", sun: "11:00-00:00" },
+    weeklySchedule: {
+      mon: { name: "Luigi Monday", description: "Popular music night — the week starts here", isSpecial: true, startTime: "21:00", genre: "Pop" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
+  },
+  {
+    name: "Mesa",
+    slug: "mesa",
+    description:
+      "Afro music nightclub and bar. Canggu's home for afrobeats.",
+    editorial:
+      "Mesa is where Canggu goes for afrobeats. Open almost every night with a dedicated crowd. The music is the draw — deep, rhythmic, and impossible to stand still to.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.NIGHTLIFE,
+    tags: ["bar", "afro"],
+    address: "Canggu, Bali",
+    latitude: -8.6478,
+    longitude: 115.1385,
+    priceRange: 2,
+    isFeatured: false,
+    rating: 4.5,
+    openingHours: { mon: "20:00-04:00", tue: "20:00-04:00", wed: "20:00-04:00", thu: "20:00-04:00", fri: "20:00-04:00", sat: "20:00-04:00", sun: "20:00-04:00" },
+    weeklySchedule: {
+      mon: { name: "Mesa Monday", description: "Afro night", isSpecial: true, startTime: "21:00", genre: "Afrobeats" },
+      tue: { name: "Mesa Tuesday", description: "Afro sessions", isSpecial: true, startTime: "21:00", genre: "Afrobeats" },
+      wed: { name: "Mesa Wednesday", description: "Mid-week Afro", isSpecial: true, startTime: "21:00", genre: "Afrobeats" },
+      thu: { name: "Mesa Thursday", description: "Afro night", isSpecial: true, startTime: "21:00", genre: "Afrobeats" },
+      fri: { name: "Mesa Friday", description: "Weekend Afro party", isSpecial: true, startTime: "21:00", genre: "Afrobeats" },
+      sat: { name: "Mesa Saturday", description: "Main night — full house", isSpecial: true, startTime: "21:00", genre: "Afrobeats" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
+  },
+  {
+    name: "Shady Pig",
+    slug: "shady-pig",
+    description:
+      "Electronic dance music nightclub. Dark, loud, and sweaty — Canggu's underground.",
+    editorial:
+      "Shady Pig doesn't pretend to be anything other than a proper nightclub. EDM, strobe lights, late nights. Tuesday through Saturday, this is where the night ends up.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.NIGHTLIFE,
+    tags: ["edm", "electronic"],
+    address: "Canggu, Bali",
+    latitude: -8.6478,
+    longitude: 115.1385,
+    priceRange: 2,
+    isFeatured: false,
+    rating: 4.3,
+    openingHours: { mon: "21:00-04:00", tue: "21:00-04:00", wed: "21:00-04:00", thu: "21:00-04:00", fri: "21:00-04:00", sat: "21:00-04:00", sun: "21:00-04:00" },
+    weeklySchedule: {
+      tue: { name: "Shady Pig Tuesday", description: "EDM night", isSpecial: true, startTime: "22:00", genre: "EDM" },
+      wed: { name: "Shady Pig Wednesday", description: "Electronic sessions", isSpecial: true, startTime: "22:00", genre: "EDM" },
+      thu: { name: "Shady Pig Thursday", description: "EDM night", isSpecial: true, startTime: "22:00", genre: "EDM" },
+      fri: { name: "Shady Pig Friday", description: "Weekend warm-up", isSpecial: true, startTime: "22:00", genre: "EDM" },
+      sat: { name: "Shady Pig Saturday", description: "Main night", isSpecial: true, startTime: "22:00", genre: "EDM" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
+  },
+  {
+    name: "Morabito",
+    slug: "morabito",
+    description:
+      "Beach club, restaurant, and nightlife venue. R&B and hip-hop by the ocean.",
+    editorial:
+      "Morabito does it all — beach club by day, restaurant at sunset, R&B and hip-hop party by night. Friday is the night to be here.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.BEACH_CLUB,
+    tags: ["restaurant", "nightlife", "rnb", "hip-hop"],
+    address: "Canggu, Bali",
+    latitude: -8.6478,
+    longitude: 115.1385,
+    priceRange: 3,
+    isFeatured: true,
+    rating: 4.5,
+    openingHours: { mon: "10:00-02:00", tue: "10:00-02:00", wed: "10:00-02:00", thu: "10:00-02:00", fri: "10:00-02:00", sat: "10:00-02:00", sun: "10:00-02:00" },
+    weeklySchedule: {
+      fri: { name: "Morabito Friday", description: "R&B and hip-hop beach party", isSpecial: true, startTime: "21:00", genre: "R&B / Hip Hop" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
+  },
+  {
+    name: "Amavi",
+    slug: "amavi",
+    description:
+      "Restaurant and nightlife venue. EDM nights that go late.",
+    editorial:
+      "Amavi is the Sunday closer. When everything else is winding down, Amavi is just getting started. EDM, late nights, no apologies.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.NIGHTLIFE,
+    tags: ["restaurant", "edm"],
+    address: "Canggu, Bali",
+    latitude: -8.6478,
+    longitude: 115.1385,
+    priceRange: 2,
+    isFeatured: false,
+    rating: 4.3,
+    openingHours: { mon: "18:00-04:00", tue: "18:00-04:00", wed: "18:00-04:00", thu: "18:00-04:00", fri: "18:00-04:00", sat: "18:00-04:00", sun: "18:00-04:00" },
+    weeklySchedule: {
+      sun: { name: "Amavi Sunday", description: "The Sunday closer — EDM all night", isSpecial: true, startTime: "22:00", genre: "EDM" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
+  },
+  {
+    name: "Back Room",
+    slug: "back-room",
+    description:
+      "R&B and hip-hop nightclub. Canggu's home for urban music.",
+    editorial:
+      "Back Room does one thing and does it well — R&B and hip-hop in a dark room with a good sound system. Sunday nights are the session.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.NIGHTLIFE,
+    tags: ["rnb", "hip-hop"],
+    address: "Canggu, Bali",
+    latitude: -8.6478,
+    longitude: 115.1385,
+    priceRange: 2,
+    isFeatured: false,
+    rating: 4.3,
+    openingHours: { mon: "21:00-04:00", tue: "21:00-04:00", wed: "21:00-04:00", thu: "21:00-04:00", fri: "21:00-04:00", sat: "21:00-04:00", sun: "21:00-04:00" },
+    weeklySchedule: {
+      sun: { name: "Back Room Sunday", description: "R&B and hip-hop session", isSpecial: true, startTime: "22:00", genre: "R&B / Hip Hop" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
+  },
+  {
+    name: "Jade",
+    slug: "jade",
+    description:
+      "Restaurant by day, R&B and hip-hop nightclub by night. The venue that started Canggu's hip-hop scene.",
+    editorial:
+      "Jade is the reason people go out on Monday and Thursday in Canggu. The restaurant is good, but the hip-hop nights are legendary. If you only go to one hip-hop night in Bali, make it Jade.",
+    area: VenueArea.CANGGU,
+    category: VenueCategory.RESTAURANT,
+    tags: ["nightlife", "rnb", "hip-hop"],
+    address: "Canggu, Bali",
+    latitude: -8.6478,
+    longitude: 115.1385,
+    priceRange: 2,
+    isFeatured: true,
+    rating: 4.6,
+    openingHours: { mon: "11:00-02:00", tue: "11:00-02:00", wed: "11:00-02:00", thu: "11:00-02:00", fri: "11:00-02:00", sat: "11:00-02:00", sun: "11:00-02:00" },
+    weeklySchedule: {
+      thu: { name: "Jade Thursday", description: "Hip-hop night — the original", isSpecial: true, startTime: "21:00", genre: "R&B / Hip Hop" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
+  },
+
+  // ─────────────────────────────────────────────
+  // SEMINYAK — NEW VENUES (1 venue)
+  // ─────────────────────────────────────────────
+  {
+    name: "Sardine",
+    slug: "sardine",
+    description:
+      "Iconic Seminyak restaurant set over rice paddies. Refined seafood and Indonesian cuisine.",
+    editorial:
+      "Sardine has been a Bali institution for over a decade. The open-air bamboo pavilion over the rice paddies is the setting, and the seafood is world-class. Saturday is the night.",
+    area: VenueArea.SEMINYAK,
+    category: VenueCategory.RESTAURANT,
+    tags: ["fine-dining", "seafood"],
+    address: "Seminyak, Bali",
+    latitude: -8.6899,
+    longitude: 115.1685,
+    priceRange: 4,
+    isFeatured: false,
+    rating: 4.7,
+    openingHours: { mon: "11:00-23:00", tue: "11:00-23:00", wed: "11:00-23:00", thu: "11:00-23:00", fri: "11:00-23:00", sat: "11:00-23:00", sun: "11:00-23:00" },
+    weeklySchedule: {
+      sat: { name: "Sardine Saturday", description: "Fine dining at its finest — book ahead", isSpecial: true, startTime: "19:00", genre: "Fine Dining" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
+  },
+
+  // ─────────────────────────────────────────────
+  // ULUWATU — NEW VENUES (1 venue)
+  // ─────────────────────────────────────────────
+  {
+    name: "Il Salotto",
+    slug: "il-salotto",
+    description:
+      "Italian restaurant and cocktail bar on the Uluwatu cliffs. Transforms into nightlife on weekends.",
+    editorial:
+      "Il Salotto is the Uluwatu spot that catches people off guard. You come for the pasta and the sunset, then Saturday night the DJ starts and suddenly you're not leaving.",
+    area: VenueArea.ULUWATU,
+    category: VenueCategory.RESTAURANT,
+    tags: ["nightlife", "cocktails"],
+    address: "Uluwatu, Bali",
+    latitude: -8.8295,
+    longitude: 115.0849,
+    priceRange: 3,
+    isFeatured: false,
+    rating: 4.4,
+    openingHours: { mon: "12:00-01:00", tue: "12:00-01:00", wed: "12:00-01:00", thu: "12:00-01:00", fri: "12:00-01:00", sat: "12:00-01:00", sun: "12:00-01:00" },
+    weeklySchedule: {
+      sat: { name: "Il Salotto Saturday", description: "Dinner turns to party on the cliffs", isSpecial: true, startTime: "21:00", genre: "House" },
+      sun: { name: "Il Salotto Sunday", description: "Sunday sessions", isSpecial: true, startTime: "16:00", genre: "Chill House" },
+    },
+    phone: "",
+    website: "",
+    instagram: "",
   },
 
   // ─────────────────────────────────────────────
