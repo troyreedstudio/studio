@@ -695,6 +695,7 @@ class _DayCard extends StatelessWidget {
                   final venue = venues[i];
                   final shortKey = dayLabel.substring(0, 3).toLowerCase();
                   final specialName = _getSpecialNightName(venue, shortKey);
+                  final timeRange = _getTimeRange(venue, shortKey);
                   return GestureDetector(
                     onTap: () {
                       Navigator.pop(context);
@@ -718,14 +719,14 @@ class _DayCard extends StatelessWidget {
                               SizedBox(height: 2.h),
                               if (specialName != null)
                                 Text(
-                                  specialName,
+                                  timeRange != null ? '$specialName \u00B7 $timeRange' : specialName,
                                   style: GoogleFonts.poppins(
                                     fontSize: 13.sp,
                                     color: AppColors.gradientMid,
                                   ),
                                 ),
                               Text(
-                                '${venue.category.replaceAll("_", " ")} · ${venue.area}',
+                                '${venue.category.replaceAll("_", " ")} \u00B7 ${venue.area}',
                                 style: GoogleFonts.poppins(
                                   fontSize: 11.sp,
                                   color: AppColors.textMuted,
@@ -841,8 +842,10 @@ class _DayCard extends StatelessWidget {
                     separatorBuilder: (_, __) => SizedBox(height: 8.h),
                     itemBuilder: (context, i) {
                       final venue = venues[i];
-                      // Check for a special night name from weeklySchedule
-                      final specialName = _getSpecialNightName(venue, dayLabel.toLowerCase());
+                      // Check for a special night name and time range from weeklySchedule
+                      final dayKey = dayLabel.toLowerCase();
+                      final specialName = _getSpecialNightName(venue, dayKey);
+                      final timeRange = _getTimeRange(venue, dayKey);
                       return GestureDetector(
                         onTap: () => Get.to(() => VenueDetailScreen(venueId: venue.id)),
                         child: Column(
@@ -873,7 +876,7 @@ class _DayCard extends StatelessWidget {
                             ),
                             if (specialName != null)
                               Text(
-                                specialName,
+                                timeRange != null ? '$specialName \u00B7 $timeRange' : specialName,
                                 style: GoogleFonts.poppins(
                                   fontSize: 11.sp,
                                   fontWeight: FontWeight.w300,
@@ -884,7 +887,7 @@ class _DayCard extends StatelessWidget {
                               )
                             else
                               Text(
-                                'Regular night',
+                                timeRange != null ? 'Regular night \u00B7 $timeRange' : 'Regular night',
                                 style: GoogleFonts.poppins(
                                   fontSize: 11.sp,
                                   fontWeight: FontWeight.w300,
@@ -923,6 +926,21 @@ class _DayCard extends StatelessWidget {
     if (dayData is Map<String, dynamic>) {
       final name = dayData['name']?.toString();
       if (name != null && name.isNotEmpty) return name;
+    }
+    return null;
+  }
+
+  /// Extract start/end time range from the venue's weeklySchedule for a given day.
+  String? _getTimeRange(VenueModel venue, String dayKey) {
+    if (venue.weeklySchedule == null) return null;
+    final dayData = venue.weeklySchedule![dayKey];
+    if (dayData is Map<String, dynamic>) {
+      final startTime = dayData['startTime']?.toString();
+      final endTime = dayData['endTime']?.toString();
+      if (startTime != null && endTime != null) {
+        return '$startTime\u2013$endTime';
+      }
+      return startTime;
     }
     return null;
   }
