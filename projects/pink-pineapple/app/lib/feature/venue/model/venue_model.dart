@@ -21,6 +21,7 @@ class VenueModel {
   final double rating;
   final String ownerId;
   final bool isFavorite;
+  final Map<String, dynamic>? weeklySchedule;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -40,6 +41,7 @@ class VenueModel {
     this.instagram = '',
     this.priceRange = 1,
     this.openingHours,
+    this.weeklySchedule,
     this.photos = const [],
     this.heroImage = '',
     this.isActive = true,
@@ -69,6 +71,9 @@ class VenueModel {
       priceRange: (json['priceRange'] as num?)?.toInt() ?? 1,
       openingHours: json['openingHours'] is Map<String, dynamic>
           ? json['openingHours'] as Map<String, dynamic>
+          : null,
+      weeklySchedule: json['weeklySchedule'] is Map<String, dynamic>
+          ? json['weeklySchedule'] as Map<String, dynamic>
           : null,
       photos: (json['photos'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -104,6 +109,7 @@ class VenueModel {
       'instagram': instagram,
       'priceRange': priceRange,
       'openingHours': openingHours,
+      'weeklySchedule': weeklySchedule,
       'photos': photos,
       'heroImage': heroImage,
       'isActive': isActive,
@@ -132,6 +138,7 @@ class VenueModel {
     String? instagram,
     int? priceRange,
     Map<String, dynamic>? openingHours,
+    Map<String, dynamic>? weeklySchedule,
     List<String>? photos,
     String? heroImage,
     bool? isActive,
@@ -158,6 +165,7 @@ class VenueModel {
       instagram: instagram ?? this.instagram,
       priceRange: priceRange ?? this.priceRange,
       openingHours: openingHours ?? this.openingHours,
+      weeklySchedule: weeklySchedule ?? this.weeklySchedule,
       photos: photos ?? this.photos,
       heroImage: heroImage ?? this.heroImage,
       isActive: isActive ?? this.isActive,

@@ -5,6 +5,7 @@ import 'package:pineapple/core/local/local_data.dart';
 
 import '../../../core/const/user_info/user_info_controller.dart';
 import '../../home_bottom_nav/ui/home_bottom_nav.dart';
+import '../ui/1.login_ui.dart';
 
 class SplashScreenController extends GetxController {
   var userImage = "".obs;
@@ -23,13 +24,15 @@ class SplashScreenController extends GetxController {
 
   moveToLoginScreen() async {
     final uToken = await local.getValue<String>(PreferenceKey.token);
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 5));
 
-    // Browse-first: always go to the main app shell.
-    // Logged-in users also get their profile loaded.
-    Get.off(() => HomeBottomNav());
     if (uToken != null && uToken.isNotEmpty) {
+      // Already logged in — go straight to home
       Get.put(UserInfoController(), permanent: true);
+      Get.off(() => HomeBottomNav());
+    } else {
+      // Not logged in — show login screen
+      Get.off(() => LoginPage());
     }
   }
 }

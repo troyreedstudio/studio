@@ -110,6 +110,20 @@ const toggleFavorite = catchAsync(async (req, res) => {
   });
 });
 
+const getWhatsOn = catchAsync(async (req, res) => {
+  const day = req.params.day as string | undefined;
+  const area = (req.query.area as string) || undefined;
+  const result = await venueService.getWhatsOn(day, area);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: day
+      ? `What's on ${day} retrieved successfully`
+      : "Weekly schedule retrieved successfully",
+    data: result,
+  });
+});
+
 export const VenueController = {
   createVenue,
   getVenueList,
@@ -120,4 +134,5 @@ export const VenueController = {
   updateVenue,
   deleteVenue,
   toggleFavorite,
+  getWhatsOn,
 };

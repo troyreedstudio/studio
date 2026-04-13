@@ -373,6 +373,7 @@ model Venue {
   instagram       String         @default("")
   priceRange      Int            @default(2)
   openingHours    Json?
+  weeklySchedule  Json?
   photos          String[]
   heroImage       String         @default("")
   isActive        Boolean        @default(true)

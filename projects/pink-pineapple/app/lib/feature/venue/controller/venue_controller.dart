@@ -13,6 +13,9 @@ class VenueController extends GetxController {
   final RxList<VenueModel> venues = <VenueModel>[].obs;
   final RxList<VenueModel> featuredVenues = <VenueModel>[].obs;
   final Rx<VenueModel?> selectedVenue = Rx<VenueModel?>(null);
+  final RxMap<String, List<VenueModel>> weeklySchedule =
+      <String, List<VenueModel>>{}.obs;
+  final RxBool isWhatsOnLoading = false.obs;
 
   final RxBool isLoading = false.obs;
   final RxBool isDetailLoading = false.obs;
@@ -28,6 +31,7 @@ class VenueController extends GetxController {
     super.onInit();
     fetchFeaturedVenues();
     fetchVenues();
+    fetchWhatsOn();
   }
 
   /// Fetch all venues with optional filters.
@@ -81,6 +85,81 @@ class VenueController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Fetch the weekly "what's on" schedule.
+  ///
+  /// Tries the dedicated endpoint first. If it fails (e.g. not deployed yet),
+  /// falls back to building a schedule from existing [venues] using their
+  /// [openingHours] data.
+  Future<void> fetchWhatsOn({String? area}) async {
+    try {
+      isWhatsOnLoading.value = true;
+
+      String url = Urls.whatsOn;
+      if (area != null && area.isNotEmpty) {
+        url += '?area=${Uri.encodeComponent(area)}';
+      }
+
+      final response = await _netConfig.ApiRequestHandler(
+        RequestMethod.GET,
+        url,
+        jsonEncode({}),
+      );
+
+      if (response != null && response['success'] == true) {
+        _logger.d('What\'s on fetched successfully');
+        final data = response['data'];
+        if (data is Map<String, dynamic>) {
+          final schedule = <String, List<VenueModel>>{};
+          for (final dayKey in data.keys) {
+            final dayVenues = data[dayKey];
+            if (dayVenues is List) {
+              final parsed = <VenueModel>[];
+              for (final v in dayVenues) {
+                try {
+                  parsed.add(VenueModel.fromJson(v as Map<String, dynamic>));
+                } catch (e) {
+                  _logger.e('Failed to parse whats-on venue: $e');
+                }
+              }
+              schedule[dayKey] = parsed;
+            }
+          }
+          weeklySchedule.assignAll(schedule);
+          return;
+        }
+      }
+
+      // Fallback: build schedule from existing venue data
+      _buildFallbackSchedule();
+    } catch (e, st) {
+      _logger.e('What\'s on fetch failed, using fallback: $e',
+          error: e, stackTrace: st);
+      _buildFallbackSchedule();
+    } finally {
+      isWhatsOnLoading.value = false;
+    }
+  }
+
+  /// Build a weekly schedule from venue [openingHours] as a fallback when the
+  /// whats-on endpoint is not available.
+  void _buildFallbackSchedule() {
+    const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const shortKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+    final schedule = <String, List<VenueModel>>{};
+    for (var i = 0; i < dayKeys.length; i++) {
+      final openOnDay = venues.where((v) {
+        if (v.openingHours == null) return true; // assume open if no data
+        final dayData = v.openingHours![dayKeys[i]];
+        if (dayData == null) return false;
+        if (dayData is Map && dayData['closed'] == true) return false;
+        return true;
+      }).toList();
+      schedule[shortKeys[i]] = openOnDay;
+    }
+    weeklySchedule.assignAll(schedule);
   }
 
   /// Fetch featured venues for hero / highlight sections.

@@ -189,6 +189,7 @@ const getByIdFromDb = async (id: string, userId?: string) => {
       instagram: true,
       priceRange: true,
       openingHours: true,
+      weeklySchedule: true,
       photos: true,
       heroImage: true,
       isActive: true,
@@ -377,6 +378,99 @@ const toggleFavorite = async (venueId: string, userId: string) => {
   }
 };
 
+const VALID_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+
+const getWhatsOn = async (day?: string, area?: string) => {
+  const whereConditions: Prisma.VenueWhereInput = {
+    isActive: true,
+  };
+
+  if (area) {
+    whereConditions.area = area.toUpperCase() as VenueArea;
+  }
+
+  const venues = await prisma.venue.findMany({
+    where: whereConditions,
+    orderBy: { rating: "desc" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      area: true,
+      category: true,
+      heroImage: true,
+      rating: true,
+      weeklySchedule: true,
+    },
+  });
+
+  if (day) {
+    // Return venues with a special night on this specific day
+    const validDay = day.toLowerCase();
+    if (!VALID_DAYS.includes(validDay as any)) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "Invalid day. Use: mon, tue, wed, thu, fri, sat, sun"
+      );
+    }
+
+    return venues
+      .filter((venue) => {
+        const schedule = venue.weeklySchedule as Record<string, any> | null;
+        if (!schedule) return false;
+        const dayEntry = schedule[validDay];
+        return dayEntry && dayEntry.isSpecial === true;
+      })
+      .map((venue) => {
+        const schedule = venue.weeklySchedule as Record<string, any>;
+        return {
+          id: venue.id,
+          name: venue.name,
+          slug: venue.slug,
+          area: venue.area,
+          category: venue.category,
+          heroImage: venue.heroImage,
+          rating: venue.rating,
+          tonight: schedule[validDay],
+        };
+      });
+  }
+
+  // No day specified — return all venues grouped by day
+  const grouped: Record<string, any[]> = {
+    mon: [],
+    tue: [],
+    wed: [],
+    thu: [],
+    fri: [],
+    sat: [],
+    sun: [],
+  };
+
+  for (const venue of venues) {
+    const schedule = venue.weeklySchedule as Record<string, any> | null;
+    if (!schedule) continue;
+
+    for (const d of VALID_DAYS) {
+      const dayEntry = schedule[d];
+      if (dayEntry && dayEntry.isSpecial === true) {
+        grouped[d].push({
+          id: venue.id,
+          name: venue.name,
+          slug: venue.slug,
+          area: venue.area,
+          category: venue.category,
+          heroImage: venue.heroImage,
+          rating: venue.rating,
+          event: dayEntry,
+        });
+      }
+    }
+  }
+
+  return grouped;
+};
+
 export const venueService = {
   createIntoDb,
   getListFromDb,
@@ -387,4 +481,5 @@ export const venueService = {
   getFeatured,
   searchVenues,
   toggleFavorite,
+  getWhatsOn,
 };

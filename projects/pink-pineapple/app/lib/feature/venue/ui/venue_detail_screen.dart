@@ -79,6 +79,8 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                   SizedBox(height: 22.h),
                   _buildDescription(venue),
                   SizedBox(height: 28.h),
+                  _buildBestNights(venue),
+                  SizedBox(height: 28.h),
                   _buildActionButtons(venue),
                   SizedBox(height: 28.h),
                   _buildInfoCard(venue),
@@ -461,6 +463,156 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
           height: 1.65,
           letterSpacing: 0.1,
         ),
+      ),
+    );
+  }
+
+  // ── Best Nights to Visit ──────────────────────────────────────────────────
+
+  Widget _buildBestNights(VenueModel venue) {
+    // Build list of open days from openingHours or weeklySchedule
+    const dayKeys = [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ];
+    const shortLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
+    final openDays = <Map<String, String>>[];
+
+    for (var i = 0; i < dayKeys.length; i++) {
+      String? nightName;
+      String? timeLabel;
+      bool isOpen = false;
+      bool isSpecial = false;
+
+      // Check weeklySchedule first (richer data)
+      if (venue.weeklySchedule != null) {
+        // Try short key (mon, tue, ...) and full key
+        final shortKey = dayKeys[i].substring(0, 3);
+        final wsDay = venue.weeklySchedule![shortKey] ??
+            venue.weeklySchedule![dayKeys[i]];
+        if (wsDay is Map<String, dynamic>) {
+          nightName = wsDay['name']?.toString();
+          timeLabel = wsDay['time']?.toString();
+          isOpen = true;
+          isSpecial = nightName != null && nightName.isNotEmpty;
+        }
+      }
+
+      // Fall back to openingHours
+      if (!isOpen && venue.openingHours != null) {
+        final dayData = venue.openingHours![dayKeys[i]];
+        if (dayData != null) {
+          if (dayData is Map) {
+            if (dayData['closed'] == true) continue;
+            timeLabel ??= dayData['open']?.toString();
+            isOpen = true;
+          } else {
+            isOpen = true;
+          }
+        }
+      }
+
+      if (isOpen) {
+        openDays.add({
+          'label': shortLabels[i],
+          'night': nightName ?? '',
+          'time': timeLabel ?? '',
+          'special': isSpecial ? 'true' : 'false',
+        });
+      }
+    }
+
+    if (openDays.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Best Nights to Visit',
+            style: GoogleFonts.outfit(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
+              fontStyle: FontStyle.italic,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 14.h),
+          SizedBox(
+            height: 90.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: openDays.length,
+              itemBuilder: (context, index) {
+                final day = openDays[index];
+                final isSpecial = day['special'] == 'true';
+                return Container(
+                  width: 90.w,
+                  margin: EdgeInsets.only(right: 10.w),
+                  padding: EdgeInsets.all(10.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSpecial
+                          ? AppColors.gradientMid
+                          : AppColors.borderSubtle,
+                      width: isSpecial ? 1.0 : 0.5,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        day['label']!,
+                        style: GoogleFonts.outfit(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w700,
+                          fontStyle: FontStyle.italic,
+                          color: isSpecial
+                              ? AppColors.gradientMid
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                      if (day['night']!.isNotEmpty) ...[
+                        SizedBox(height: 4.h),
+                        Text(
+                          day['night']!,
+                          style: GoogleFonts.poppins(
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.gradientMid,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      if (day['time']!.isNotEmpty) ...[
+                        SizedBox(height: 2.h),
+                        Text(
+                          day['time']!,
+                          style: GoogleFonts.poppins(
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w300,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

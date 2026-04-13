@@ -71,19 +71,23 @@ class SignUpPage extends StatelessWidget {
                 SizedBox(height: 32.h),
                 // Logo
                 Center(
-                  child: Image.asset(
-                    ImagePath.splashLogo,
-                    height: 56.h,
-                    fit: BoxFit.contain,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Image.asset(
+                      ImagePath.splashLogo,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
                 SizedBox(height: 24.h),
                 // Heading
                 Text(
                   'Create Account',
-                  style: GoogleFonts.cormorantGaramond(
+                  style: GoogleFonts.outfit(
                     fontSize: 32.sp,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w800,
+                    fontStyle: FontStyle.italic,
                     color: AppColors.textPrimary,
                     letterSpacing: 0.5,
                   ),

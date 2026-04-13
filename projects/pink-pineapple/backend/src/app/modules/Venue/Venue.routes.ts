@@ -12,6 +12,8 @@ router.get("/", optionalAuth, VenueController.getVenueList);
 router.get("/featured", optionalAuth, VenueController.getFeatured);
 router.get("/area/:area", optionalAuth, VenueController.getByArea);
 router.get("/search", optionalAuth, VenueController.searchVenues);
+router.get("/whats-on", optionalAuth, VenueController.getWhatsOn);
+router.get("/whats-on/:day", optionalAuth, VenueController.getWhatsOn);
 router.get("/:id", optionalAuth, VenueController.getVenueById);
 
 // Protected routes

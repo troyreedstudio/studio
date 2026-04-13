@@ -35,32 +35,23 @@ class SplashScreen extends StatelessWidget {
           children: [
             const Spacer(flex: 2),
             // Logo
-            Image.asset(
-              ImagePath.splashLogo,
-              height: MediaQuery.of(context).size.height * 0.18,
-              width: double.infinity,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 20),
-            // Brand name
-            Text(
-              'PINK PINEAPPLE',
-              style: GoogleFonts.outfit(
-                fontSize: 28.sp,
-                fontWeight: FontWeight.w800,
-                fontStyle: FontStyle.italic,
-                color: AppColors.accentRoseGold,
-                letterSpacing: 6,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40.w),
+              child: Image.asset(
+                ImagePath.splashLogo,
+                width: double.infinity,
+                fit: BoxFit.contain,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
+            // Tagline
             Text(
-              'BALI',
+              'KNOW BALI LIKE A LOCAL',
               style: GoogleFonts.poppins(
-                fontSize: 11.sp,
+                fontSize: 12.sp,
                 fontWeight: FontWeight.w300,
                 color: AppColors.textSecondary,
-                letterSpacing: 8,
+                letterSpacing: 4,
               ),
             ),
             const Spacer(flex: 2),

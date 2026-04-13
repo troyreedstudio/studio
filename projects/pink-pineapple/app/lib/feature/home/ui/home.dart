@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:pineapple/core/const/app_colors.dart';
 import 'package:pineapple/core/global_widgets/app_loading.dart';
 import 'package:pineapple/core/global_widgets/bg_screen_widget.dart';
 import 'package:pineapple/feature/home/controller/home_controller.dart';
-import 'package:pineapple/feature/home/widgets/trending_event_widget.dart';
-import 'package:pineapple/feature/home/widgets/tonight_event_widget.dart';
 import 'package:pineapple/feature/home_bottom_nav/controller/home_nav_controller.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
+import 'package:pineapple/feature/venue/model/venue_model.dart';
 import 'package:pineapple/feature/venue/widgets/venue_card_widget.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -55,7 +55,7 @@ class _HomeHeader extends StatelessWidget {
             children: [
               Image.asset(
                 'assets/images/app_logo_dark.jpg',
-                height: 56,
+                height: 80,
                 fit: BoxFit.contain,
               ),
               SizedBox(height: 2.h),
@@ -180,12 +180,17 @@ class _AreaFilterBar extends StatelessWidget {
                 homeController.selectedAreaIndex.value = index;
                 final venueCtrl = Get.find<VenueController>();
                 if (index == 0) {
-                  // "All Bali" — fetch all venues
-                  venueCtrl.fetchVenues();
+                  // "All Bali" — fetch all venues + all featured
                   venueCtrl.selectedArea.value = '';
+                  venueCtrl.selectedCategory.value = '';
+                  venueCtrl.fetchVenues();
+                  venueCtrl.fetchFeaturedVenues();
                 } else {
                   final area = areas[index]['label']!.toUpperCase();
+                  venueCtrl.selectedCategory.value = '';
                   venueCtrl.fetchVenuesByArea(area);
+                  // Also filter featured/trending to this area
+                  venueCtrl.fetchVenues(area: area);
                 }
               },
               child: AnimatedContainer(
@@ -261,34 +266,14 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 20.h),
 
-          // Trending Tonight — featured venues with photos
+          // This Week — horizontal day browser
           _SectionHeader(
-            title: 'Trending Tonight',
-            subtitle: 'Don\'t miss out',
+            title: 'This Week',
+            subtitle: 'Which night, which venue',
             onSeeAll: () => Get.find<HomeNavController>().changeIndex(1),
           ),
           SizedBox(height: 12.h),
-          SizedBox(
-            height: 220.h,
-            child: Obx(() {
-              final featured = venueController.featuredVenues;
-              return venueController.isFeaturedLoading.value
-                  ? loading()
-                  : featured.isEmpty
-                      ? _EmptySection(message: 'No venues tonight')
-                      : ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: EdgeInsets.symmetric(horizontal: 20.w),
-                          itemCount: featured.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: EdgeInsets.only(right: 14.w),
-                              child: VenueCardWidget(venue: featured[index]),
-                            );
-                          },
-                        );
-            }),
-          ),
+          const _ThisWeekSection(),
 
           SizedBox(height: 28.h),
 
@@ -329,31 +314,6 @@ class _DiscoverContent extends StatelessWidget {
                         );
             }),
           ),
-
-          SizedBox(height: 28.h),
-
-          // Tonight's Events — list
-          _SectionHeader(
-            title: 'Tonight\'s Events',
-            subtitle: 'Don\'t miss out',
-            onSeeAll: () => Get.find<HomeNavController>().changeIndex(1),
-          ),
-          SizedBox(height: 12.h),
-          Obx(() {
-            return homeController.tonightEventList.isEmpty
-                ? _EmptySection(message: 'No events scheduled for tonight')
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    itemCount: homeController.tonightEventList.length,
-                    itemBuilder: (context, index) {
-                      return TonightEventWidget(
-                        event: homeController.tonightEventList[index],
-                      );
-                    },
-                  );
-          }),
 
           SizedBox(height: 32.h),
         ],
@@ -634,6 +594,234 @@ class _EmptySection extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ── This Week Section ────────────────────────────────────────────────────────
+
+class _ThisWeekSection extends StatelessWidget {
+  const _ThisWeekSection();
+
+  /// Short day keys matching the controller's weeklySchedule map.
+  static const _shortDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+  /// Full day labels for display.
+  static const _dayLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
+  @override
+  Widget build(BuildContext context) {
+    final venueCtrl = Get.find<VenueController>();
+
+    return SizedBox(
+      height: 210.h,
+      child: Obx(() {
+        if (venueCtrl.isWhatsOnLoading.value && venueCtrl.weeklySchedule.isEmpty) {
+          return loading();
+        }
+
+        final now = DateTime.now();
+        // Build list of 7 days starting from today
+        final days = List.generate(7, (i) => now.add(Duration(days: i)));
+
+        return ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          itemCount: 7,
+          itemBuilder: (context, index) {
+            final date = days[index];
+            final isToday = index == 0;
+            // DateTime weekday: 1=Monday .. 7=Sunday
+            final shortKey = _shortDays[date.weekday - 1];
+            final dayLabel = _dayLabels[date.weekday - 1];
+            final dateLabel = DateFormat('d MMM').format(date);
+
+            // Get venues for this day from the schedule
+            final dayVenues = venueCtrl.weeklySchedule[shortKey] ?? <VenueModel>[];
+
+            return Padding(
+              padding: EdgeInsets.only(right: 12.w),
+              child: _DayCard(
+                dayLabel: dayLabel,
+                dateLabel: dateLabel,
+                isToday: isToday,
+                venues: dayVenues,
+              ),
+            );
+          },
+        );
+      }),
+    );
+  }
+}
+
+class _DayCard extends StatelessWidget {
+  final String dayLabel;
+  final String dateLabel;
+  final bool isToday;
+  final List<VenueModel> venues;
+
+  const _DayCard({
+    required this.dayLabel,
+    required this.dateLabel,
+    required this.isToday,
+    required this.venues,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 140.w,
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isToday ? AppColors.gradientMid : AppColors.borderSubtle,
+          width: isToday ? 1.5 : 0.5,
+        ),
+        boxShadow: isToday
+            ? [
+                BoxShadow(
+                  color: AppColors.gradientMid.withOpacity(0.15),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Day label + TODAY badge
+          Row(
+            children: [
+              Text(
+                dayLabel,
+                style: GoogleFonts.outfit(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w800,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              if (isToday)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.brandGradient,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'TODAY',
+                    style: GoogleFonts.poppins(
+                      fontSize: 8.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.background,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          // Date
+          Text(
+            dateLabel,
+            style: GoogleFonts.poppins(
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w300,
+              color: AppColors.textMuted,
+            ),
+          ),
+          SizedBox(height: 10.h),
+          // Venue list
+          Expanded(
+            child: venues.isEmpty
+                ? Text(
+                    'No venues',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w300,
+                      color: AppColors.textMuted,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  )
+                : ListView.separated(
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    itemCount: venues.length > 3 ? 3 : venues.length,
+                    separatorBuilder: (_, __) => SizedBox(height: 8.h),
+                    itemBuilder: (context, i) {
+                      final venue = venues[i];
+                      // Check for a special night name from weeklySchedule
+                      final specialName = _getSpecialNightName(venue, dayLabel.toLowerCase());
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            venue.name,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (specialName != null)
+                            Text(
+                              specialName,
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w300,
+                                color: AppColors.gradientMid,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          else
+                            Text(
+                              'Regular night',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w300,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+          // "more" indicator
+          if (venues.length > 3)
+            Padding(
+              padding: EdgeInsets.only(top: 4.h),
+              child: Text(
+                '+${venues.length - 3} more',
+                style: GoogleFonts.poppins(
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.gradientMid,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Extract a special night name from the venue's weeklySchedule if available.
+  String? _getSpecialNightName(VenueModel venue, String dayKey) {
+    if (venue.weeklySchedule == null) return null;
+    final dayData = venue.weeklySchedule![dayKey];
+    if (dayData is Map<String, dynamic>) {
+      final name = dayData['name']?.toString();
+      if (name != null && name.isNotEmpty) return name;
+    }
+    return null;
   }
 }
 
