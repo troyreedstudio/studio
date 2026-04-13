@@ -22,13 +22,13 @@ const Login = () => {
             </p>
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#C4707E] to-transparent" />
           </div>
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/images/logo_primary_dark.jpg"
             alt="Pink Pineapple"
             width={280}
             height={90}
-            className="object-contain"
-            priority
+            style={{ objectFit: 'contain' }}
           />
           <p className="text-[#B0B0B0] text-sm max-w-xs leading-relaxed" style={{ fontFamily: 'var(--font-inter), sans-serif' }}>
             Manage your events, bookings, and VIP experiences from one elegant dashboard.
@@ -42,20 +42,20 @@ const Login = () => {
           <div className="max-w-sm w-full space-y-8">
             {/* Mobile logo */}
             <div className="md:hidden text-center mb-8">
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/images/logo_primary_dark.jpg"
                 alt="Pink Pineapple"
                 width={200}
                 height={65}
-                className="object-contain mx-auto"
-                priority
+                style={{ objectFit: 'contain', margin: '0 auto' }}
               />
             </div>
 
             <div className="space-y-2">
               <h2
                 className="text-3xl font-semibold text-[#FFFFFF]"
-                style={{ fontFamily: 'Cormorant Garamond, serif' }}
+                style={{ fontFamily: 'var(--font-playfair), serif' }}
               >
                 Welcome Back
               </h2>

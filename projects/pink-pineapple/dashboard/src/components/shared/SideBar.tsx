@@ -115,13 +115,13 @@ const SideBar = () => {
 
         {/* Brand header */}
         <SidebarGroupLabel className="mb-10 mt-8 mx-auto flex flex-col items-center gap-1">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/images/logo_primary_dark.jpg"
             alt="Pink Pineapple"
             width={180}
             height={60}
-            className="object-contain"
-            priority
+            style={{ objectFit: 'contain' }}
           />
         </SidebarGroupLabel>
 
