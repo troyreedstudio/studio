@@ -45,9 +45,10 @@ class SplashScreen extends StatelessWidget {
             // Brand name
             Text(
               'PINK PINEAPPLE',
-              style: GoogleFonts.playfairDisplay(
+              style: GoogleFonts.outfit(
                 fontSize: 28.sp,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w800,
+                fontStyle: FontStyle.italic,
                 color: AppColors.accentRoseGold,
                 letterSpacing: 6,
               ),

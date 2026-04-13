@@ -399,9 +399,10 @@ class BookTicketsPage extends StatelessWidget {
         children: [
           Text(
             'Tickets',
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.outfit(
               fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
+              fontStyle: FontStyle.italic,
               color: AppColors.textPrimary,
             ),
           ),

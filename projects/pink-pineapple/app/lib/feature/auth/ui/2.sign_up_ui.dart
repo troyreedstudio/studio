@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/const/app_colors.dart';
 import '../../../core/const/image_path.dart';
 import '../../../core/global_widgets/app_loading.dart';
+import '../../../core/global_widgets/country_code_picker.dart';
 import '../controller/2.sign_up_cnt.dart';
 import '1.login_ui.dart';
 
@@ -161,54 +162,51 @@ class SignUpPage extends StatelessWidget {
                 Row(
                   children: [
                     Obx(() {
-                      final items = controller.uniqueCountryByCode;
-                      return Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10.w,
-                          vertical: 12.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundSurface,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(color: AppColors.borderSubtle),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: controller.selectedCountryCode.value,
-                            isDense: true,
-                            dropdownColor: AppColors.backgroundCard,
-                            style: GoogleFonts.poppins(
-                              color: AppColors.textPrimary,
-                              fontSize: 14.sp,
-                            ),
-                            items: items.map((item) {
-                              return DropdownMenuItem<String>(
-                                value: item['code'],
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      item['icon'] ?? '🌍',
-                                      style: TextStyle(fontSize: 16.sp),
-                                    ),
-                                    SizedBox(width: 6.w),
-                                    Text(
-                                      item['code'] ?? '',
-                                      style: GoogleFonts.poppins(
-                                        color: AppColors.textPrimary,
-                                        fontSize: 13.sp,
-                                      ),
-                                    ),
-                                  ],
+                      return GestureDetector(
+                        onTap: () async {
+                          final selected = await showCountryCodePicker(
+                            context: context,
+                            currentCode: controller.selectedCountryCode.value,
+                          );
+                          if (selected != null) {
+                            controller.selectedCountryCode.value =
+                                selected['code'] ?? '+1';
+                            controller.selectedCountryFlag.value =
+                                selected['icon'] ?? '🌍';
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 14.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundSurface,
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(color: AppColors.borderSubtle),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                controller.selectedCountryFlag.value,
+                                style: TextStyle(fontSize: 16.sp),
+                              ),
+                              SizedBox(width: 6.w),
+                              Text(
+                                controller.selectedCountryCode.value,
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 13.sp,
                                 ),
-                              );
-                            }).toList(),
-                            onChanged: (v) {
-                              if (v != null) {
-                                controller.selectedCountryCode.value = v;
-                                controller.selectedCountryFlag.value =
-                                    controller.getFlagByCode(v);
-                              }
-                            },
+                              ),
+                              SizedBox(width: 4.w),
+                              Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: AppColors.textMuted,
+                                size: 18,
+                              ),
+                            ],
                           ),
                         ),
                       );

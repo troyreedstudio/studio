@@ -22,9 +22,10 @@ class LogOutDialog extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Are You Sure?',
-              style: GoogleFonts.playfairDisplay(
+              style: GoogleFonts.outfit(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
+                fontStyle: FontStyle.italic,
                 color: AppColors.textPrimary,
               ),
             ),

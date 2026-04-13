@@ -15,8 +15,10 @@ class VenueController extends GetxController {
   final Rx<VenueModel?> selectedVenue = Rx<VenueModel?>(null);
 
   final RxBool isLoading = false.obs;
+  final RxBool isDetailLoading = false.obs;
   final RxBool isFeaturedLoading = false.obs;
   final RxString selectedArea = 'CANGGU'.obs;
+  final RxString selectedCategory = ''.obs;
 
   /// Guard to prevent duplicate favorite taps
   final RxSet<String> favoriteInFlight = <String>{}.obs;
@@ -161,7 +163,8 @@ class VenueController extends GetxController {
   /// Fetch a single venue's full detail.
   Future<void> fetchVenueDetail(String id) async {
     try {
-      isLoading.value = true;
+      isDetailLoading.value = true;
+      selectedVenue.value = null;
 
       final response = await _netConfig.ApiRequestHandler(
         RequestMethod.GET,
@@ -178,11 +181,13 @@ class VenueController extends GetxController {
         if (venueData is Map<String, dynamic>) {
           selectedVenue.value = VenueModel.fromJson(venueData);
         }
+      } else {
+        _logger.e('Venue detail response: $response');
       }
     } catch (e, st) {
       _logger.e('Venue detail fetch failed: $e', error: e, stackTrace: st);
     } finally {
-      isLoading.value = false;
+      isDetailLoading.value = false;
     }
   }
 

@@ -26,7 +26,14 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _venueController = Get.find<VenueController>();
+    // Use existing controller if available, otherwise create new one
+    if (Get.isRegistered<VenueController>()) {
+      _venueController = Get.find<VenueController>();
+    } else {
+      _venueController = Get.put(VenueController());
+    }
+    // Clear any previous selection and fetch this venue
+    _venueController.selectedVenue.value = null;
     _venueController.fetchVenueDetail(widget.venueId);
   }
 
@@ -35,7 +42,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Obx(() {
-        if (_venueController.isLoading.value) {
+        if (_venueController.isDetailLoading.value) {
           return _buildLoadingSkeleton();
         }
 
@@ -310,9 +317,10 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Text(
         venue.name,
-        style: GoogleFonts.playfairDisplay(
+        style: GoogleFonts.outfit(
           fontSize: 32.sp,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
+          fontStyle: FontStyle.italic,
           color: AppColors.textPrimary,
           height: 1.1,
         ),
@@ -490,11 +498,10 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
 
   Widget _buildInfoCard(VenueModel venue) {
     final hasPhone = venue.phone.isNotEmpty;
-    final hasWebsite = venue.website.isNotEmpty;
     final hasInstagram = venue.instagram.isNotEmpty;
     final hasAddress = venue.address.isNotEmpty;
 
-    if (!hasPhone && !hasWebsite && !hasInstagram && !hasAddress) {
+    if (!hasPhone && !hasInstagram && !hasAddress) {
       return const SizedBox.shrink();
     }
 
@@ -516,13 +523,8 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
               Divider(color: AppColors.borderSubtle, height: 24.h),
             _buildInfoRow(Icons.phone_outlined, 'Phone', venue.phone),
           ],
-          if (hasWebsite) ...[
-            if (hasPhone || hasAddress)
-              Divider(color: AppColors.borderSubtle, height: 24.h),
-            _buildInfoRow(Icons.language, 'Website', venue.website),
-          ],
           if (hasInstagram) ...[
-            if (hasPhone || hasWebsite || hasAddress)
+            if (hasPhone || hasAddress)
               Divider(color: AppColors.borderSubtle, height: 24.h),
             _buildInfoRow(
               FontAwesomeIcons.instagram,

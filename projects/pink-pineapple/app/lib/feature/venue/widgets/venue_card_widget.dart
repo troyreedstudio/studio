@@ -181,9 +181,10 @@ class VenueCardWidget extends StatelessWidget {
                   // Venue name — editorial serif font
                   Text(
                     venue.name,
-                    style: GoogleFonts.playfairDisplay(
+                    style: GoogleFonts.outfit(
                       fontSize: 15.sp,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
+                      fontStyle: FontStyle.italic,
                       color: AppColors.textPrimary,
                     ),
                     maxLines: 1,

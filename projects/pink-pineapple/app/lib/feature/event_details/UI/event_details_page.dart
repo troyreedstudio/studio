@@ -241,9 +241,10 @@ class EventDetailsPage extends StatelessWidget {
         children: [
           Text(
             event.eventName ?? 'Event',
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.outfit(
               fontSize: 36.sp,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
+              fontStyle: FontStyle.italic,
               color: AppColors.textPrimary,
               height: 1.05,
               letterSpacing: 0.2,

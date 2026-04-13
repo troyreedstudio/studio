@@ -5,7 +5,7 @@ class ImagePath {
   static const String bg_1 = "assets/images/bg_1.png";
   static const String bg_2 = "assets/images/bg_2.png";
   static const String smallLogo = "assets/images/pinaple.png";
-  static const String splashLogo = "assets/images/splash_logo_v2.png";
+  static const String splashLogo = "assets/images/app_logo_dark.jpg";
   static const String bg_screen = "assets/images/bg_screen.png";
   static const String pineapple = "assets/images/pinaple.png";
   static const String pineappleroom = "assets/images/pineappleroom.png";

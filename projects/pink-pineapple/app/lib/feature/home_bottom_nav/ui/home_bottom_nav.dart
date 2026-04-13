@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pineapple/core/const/app_colors.dart';
-import 'package:pineapple/feature/explore/ui/explore_screen.dart';
 import 'package:pineapple/feature/home/ui/home.dart';
 import 'package:pineapple/feature/profile_tab/ui/profile_tab.dart';
 import 'package:pineapple/feature/tonight/ui/tonight_screen.dart';
@@ -15,7 +14,6 @@ class HomeBottomNav extends StatelessWidget {
 
   final List<Widget> pages = [
     HomeScreen(),       // Discover
-    ExploreScreen(),    // Explore
     TonightScreen(),    // Tonight
     BookingsListPage(), // Bookings
     ProfileTabPage(),   // Profile
@@ -81,24 +79,16 @@ class _PinkPineappleNavBar extends StatelessWidget {
                   currentIndex: navigationController.currentIndex.value,
                   onTap: navigationController.changeIndex,
                 ),
-                _NavItem(
-                  icon: Icons.map_outlined,
-                  activeIcon: Icons.map,
-                  label: 'Explore',
+                _TonightNavItem(
                   index: 1,
                   currentIndex: navigationController.currentIndex.value,
                   onTap: navigationController.changeIndex,
                 ),
-                _TonightNavItem(
-                  index: 2,
-                  currentIndex: navigationController.currentIndex.value,
-                  onTap: navigationController.changeIndex,
-                ),
                 _NavItem(
-                  icon: Icons.bookmark_border,
-                  activeIcon: Icons.bookmark,
+                  icon: Icons.confirmation_number_outlined,
+                  activeIcon: Icons.confirmation_number,
                   label: 'Bookings',
-                  index: 3,
+                  index: 2,
                   currentIndex: navigationController.currentIndex.value,
                   onTap: navigationController.changeIndex,
                 ),
@@ -106,7 +96,7 @@ class _PinkPineappleNavBar extends StatelessWidget {
                   icon: Icons.person_outline,
                   activeIcon: Icons.person,
                   label: 'Profile',
-                  index: 4,
+                  index: 3,
                   currentIndex: navigationController.currentIndex.value,
                   onTap: navigationController.changeIndex,
                 ),

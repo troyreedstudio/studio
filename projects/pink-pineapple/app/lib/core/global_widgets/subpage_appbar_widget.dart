@@ -36,8 +36,9 @@ class SubPageAppbarWidget extends StatelessWidget {
         // SizedBox(width: 10.w),
         Text(
           appbarTitle,
-          style: GoogleFonts.playfairDisplay(
-            fontWeight: FontWeight.w500,
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w700,
+            fontStyle: FontStyle.italic,
             fontSize: 20.sp,
             color: AppColors.textPrimary,
           ),

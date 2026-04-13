@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:pineapple/core/const/user_info/user_info_controller.dart';
 import 'package:pineapple/core/local/local_data.dart';
 import 'package:pineapple/feature/auth/ui/9.change_password_page.dart';
-import 'package:pineapple/feature/blocked_user/ui/blocked_user_ui.dart';
 import 'package:pineapple/feature/free_user/ui/free_user_home_page.dart';
 
 import '../../favorites/ui/favorite_event_screen.dart';
@@ -32,11 +31,6 @@ class ProfileTabController extends GetxController {
       title: 'Change Password',
       iconPath: 'assets/icons/lock.png',
       onTap: () => _onChangePasswordTap(),
-    ),
-    ProfileMenuItem(
-      title: 'Blocked Users',
-      iconPath: 'assets/icons/block.png',
-      onTap: () => _onBlockedUsersTap(),
     ),
   ];
 
@@ -70,10 +64,6 @@ class ProfileTabController extends GetxController {
       // () => UnifiedPostsPage(postType: PostType.favourites),
       () => FavoriteEventScreen(),
     ); // Add navigation logic here
-  }
-
-  static void _onBlockedUsersTap() {
-    Get.to(() => BlockedUsersPage()); // Add navigation logic here
   }
 
   static void _onChangePasswordTap() {

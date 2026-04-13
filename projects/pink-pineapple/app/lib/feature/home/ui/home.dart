@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pineapple/core/const/app_colors.dart';
-import 'package:pineapple/core/const/image_path.dart';
 import 'package:pineapple/core/global_widgets/app_loading.dart';
 import 'package:pineapple/core/global_widgets/bg_screen_widget.dart';
 import 'package:pineapple/feature/home/controller/home_controller.dart';
@@ -48,24 +48,17 @@ class _HomeHeader extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
       child: Row(
         children: [
-          // Logo / wordmark
+          // Logo
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              ShaderMask(
-                shaderCallback: (bounds) =>
-                    AppColors.gradientPrimary.createShader(bounds),
-                child: Text(
-                  'PINK PINEAPPLE',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 1.5,
-                  ),
-                ),
+              Image.asset(
+                'assets/images/app_logo_dark.jpg',
+                height: 40,
+                fit: BoxFit.contain,
               ),
+              SizedBox(height: 2.h),
               Row(
                 children: [
                   Icon(
@@ -87,10 +80,10 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          // Search
+          // Search — scrolls focus to the inline search bar
           _IconButton(
             icon: Icons.search,
-            onTap: () => Get.find<HomeNavController>().changeIndex(1),
+            onTap: () {},
           ),
           SizedBox(width: 10.w),
           // Notifications
@@ -256,13 +249,23 @@ class _DiscoverContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
 
-          // Featured Tonight — hero carousel
+          // Category filter pills
+          _CategoryFilterPills(),
+
+          SizedBox(height: 14.h),
+
+          // Search bar
+          _VenueSearchBar(),
+
+          SizedBox(height: 20.h),
+
+          // Trending Tonight — hero carousel
           _SectionHeader(
-            title: 'Featured Tonight',
-            subtitle: 'Handpicked for tonight',
-            onSeeAll: () => Get.find<HomeNavController>().changeIndex(2),
+            title: 'Trending Tonight',
+            subtitle: 'Don\'t miss out',
+            onSeeAll: () => Get.find<HomeNavController>().changeIndex(1),
           ),
           SizedBox(height: 12.h),
           SizedBox(
@@ -319,21 +322,11 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 28.h),
 
-          // Categories
-          _SectionHeader(
-            title: 'What\'s Your Vibe?',
-            subtitle: 'Explore by category',
-          ),
-          SizedBox(height: 12.h),
-          _CategoryGrid(),
-
-          SizedBox(height: 28.h),
-
           // Tonight's Events — list
           _SectionHeader(
             title: 'Tonight\'s Events',
             subtitle: 'Don\'t miss out',
-            onSeeAll: () => Get.find<HomeNavController>().changeIndex(2),
+            onSeeAll: () => Get.find<HomeNavController>().changeIndex(1),
           ),
           SizedBox(height: 12.h),
           Obx(() {
@@ -438,73 +431,161 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Category Grid ─────────────────────────────────────────────────────────────
+// ── Category Filter Pills ────────────────────────────────────────────────────
 
-class _CategoryGrid extends StatelessWidget {
-  static const List<Map<String, dynamic>> categories = [
-    {'label': 'Beach Clubs', 'icon': Icons.beach_access, 'color': 0xFFC4707E},
-    {'label': 'Nightclubs', 'icon': Icons.nightlife, 'color': 0xFFBD7FBD},
-    {'label': 'Rooftop Bars', 'icon': Icons.roofing, 'color': 0xFF7FA8D4},
-    {'label': 'Day Parties', 'icon': Icons.wb_sunny, 'color': 0xFFD4C574},
-    {'label': 'Live Music', 'icon': Icons.music_note, 'color': 0xFF7DD4A5},
-    {'label': 'Fine Dining', 'icon': Icons.restaurant, 'color': 0xFFD47F7F},
+class _CategoryFilterPills extends StatelessWidget {
+  static const List<Map<String, String>> categories = [
+    {'label': 'All', 'value': ''},
+    {'label': 'Beach Clubs', 'value': 'BEACH_CLUB'},
+    {'label': 'Restaurants', 'value': 'RESTAURANT'},
+    {'label': 'Nightlife', 'value': 'NIGHTLIFE'},
+    {'label': 'Wellness', 'value': 'WELLNESS'},
+    {'label': 'Events', 'value': 'EVENTS'},
   ];
 
   @override
   Widget build(BuildContext context) {
+    final venueCtrl = Get.find<VenueController>();
+
     return SizedBox(
-      height: 90.h,
+      height: 32.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 20.w),
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final cat = categories[index];
-          final color = Color(cat['color'] as int);
-          return GestureDetector(
-            onTap: () {},
-            child: Container(
-              width: 78.w,
-              margin: EdgeInsets.only(right: 10.w),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: color.withOpacity(0.25),
-                  width: 0.5,
+          return Obx(() {
+            final isSelected = venueCtrl.selectedCategory.value ==
+                (cat['value'] ?? '');
+            return GestureDetector(
+              onTap: () {
+                final value = cat['value'] ?? '';
+                venueCtrl.selectedCategory.value = value;
+                if (value.isEmpty) {
+                  venueCtrl.fetchVenues();
+                } else {
+                  venueCtrl.fetchVenues(category: value);
+                }
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: EdgeInsets.only(right: 8.w),
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  gradient: isSelected ? AppColors.gradientPrimary : null,
+                  color: isSelected ? null : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected
+                        ? Colors.transparent
+                        : AppColors.borderSubtle,
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  cat['label']!,
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected
+                        ? AppColors.backgroundDark
+                        : AppColors.textSecondary,
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      cat['icon'] as IconData,
-                      color: color,
-                      size: 20.sp,
-                    ),
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    cat['label'] as String,
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                  ),
-                ],
-              ),
-            ),
-          );
+            );
+          });
         },
+      ),
+    );
+  }
+}
+
+// ── Venue Search Bar ─────────────────────────────────────────────────────────
+
+class _VenueSearchBar extends StatefulWidget {
+  @override
+  State<_VenueSearchBar> createState() => _VenueSearchBarState();
+}
+
+class _VenueSearchBarState extends State<_VenueSearchBar> {
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final venueCtrl = Get.find<VenueController>();
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Container(
+        height: 42.h,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.borderSubtle,
+            width: 0.5,
+          ),
+        ),
+        child: TextField(
+          controller: _textController,
+          focusNode: _focusNode,
+          style: GoogleFonts.poppins(
+            fontSize: 13.sp,
+            color: AppColors.textPrimary,
+          ),
+          decoration: InputDecoration(
+            hintText: 'Search venues, bars, restaurants...',
+            hintStyle: GoogleFonts.poppins(
+              fontSize: 13.sp,
+              color: AppColors.textMuted,
+            ),
+            prefixIcon: Icon(
+              Icons.search,
+              size: 18.sp,
+              color: AppColors.textMuted,
+            ),
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _textController,
+              builder: (context, value, _) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return GestureDetector(
+                  onTap: () {
+                    _textController.clear();
+                    _focusNode.unfocus();
+                    venueCtrl.fetchVenues();
+                  },
+                  child: Icon(
+                    Icons.close,
+                    size: 18.sp,
+                    color: AppColors.textMuted,
+                  ),
+                );
+              },
+            ),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+          ),
+          cursorColor: AppColors.gradientMid,
+          onChanged: (query) {
+            if (query.trim().isEmpty) {
+              venueCtrl.fetchVenues();
+            } else {
+              venueCtrl.searchVenues(query);
+            }
+          },
+        ),
       ),
     );
   }

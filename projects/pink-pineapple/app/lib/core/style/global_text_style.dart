@@ -5,42 +5,44 @@ import 'package:pineapple/core/const/app_colors.dart';
 /// ─────────────────────────────────────────────────────────────────────────────
 /// Pink Pineapple — Typography tokens (LOCKED brand guidelines)
 ///
-/// Venue names:      Playfair Display, Bold, 32-40px
+/// Venue names:      Outfit, ExtraBold Italic, 32-40px
 /// Body text:        Inter, Regular, 14-16px
 /// Labels/cats:      Inter, Light/300, 12-14px, UPPERCASE, wide tracking
 /// Section headers:  Inter, Semi-bold Italic, 20-24px
 /// Tags/badges:      Inter, Medium/500, 11-12px, wide tracking
 /// ─────────────────────────────────────────────────────────────────────────────
 
-/// Venue name / hero heading — Playfair Display (serif)
+/// Venue name / hero heading — Outfit (geometric sans-serif)
 TextStyle venueNameStyle({
   double fontSize = 36.0,
-  FontWeight fontWeight = FontWeight.w700,
+  FontWeight fontWeight = FontWeight.w800,
   Color color = const Color(0xFFFFFFFF),
   double letterSpacing = 0.2,
   double lineHeight = 1.1,
 }) {
-  return GoogleFonts.playfairDisplay(
+  return GoogleFonts.outfit(
     fontSize: fontSize,
     fontWeight: fontWeight,
+    fontStyle: FontStyle.italic,
     color: color,
     letterSpacing: letterSpacing,
     height: lineHeight,
   );
 }
 
-/// Primary brand heading — Playfair Display for headings (luxury editorial)
+/// Primary brand heading — Outfit for headings (geometric sans-serif)
 /// Legacy alias kept so existing call-sites compile without changes.
 TextStyle brandHeadingStyle({
   double fontSize = 24.0,
-  FontWeight fontWeight = FontWeight.w700,
+  FontWeight fontWeight = FontWeight.w800,
   Color color = const Color(0xFFFFFFFF),
   double letterSpacing = 0.5,
   double lineHeight = 1.3,
 }) {
-  return GoogleFonts.playfairDisplay(
+  return GoogleFonts.outfit(
     fontSize: fontSize,
     fontWeight: fontWeight,
+    fontStyle: FontStyle.italic,
     color: color,
     letterSpacing: letterSpacing,
     height: lineHeight,

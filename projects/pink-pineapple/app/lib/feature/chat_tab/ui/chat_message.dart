@@ -74,7 +74,6 @@ class MessagesPage extends StatelessWidget {
           headingText(
             text: 'Messages',
             color: AppColors.textPrimary,
-            fontFamily: 'Cormorant Garamond',
           ),
           const Spacer(),
           Obx(() {

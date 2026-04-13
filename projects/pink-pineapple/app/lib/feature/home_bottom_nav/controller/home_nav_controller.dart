@@ -6,7 +6,7 @@ class HomeNavController extends GetxController {
   var currentIndex = 0.obs;
 
   // Page titles for AppBar
-  final List<String> pageTitles = ['Home', 'Theme', 'Affirmations', 'Profile'];
+  final List<String> pageTitles = ['Discover', 'Tonight', 'Bookings', 'Profile'];
 
   void changeIndex(int index) {
     currentIndex.value = index;
