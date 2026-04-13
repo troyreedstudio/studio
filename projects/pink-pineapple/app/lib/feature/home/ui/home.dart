@@ -46,42 +46,13 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
-      child: Row(
-        children: [
-          // Logo
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/images/app_logo_dark.jpg',
-                height: 80,
-                fit: BoxFit.contain,
-              ),
-              SizedBox(height: 2.h),
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 10.sp,
-                    color: AppColors.textMuted,
-                  ),
-                  SizedBox(width: 2.w),
-                  Text(
-                    'Bali, Indonesia',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: AppColors.textMuted,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const Spacer(),
-        ],
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+      child: Center(
+        child: Image.asset(
+          'assets/images/app_logo_dark.jpg',
+          height: 100,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }
@@ -234,7 +205,6 @@ class _DiscoverContent extends StatelessWidget {
           _SectionHeader(
             title: 'This Week',
             subtitle: 'Which night, which venue',
-            onSeeAll: () {},  // All content is on this page
           ),
           SizedBox(height: 12.h),
           const _ThisWeekSection(),
@@ -513,7 +483,6 @@ class _CategorySection extends StatelessWidget {
       children: [
         _SectionHeader(
           title: title,
-          onSeeAll: () {},
         ),
         SizedBox(height: 12.h),
         SizedBox(
@@ -746,7 +715,7 @@ class _DayCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => _showDayDetail(context),
       child: Container(
-        width: 140.w,
+        width: 160.w,
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -864,20 +833,29 @@ class _DayCard extends StatelessWidget {
                             ),
                             if (specialName != null)
                               Text(
-                                timeRange != null ? '$specialName \u00B7 $timeRange' : specialName,
+                                specialName,
                                 style: GoogleFonts.poppins(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w300,
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w400,
                                   color: AppColors.gradientMid,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                              )
-                            else
+                              ),
+                            if (timeRange != null)
                               Text(
-                                timeRange != null ? 'Regular night \u00B7 $timeRange' : 'Regular night',
+                                timeRange,
                                 style: GoogleFonts.poppins(
-                                  fontSize: 11.sp,
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w300,
+                                  color: AppColors.textMuted,
+                                ),
+                              )
+                            else if (specialName == null)
+                              Text(
+                                'Open',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10.sp,
                                   fontWeight: FontWeight.w300,
                                   color: AppColors.textMuted,
                                 ),
@@ -908,12 +886,46 @@ class _DayCard extends StatelessWidget {
   }
 
   /// Extract a special night name from the venue's weeklySchedule if available.
+  /// Strips the venue name and day from the event name to avoid repetition.
   String? _getSpecialNightName(VenueModel venue, String dayKey) {
     if (venue.weeklySchedule == null) return null;
     final dayData = venue.weeklySchedule![dayKey];
     if (dayData is Map<String, dynamic>) {
-      final name = dayData['name']?.toString();
-      if (name != null && name.isNotEmpty) return name;
+      final rawName = dayData['name']?.toString() ?? '';
+      final desc = dayData['description']?.toString() ?? '';
+      final genre = dayData['genre']?.toString() ?? '';
+
+      if (rawName.isEmpty) {
+        if (desc.isNotEmpty) return desc;
+        if (genre.isNotEmpty) return genre;
+        return null;
+      }
+
+      // Strip venue name prefix (e.g. "Bella Monday" -> "Monday")
+      String cleaned = rawName;
+      if (cleaned.startsWith(venue.name)) {
+        cleaned = cleaned.substring(venue.name.length).trim();
+      }
+
+      // Strip day names
+      final dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+      // Strip trailing day name (e.g. "EDM Monday" -> "EDM")
+      for (final d in dayNames) {
+        if (cleaned.endsWith(' $d')) {
+          cleaned = cleaned.substring(0, cleaned.length - d.length - 1).trim();
+          break;
+        }
+      }
+
+      // If what's left is empty or just a day name, use description or genre
+      if (cleaned.isEmpty || dayNames.contains(cleaned)) {
+        if (desc.isNotEmpty) return desc;
+        if (genre.isNotEmpty) return genre;
+        return null;
+      }
+
+      return cleaned;
     }
     return null;
   }

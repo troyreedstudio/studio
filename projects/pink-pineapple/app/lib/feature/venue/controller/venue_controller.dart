@@ -46,10 +46,10 @@ class VenueController extends GetxController {
         queryParams['category'] = category;
       }
 
-      String url = Urls.allVenues;
-      if (queryParams.isNotEmpty) {
-        url += '?${Uri(queryParameters: queryParams).query}';
-      }
+      // Always fetch enough venues to fill all category sections
+      queryParams['limit'] = '100';
+
+      String url = '${Urls.allVenues}?${Uri(queryParameters: queryParams).query}';
 
       final response = await _netConfig.ApiRequestHandler(
         RequestMethod.GET,
@@ -118,7 +118,14 @@ class VenueController extends GetxController {
               final parsed = <VenueModel>[];
               for (final v in dayVenues) {
                 try {
-                  parsed.add(VenueModel.fromJson(v as Map<String, dynamic>));
+                  final venueJson = v as Map<String, dynamic>;
+                  // The whats-on endpoint returns "event" or "tonight" with the day's special data.
+                  // Inject it into weeklySchedule so the UI can read it.
+                  final specialData = venueJson['event'] ?? venueJson['tonight'];
+                  if (specialData is Map<String, dynamic>) {
+                    venueJson['weeklySchedule'] = {dayKey: specialData};
+                  }
+                  parsed.add(VenueModel.fromJson(venueJson));
                 } catch (e) {
                   _logger.e('Failed to parse whats-on venue: $e');
                 }
