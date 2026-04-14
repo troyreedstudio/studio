@@ -9,6 +9,7 @@ import '../../../core/const/app_colors.dart';
 import '../../../core/network_caller/endpoints.dart';
 import '../../../core/network_caller/network_config.dart';
 import '../../home/model/event_model.dart';
+import '../../venue/model/venue_model.dart';
 
 class ExploreController extends GetxController {
   final logger = Logger();
@@ -21,6 +22,7 @@ class ExploreController extends GetxController {
   final query = ''.obs;
   final isLoading = false.obs;
   final results = <AllEventModel>[].obs;
+  final venueResults = <VenueModel>[].obs;
   final recent = <String>[].obs;
   final selectedFilters = <String>{}.obs;
 
@@ -157,10 +159,10 @@ class ExploreController extends GetxController {
     });
   }
 
-  /// 🔎 SEARCH FUNCTION
+  /// 🔎 SEARCH FUNCTION — searches venues AND events
   Future<void> search(String q) async {
     if (q.isEmpty) {
-      // Reset to show all events
+      venueResults.clear();
       currentPage.value = 1;
       await fetchEvents(refresh: true);
       return;
@@ -169,11 +171,10 @@ class ExploreController extends GetxController {
     isLoading.value = true;
 
     try {
-      // TODO: If your API supports search, use it here
-      // For now, we'll filter locally
-      await Future.delayed(const Duration(milliseconds: 200));
+      // Search venues via backend API
+      await _searchVenues(q);
 
-      // Filter from all results
+      // Filter events locally
       final filtered = results.where((event) {
         final eventName = event.eventName?.toLowerCase() ?? '';
         final location = event.user?.fullAddress?.toLowerCase() ?? '';
@@ -185,13 +186,42 @@ class ExploreController extends GetxController {
             description.contains(searchTerm);
       }).toList();
 
-      // Temporarily show filtered results
-      // (This won't affect the main list)
       results.assignAll(filtered);
     } catch (e) {
       logger.e('Search failed: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// 🏝️ VENUE SEARCH via backend API
+  Future<void> _searchVenues(String q) async {
+    try {
+      final response = await netConfig.ApiRequestHandler(
+        RequestMethod.GET,
+        '${Urls.searchVenues}?searchTerm=$q',
+        jsonEncode({}),
+        is_auth: false,
+      );
+
+      if (response != null && response['success'] == true) {
+        final venuesData = response['data'];
+        if (venuesData is List) {
+          venueResults.assignAll(
+            venuesData
+                .map((v) => VenueModel.fromJson(v as Map<String, dynamic>))
+                .toList(),
+          );
+          logger.d('Venue search: ${venueResults.length} results for "$q"');
+        } else {
+          venueResults.clear();
+        }
+      } else {
+        venueResults.clear();
+      }
+    } catch (e) {
+      logger.e('Venue search failed: $e');
+      venueResults.clear();
     }
   }
 
@@ -213,6 +243,7 @@ class ExploreController extends GetxController {
   void clearQuery() {
     textController.clear();
     query.value = '';
+    venueResults.clear();
     currentPage.value = 1;
     fetchEvents(refresh: true);
   }

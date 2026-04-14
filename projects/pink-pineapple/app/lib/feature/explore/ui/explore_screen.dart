@@ -12,6 +12,8 @@ import '../../../core/global_widgets/app_network_image.dart';
 import '../../event_details/UI/event_details_page.dart';
 import '../../home/controller/home_controller.dart';
 import '../../home/model/event_model.dart';
+import '../../venue/model/venue_model.dart';
+import '../../venue/ui/venue_detail_screen.dart';
 import '../controller/explore_controller.dart';
 
 class ExploreScreen extends StatelessWidget {
@@ -53,26 +55,10 @@ class ExploreScreen extends StatelessWidget {
 
               SizedBox(height: 16.h),
 
-              // Results count
-              Obx(() {
-                if (c.results.isEmpty) return const SizedBox.shrink();
-                return Padding(
-                  padding: EdgeInsets.only(left: 8.w, bottom: 8.h),
-                  child: Text(
-                    '${c.results.length} event${c.results.length != 1 ? 's' : ''} found',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.sp,
-                      color: AppColors.textMuted,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                );
-              }),
-
               // Body
               Expanded(
                 child: Obx(() {
-                  if (c.isLoading.value && c.results.isEmpty) {
+                  if (c.isLoading.value && c.results.isEmpty && c.venueResults.isEmpty) {
                     return Center(
                       child: CircularProgressIndicator(
                         color: AppColors.accentRoseGold,
@@ -85,7 +71,7 @@ class ExploreScreen extends StatelessWidget {
                     return _buildRecentSearches();
                   }
 
-                  if (c.results.isEmpty) {
+                  if (c.results.isEmpty && c.venueResults.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -108,7 +94,7 @@ class ExploreScreen extends StatelessWidget {
                           ),
                           SizedBox(height: 20.h),
                           Text(
-                            'No events found',
+                            'No results found',
                             style: GoogleFonts.outfit(
                               color: AppColors.textSecondary,
                               fontSize: 20.sp,
@@ -133,47 +119,55 @@ class ExploreScreen extends StatelessWidget {
                     color: AppColors.accentRoseGold,
                     backgroundColor: AppColors.backgroundCard,
                     onRefresh: c.refresh,
-                    child: ListView.separated(
+                    child: ListView(
                       controller: c.scrollController,
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.only(bottom: 16.h),
-                      itemCount: c.results.length + 1,
-                      separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                      itemBuilder: (_, i) {
-                        if (i == c.results.length) {
-                          if (c.isLoadingMore.value) {
-                            return Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16.h),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.accentRoseGold,
-                                  strokeWidth: 2,
-                                ),
+                      children: [
+                        // Venue results
+                        if (c.venueResults.isNotEmpty) ...[
+                          Padding(
+                            padding: EdgeInsets.only(left: 8.w, bottom: 8.h),
+                            child: Text(
+                              'Venues',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.sp,
+                                color: AppColors.textSecondary,
+                                letterSpacing: 0.3,
                               ),
-                            );
-                          }
-                          if (!c.hasMoreData.value && c.results.length >= c.limit) {
-                            return Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16.h),
-                              child: Center(
-                                child: Text(
-                                  'No more events',
-                                  style: GoogleFonts.poppins(
-                                    color: AppColors.textMuted,
-                                    fontSize: 12.sp,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        }
+                            ),
+                          ),
+                          ...c.venueResults.map((venue) => Padding(
+                            padding: EdgeInsets.only(bottom: 12.h),
+                            child: _VenueSearchCard(venue: venue),
+                          )),
+                          SizedBox(height: 8.h),
+                        ],
 
-                        return _EventSearchCard(
-                          event: c.results[i],
-                          homeController: homeController,
-                        );
-                      },
+                        // Event results
+                        if (c.results.isNotEmpty) ...[
+                          Padding(
+                            padding: EdgeInsets.only(left: 8.w, bottom: 8.h),
+                            child: Text(
+                              'Events',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.sp,
+                                color: AppColors.textSecondary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                          ...c.results.map((event) => Padding(
+                            padding: EdgeInsets.only(bottom: 12.h),
+                            child: _EventSearchCard(
+                              event: event,
+                              homeController: homeController,
+                            ),
+                          )),
+                        ],
+                      ],
                     ),
                   );
                 }),
@@ -469,6 +463,133 @@ class _EventSearchCard extends StatelessWidget {
   }
 }
 
+class _VenueSearchCard extends StatelessWidget {
+  const _VenueSearchCard({Key? key, required this.venue}) : super(key: key);
+
+  final VenueModel venue;
+
+  String _formatCategory(String category) {
+    return category.replaceAll('_', ' ').toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Get.to(() => VenueDetailScreen(venueId: venue.id));
+      },
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundCard,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: AppColors.borderSubtle, width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Venue Image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12.r),
+              child: SizedBox(
+                width: 80.w,
+                height: 80.w,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ResponsiveNetworkImage(
+                      imageUrl: venue.heroImage,
+                      fit: BoxFit.cover,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: AppColors.gradientDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            SizedBox(width: 14.w),
+
+            // Venue info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    venue.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w800,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+
+                  SizedBox(height: 6.h),
+
+                  // Category . Area
+                  Text(
+                    '${_formatCategory(venue.category)} · ${venue.area.toUpperCase()}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 10.sp,
+                      color: AppColors.accentRoseGold,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+
+                  SizedBox(height: 4.h),
+
+                  // Rating
+                  if (venue.rating > 0)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          size: 12.sp,
+                          color: AppColors.ratingColor,
+                        ),
+                        SizedBox(width: 3.w),
+                        Text(
+                          venue.rating.toStringAsFixed(1),
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.sp,
+                            color: AppColors.textMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+
+            // Arrow
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textMuted,
+              size: 20.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SearchBar extends StatelessWidget {
   const _SearchBar({required this.controller});
 
@@ -504,7 +625,7 @@ class _SearchBar extends StatelessWidget {
                 fontSize: 14.sp,
               ),
               decoration: InputDecoration(
-                hintText: 'Search events, locations...',
+                hintText: 'Search venues, events, areas...',
                 hintStyle: GoogleFonts.poppins(
                   color: AppColors.textMuted,
                   fontSize: 13.sp,

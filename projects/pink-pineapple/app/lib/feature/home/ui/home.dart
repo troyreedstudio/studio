@@ -8,6 +8,8 @@ import 'package:pineapple/core/global_widgets/app_loading.dart';
 import 'package:pineapple/core/global_widgets/bg_screen_widget.dart';
 import 'package:pineapple/feature/home/controller/home_controller.dart';
 import 'package:pineapple/feature/home_bottom_nav/controller/home_nav_controller.dart';
+import 'package:pineapple/core/network_caller/endpoints.dart';
+import 'package:pineapple/core/network_caller/network_config.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
 import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
@@ -29,6 +31,8 @@ class HomeScreen extends StatelessWidget {
             _HomeHeader(),
             SizedBox(height: 8.h),
             _AreaFilterBar(homeController: homeController),
+            SizedBox(height: 10.h),
+            _HomeSearchBar(),
             SizedBox(height: 4.h),
             Expanded(
               child: _DiscoverContent(homeController: homeController),
@@ -251,9 +255,6 @@ class _DiscoverContent extends StatelessWidget {
 
           SizedBox(height: 28.h),
 
-          // Search bar — at the bottom
-          _VenueSearchBar(),
-
           SizedBox(height: 40.h),
         ],
       ),
@@ -341,7 +342,225 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Venue Search Bar ─────────────────────────────────────────────────────────
+// ── Home Search Bar (with inline results) ───────────────────────────────────
+
+class _HomeSearchBar extends StatefulWidget {
+  @override
+  State<_HomeSearchBar> createState() => _HomeSearchBarState();
+}
+
+class _HomeSearchBarState extends State<_HomeSearchBar> {
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  final _searchResults = <VenueModel>[].obs;
+  final _isSearching = false.obs;
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _doSearch(String query) async {
+    if (query.trim().isEmpty) {
+      _searchResults.clear();
+      _isSearching.value = false;
+      return;
+    }
+
+    _isSearching.value = true;
+
+    try {
+      final netConfig = NetworkConfigV1();
+      final url =
+          '${Urls.searchVenues}?searchTerm=${Uri.encodeComponent(query)}';
+
+      final response = await netConfig.ApiRequestHandler(
+        RequestMethod.GET,
+        url,
+        '{}',
+      );
+
+      if (response != null && response['success'] == true) {
+        final venuesData = response['data'];
+        if (venuesData is List) {
+          _searchResults.assignAll(
+            venuesData
+                .map((v) => VenueModel.fromJson(v as Map<String, dynamic>))
+                .toList(),
+          );
+        } else {
+          _searchResults.clear();
+        }
+      } else {
+        _searchResults.clear();
+      }
+    } catch (_) {
+      _searchResults.clear();
+    } finally {
+      _isSearching.value = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Search input
+          Container(
+            height: 42.h,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.borderSubtle, width: 0.5),
+            ),
+            child: TextField(
+              controller: _textController,
+              focusNode: _focusNode,
+              style: GoogleFonts.poppins(
+                fontSize: 13.sp,
+                color: AppColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Search venues, clubs, restaurants...',
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: 13.sp,
+                  color: AppColors.textMuted,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  size: 18.sp,
+                  color: AppColors.textMuted,
+                ),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _textController,
+                  builder: (context, value, _) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return GestureDetector(
+                      onTap: () {
+                        _textController.clear();
+                        _focusNode.unfocus();
+                        _searchResults.clear();
+                      },
+                      child: Icon(
+                        Icons.close,
+                        size: 18.sp,
+                        color: AppColors.textMuted,
+                      ),
+                    );
+                  },
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+              ),
+              cursorColor: AppColors.gradientMid,
+              onChanged: _doSearch,
+            ),
+          ),
+
+          // Search results dropdown
+          Obx(() {
+            if (_searchResults.isEmpty) return const SizedBox.shrink();
+
+            return Container(
+              margin: EdgeInsets.only(top: 4.h),
+              constraints: BoxConstraints(maxHeight: 280.h),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderSubtle, width: 0.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                itemCount: _searchResults.length,
+                separatorBuilder: (_, __) => Divider(
+                  color: AppColors.borderSubtle,
+                  height: 1,
+                  indent: 16.w,
+                  endIndent: 16.w,
+                ),
+                itemBuilder: (_, i) {
+                  final venue = _searchResults[i];
+                  return ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14.w,
+                      vertical: 2.h,
+                    ),
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        width: 44.w,
+                        height: 44.w,
+                        child: venue.heroImage.isNotEmpty
+                            ? Image.network(
+                                venue.heroImage,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: AppColors.surfaceElevated,
+                                  child: Icon(Icons.place,
+                                      color: AppColors.textMuted, size: 20),
+                                ),
+                              )
+                            : Container(
+                                color: AppColors.surfaceElevated,
+                                child: Icon(Icons.place,
+                                    color: AppColors.textMuted, size: 20),
+                              ),
+                      ),
+                    ),
+                    title: Text(
+                      venue.name,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${venue.category.replaceAll("_", " ")} · ${venue.area}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.sp,
+                        color: AppColors.accentRoseGold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right,
+                      color: AppColors.textMuted,
+                      size: 18.sp,
+                    ),
+                    onTap: () {
+                      _focusNode.unfocus();
+                      _textController.clear();
+                      _searchResults.clear();
+                      Get.to(() => VenueDetailScreen(venueId: venue.id));
+                    },
+                  );
+                },
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Venue Search Bar (legacy — kept for reference) ──────────────────────────
 
 class _VenueSearchBar extends StatefulWidget {
   @override
