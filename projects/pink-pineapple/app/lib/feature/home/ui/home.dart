@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -399,25 +401,29 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
         _searchResults.clear();
       }
 
-      // Search Google Places (runs in parallel conceptually — fires after venue search)
-      final googleUrl =
-          '${Urls.googlePlacesSearch}?searchTerm=${Uri.encodeComponent(query)}';
-      final googleResponse = await _netConfig.ApiRequestHandler(
-        RequestMethod.GET,
-        googleUrl,
-        '{}',
-      );
-
-      if (googleResponse != null && googleResponse['success'] == true) {
-        final placesData = googleResponse['data'];
-        if (placesData is List) {
-          _googleResults.assignAll(
-            placesData.map((p) => Map<String, dynamic>.from(p)).toList(),
-          );
+      // Search Google Places — use raw http.get to avoid ShowError on 404
+      try {
+        final googleUrl =
+            '${Urls.googlePlacesSearch}?searchTerm=${Uri.encodeComponent(query)}';
+        final googleReq = await http.get(
+          Uri.parse(googleUrl),
+          headers: {'Content-type': 'application/json'},
+        );
+        if (googleReq.statusCode == 200) {
+          final googleBody = json.decode(googleReq.body);
+          if (googleBody['success'] == true && googleBody['data'] is List) {
+            _googleResults.assignAll(
+              (googleBody['data'] as List)
+                  .map((p) => Map<String, dynamic>.from(p))
+                  .toList(),
+            );
+          } else {
+            _googleResults.clear();
+          }
         } else {
           _googleResults.clear();
         }
-      } else {
+      } catch (_) {
         _googleResults.clear();
       }
     } catch (_) {
