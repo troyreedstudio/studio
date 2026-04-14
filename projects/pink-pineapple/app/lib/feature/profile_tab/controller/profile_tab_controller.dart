@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:pineapple/core/const/user_info/user_info_controller.dart';
 import 'package:pineapple/core/local/local_data.dart';
 import 'package:pineapple/feature/auth/ui/9.change_password_page.dart';
-import 'package:pineapple/feature/free_user/ui/free_user_home_page.dart';
+import 'package:pineapple/feature/auth/ui/1.login_ui.dart';
 
 import '../../favorites/ui/favorite_event_screen.dart';
 import '../ui/privacy_policy_page.dart';
@@ -87,7 +87,7 @@ class ProfileTabController extends GetxController {
       }
 
       // Navigate to free user home (allow browsing without login)
-      Get.offAll(() => FreeUserHomePage(), predicate: (route) => false);
+      Get.offAll(() => LoginPage(), predicate: (route) => false);
     } catch (e) {
       print('Logout error: $e');
     }

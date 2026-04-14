@@ -83,10 +83,10 @@ class OtpController extends GetxController {
       );
       if (response != null && response['success'] == true) {
         AppSnackbar.show(
-          message: "Account Created successfully!",
+          message: "Account created! Set up your profile.",
           isSuccess: true,
         );
-        Get.off(LoginPage(), arguments: {'email': email});
+        Get.off(() => SignUpProfileSetUp(), arguments: {'email': email});
         return true;
       } else {
         String errorMessage = response['message'] ?? 'OTP verification failed';
