@@ -5,6 +5,7 @@ export interface IUser {
   email: string;
   fullName: string;
   fcmToken: string;
+  instagram: string;
   password: string;
   role: UserRole;
   profession:string;

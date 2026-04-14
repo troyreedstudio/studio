@@ -57,6 +57,10 @@ const createUserIntoDb = async (payload: User) => {
         updatedData.role = payload.role;
       }
 
+      if (payload.instagram) {
+        updatedData.instagram = payload.instagram;
+      }
+
       const result = await prisma.user.update({
         where: { id: existingUser.id },
         data: updatedData,
@@ -97,6 +101,7 @@ const createUserIntoDb = async (payload: User) => {
       profilePrivacy: payload.profilePrivacy,
       bio: payload.bio,
       phoneNumber: payload.phoneNumber,
+      instagram: payload.instagram,
       password: hashedPassword,
       dob: payload.dob,
       role: payload.role,

@@ -18,6 +18,7 @@ class SignUpPage extends StatelessWidget {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController instagramController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final SignInController controller = Get.put(SignInController());
 
@@ -152,9 +153,9 @@ class SignUpPage extends StatelessWidget {
                 ),
                 SizedBox(height: 16.h),
 
-                // Phone (Optional)
+                // WhatsApp
                 Text(
-                  'Phone Number (Optional)',
+                  'WhatsApp',
                   style: GoogleFonts.poppins(
                     fontSize: 12.sp,
                     color: AppColors.textSecondary,
@@ -228,6 +229,30 @@ class SignUpPage extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                SizedBox(height: 16.h),
+
+                // Instagram
+                Text(
+                  'Instagram',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                TextField(
+                  controller: instagramController,
+                  style: GoogleFonts.poppins(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.sp,
+                  ),
+                  decoration: _brandInputDecoration(
+                    hint: '@yourhandle',
+                    prefixIcon: Icons.camera_alt_outlined,
+                  ),
                 ),
                 SizedBox(height: 16.h),
 
@@ -346,6 +371,7 @@ class SignUpPage extends StatelessWidget {
                                 nameController.text,
                                 emailController.text,
                                 phoneController.text,
+                                instagramController.text,
                                 addressController.text,
                                 passwordController.text,
                               );

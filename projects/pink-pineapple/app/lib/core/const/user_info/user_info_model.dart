@@ -50,6 +50,7 @@ class UserProfile {
   final String? fullAddress;
   final String? bio;
   final String? phoneNumber;
+  final String? instagram;
   final String? status;
   final String? profileImage;
   final bool? isCompleteProfile;
@@ -66,6 +67,7 @@ class UserProfile {
     this.fullAddress,
     this.bio,
     this.phoneNumber,
+    this.instagram,
     this.status,
     this.profileImage,
     this.isCompleteProfile,
@@ -83,6 +85,7 @@ class UserProfile {
     String? fullAddress,
     String? bio,
     String? phoneNumber,
+    String? instagram,
     String? status,
     String? profileImage,
     bool? isCompleteProfile,
@@ -99,6 +102,7 @@ class UserProfile {
         fullAddress: fullAddress ?? this.fullAddress,
         bio: bio ?? this.bio,
         phoneNumber: phoneNumber ?? this.phoneNumber,
+        instagram: instagram ?? this.instagram,
         status: status ?? this.status,
         profileImage: profileImage ?? this.profileImage,
         isCompleteProfile: isCompleteProfile ?? this.isCompleteProfile,
@@ -116,6 +120,7 @@ class UserProfile {
     fullAddress: json["fullAddress"],
     bio: json["bio"],
     phoneNumber: json["phoneNumber"],
+    instagram: json["instagram"],
     status: json["status"],
     profileImage: json["profileImage"],
     isCompleteProfile: json["isCompleteProfile"],
@@ -133,6 +138,7 @@ class UserProfile {
     "fullAddress": fullAddress,
     "bio": bio,
     "phoneNumber": phoneNumber,
+    "instagram": instagram,
     "status": status,
     "profileImage": profileImage,
     "isCompleteProfile": isCompleteProfile,
