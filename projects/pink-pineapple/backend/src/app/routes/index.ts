@@ -18,6 +18,7 @@ import { BlockUserRoutes } from "../modules/BlockUser/BlockUser.routes";
 import { VenueRoutes } from "../modules/Venue/Venue.routes";
 import { VenueFavoriteRoutes } from "../modules/VenueFavorite/VenueFavorite.routes";
 import { PaymentRoutes } from "../modules/Payment/Payment.routes";
+import { GooglePlacesRoutes } from "../modules/GooglePlaces/GooglePlaces.routes";
 
 const router = express.Router();
 
@@ -97,6 +98,10 @@ const moduleRoutes = [
   {
     path: "/payments",
     route: PaymentRoutes,
+  },
+  {
+    path: "/places",
+    route: GooglePlacesRoutes,
   },
 ];
 

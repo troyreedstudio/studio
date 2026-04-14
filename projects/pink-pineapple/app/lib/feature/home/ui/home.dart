@@ -353,7 +353,9 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
   final TextEditingController _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   final _searchResults = <VenueModel>[].obs;
+  final _googleResults = <Map<String, dynamic>>[].obs;
   final _isSearching = false.obs;
+  final _netConfig = NetworkConfigV1();
 
   @override
   void dispose() {
@@ -365,6 +367,7 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
   Future<void> _doSearch(String query) async {
     if (query.trim().isEmpty) {
       _searchResults.clear();
+      _googleResults.clear();
       _isSearching.value = false;
       return;
     }
@@ -372,18 +375,17 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
     _isSearching.value = true;
 
     try {
-      final netConfig = NetworkConfigV1();
-      final url =
+      // Search Pink Pineapple venues
+      final venueUrl =
           '${Urls.searchVenues}?searchTerm=${Uri.encodeComponent(query)}';
-
-      final response = await netConfig.ApiRequestHandler(
+      final venueResponse = await _netConfig.ApiRequestHandler(
         RequestMethod.GET,
-        url,
+        venueUrl,
         '{}',
       );
 
-      if (response != null && response['success'] == true) {
-        final venuesData = response['data'];
+      if (venueResponse != null && venueResponse['success'] == true) {
+        final venuesData = venueResponse['data'];
         if (venuesData is List) {
           _searchResults.assignAll(
             venuesData
@@ -396,8 +398,31 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
       } else {
         _searchResults.clear();
       }
+
+      // Search Google Places (runs in parallel conceptually — fires after venue search)
+      final googleUrl =
+          '${Urls.googlePlacesSearch}?searchTerm=${Uri.encodeComponent(query)}';
+      final googleResponse = await _netConfig.ApiRequestHandler(
+        RequestMethod.GET,
+        googleUrl,
+        '{}',
+      );
+
+      if (googleResponse != null && googleResponse['success'] == true) {
+        final placesData = googleResponse['data'];
+        if (placesData is List) {
+          _googleResults.assignAll(
+            placesData.map((p) => Map<String, dynamic>.from(p)).toList(),
+          );
+        } else {
+          _googleResults.clear();
+        }
+      } else {
+        _googleResults.clear();
+      }
     } catch (_) {
       _searchResults.clear();
+      _googleResults.clear();
     } finally {
       _isSearching.value = false;
     }
@@ -445,6 +470,7 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
                         _textController.clear();
                         _focusNode.unfocus();
                         _searchResults.clear();
+                        _googleResults.clear();
                       },
                       child: Icon(
                         Icons.close,
@@ -464,11 +490,13 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
 
           // Search results dropdown
           Obx(() {
-            if (_searchResults.isEmpty) return const SizedBox.shrink();
+            if (_searchResults.isEmpty && _googleResults.isEmpty) {
+              return const SizedBox.shrink();
+            }
 
             return Container(
               margin: EdgeInsets.only(top: 4.h),
-              constraints: BoxConstraints(maxHeight: 280.h),
+              constraints: BoxConstraints(maxHeight: 380.h),
               decoration: BoxDecoration(
                 color: AppColors.backgroundCard,
                 borderRadius: BorderRadius.circular(12),
@@ -481,76 +509,143 @@ class _HomeSearchBarState extends State<_HomeSearchBar> {
                   ),
                 ],
               ),
-              child: ListView.separated(
+              child: ListView(
                 shrinkWrap: true,
                 padding: EdgeInsets.symmetric(vertical: 8.h),
-                itemCount: _searchResults.length,
-                separatorBuilder: (_, __) => Divider(
-                  color: AppColors.borderSubtle,
-                  height: 1,
-                  indent: 16.w,
-                  endIndent: 16.w,
-                ),
-                itemBuilder: (_, i) {
-                  final venue = _searchResults[i];
-                  return ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 14.w,
-                      vertical: 2.h,
+                children: [
+                  // Pink Pineapple venues
+                  if (_searchResults.isNotEmpty) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
+                      child: Text(
+                        'PINK PINEAPPLE',
+                        style: GoogleFonts.poppins(
+                          fontSize: 9.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.accentRoseGold,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
                     ),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: SizedBox(
-                        width: 44.w,
-                        height: 44.w,
-                        child: venue.heroImage.isNotEmpty
-                            ? Image.network(
-                                venue.heroImage,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
+                    ..._searchResults.map((venue) => ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 14.w, vertical: 2.h,
+                      ),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: 44.w, height: 44.w,
+                          child: venue.heroImage.isNotEmpty
+                              ? Image.network(venue.heroImage, fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: AppColors.surfaceElevated,
+                                    child: Icon(Icons.place, color: AppColors.textMuted, size: 20),
+                                  ))
+                              : Container(
                                   color: AppColors.surfaceElevated,
-                                  child: Icon(Icons.place,
-                                      color: AppColors.textMuted, size: 20),
+                                  child: Icon(Icons.place, color: AppColors.textMuted, size: 20),
                                 ),
-                              )
-                            : Container(
-                                color: AppColors.surfaceElevated,
-                                child: Icon(Icons.place,
-                                    color: AppColors.textMuted, size: 20),
-                              ),
+                        ),
+                      ),
+                      title: Text(venue.name, style: GoogleFonts.outfit(
+                        fontSize: 14.sp, fontWeight: FontWeight.w700,
+                        fontStyle: FontStyle.italic, color: AppColors.textPrimary,
+                      )),
+                      subtitle: Text(
+                        '${venue.category.replaceAll("_", " ")} · ${venue.area}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10.sp, color: AppColors.accentRoseGold, letterSpacing: 0.5,
+                        ),
+                      ),
+                      trailing: Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18.sp),
+                      onTap: () {
+                        _focusNode.unfocus();
+                        _textController.clear();
+                        _searchResults.clear();
+                        _googleResults.clear();
+                        Get.to(() => VenueDetailScreen(venueId: venue.id));
+                      },
+                    )),
+                  ],
+
+                  // Google Places results
+                  if (_googleResults.isNotEmpty) ...[
+                    if (_searchResults.isNotEmpty)
+                      Divider(color: AppColors.borderSubtle, height: 16.h, indent: 14.w, endIndent: 14.w),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
+                      child: Text(
+                        'MORE IN BALI',
+                        style: GoogleFonts.poppins(
+                          fontSize: 9.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textMuted,
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ),
-                    title: Text(
-                      venue.name,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w700,
-                        fontStyle: FontStyle.italic,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '${venue.category.replaceAll("_", " ")} · ${venue.area}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 10.sp,
-                        color: AppColors.accentRoseGold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    trailing: Icon(
-                      Icons.chevron_right,
-                      color: AppColors.textMuted,
-                      size: 18.sp,
-                    ),
-                    onTap: () {
-                      _focusNode.unfocus();
-                      _textController.clear();
-                      _searchResults.clear();
-                      Get.to(() => VenueDetailScreen(venueId: venue.id));
-                    },
-                  );
-                },
+                    ..._googleResults.map((place) {
+                      final name = place['name']?.toString() ?? '';
+                      final address = place['address']?.toString() ?? '';
+                      final category = place['category']?.toString().replaceAll('_', ' ') ?? '';
+                      final rating = (place['rating'] as num?)?.toDouble() ?? 0.0;
+                      final photoUrl = place['photoUrl']?.toString() ?? '';
+
+                      return ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 14.w, vertical: 2.h,
+                        ),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: SizedBox(
+                            width: 44.w, height: 44.w,
+                            child: photoUrl.isNotEmpty
+                                ? Image.network(photoUrl, fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      color: AppColors.surfaceElevated,
+                                      child: Icon(Icons.map_outlined, color: AppColors.textMuted, size: 20),
+                                    ))
+                                : Container(
+                                    color: AppColors.surfaceElevated,
+                                    child: Icon(Icons.map_outlined, color: AppColors.textMuted, size: 20),
+                                  ),
+                          ),
+                        ),
+                        title: Text(name, style: GoogleFonts.poppins(
+                          fontSize: 13.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary,
+                        )),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (category.isNotEmpty)
+                              Text(category.toUpperCase(), style: GoogleFonts.poppins(
+                                fontSize: 9.sp, color: AppColors.textMuted, letterSpacing: 0.8,
+                              )),
+                            if (address.isNotEmpty)
+                              Text(address, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(fontSize: 10.sp, color: AppColors.textMuted)),
+                            if (rating > 0)
+                              Row(children: [
+                                Icon(Icons.star_rounded, size: 11.sp, color: AppColors.ratingColor),
+                                SizedBox(width: 2.w),
+                                Text(rating.toStringAsFixed(1), style: GoogleFonts.poppins(
+                                  fontSize: 10.sp, color: AppColors.textMuted,
+                                )),
+                              ]),
+                          ],
+                        ),
+                        trailing: Icon(Icons.open_in_new, color: AppColors.textMuted, size: 14.sp),
+                        onTap: () {
+                          _focusNode.unfocus();
+                          // Google Places results don't have a detail page yet
+                          // Future: open in Google Maps or create a venue from this
+                        },
+                      );
+                    }),
+                  ],
+                ],
               ),
             );
           }),

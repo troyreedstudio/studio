@@ -24,5 +24,6 @@ export default {
         email: process.env.EMAIL,
         app_pass: process.env.APP_PASS
     },
+    google_places_api_key: process.env.GOOGLE_PLACES_API_KEY,
 
 }

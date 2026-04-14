@@ -77,4 +77,7 @@ class Urls {
   static const String venueDetails = '$baseUrl/venues'; // GET — append /:id
   static const String toggleVenueFavorite = '$baseUrl/venues'; // POST — append /:id/favorite
   static const String whatsOn = '$baseUrl/venues/whats-on'; // GET — weekly schedule
+
+  /// google places
+  static const String googlePlacesSearch = '$baseUrl/places/search'; // GET
 }
