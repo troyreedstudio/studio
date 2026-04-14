@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/const/app_colors.dart';
 import '../../../../../core/const/user_info/user_info_controller.dart';
 import '../../../../../core/global_widgets/app_network_image.dart';
-import '../../../../../core/global_widgets/bg_screen_widget.dart';
+import '../../../../../core/global_widgets/country_code_picker.dart';
 import '../../../../../core/style/global_text_style.dart';
 import '../controller/profile_edit_controller.dart';
 
@@ -194,90 +194,56 @@ class ProfileEditScreen extends StatelessWidget {
               _label('Bio*'),
               _field(controller: c.bio, hint: 'describe', maxLines: 3),
 
-              _label('Profile Privacy*'),
-              Obx(
-                () => Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundSurface,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: AppColors.borderSubtle),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: c.privacy.value,
-                      borderRadius: BorderRadius.circular(12.r),
-                      dropdownColor: AppColors.backgroundElevated,
-                      items: c.privacyOptions
-                          .map(
-                            (e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(
-                                e,
-                                style: globalTextStyle(fontSize: 14.sp, color: AppColors.textPrimary),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) {
-                        if (v != null) c.privacy.value = v;
-                      },
-                      isDense: true,
-                      iconEnabledColor: AppColors.primaryColor,
-                    ),
-                  ),
-                ),
-              ),
-
               _label('Phone*'),
               Row(
                 children: [
                   // country picker (code + flag)
                   Obx(() {
-                    final items = c.uniqueCountryByCode;
-                    return Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 10.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.backgroundSurface,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: AppColors.borderSubtle),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: c.selectedCountryCode.value,
-                          isDense: true,
-                          dropdownColor: AppColors.backgroundElevated,
-                          iconEnabledColor: AppColors.primaryColor,
-                          items: items.map((item) {
-                            return DropdownMenuItem<String>(
-                              value: item['code'],
-                              child: Row(
-                                children: [
-                                  Text(
-                                    item['icon'] ?? '🌍',
-                                    style: TextStyle(fontSize: 18.sp),
-                                  ),
-                                  SizedBox(width: 6.w),
-                                  Text(
-                                    item['code'] ?? '',
-                                    style: globalTextStyle(fontSize: 14.sp, color: AppColors.textPrimary),
-                                  ),
-                                ],
+                    return GestureDetector(
+                      onTap: () async {
+                        final selected = await showCountryCodePicker(
+                          context: context,
+                          currentCode: c.selectedCountryCode.value,
+                        );
+                        if (selected != null) {
+                          c.selectedCountryCode.value =
+                              selected['code'] ?? '+44';
+                          c.selectedCountryFlag.value =
+                              selected['icon'] ?? '🌍';
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 14.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundSurface,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(color: AppColors.borderSubtle),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              c.selectedCountryFlag.value,
+                              style: TextStyle(fontSize: 16.sp),
+                            ),
+                            SizedBox(width: 6.w),
+                            Text(
+                              c.selectedCountryCode.value,
+                              style: globalTextStyle(
+                                fontSize: 13.sp,
+                                color: AppColors.textPrimary,
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (v) {
-                            if (v != null) {
-                              c.selectedCountryCode.value = v;
-                              c.selectedCountryFlag.value = c.getFlagByCode(v);
-                            }
-                          },
+                            ),
+                            SizedBox(width: 4.w),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: AppColors.textMuted,
+                              size: 18,
+                            ),
+                          ],
                         ),
                       ),
                     );

@@ -16,8 +16,6 @@ class ProfileTabController extends GetxController {
   final RxString userImageUrl =
       'https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dXNlcnxlbnwwfHwwfHx8MA%3D%3D'
           .obs;
-  final RxInt followingCount = 177.obs;
-  final RxInt followersCount = 199.obs;
   final local = LocalService();
 
   // Menu items
@@ -95,20 +93,6 @@ class ProfileTabController extends GetxController {
     }
   }
 
-  // Methods to update data
-  void updateFollowingCount(int count) {
-    followingCount.value = count;
-  }
-
-  void updateFollowersCount(int count) {
-    followersCount.value = count;
-  }
-
-  void updateUserInfo({String? name, String? email, String? imageUrl}) {
-    if (name != null) userName.value = name;
-    if (email != null) userEmail.value = email;
-    if (imageUrl != null) userImageUrl.value = imageUrl;
-  }
 }
 
 class ProfileMenuItem {

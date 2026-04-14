@@ -37,34 +37,6 @@ class ProfileEditController extends GetxController {
 
   final selectedDOB = Rxn<DateTime>();
 
-  /// UI values: Only Me / Public
-  final privacy = 'Only Me'.obs;
-  final privacyOptions = const ['Only Me', 'Public'];
-
-  /// Backend enum: VIEWABLE / PRIVATE
-  String mapPrivacyToApi(String ui) {
-    switch (ui) {
-      case 'Only Me':
-        return 'PRIVATE';
-      case 'Public':
-        return 'VIEWABLE';
-      default:
-        return 'VIEWABLE';
-    }
-  }
-
-  /// Map API privacy to UI privacy
-  String mapApiToPrivacy(String? api) {
-    switch (api?.toUpperCase()) {
-      case 'PRIVATE':
-        return 'Only Me';
-      case 'VIEWABLE':
-        return 'Public';
-      default:
-        return 'Only Me'; // default to private
-    }
-  }
-
   // phone country code
   final RxString selectedCountryCode = '+44'.obs;
   final RxString selectedCountryFlag = '🇬🇧'.obs;
@@ -174,12 +146,6 @@ class ProfileEditController extends GetxController {
       logger.d('📅 Loaded DOB from server: ${u.dob}');
     }
 
-    // Load privacy from server
-    if (u.profilePrivacy != null) {
-      privacy.value = mapApiToPrivacy(u.profilePrivacy);
-      logger.d('🔒 Loaded privacy from server: ${u.profilePrivacy} -> ${privacy.value}');
-    }
-
     // phone parse (best-effort)
     final phone = (u.phoneNumber ?? '').trim();
     if (phone.startsWith('+')) {
@@ -209,7 +175,6 @@ class ProfileEditController extends GetxController {
     logger.i('   phoneNumber field: "${phoneNumber.text}"');
     logger.i('   selectedCountryCode: "${selectedCountryCode.value}"');
     logger.i('   selectedDOB: ${selectedDOB.value}');
-    logger.i('   privacy UI value: "${privacy.value}"');
     logger.i('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     final payload = <String, dynamic>{};
@@ -224,9 +189,6 @@ class ProfileEditController extends GetxController {
     if (selectedDOB.value != null) {
       payload['dob'] = selectedDOB.value!.toIso8601String();
     }
-
-    // Privacy: always include
-    payload['profilePrivacy'] = mapPrivacyToApi(privacy.value);
 
     // Phone: always include if there's a local number
     final local = phoneNumber.text.trim();
