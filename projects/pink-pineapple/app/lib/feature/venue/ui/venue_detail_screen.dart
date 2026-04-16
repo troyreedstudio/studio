@@ -623,6 +623,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
   // Known booking URLs — temporary until backend is deployed with bookingUrl field
   static const _knownBookingUrls = <String, String>{
     'savaya': 'https://booketing.com/microsite/real/events/2184/1096295/savaya-bali',
+    'desa-kitsune': 'https://booketing.com/microsite/real/events/2184/1440723/desa-kitsune',
   };
 
   void _openBooking(VenueModel venue) {
