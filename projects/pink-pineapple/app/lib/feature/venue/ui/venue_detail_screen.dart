@@ -621,16 +621,37 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
   // ── Action Buttons ────────────────────────────────────────────────────────
 
   // Known booking URLs — temporary until backend is deployed with bookingUrl field
+  // Venues with a single link use a String value.
+  // Venues with per-night links use a Map<int, String> keyed by DateTime.weekday (1=Mon..7=Sun).
   static const _knownBookingUrls = <String, String>{
     'savaya': 'https://booketing.com/microsite/real/events/2184/1096295/savaya-bali',
     'desa-kitsune': 'https://booketing.com/microsite/real/events/2184/1440723/desa-kitsune',
   };
 
+  static const _knownDailyBookingUrls = <String, Map<int, String>>{
+    'mesa': {
+      1: 'https://mtix.me/rowancocorico',  // Monday
+      2: 'https://mtix.me/rowanaf',         // Tuesday
+      3: 'https://mtix.me/rowanplay',       // Wednesday
+      4: 'https://mtix.me/rowantb',          // Thursday
+    },
+  };
+
   void _openBooking(VenueModel venue) {
     // Check venue's own bookingUrl first, then fall back to known URLs
     var url = venue.bookingUrl;
+
     if (url.isEmpty) {
       url = _knownBookingUrls[venue.slug] ?? '';
+    }
+
+    // Check daily booking URLs (venues with different links per night)
+    if (url.isEmpty) {
+      final dailyUrls = _knownDailyBookingUrls[venue.slug];
+      if (dailyUrls != null) {
+        final today = DateTime.now().weekday; // 1=Mon..7=Sun
+        url = dailyUrls[today] ?? dailyUrls.values.first;
+      }
     }
 
     if (url.isNotEmpty) {
