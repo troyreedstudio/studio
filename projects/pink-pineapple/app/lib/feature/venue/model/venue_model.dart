@@ -20,6 +20,7 @@ class VenueModel {
   final bool isFeatured;
   final double rating;
   final String ownerId;
+  final String bookingUrl;
   final bool isFavorite;
   final List<String> tags;
   final Map<String, dynamic>? weeklySchedule;
@@ -49,6 +50,7 @@ class VenueModel {
     this.isFeatured = false,
     this.rating = 0.0,
     this.ownerId = '',
+    this.bookingUrl = '',
     this.isFavorite = false,
     this.tags = const [],
     required this.createdAt,
@@ -86,6 +88,7 @@ class VenueModel {
       isFeatured: json['isFeatured'] as bool? ?? false,
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       ownerId: json['ownerId']?.toString() ?? '',
+      bookingUrl: json['bookingUrl']?.toString() ?? '',
       isFavorite: json['isFavorite'] as bool? ?? false,
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
@@ -119,6 +122,7 @@ class VenueModel {
       'isFeatured': isFeatured,
       'rating': rating,
       'ownerId': ownerId,
+      'bookingUrl': bookingUrl,
       'isFavorite': isFavorite,
       'tags': tags,
       'createdAt': createdAt.toIso8601String(),
@@ -149,6 +153,7 @@ class VenueModel {
     bool? isFeatured,
     double? rating,
     String? ownerId,
+    String? bookingUrl,
     bool? isFavorite,
     List<String>? tags,
     DateTime? createdAt,
@@ -177,6 +182,7 @@ class VenueModel {
       isFeatured: isFeatured ?? this.isFeatured,
       rating: rating ?? this.rating,
       ownerId: ownerId ?? this.ownerId,
+      bookingUrl: bookingUrl ?? this.bookingUrl,
       isFavorite: isFavorite ?? this.isFavorite,
       tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,

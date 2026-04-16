@@ -10,6 +10,7 @@ import 'package:pineapple/core/global_widgets/pp_button.dart';
 import 'package:pineapple/core/helpers/auth_guard.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
+import 'package:pineapple/feature/venue/ui/venue_booking_webview.dart';
 
 class VenueDetailScreen extends StatefulWidget {
   const VenueDetailScreen({super.key, required this.venueId});
@@ -619,6 +620,24 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
 
   // ── Action Buttons ────────────────────────────────────────────────────────
 
+  void _openBooking(VenueModel venue) {
+    if (venue.bookingUrl.isNotEmpty) {
+      Get.to(() => VenueBookingWebView(
+        bookingUrl: venue.bookingUrl,
+        venueName: venue.name,
+      ));
+    } else {
+      Get.snackbar(
+        'Booking Coming Soon',
+        '${venue.name} booking will be available shortly.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.surface,
+        colorText: AppColors.textPrimary,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
   Widget _buildActionButtons(VenueModel venue) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -629,7 +648,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
             icon: Icons.table_bar_outlined,
             onTap: () async {
               if (!await AuthGuard.requireAuth()) return;
-              // TODO: Navigate to booking flow
+              _openBooking(venue);
             },
           ),
           SizedBox(height: 14.h),
@@ -638,7 +657,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
             icon: Icons.star_outline,
             onTap: () async {
               if (!await AuthGuard.requireAuth()) return;
-              // TODO: Navigate to VIP booking flow
+              _openBooking(venue);
             },
           ),
         ],

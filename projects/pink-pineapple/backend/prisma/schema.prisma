@@ -377,6 +377,7 @@ model Venue {
   weeklySchedule  Json?
   photos          String[]
   heroImage       String         @default("")
+  bookingUrl      String         @default("")
   isActive        Boolean        @default(true)
   isFeatured      Boolean        @default(false)
   rating          Float          @default(0)
