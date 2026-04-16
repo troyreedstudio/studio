@@ -620,10 +620,21 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
 
   // ── Action Buttons ────────────────────────────────────────────────────────
 
+  // Known booking URLs — temporary until backend is deployed with bookingUrl field
+  static const _knownBookingUrls = <String, String>{
+    'savaya': 'https://booketing.com/microsite/real/events/2184/1096295/savaya-bali',
+  };
+
   void _openBooking(VenueModel venue) {
-    if (venue.bookingUrl.isNotEmpty) {
+    // Check venue's own bookingUrl first, then fall back to known URLs
+    var url = venue.bookingUrl;
+    if (url.isEmpty) {
+      url = _knownBookingUrls[venue.slug] ?? '';
+    }
+
+    if (url.isNotEmpty) {
       Get.to(() => VenueBookingWebView(
-        bookingUrl: venue.bookingUrl,
+        bookingUrl: url,
         venueName: venue.name,
       ));
     } else {

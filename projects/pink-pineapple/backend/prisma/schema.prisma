@@ -18,6 +18,7 @@ model User {
   country            String               @default("")
   city               String               @default("")
   instagram          String               @default("")
+  gender             String               @default("")
   bio                String               @default("")
   phoneNumber        String
   typeOfVenue        String               @default("")

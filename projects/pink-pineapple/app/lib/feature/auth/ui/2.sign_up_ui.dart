@@ -22,6 +22,15 @@ class SignUpPage extends StatelessWidget {
   final TextEditingController addressController = TextEditingController();
   final SignInController controller = Get.put(SignInController());
 
+  // DOB dropdowns
+  final Rx<int?> selectedDay = Rx<int?>(null);
+  final Rx<int?> selectedMonth = Rx<int?>(null);
+  final Rx<int?> selectedYear = Rx<int?>(null);
+
+  // Gender dropdown
+  final Rx<String?> selectedGender = Rx<String?>(null);
+  static const genderOptions = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
+
   InputDecoration _brandInputDecoration({
     required String hint,
     IconData? prefixIcon,
@@ -48,6 +57,41 @@ class SignUpPage extends StatelessWidget {
         borderSide: const BorderSide(color: AppColors.accentRoseGold, width: 1.5),
       ),
       contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+    );
+  }
+
+  Widget _buildDropdown<T>({
+    required T? value,
+    required String hint,
+    required List<T> items,
+    required String Function(T) labelBuilder,
+    required void Function(T?) onChanged,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          isExpanded: true,
+          hint: Text(
+            hint,
+            style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 13.sp),
+          ),
+          dropdownColor: AppColors.backgroundCard,
+          style: GoogleFonts.poppins(color: AppColors.textPrimary, fontSize: 13.sp),
+          icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textMuted, size: 18),
+          items: items.map((item) => DropdownMenuItem<T>(
+            value: item,
+            child: Text(labelBuilder(item)),
+          )).toList(),
+          onChanged: onChanged,
+        ),
+      ),
     );
   }
 
@@ -256,6 +300,78 @@ class SignUpPage extends StatelessWidget {
                 ),
                 SizedBox(height: 16.h),
 
+                // Date of Birth
+                Text(
+                  'Date of Birth',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Row(
+                  children: [
+                    // Day
+                    Expanded(
+                      child: Obx(() => _buildDropdown<int>(
+                        value: selectedDay.value,
+                        hint: 'Day',
+                        items: List.generate(31, (i) => i + 1),
+                        labelBuilder: (v) => v.toString().padLeft(2, '0'),
+                        onChanged: (v) => selectedDay.value = v,
+                      )),
+                    ),
+                    SizedBox(width: 10.w),
+                    // Month
+                    Expanded(
+                      child: Obx(() => _buildDropdown<int>(
+                        value: selectedMonth.value,
+                        hint: 'Month',
+                        items: List.generate(12, (i) => i + 1),
+                        labelBuilder: (v) => [
+                          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+                        ][v - 1],
+                        onChanged: (v) => selectedMonth.value = v,
+                      )),
+                    ),
+                    SizedBox(width: 10.w),
+                    // Year
+                    Expanded(
+                      child: Obx(() => _buildDropdown<int>(
+                        value: selectedYear.value,
+                        hint: 'Year',
+                        items: List.generate(60, (i) => DateTime.now().year - 18 - i),
+                        labelBuilder: (v) => v.toString(),
+                        onChanged: (v) => selectedYear.value = v,
+                      )),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+
+                // Gender
+                Text(
+                  'Gender',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Obx(() => _buildDropdown<String>(
+                  value: selectedGender.value,
+                  hint: 'Select',
+                  items: genderOptions,
+                  labelBuilder: (v) => v,
+                  onChanged: (v) => selectedGender.value = v,
+                )),
+                SizedBox(height: 16.h),
+
                 // Password
                 Text(
                   'Password',
@@ -367,11 +483,21 @@ class SignUpPage extends StatelessWidget {
                               ),
                             ),
                             onPressed: () {
+                              // Build DOB string if all parts selected
+                              String dobStr = '';
+                              if (selectedYear.value != null &&
+                                  selectedMonth.value != null &&
+                                  selectedDay.value != null) {
+                                dobStr =
+                                    '${selectedYear.value}-${selectedMonth.value.toString().padLeft(2, '0')}-${selectedDay.value.toString().padLeft(2, '0')}';
+                              }
                               controller.registerUser(
                                 nameController.text,
                                 emailController.text,
                                 phoneController.text,
                                 instagramController.text,
+                                dobStr,
+                                selectedGender.value ?? '',
                                 addressController.text,
                                 passwordController.text,
                               );

@@ -55,6 +55,16 @@ class _VenueBookingWebViewState extends State<VenueBookingWebView> {
       final email = _escapeJs(profile.email ?? '');
       final phone = _escapeJs(profile.phoneNumber ?? '');
 
+      // Parse DOB into day/month/year for dropdown auto-fill
+      String dobDay = '';
+      String dobMonth = '';
+      String dobYear = '';
+      if (profile.dob != null) {
+        dobDay = profile.dob!.day.toString();
+        dobMonth = profile.dob!.month.toString();
+        dobYear = profile.dob!.year.toString();
+      }
+
       // JavaScript to find and fill common form fields
       // Covers: standard input names, booketing.com IDs, generic patterns
       final js = '''
@@ -101,6 +111,31 @@ class _VenueBookingWebViewState extends State<VenueBookingWebView> {
             'input[placeholder*="WhatsApp" i]',
             '#uvgl-phonefull',
           ], '$phone');
+
+          // Date of Birth fields (booketing.com uses select dropdowns)
+          fill([
+            '#uvgl-dob-day',
+            'select[name="dob_day"]',
+            'select[name="day"]',
+          ], '$dobDay');
+
+          fill([
+            '#uvgl-dob-month',
+            'select[name="dob_month"]',
+            'select[name="month"]',
+          ], '$dobMonth');
+
+          fill([
+            '#uvgl-dob-year',
+            'select[name="dob_year"]',
+            'select[name="year"]',
+          ], '$dobYear');
+
+          // Gender fields
+          fill([
+            'select[name="gender"]',
+            'select[id*="gender" i]',
+          ], 'Male');
         })();
       ''';
 

@@ -56,6 +56,8 @@ class SignInController extends GetxController {
     String email,
     String phone,
     String instagram,
+    String dob,
+    String gender,
     String address,
     String password,
   ) async {
@@ -76,6 +78,8 @@ class SignInController extends GetxController {
         "role": "USER",
         "password": password,
         "instagram": instagram,
+        if (dob.isNotEmpty) "dob": dob,
+        if (gender.isNotEmpty) "gender": gender,
       };
       log(requestBody.toString());
       final response = await _networkConfig.ApiRequestHandler(

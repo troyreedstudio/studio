@@ -61,6 +61,14 @@ const createUserIntoDb = async (payload: User) => {
         updatedData.instagram = payload.instagram;
       }
 
+      if (payload.gender) {
+        updatedData.gender = payload.gender;
+      }
+
+      if (payload.dob) {
+        updatedData.dob = new Date(payload.dob);
+      }
+
       const result = await prisma.user.update({
         where: { id: existingUser.id },
         data: updatedData,
@@ -102,8 +110,9 @@ const createUserIntoDb = async (payload: User) => {
       bio: payload.bio,
       phoneNumber: payload.phoneNumber,
       instagram: payload.instagram,
+      gender: payload.gender,
       password: hashedPassword,
-      dob: payload.dob,
+      dob: payload.dob ? new Date(payload.dob) : undefined,
       role: payload.role,
       typeOfVenue: payload.typeOfVenue,
       fcmToken: payload.fcmToken,
