@@ -626,6 +626,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
   static const _knownBookingUrls = <String, String>{
     'savaya': 'https://booketing.com/microsite/real/events/2184/1096295/savaya-bali',
     'desa-kitsune': 'https://booketing.com/microsite/real/events/2184/1440723/desa-kitsune',
+    'jade': 'https://crowdstack.app/promoter/rowan',
   };
 
   static const _knownDailyBookingUrls = <String, Map<int, String>>{
