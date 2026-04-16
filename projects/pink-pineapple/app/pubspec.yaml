@@ -3,9 +3,9 @@ description: "A new Flutter project."
 
 
 
-version: 1.2.0+4
-# the last version was 1.1.0+3 uploaded to play store, 17 feb 2026
-# so now we are updating it to 1.4.0+4, 7 March 2026
+version: 1.2.0+5
+# build 4: 1.2.0+4, 7 March 2026
+# build 5: 1.2.0+5, 16 April 2026 — venue search, Instagram/WhatsApp, Google Places
 
 environment:
   sdk: ^3.9.0
