@@ -593,7 +593,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.wifi_tethering, color: AppColors.accentRoseGold, size: 16.sp),
+                    Icon(Icons.wifi_tethering, color: AppColors.textPrimary, size: 16.sp),
                     SizedBox(width: 8.w),
                     Text(
                       vibe != null && isRecent
@@ -601,8 +601,8 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                           : 'Are you here? Report the vibe',
                       style: GoogleFonts.poppins(
                         fontSize: 12.sp,
-                        color: AppColors.accentRoseGold,
-                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
