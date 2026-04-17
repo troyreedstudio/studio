@@ -15,6 +15,7 @@ import 'package:pineapple/core/network_caller/network_config.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
 import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
+import 'package:pineapple/feature/venue/ui/venue_booking_webview.dart';
 import 'package:pineapple/feature/venue/widgets/venue_card_widget.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -233,6 +234,11 @@ class _DiscoverContent extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           const _ThisWeekSection(),
+
+          SizedBox(height: 28.h),
+
+          // Featured Events
+          const _FeaturedEventsSection(),
 
           SizedBox(height: 28.h),
 
@@ -783,6 +789,188 @@ class _EmptySection extends StatelessWidget {
                 fontSize: 13.sp,
               ),
               textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Featured Events Section ─────────────────────────────────────────────────
+
+class _FeaturedEventsSection extends StatelessWidget {
+  const _FeaturedEventsSection();
+
+  // Hardcoded featured events — move to backend when deployed
+  static final _events = [
+    {
+      'title': 'Day Zero Bali',
+      'subtitle': 'Journey to the Centre of the Universe',
+      'venue': 'Savaya · GWK Cultural Park',
+      'dates': 'Apr 14–19, 2026',
+      'lineup': 'Bonobo · Damian Lazarus · Jamie Jones · Jan Blomqvist · Âme · John Summit',
+      'ticketUrl': 'https://megatix.co.id/events/day-zero-bali',
+      'imageUrl': 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(
+          title: 'Featured Events',
+          subtitle: 'Don\'t miss out',
+        ),
+        SizedBox(height: 12.h),
+        SizedBox(
+          height: 220.h,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            itemCount: _events.length,
+            itemBuilder: (context, index) {
+              final event = _events[index];
+              return _FeaturedEventCard(event: event);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FeaturedEventCard extends StatelessWidget {
+  const _FeaturedEventCard({required this.event});
+
+  final Map<String, String> event;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        final url = event['ticketUrl'] ?? '';
+        if (url.isNotEmpty) {
+          Get.to(() => VenueBookingWebView(
+            bookingUrl: url,
+            venueName: event['title'] ?? 'Event',
+          ));
+        }
+      },
+      child: Container(
+        width: 300.w,
+        margin: EdgeInsets.only(right: 14.w),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderSubtle, width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Event image
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+              child: SizedBox(
+                height: 110.h,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      event['imageUrl'] ?? '',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: AppColors.surfaceElevated,
+                        child: Icon(Icons.event, color: AppColors.textMuted, size: 32.sp),
+                      ),
+                    ),
+                    // Gradient overlay
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 50.h,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(gradient: AppColors.gradientOverlay),
+                      ),
+                    ),
+                    // Date badge
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          gradient: AppColors.gradientPrimary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          event['dates'] ?? '',
+                          style: GoogleFonts.poppins(
+                            fontSize: 9.sp,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.backgroundDark,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Event details
+            Padding(
+              padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 10.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event['title'] ?? '',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w800,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    event['venue'] ?? '',
+                    style: GoogleFonts.poppins(
+                      fontSize: 10.sp,
+                      color: AppColors.accentRoseGold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    event['lineup'] ?? '',
+                    style: GoogleFonts.poppins(
+                      fontSize: 9.sp,
+                      color: AppColors.textMuted,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
