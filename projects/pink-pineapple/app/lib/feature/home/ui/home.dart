@@ -805,6 +805,7 @@ class _CategorySection extends StatelessWidget {
   // Curated order per category — venues not in the list appear after in default order
   static const _curatedOrder = <String, List<String>>{
     'NIGHTLIFE': ['savaya', 'desa-kitsune', 'shady-pig', 'mesa', 'miss-fish'],
+    'BEACH_CLUB': ['finns-beach-club', 'el-kabron', 'atlas-beach-club', 'desa-kitsune', 'potato-head-seminyak', 'ku-de-ta'],
   };
 
   @override
