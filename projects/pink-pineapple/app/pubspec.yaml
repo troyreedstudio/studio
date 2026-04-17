@@ -3,10 +3,11 @@ description: "A new Flutter project."
 
 
 
-version: 1.2.0+6
+version: 1.2.0+7
 # build 4: 1.2.0+4, 7 March 2026
 # build 5: 1.2.0+5, 16 April 2026 — venue search, Instagram/WhatsApp, Google Places
 # build 6: 1.2.0+6, 17 April 2026 — booking WebView, ratings, curated schedule, Day Zero, gyms
+# build 7: 1.2.0+7, 17 April 2026 — Plan My Night, Live Vibe Check, full sales demo build
 
 environment:
   sdk: ^3.9.0
