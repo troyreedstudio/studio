@@ -15,6 +15,7 @@ import 'package:pineapple/core/network_caller/network_config.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
 import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
+import 'package:pineapple/feature/home/ui/plan_my_night_screen.dart';
 import 'package:pineapple/feature/venue/ui/venue_booking_webview.dart';
 import 'package:pineapple/feature/venue/widgets/venue_card_widget.dart';
 
@@ -226,6 +227,11 @@ class _DiscoverContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 12.h),
+
+          // Plan My Night
+          const _PlanMyNightCard(),
+
+          SizedBox(height: 28.h),
 
           // This Week — horizontal day browser
           _SectionHeader(
@@ -788,6 +794,90 @@ class _EmptySection extends StatelessWidget {
 }
 
 // ── Featured Events Section ─────────────────────────────────────────────────
+
+// ── Plan My Night Card ──────────────────────────────────────────────────────
+
+class _PlanMyNightCard extends StatelessWidget {
+  const _PlanMyNightCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: GestureDetector(
+        onTap: () => Get.to(() => const PlanMyNightScreen()),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF1A1A1A), Color(0xFF2A1A20)],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.accentRoseGold.withOpacity(0.3),
+              width: 0.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.accentRoseGold.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PLAN MY NIGHT',
+                      style: GoogleFonts.outfit(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w800,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Tell us the vibe, we\'ll build your evening',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12.sp,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  gradient: AppColors.gradientPrimary,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.nightlife,
+                  color: AppColors.backgroundDark,
+                  size: 22.sp,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Featured Events ─────────────────────────────────────────────────────────
 
 class _FeaturedEventsSection extends StatelessWidget {
   const _FeaturedEventsSection();
