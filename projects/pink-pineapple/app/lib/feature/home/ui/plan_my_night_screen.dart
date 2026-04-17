@@ -67,22 +67,42 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
         ? allVenues
         : allVenues.where((v) => v.area.toUpperCase() == areaFilter).toList();
 
-    // Categorize
+    // Categorize — area-filtered for dinner/nightlife
     final restaurants = areaVenues
         .where((v) => v.category == 'RESTAURANT')
-        .toList()..shuffle();
-    final beachClubs = areaVenues
-        .where((v) => v.category == 'BEACH_CLUB')
         .toList()..shuffle();
     final nightlife = areaVenues
         .where((v) => v.category == 'NIGHTLIFE')
         .toList()..shuffle();
+
+    // Beach clubs pull from ALL areas — best clubs are spread across Bali
+    // Prioritize the top ones
+    const topBeachClubOrder = [
+      'finns-beach-club', 'atlas-beach-club', 'savaya', 'desa-kitsune',
+      'ku-de-ta', 'potato-head-seminyak', 'omnia-dayclub', 'la-brisa',
+      'sundays-beach-club', 'mrs-sippy', 'morabito', 'the-lawn',
+      'como-beach-club', 'ulu-cliffhouse', 'karma-beach', 'the-edge',
+    ];
+    final allBeachClubs = allVenues
+        .where((v) => v.category == 'BEACH_CLUB')
+        .toList();
+    // Sort by curated order, then shuffle the rest
+    allBeachClubs.sort((a, b) {
+      final ia = topBeachClubOrder.indexOf(a.slug);
+      final ib = topBeachClubOrder.indexOf(b.slug);
+      if (ia == -1 && ib == -1) return 0;
+      if (ia == -1) return 1;
+      if (ib == -1) return -1;
+      return ia.compareTo(ib);
+    });
+    final beachClubs = allBeachClubs;
+
     final bars = [...restaurants, ...beachClubs]..shuffle();
 
     final stops = <_ItineraryStop>[];
 
     if (_vibe == 'Beach club day party') {
-      // Afternoon beach club flow
+      // Afternoon beach club flow — pull from all Bali
       if (beachClubs.isNotEmpty) {
         stops.add(_ItineraryStop(
           time: '12:00 PM',
@@ -92,14 +112,21 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
       }
       if (beachClubs.length > 1) {
         stops.add(_ItineraryStop(
-          time: '4:00 PM',
-          label: 'Sunset session',
+          time: '3:00 PM',
+          label: 'Pool party',
           venue: beachClubs[1],
+        ));
+      }
+      if (beachClubs.length > 2) {
+        stops.add(_ItineraryStop(
+          time: '5:30 PM',
+          label: 'Sunset session',
+          venue: beachClubs[2],
         ));
       }
       if (restaurants.isNotEmpty) {
         stops.add(_ItineraryStop(
-          time: '7:30 PM',
+          time: '8:00 PM',
           label: 'Dinner',
           venue: restaurants.first,
         ));
