@@ -34,10 +34,29 @@ class HomeScreen extends StatelessWidget {
             SizedBox(height: 8.h),
             _AreaFilterBar(homeController: homeController),
             SizedBox(height: 10.h),
-            _HomeSearchBar(),
-            SizedBox(height: 4.h),
             Expanded(
-              child: _DiscoverContent(homeController: homeController),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Column(
+                    children: [
+                      // Search bar (input only — no dropdown here)
+                      _HomeSearchInput(),
+                      SizedBox(height: 4.h),
+                      Expanded(
+                        child: _DiscoverContent(homeController: homeController),
+                      ),
+                    ],
+                  ),
+                  // Search results overlay — sits on top of content
+                  Positioned(
+                    top: 48.h,
+                    left: 0,
+                    right: 0,
+                    child: _HomeSearchResults(),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -344,320 +363,308 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Home Search Bar (with inline results) ───────────────────────────────────
+// ── Home Search Controller (shared state) ───────────────────────────────────
 
-class _HomeSearchBar extends StatefulWidget {
-  @override
-  State<_HomeSearchBar> createState() => _HomeSearchBarState();
-}
-
-class _HomeSearchBarState extends State<_HomeSearchBar> {
-  final TextEditingController _textController = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
-  final _searchResults = <VenueModel>[].obs;
-  final _googleResults = <Map<String, dynamic>>[].obs;
-  final _isSearching = false.obs;
+class _HomeSearchController extends GetxController {
+  final textController = TextEditingController();
+  final focusNode = FocusNode();
+  final searchResults = <VenueModel>[].obs;
+  final googleResults = <Map<String, dynamic>>[].obs;
+  final isSearching = false.obs;
   final _netConfig = NetworkConfigV1();
 
   @override
-  void dispose() {
-    _textController.dispose();
-    _focusNode.dispose();
-    super.dispose();
+  void onClose() {
+    textController.dispose();
+    focusNode.dispose();
+    super.onClose();
   }
 
-  Future<void> _doSearch(String query) async {
+  Future<void> doSearch(String query) async {
     if (query.trim().isEmpty) {
-      _searchResults.clear();
-      _googleResults.clear();
-      _isSearching.value = false;
+      searchResults.clear();
+      googleResults.clear();
+      isSearching.value = false;
       return;
     }
 
-    _isSearching.value = true;
+    isSearching.value = true;
 
     try {
       // Search Pink Pineapple venues
       final venueUrl =
           '${Urls.searchVenues}?searchTerm=${Uri.encodeComponent(query)}';
       final venueResponse = await _netConfig.ApiRequestHandler(
-        RequestMethod.GET,
-        venueUrl,
-        '{}',
+        RequestMethod.GET, venueUrl, '{}',
       );
 
       if (venueResponse != null && venueResponse['success'] == true) {
         final venuesData = venueResponse['data'];
         if (venuesData is List) {
-          _searchResults.assignAll(
-            venuesData
-                .map((v) => VenueModel.fromJson(v as Map<String, dynamic>))
-                .toList(),
+          searchResults.assignAll(
+            venuesData.map((v) => VenueModel.fromJson(v as Map<String, dynamic>)).toList(),
           );
         } else {
-          _searchResults.clear();
+          searchResults.clear();
         }
       } else {
-        _searchResults.clear();
+        searchResults.clear();
       }
 
-      // Search Google Places — use raw http.get to avoid ShowError on 404
+      // Google Places (temporary local test)
       try {
-        final googleUrl =
-            '${Urls.googlePlacesSearch}?searchTerm=${Uri.encodeComponent(query)}';
-        final googleReq = await http.get(
-          Uri.parse(googleUrl),
-          headers: {'Content-type': 'application/json'},
+        const googleApiKey = 'AIzaSyCc43zTzs9uH4w5Y9McHyd2JYt8SzCFpy8';
+        final googleReq = await http.post(
+          Uri.parse('https://places.googleapis.com/v1/places:searchText'),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': googleApiKey,
+            'X-Goog-FieldMask':
+                'places.id,places.displayName,places.formattedAddress,places.rating,places.primaryType,places.photos',
+          },
+          body: json.encode({
+            'textQuery': '$query in Bali, Indonesia',
+            'maxResultCount': 8,
+            'languageCode': 'en',
+          }),
         );
         if (googleReq.statusCode == 200) {
           final googleBody = json.decode(googleReq.body);
-          if (googleBody['success'] == true && googleBody['data'] is List) {
-            _googleResults.assignAll(
-              (googleBody['data'] as List)
-                  .map((p) => Map<String, dynamic>.from(p))
-                  .toList(),
-            );
-          } else {
-            _googleResults.clear();
-          }
+          final places = googleBody['places'] as List? ?? [];
+          googleResults.assignAll(places.map((p) {
+            String photoUrl = '';
+            if (p['photos'] != null && (p['photos'] as List).isNotEmpty) {
+              final photoName = p['photos'][0]['name'];
+              photoUrl =
+                  'https://places.googleapis.com/v1/$photoName/media?maxHeightPx=400&maxWidthPx=600&key=$googleApiKey';
+            }
+            return <String, dynamic>{
+              'name': p['displayName']?['text'] ?? '',
+              'address': p['formattedAddress'] ?? '',
+              'category': (p['primaryType'] ?? '').toString().replaceAll('_', ' '),
+              'rating': (p['rating'] ?? 0).toDouble(),
+              'photoUrl': photoUrl,
+              'source': 'google',
+            };
+          }).toList());
         } else {
-          _googleResults.clear();
+          googleResults.clear();
         }
       } catch (_) {
-        _googleResults.clear();
+        googleResults.clear();
       }
     } catch (_) {
-      _searchResults.clear();
-      _googleResults.clear();
+      searchResults.clear();
+      googleResults.clear();
     } finally {
-      _isSearching.value = false;
+      isSearching.value = false;
     }
   }
 
+  void clearAll() {
+    textController.clear();
+    focusNode.unfocus();
+    searchResults.clear();
+    googleResults.clear();
+  }
+}
+
+// ── Search Input (sits in layout flow) ──────────────────────────────────────
+
+class _HomeSearchInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = Get.put(_HomeSearchController(), tag: 'homeSearch');
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Search input
-          Container(
-            height: 42.h,
+      child: Container(
+        height: 42.h,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderSubtle, width: 0.5),
+        ),
+        child: TextField(
+          controller: c.textController,
+          focusNode: c.focusNode,
+          style: GoogleFonts.poppins(fontSize: 13.sp, color: AppColors.textPrimary),
+          decoration: InputDecoration(
+            hintText: 'Search venues, clubs, restaurants...',
+            hintStyle: GoogleFonts.poppins(fontSize: 13.sp, color: AppColors.textMuted),
+            prefixIcon: Icon(Icons.search, size: 18.sp, color: AppColors.textMuted),
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: c.textController,
+              builder: (context, value, _) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return GestureDetector(
+                  onTap: c.clearAll,
+                  child: Icon(Icons.close, size: 18.sp, color: AppColors.textMuted),
+                );
+              },
+            ),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+          ),
+          cursorColor: AppColors.gradientMid,
+          onChanged: c.doSearch,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Search Results Overlay (floats on top of content) ───────────────────────
+
+class _HomeSearchResults extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final c = Get.find<_HomeSearchController>(tag: 'homeSearch');
+
+    return Obx(() {
+      if (c.searchResults.isEmpty && c.googleResults.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            constraints: BoxConstraints(maxHeight: 340.h),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.backgroundCard,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.borderSubtle, width: 0.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            child: TextField(
-              controller: _textController,
-              focusNode: _focusNode,
-              style: GoogleFonts.poppins(
-                fontSize: 13.sp,
-                color: AppColors.textPrimary,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Search venues, clubs, restaurants...',
-                hintStyle: GoogleFonts.poppins(
-                  fontSize: 13.sp,
-                  color: AppColors.textMuted,
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  size: 18.sp,
-                  color: AppColors.textMuted,
-                ),
-                suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _textController,
-                  builder: (context, value, _) {
-                    if (value.text.isEmpty) return const SizedBox.shrink();
-                    return GestureDetector(
-                      onTap: () {
-                        _textController.clear();
-                        _focusNode.unfocus();
-                        _searchResults.clear();
-                        _googleResults.clear();
-                      },
-                      child: Icon(
-                        Icons.close,
-                        size: 18.sp,
-                        color: AppColors.textMuted,
-                      ),
-                    );
-                  },
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 10.h),
-              ),
-              cursorColor: AppColors.gradientMid,
-              onChanged: _doSearch,
-            ),
-          ),
-
-          // Search results dropdown
-          Obx(() {
-            if (_searchResults.isEmpty && _googleResults.isEmpty) {
-              return const SizedBox.shrink();
-            }
-
-            return Container(
-              margin: EdgeInsets.only(top: 4.h),
-              constraints: BoxConstraints(maxHeight: 380.h),
-              decoration: BoxDecoration(
-                color: AppColors.backgroundCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderSubtle, width: 0.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
+            child: ListView(
+              shrinkWrap: true,
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              children: [
+                // Pink Pineapple venues
+                if (c.searchResults.isNotEmpty) ...[
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
+                    child: Text('PINK PINEAPPLE', style: GoogleFonts.poppins(
+                      fontSize: 9.sp, fontWeight: FontWeight.w700,
+                      color: AppColors.accentRoseGold, letterSpacing: 1.5,
+                    )),
                   ),
-                ],
-              ),
-              child: ListView(
-                shrinkWrap: true,
-                padding: EdgeInsets.symmetric(vertical: 8.h),
-                children: [
-                  // Pink Pineapple venues
-                  if (_searchResults.isNotEmpty) ...[
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
-                      child: Text(
-                        'PINK PINEAPPLE',
-                        style: GoogleFonts.poppins(
-                          fontSize: 9.sp,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.accentRoseGold,
-                          letterSpacing: 1.5,
-                        ),
+                  ...c.searchResults.map((venue) => ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 2.h),
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        width: 44.w, height: 44.w,
+                        child: venue.heroImage.isNotEmpty
+                            ? Image.network(venue.heroImage, fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: AppColors.surfaceElevated,
+                                  child: Icon(Icons.place, color: AppColors.textMuted, size: 20),
+                                ))
+                            : Container(
+                                color: AppColors.surfaceElevated,
+                                child: Icon(Icons.place, color: AppColors.textMuted, size: 20),
+                              ),
                       ),
                     ),
-                    ..._searchResults.map((venue) => ListTile(
+                    title: Text(venue.name, style: GoogleFonts.outfit(
+                      fontSize: 14.sp, fontWeight: FontWeight.w700,
+                      fontStyle: FontStyle.italic, color: AppColors.textPrimary,
+                    )),
+                    subtitle: Text(
+                      '${venue.category.replaceAll("_", " ")} · ${venue.area}',
+                      style: GoogleFonts.poppins(fontSize: 10.sp, color: AppColors.accentRoseGold, letterSpacing: 0.5),
+                    ),
+                    trailing: Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18.sp),
+                    onTap: () {
+                      c.clearAll();
+                      Get.to(() => VenueDetailScreen(venueId: venue.id));
+                    },
+                  )),
+                ],
+
+                // Google Places
+                if (c.googleResults.isNotEmpty) ...[
+                  if (c.searchResults.isNotEmpty)
+                    Divider(color: AppColors.borderSubtle, height: 16.h, indent: 14.w, endIndent: 14.w),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
+                    child: Text('MORE IN BALI', style: GoogleFonts.poppins(
+                      fontSize: 9.sp, fontWeight: FontWeight.w700,
+                      color: AppColors.textMuted, letterSpacing: 1.5,
+                    )),
+                  ),
+                  ...c.googleResults.map((place) {
+                    final name = place['name']?.toString() ?? '';
+                    final address = place['address']?.toString() ?? '';
+                    final category = place['category']?.toString().replaceAll('_', ' ') ?? '';
+                    final rating = (place['rating'] as num?)?.toDouble() ?? 0.0;
+                    final photoUrl = place['photoUrl']?.toString() ?? '';
+
+                    return ListTile(
                       dense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 14.w, vertical: 2.h,
-                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 2.h),
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: SizedBox(
                           width: 44.w, height: 44.w,
-                          child: venue.heroImage.isNotEmpty
-                              ? Image.network(venue.heroImage, fit: BoxFit.cover,
+                          child: photoUrl.isNotEmpty
+                              ? Image.network(photoUrl, fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) => Container(
                                     color: AppColors.surfaceElevated,
-                                    child: Icon(Icons.place, color: AppColors.textMuted, size: 20),
+                                    child: Icon(Icons.map_outlined, color: AppColors.textMuted, size: 20),
                                   ))
                               : Container(
                                   color: AppColors.surfaceElevated,
-                                  child: Icon(Icons.place, color: AppColors.textMuted, size: 20),
+                                  child: Icon(Icons.map_outlined, color: AppColors.textMuted, size: 20),
                                 ),
                         ),
                       ),
-                      title: Text(venue.name, style: GoogleFonts.outfit(
-                        fontSize: 14.sp, fontWeight: FontWeight.w700,
-                        fontStyle: FontStyle.italic, color: AppColors.textPrimary,
+                      title: Text(name, style: GoogleFonts.poppins(
+                        fontSize: 13.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary,
                       )),
-                      subtitle: Text(
-                        '${venue.category.replaceAll("_", " ")} · ${venue.area}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 10.sp, color: AppColors.accentRoseGold, letterSpacing: 0.5,
-                        ),
-                      ),
-                      trailing: Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18.sp),
-                      onTap: () {
-                        _focusNode.unfocus();
-                        _textController.clear();
-                        _searchResults.clear();
-                        _googleResults.clear();
-                        Get.to(() => VenueDetailScreen(venueId: venue.id));
-                      },
-                    )),
-                  ],
-
-                  // Google Places results
-                  if (_googleResults.isNotEmpty) ...[
-                    if (_searchResults.isNotEmpty)
-                      Divider(color: AppColors.borderSubtle, height: 16.h, indent: 14.w, endIndent: 14.w),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
-                      child: Text(
-                        'MORE IN BALI',
-                        style: GoogleFonts.poppins(
-                          fontSize: 9.sp,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textMuted,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ),
-                    ..._googleResults.map((place) {
-                      final name = place['name']?.toString() ?? '';
-                      final address = place['address']?.toString() ?? '';
-                      final category = place['category']?.toString().replaceAll('_', ' ') ?? '';
-                      final rating = (place['rating'] as num?)?.toDouble() ?? 0.0;
-                      final photoUrl = place['photoUrl']?.toString() ?? '';
-
-                      return ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 14.w, vertical: 2.h,
-                        ),
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: SizedBox(
-                            width: 44.w, height: 44.w,
-                            child: photoUrl.isNotEmpty
-                                ? Image.network(photoUrl, fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
-                                      color: AppColors.surfaceElevated,
-                                      child: Icon(Icons.map_outlined, color: AppColors.textMuted, size: 20),
-                                    ))
-                                : Container(
-                                    color: AppColors.surfaceElevated,
-                                    child: Icon(Icons.map_outlined, color: AppColors.textMuted, size: 20),
-                                  ),
-                          ),
-                        ),
-                        title: Text(name, style: GoogleFonts.poppins(
-                          fontSize: 13.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary,
-                        )),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (category.isNotEmpty)
-                              Text(category.toUpperCase(), style: GoogleFonts.poppins(
-                                fontSize: 9.sp, color: AppColors.textMuted, letterSpacing: 0.8,
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (category.isNotEmpty)
+                            Text(category.toUpperCase(), style: GoogleFonts.poppins(
+                              fontSize: 9.sp, color: AppColors.textMuted, letterSpacing: 0.8,
+                            )),
+                          if (address.isNotEmpty)
+                            Text(address, maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(fontSize: 10.sp, color: AppColors.textMuted)),
+                          if (rating > 0)
+                            Row(children: [
+                              Icon(Icons.star_rounded, size: 11.sp, color: AppColors.ratingColor),
+                              SizedBox(width: 2.w),
+                              Text(rating.toStringAsFixed(1), style: GoogleFonts.poppins(
+                                fontSize: 10.sp, color: AppColors.textMuted,
                               )),
-                            if (address.isNotEmpty)
-                              Text(address, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(fontSize: 10.sp, color: AppColors.textMuted)),
-                            if (rating > 0)
-                              Row(children: [
-                                Icon(Icons.star_rounded, size: 11.sp, color: AppColors.ratingColor),
-                                SizedBox(width: 2.w),
-                                Text(rating.toStringAsFixed(1), style: GoogleFonts.poppins(
-                                  fontSize: 10.sp, color: AppColors.textMuted,
-                                )),
-                              ]),
-                          ],
-                        ),
-                        trailing: Icon(Icons.open_in_new, color: AppColors.textMuted, size: 14.sp),
-                        onTap: () {
-                          _focusNode.unfocus();
-                          // Google Places results don't have a detail page yet
-                          // Future: open in Google Maps or create a venue from this
-                        },
-                      );
-                    }),
-                  ],
+                            ]),
+                        ],
+                      ),
+                      trailing: Icon(Icons.open_in_new, color: AppColors.textMuted, size: 14.sp),
+                      onTap: () {
+                        c.focusNode.unfocus();
+                      },
+                    );
+                  }),
                 ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
+              ],
+            ),
+          ),
+        ),
+      );
+    });
   }
 }
 
@@ -795,6 +802,11 @@ class _CategorySection extends StatelessWidget {
     required this.category,
   });
 
+  // Curated order per category — venues not in the list appear after in default order
+  static const _curatedOrder = <String, List<String>>{
+    'NIGHTLIFE': ['savaya', 'desa-kitsune', 'shady-pig', 'mesa', 'miss-fish'],
+  };
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -814,10 +826,26 @@ class _CategorySection extends StatelessWidget {
               return loading();
             }
 
-            final filtered = venueCtrl.venues
+            var filtered = venueCtrl.venues
                 .where((v) => v.category.toUpperCase() == category)
-                .take(5)
                 .toList();
+
+            // Apply curated order if one exists for this category
+            final order = _curatedOrder[category];
+            if (order != null && filtered.isNotEmpty) {
+              final ordered = <VenueModel>[];
+              for (final slug in order) {
+                final match = filtered.firstWhereOrNull((v) => v.slug == slug);
+                if (match != null) ordered.add(match);
+              }
+              // Add any remaining venues not in the curated list
+              for (final v in filtered) {
+                if (!ordered.any((o) => o.slug == v.slug)) ordered.add(v);
+              }
+              filtered = ordered;
+            }
+
+            filtered = filtered.take(10).toList();
 
             if (filtered.isEmpty) {
               return Center(
