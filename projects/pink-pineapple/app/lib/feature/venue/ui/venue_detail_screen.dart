@@ -11,6 +11,7 @@ import 'package:pineapple/core/helpers/auth_guard.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
 import 'package:pineapple/core/services/venue_rating_service.dart';
+import 'package:pineapple/core/services/venue_vibe_service.dart';
 import 'package:pineapple/feature/venue/ui/venue_booking_webview.dart';
 
 class VenueDetailScreen extends StatefulWidget {
@@ -25,11 +26,13 @@ class VenueDetailScreen extends StatefulWidget {
 class _VenueDetailScreenState extends State<VenueDetailScreen> {
   late final VenueController _venueController;
   late final VenueRatingService _ratingService;
+  late final VenueVibeService _vibeService;
 
   @override
   void initState() {
     super.initState();
     _ratingService = Get.put(VenueRatingService());
+    _vibeService = Get.put(VenueVibeService());
     // Use existing controller if available, otherwise create new one
     if (Get.isRegistered<VenueController>()) {
       _venueController = Get.find<VenueController>();
@@ -86,6 +89,8 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                   _buildStatusIndicator(venue),
                   SizedBox(height: 14.h),
                   _buildRating(venue),
+                  SizedBox(height: 22.h),
+                  _buildVibeCheck(venue),
                   SizedBox(height: 22.h),
                   _buildDescription(venue),
                   SizedBox(height: 28.h),
@@ -506,6 +511,278 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
           }),
         ],
       ),
+    );
+  }
+
+  // ── Live Vibe Check ───────────────────────────────────────────────────────
+
+  Widget _buildVibeCheck(VenueModel venue) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: Obx(() {
+        final vibe = _vibeService.getVibe(venue.slug);
+        final isRecent = _vibeService.isRecent(venue.slug);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Live Vibe',
+                  style: GoogleFonts.outfit(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w800,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                if (vibe != null && isRecent)
+                  Text(
+                    '${(vibe['count'] as int? ?? 0)} report${(vibe['count'] as int? ?? 0) != 1 ? 's' : ''}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 10.sp,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+
+            // Show current vibe if reported
+            if (vibe != null && isRecent) ...[
+              _vibeRow(
+                VenueVibeService.crowdEmoji(
+                    (vibe['crowd'] as num).toDouble()),
+                VenueVibeService.crowdLabel(
+                    (vibe['crowd'] as num).toDouble()),
+                'Crowd',
+              ),
+              SizedBox(height: 8.h),
+              _vibeRow(
+                '🎵',
+                VenueVibeService.musicLabel(
+                    (vibe['music'] as num).toDouble()),
+                'Music',
+              ),
+              SizedBox(height: 8.h),
+              _vibeRow(
+                '⚡',
+                VenueVibeService.energyLabel(
+                    (vibe['energy'] as num).toDouble()),
+                'Energy',
+              ),
+              SizedBox(height: 14.h),
+            ],
+
+            // Update vibe button
+            GestureDetector(
+              onTap: () => _showVibeSheet(venue),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.accentRoseGold.withOpacity(0.3),
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.wifi_tethering, color: AppColors.accentRoseGold, size: 16.sp),
+                    SizedBox(width: 8.w),
+                    Text(
+                      vibe != null && isRecent
+                          ? 'Update vibe'
+                          : 'Are you here? Report the vibe',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12.sp,
+                        color: AppColors.accentRoseGold,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _vibeRow(String emoji, String label, String category) {
+    return Row(
+      children: [
+        Text(emoji, style: TextStyle(fontSize: 16.sp)),
+        SizedBox(width: 10.w),
+        Text(
+          category,
+          style: GoogleFonts.poppins(
+            fontSize: 11.sp,
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12.sp,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showVibeSheet(VenueModel venue) {
+    final crowd = 2.obs;
+    final music = 2.obs;
+    final energy = 2.obs;
+
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 32.h),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40.w, height: 4.h,
+              decoration: BoxDecoration(
+                color: AppColors.textMuted,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            Text(
+              'How\'s ${venue.name} right now?',
+              style: GoogleFonts.outfit(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w800,
+                fontStyle: FontStyle.italic,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 24.h),
+
+            // Crowd slider
+            _vibeSlider('Crowd', crowd, VenueVibeService.crowdLevels),
+            SizedBox(height: 16.h),
+
+            // Music slider
+            _vibeSlider('Music', music, VenueVibeService.musicLevels),
+            SizedBox(height: 16.h),
+
+            // Energy slider
+            _vibeSlider('Energy', energy, VenueVibeService.energyLevels),
+            SizedBox(height: 24.h),
+
+            // Submit
+            Container(
+              width: double.infinity,
+              height: 48.h,
+              decoration: BoxDecoration(
+                gradient: AppColors.gradientPrimary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  _vibeService.submitVibe(
+                    venue.slug,
+                    crowd: crowd.value,
+                    music: music.value,
+                    energy: energy.value,
+                  );
+                  Get.back();
+                  Get.snackbar(
+                    'Vibe updated!',
+                    'Thanks for reporting — others can see this now',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: AppColors.surface,
+                    colorText: AppColors.textPrimary,
+                    duration: const Duration(seconds: 2),
+                  );
+                },
+                child: Text(
+                  'SUBMIT VIBE',
+                  style: GoogleFonts.outfit(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w800,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.backgroundDark,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _vibeSlider(String label, RxInt value, List<String> levels) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12.sp,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Spacer(),
+            Obx(() => Text(
+              levels[value.value],
+              style: GoogleFonts.poppins(
+                fontSize: 12.sp,
+                color: AppColors.accentRoseGold,
+                fontWeight: FontWeight.w600,
+              ),
+            )),
+          ],
+        ),
+        SizedBox(height: 6.h),
+        Obx(() => SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: AppColors.accentRoseGold,
+            inactiveTrackColor: AppColors.borderSubtle,
+            thumbColor: AppColors.accentRoseGold,
+            overlayColor: AppColors.accentRoseGold.withOpacity(0.15),
+            trackHeight: 4,
+            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 8.r),
+          ),
+          child: Slider(
+            value: value.value.toDouble(),
+            min: 0,
+            max: 4,
+            divisions: 4,
+            onChanged: (v) => value.value = v.round(),
+          ),
+        )),
+      ],
     );
   }
 
