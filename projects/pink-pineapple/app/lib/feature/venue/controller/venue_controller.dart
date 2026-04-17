@@ -171,6 +171,12 @@ class VenueController extends GetxController {
   /// Curated weekly schedule — filters and orders venues per Troy's specification.
   /// This runs after fetching from the API and overrides the order/visibility.
   void _applyCuratedSchedule() {
+    // Event name overrides: "day:slug" -> event label shown in This Week cards
+    const eventLabels = <String, String>{
+      'wed:da-maria': 'Hip Hop Night',
+      'sun:da-maria': 'Hip Hop Night',
+    };
+
     const curated = <String, List<String>>{
       // Canggu venues first, then Seminyak (Da Maria, Iron Fairies, ShiShi, La Favela all Mon-Sun)
       'mon': ['bella', 'luigi', 'mesa', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
@@ -199,6 +205,15 @@ class VenueController extends GetxController {
         match ??= venues.firstWhereOrNull((v) => v.slug == slug)
             ?? venues.firstWhereOrNull((v) => v.name.toLowerCase().replaceAll(' ', '-') == slug);
         if (match != null) {
+          // Apply event label override if one exists
+          final labelKey = '$day:${match.slug}';
+          if (eventLabels.containsKey(labelKey)) {
+            match = match.copyWith(
+              weeklySchedule: {
+                day: {'name': eventLabels[labelKey], 'isSpecial': true},
+              },
+            );
+          }
           ordered.add(match);
         }
       }
