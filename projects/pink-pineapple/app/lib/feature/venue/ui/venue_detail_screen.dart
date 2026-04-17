@@ -10,6 +10,7 @@ import 'package:pineapple/core/global_widgets/pp_button.dart';
 import 'package:pineapple/core/helpers/auth_guard.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
+import 'package:pineapple/core/services/venue_rating_service.dart';
 import 'package:pineapple/feature/venue/ui/venue_booking_webview.dart';
 
 class VenueDetailScreen extends StatefulWidget {
@@ -23,10 +24,12 @@ class VenueDetailScreen extends StatefulWidget {
 
 class _VenueDetailScreenState extends State<VenueDetailScreen> {
   late final VenueController _venueController;
+  late final VenueRatingService _ratingService;
 
   @override
   void initState() {
     super.initState();
+    _ratingService = Get.put(VenueRatingService());
     // Use existing controller if available, otherwise create new one
     if (Get.isRegistered<VenueController>()) {
       _venueController = Get.find<VenueController>();
@@ -421,34 +424,86 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
   // ── Rating ────────────────────────────────────────────────────────────────
 
   Widget _buildRating(VenueModel venue) {
-    if (venue.rating <= 0) return const SizedBox.shrink();
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            venue.rating.toStringAsFixed(1),
-            style: GoogleFonts.poppins(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
-              color: AppColors.ratingColor,
+          // Venue's average rating
+          if (venue.rating > 0)
+            Row(
+              children: [
+                Text(
+                  venue.rating.toStringAsFixed(1),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ratingColor,
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                ...List.generate(5, (i) {
+                  final starValue = i + 1;
+                  return Icon(
+                    starValue <= venue.rating.round()
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    color: AppColors.ratingColor,
+                    size: 18.sp,
+                  );
+                }),
+              ],
             ),
-          ),
-          SizedBox(width: 4.w),
-          Icon(
-            Icons.star_rounded,
-            color: AppColors.ratingColor,
-            size: 18.sp,
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            '(reviews)',
-            style: GoogleFonts.poppins(
-              fontSize: 12.sp,
-              color: AppColors.textMuted,
-            ),
-          ),
+          SizedBox(height: 12.h),
+          // User's interactive rating
+          Obx(() {
+            final userRating = _ratingService.getUserRating(venue.slug);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  userRating != null ? 'Your rating' : 'Rate this venue',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.sp,
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Row(
+                  children: List.generate(5, (i) {
+                    final starValue = (i + 1).toDouble();
+                    final isFilled = userRating != null && starValue <= userRating;
+                    return GestureDetector(
+                      onTap: () async {
+                        if (!await AuthGuard.requireAuth()) return;
+                        _ratingService.rateVenue(venue.slug, starValue);
+                        Get.snackbar(
+                          'Thanks!',
+                          'You rated ${venue.name} ${starValue.toInt()} star${starValue > 1 ? 's' : ''}',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: AppColors.surface,
+                          colorText: AppColors.textPrimary,
+                          duration: const Duration(seconds: 2),
+                        );
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 6.w),
+                        child: Icon(
+                          isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
+                          color: isFilled
+                              ? AppColors.accentRoseGold
+                              : AppColors.textMuted,
+                          size: 28.sp,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            );
+          }),
         ],
       ),
     );
