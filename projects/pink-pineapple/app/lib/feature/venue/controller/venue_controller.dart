@@ -172,13 +172,14 @@ class VenueController extends GetxController {
   /// This runs after fetching from the API and overrides the order/visibility.
   void _applyCuratedSchedule() {
     const curated = <String, List<String>>{
-      'mon': ['bella', 'luigi', 'mesa'],
-      'tue': ['desa-kitsune', 'mesa', 'miss-fish', 'shady-pig'],
-      'wed': ['bella', 'mesa', 'shady-pig', 'miss-fish'],
-      'thu': ['jade', 'shady-pig', 'miss-fish', 'mesa'],
-      'fri': ['desa-kitsune', 'morabito', 'miss-fish', 'mesa', 'shady-pig'],
-      'sat': ['sardine', 'savaya', 'mesa', 'miss-fish', 'shady-pig', 'il-salotto'],
-      'sun': ['savaya', 'il-salotto', 'single-fin', 'amavi', 'back-room'],
+      // Canggu venues first, then Seminyak
+      'mon': ['bella', 'luigi', 'mesa', 'iron-fairies', 'shishi', 'la-favela'],
+      'tue': ['desa-kitsune', 'mesa', 'miss-fish', 'shady-pig', 'iron-fairies', 'shishi', 'la-favela'],
+      'wed': ['bella', 'mesa', 'shady-pig', 'miss-fish', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
+      'thu': ['jade', 'shady-pig', 'miss-fish', 'mesa', 'iron-fairies', 'shishi', 'la-favela'],
+      'fri': ['desa-kitsune', 'morabito', 'miss-fish', 'mesa', 'shady-pig', 'iron-fairies', 'shishi', 'la-favela'],
+      'sat': ['sardine', 'savaya', 'mesa', 'miss-fish', 'shady-pig', 'il-salotto', 'iron-fairies', 'shishi', 'la-favela'],
+      'sun': ['savaya', 'il-salotto', 'single-fin', 'amavi', 'back-room', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
     };
 
     final updated = <String, List<VenueModel>>{};
