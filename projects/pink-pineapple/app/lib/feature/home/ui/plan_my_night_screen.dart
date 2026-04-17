@@ -75,27 +75,34 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
         .where((v) => v.category == 'NIGHTLIFE')
         .toList()..shuffle();
 
-    // Beach clubs pull from ALL areas — best clubs are spread across Bali
-    // Prioritize the top ones
-    const topBeachClubOrder = [
-      'finns-beach-club', 'atlas-beach-club', 'savaya', 'desa-kitsune',
-      'ku-de-ta', 'potato-head-seminyak', 'omnia-dayclub', 'la-brisa',
-      'sundays-beach-club', 'mrs-sippy', 'morabito', 'the-lawn',
-      'como-beach-club', 'ulu-cliffhouse', 'karma-beach', 'the-edge',
-    ];
-    final allBeachClubs = allVenues
-        .where((v) => v.category == 'BEACH_CLUB')
-        .toList();
-    // Sort by curated order, then shuffle the rest
-    allBeachClubs.sort((a, b) {
-      final ia = topBeachClubOrder.indexOf(a.slug);
-      final ib = topBeachClubOrder.indexOf(b.slug);
-      if (ia == -1 && ib == -1) return 0;
-      if (ia == -1) return 1;
-      if (ib == -1) return -1;
-      return ia.compareTo(ib);
-    });
-    final beachClubs = allBeachClubs;
+    // Beach clubs — respect area filter, use curated order per area
+    const beachClubOrder = <String, List<String>>{
+      'CANGGU': ['finns-beach-club', 'atlas-beach-club', 'desa-kitsune', 'la-brisa', 'morabito', 'the-lawn', 'como-beach-club'],
+      'SEMINYAK': ['ku-de-ta', 'potato-head-seminyak', 'mrs-sippy'],
+      'ULUWATU': ['savaya', 'omnia-dayclub', 'sundays-beach-club', 'ulu-cliffhouse', 'karma-beach', 'the-edge'],
+    };
+
+    List<VenueModel> beachClubSource;
+    if (areaFilter.isEmpty) {
+      // "Surprise me" — all beach clubs
+      beachClubSource = allVenues.where((v) => v.category == 'BEACH_CLUB').toList();
+    } else {
+      beachClubSource = areaVenues.where((v) => v.category == 'BEACH_CLUB').toList();
+    }
+
+    // Sort by curated order for the selected area
+    final order = beachClubOrder[areaFilter] ?? [];
+    if (order.isNotEmpty) {
+      beachClubSource.sort((a, b) {
+        final ia = order.indexOf(a.slug);
+        final ib = order.indexOf(b.slug);
+        if (ia == -1 && ib == -1) return 0;
+        if (ia == -1) return 1;
+        if (ib == -1) return -1;
+        return ia.compareTo(ib);
+      });
+    }
+    final beachClubs = beachClubSource;
 
     final bars = [...restaurants, ...beachClubs]..shuffle();
 
