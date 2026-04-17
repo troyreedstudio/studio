@@ -189,11 +189,15 @@ class VenueController extends GetxController {
       final slugOrder = entry.value;
       final dayVenues = weeklySchedule[day] ?? <VenueModel>[];
 
-      // Build ordered list: find each slug in the fetched data (try slug, then name)
+      // Build ordered list: find each slug in whats-on data first,
+      // then fall back to the full venues list (for venues not marked isSpecial)
       final ordered = <VenueModel>[];
       for (final slug in slugOrder) {
-        final match = dayVenues.firstWhereOrNull((v) => v.slug == slug)
+        var match = dayVenues.firstWhereOrNull((v) => v.slug == slug)
             ?? dayVenues.firstWhereOrNull((v) => v.name.toLowerCase().replaceAll(' ', '-') == slug);
+        // Fallback: check the full venues list if not in whats-on
+        match ??= venues.firstWhereOrNull((v) => v.slug == slug)
+            ?? venues.firstWhereOrNull((v) => v.name.toLowerCase().replaceAll(' ', '-') == slug);
         if (match != null) {
           ordered.add(match);
         }
