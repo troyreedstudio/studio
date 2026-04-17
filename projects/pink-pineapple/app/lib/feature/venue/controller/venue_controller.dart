@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:pineapple/core/network_caller/endpoints.dart';
 import 'package:pineapple/core/network_caller/network_config.dart';
+import 'package:pineapple/core/services/venue_tap_tracker.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
 
 class VenueController extends GetxController {
@@ -26,8 +27,23 @@ class VenueController extends GetxController {
   /// Guard to prevent duplicate favorite taps
   final RxSet<String> favoriteInFlight = <String>{}.obs;
 
+  /// Tap tracker for popularity-based ranking
+  late final VenueTapTracker tapTracker;
+
+  /// Record a venue interaction (tap, view, booking)
+  void trackVenueTap(String slug, {String? dayKey, bool isBooking = false}) {
+    if (isBooking) {
+      tapTracker.recordBooking(slug);
+    } else {
+      tapTracker.recordTap(slug, dayKey: dayKey);
+    }
+    // Re-sort the schedule after tracking
+    _applyCuratedSchedule();
+  }
+
   @override
   void onInit() {
+    tapTracker = Get.put(VenueTapTracker());
     super.onInit();
     fetchFeaturedVenues();
     fetchVenues();
@@ -172,14 +188,26 @@ class VenueController extends GetxController {
       final slugOrder = entry.value;
       final dayVenues = weeklySchedule[day] ?? <VenueModel>[];
 
-      // Build ordered list: find each slug in the fetched data
+      // Build ordered list: find each slug in the fetched data (try slug, then name)
       final ordered = <VenueModel>[];
       for (final slug in slugOrder) {
-        final match = dayVenues.firstWhereOrNull((v) => v.slug == slug);
+        final match = dayVenues.firstWhereOrNull((v) => v.slug == slug)
+            ?? dayVenues.firstWhereOrNull((v) => v.name.toLowerCase().replaceAll(' ', '-') == slug);
         if (match != null) {
           ordered.add(match);
         }
       }
+
+      // Sort by popularity score (highest first).
+      // Curated order is the tiebreaker when scores are equal.
+      ordered.sort((a, b) {
+        final scoreA = tapTracker.getPopularityScore(a.slug, dayKey: day);
+        final scoreB = tapTracker.getPopularityScore(b.slug, dayKey: day);
+        if (scoreA != scoreB) return scoreB.compareTo(scoreA);
+        // Same score — preserve curated order
+        return slugOrder.indexOf(a.slug).compareTo(slugOrder.indexOf(b.slug));
+      });
+
       updated[day] = ordered;
     }
 

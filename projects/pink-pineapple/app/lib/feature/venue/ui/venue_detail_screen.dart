@@ -35,7 +35,13 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     }
     // Clear any previous selection and fetch this venue
     _venueController.selectedVenue.value = null;
-    _venueController.fetchVenueDetail(widget.venueId);
+    _venueController.fetchVenueDetail(widget.venueId).then((_) {
+      // Track venue view once loaded
+      final venue = _venueController.selectedVenue.value;
+      if (venue != null) {
+        _venueController.trackVenueTap(venue.slug);
+      }
+    });
   }
 
   @override
@@ -656,6 +662,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     }
 
     if (url.isNotEmpty) {
+      _venueController.trackVenueTap(venue.slug, isBooking: true);
       Get.to(() => VenueBookingWebView(
         bookingUrl: url,
         venueName: venue.name,
