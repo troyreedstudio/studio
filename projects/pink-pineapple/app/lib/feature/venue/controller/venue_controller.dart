@@ -134,6 +134,7 @@ class VenueController extends GetxController {
             }
           }
           weeklySchedule.assignAll(schedule);
+          _applyCuratedSchedule();
           return;
         }
       }
@@ -151,6 +152,40 @@ class VenueController extends GetxController {
 
   /// Build a weekly schedule from venue [openingHours] as a fallback when the
   /// whats-on endpoint is not available.
+  /// Curated weekly schedule — filters and orders venues per Troy's specification.
+  /// This runs after fetching from the API and overrides the order/visibility.
+  void _applyCuratedSchedule() {
+    const curated = <String, List<String>>{
+      'mon': ['bella', 'luigi', 'mesa'],
+      'tue': ['desa-kitsune', 'mesa', 'miss-fish', 'shady-pig'],
+      'wed': ['bella', 'mesa', 'shady-pig', 'miss-fish'],
+      'thu': ['jade', 'shady-pig', 'miss-fish', 'mesa'],
+      'fri': ['desa-kitsune', 'morabito', 'miss-fish', 'mesa', 'shady-pig'],
+      'sat': ['sardine', 'savaya', 'mesa', 'miss-fish', 'shady-pig', 'il-salotto'],
+      'sun': ['savaya', 'il-salotto', 'single-fin', 'amavi', 'back-room'],
+    };
+
+    final updated = <String, List<VenueModel>>{};
+
+    for (final entry in curated.entries) {
+      final day = entry.key;
+      final slugOrder = entry.value;
+      final dayVenues = weeklySchedule[day] ?? <VenueModel>[];
+
+      // Build ordered list: find each slug in the fetched data
+      final ordered = <VenueModel>[];
+      for (final slug in slugOrder) {
+        final match = dayVenues.firstWhereOrNull((v) => v.slug == slug);
+        if (match != null) {
+          ordered.add(match);
+        }
+      }
+      updated[day] = ordered;
+    }
+
+    weeklySchedule.assignAll(updated);
+  }
+
   void _buildFallbackSchedule() {
     const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const shortKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
