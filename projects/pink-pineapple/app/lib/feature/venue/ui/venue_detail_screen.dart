@@ -598,7 +598,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                     Text(
                       vibe != null && isRecent
                           ? 'Update vibe'
-                          : 'Are you here? Report the vibe',
+                          : 'Are you here? Tell us the vibe',
                       style: GoogleFonts.poppins(
                         fontSize: 12.sp,
                         color: AppColors.textPrimary,
