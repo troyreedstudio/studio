@@ -272,16 +272,6 @@ class _DiscoverContent extends StatelessWidget {
             category: 'WELLNESS',
           ),
 
-          SizedBox(height: 28.h),
-
-          // Events
-          const _CategorySection(
-            title: 'Events',
-            category: 'EVENTS',
-          ),
-
-          SizedBox(height: 28.h),
-
           SizedBox(height: 40.h),
         ],
       ),
