@@ -190,13 +190,26 @@ class ProfileTabPage extends StatelessWidget {
                   color: AppColors.backgroundCard,
                   shape: BoxShape.circle,
                 ),
-                child: ResponsiveNetworkImage(
-                  imageUrl: user.userProfile?.profileImage ?? "",
-                  shape: ImageShape.circle,
-                  widthPercent: 0.16,
-                  heightPercent: 0.08,
-                  fit: BoxFit.cover,
-                ),
+                child: (user.userProfile?.profileImage ?? '').isNotEmpty
+                    ? ResponsiveNetworkImage(
+                        imageUrl: user.userProfile!.profileImage!,
+                        shape: ImageShape.circle,
+                        widthPercent: 0.16,
+                        heightPercent: 0.08,
+                        fit: BoxFit.cover,
+                      )
+                    : CircleAvatar(
+                        radius: 28.w,
+                        backgroundColor: AppColors.backgroundSurface,
+                        child: Text(
+                          _getInitials(user.userProfile?.fullName),
+                          style: GoogleFonts.outfit(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.accentRoseGold,
+                          ),
+                        ),
+                      ),
               ),
             ),
 
@@ -237,6 +250,15 @@ class ProfileTabPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getInitials(String? name) {
+    if (name == null || name.isEmpty) return '?';
+    final parts = name.trim().split(' ');
+    if (parts.length > 1) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
   }
 
   Widget _buildMenuSection(ProfileTabController controller) {
