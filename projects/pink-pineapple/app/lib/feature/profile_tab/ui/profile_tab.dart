@@ -41,9 +41,10 @@ class ProfileTabPage extends StatelessWidget {
                 // Page heading
                 Text(
                   'PROFILE',
-                  style: GoogleFonts.cormorantGaramond(
+                  style: GoogleFonts.outfit(
                     fontSize: 22.sp,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w800,
+                    fontStyle: FontStyle.italic,
                     color: AppColors.textPrimary,
                     letterSpacing: 3,
                   ),
@@ -208,9 +209,10 @@ class ProfileTabPage extends StatelessWidget {
                 children: [
                   Text(
                     user.userProfile?.fullName ?? 'Anonymous',
-                    style: GoogleFonts.cormorantGaramond(
+                    style: GoogleFonts.outfit(
                       fontSize: 18.sp,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
+                      fontStyle: FontStyle.italic,
                       color: AppColors.textPrimary,
                     ),
                   ),

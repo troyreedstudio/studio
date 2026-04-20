@@ -49,9 +49,10 @@ class ProfileEditScreen extends StatelessWidget {
                   SizedBox(width: 16.w),
                   Text(
                     "Profile Settings",
-                    style: GoogleFonts.cormorantGaramond(
+                    style: GoogleFonts.outfit(
                       fontSize: 20.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
+                      fontStyle: FontStyle.italic,
                       color: AppColors.textPrimary,
                     ),
                   ),
