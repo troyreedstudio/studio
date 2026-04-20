@@ -29,10 +29,10 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
   static const _areas = ['Canggu', 'Seminyak', 'Uluwatu', 'Surprise me'];
   static const _vibes = [
     {'label': 'Chill dinner & drinks', 'icon': Icons.restaurant_outlined},
-    {'label': 'Full send — dinner to dancing', 'icon': Icons.nightlife},
+    {'label': 'Dinner & dancing', 'icon': Icons.nightlife},
     {'label': 'Beach club day party', 'icon': Icons.beach_access_outlined},
     {'label': 'Date night', 'icon': Icons.favorite_outline},
-    {'label': 'Group night out', 'icon': Icons.groups_outlined},
+    {'label': 'Up late', 'icon': Icons.dark_mode_outlined},
   ];
 
   void _selectArea(String area) {
@@ -174,8 +174,31 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
           venue: bars.first,
         ));
       }
+    } else if (_vibe == 'Up late') {
+      // Club hopping — no dinner, just nightlife
+      if (nightlife.isNotEmpty) {
+        stops.add(_ItineraryStop(
+          time: '10:00 PM',
+          label: 'Warm up',
+          venue: nightlife.first,
+        ));
+      }
+      if (nightlife.length > 1) {
+        stops.add(_ItineraryStop(
+          time: '12:00 AM',
+          label: 'Main event',
+          venue: nightlife[1],
+        ));
+      }
+      if (nightlife.length > 2) {
+        stops.add(_ItineraryStop(
+          time: '2:00 AM',
+          label: 'After hours',
+          venue: nightlife[2],
+        ));
+      }
     } else {
-      // Full send / Group night out — dinner → drinks → club → late night
+      // Dinner & dancing — dinner → drinks → club → late night
       if (restaurants.isNotEmpty) {
         stops.add(_ItineraryStop(
           time: '7:30 PM',
