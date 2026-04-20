@@ -1097,19 +1097,24 @@ class _CategorySection extends StatelessWidget {
               return loading();
             }
 
-            var filtered = venueCtrl.venues
+            final allVenues = venueCtrl.venues;
+            var filtered = allVenues
                 .where((v) => v.category.toUpperCase() == category)
                 .toList();
 
-            // Apply curated order if one exists for this category
+            // Apply curated order if one exists for this category.
+            // Curated list can pull venues from ANY category — many Bali
+            // venues are restaurants by day, nightclubs by night.
             final order = _curatedOrder[category];
-            if (order != null && filtered.isNotEmpty) {
+            if (order != null) {
               final ordered = <VenueModel>[];
               for (final slug in order) {
-                final match = filtered.firstWhereOrNull((v) => v.slug == slug);
+                // First try within the category, then from all venues
+                var match = filtered.firstWhereOrNull((v) => v.slug == slug);
+                match ??= allVenues.firstWhereOrNull((v) => v.slug == slug);
                 if (match != null) ordered.add(match);
               }
-              // Add any remaining venues not in the curated list
+              // Add any remaining same-category venues not in the curated list
               for (final v in filtered) {
                 if (!ordered.any((o) => o.slug == v.slug)) ordered.add(v);
               }
