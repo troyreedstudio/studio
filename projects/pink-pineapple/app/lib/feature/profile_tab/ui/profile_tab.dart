@@ -123,32 +123,40 @@ class ProfileTabPage extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 52.w,
-            height: 52.w,
+            padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
-              color: AppColors.backgroundSurface,
+              gradient: AppColors.gradientPrimary,
               shape: BoxShape.circle,
+            ),
+            child: CircleAvatar(
+              radius: 28.w,
+              backgroundColor: AppColors.backgroundSurface,
+              child: Icon(
+                Icons.person_outline,
+                color: AppColors.accentRoseGold,
+                size: 28.sp,
+              ),
             ),
           ),
           SizedBox(width: 16.w),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 120.w,
-                height: 14.h,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundSurface,
-                  borderRadius: BorderRadius.circular(4),
+              Text(
+                'Loading profile...',
+                style: GoogleFonts.outfit(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textSecondary,
                 ),
               ),
-              SizedBox(height: 8.h),
-              Container(
-                width: 80.w,
-                height: 11.h,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundSurface,
-                  borderRadius: BorderRadius.circular(4),
+              SizedBox(height: 4.h),
+              Text(
+                'Connect to view your profile',
+                style: GoogleFonts.poppins(
+                  fontSize: 11.sp,
+                  color: AppColors.textMuted,
                 ),
               ),
             ],
