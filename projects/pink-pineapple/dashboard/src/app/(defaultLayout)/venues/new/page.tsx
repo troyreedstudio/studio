@@ -57,6 +57,7 @@ const NewVenuePage = () => {
     phone: "",
     website: "",
     instagram: "",
+    bookingUrl: "",
     priceRange: 2,
     openingHours: "",
   });
@@ -115,6 +116,7 @@ const NewVenuePage = () => {
       if (form.phone) formData.append("phone", form.phone);
       if (form.website) formData.append("website", form.website);
       if (form.instagram) formData.append("instagram", form.instagram);
+      if (form.bookingUrl) formData.append("bookingUrl", form.bookingUrl);
       formData.append("priceRange", String(form.priceRange));
       if (form.openingHours) formData.append("openingHours", form.openingHours);
 
@@ -346,6 +348,28 @@ const NewVenuePage = () => {
             className={inputClass}
             style={inter}
           />
+        </div>
+
+        {/* Booking URL */}
+        <div>
+          <label
+            className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+            style={inter}
+          >
+            Booking URL
+          </label>
+          <input
+            type="text"
+            name="bookingUrl"
+            value={form.bookingUrl}
+            onChange={handleChange}
+            placeholder="https://booketing.com/... or https://mtix.me/..."
+            className={inputClass}
+            style={inter}
+          />
+          <p className="text-[#6B6B6B] text-xs mt-1" style={inter}>
+            Paste the venue&apos;s booking page link — customers will be directed here from the app
+          </p>
         </div>
 
         {/* Price Range */}

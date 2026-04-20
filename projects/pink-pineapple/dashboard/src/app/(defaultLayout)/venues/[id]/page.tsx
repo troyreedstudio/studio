@@ -81,6 +81,7 @@ const VenueDetailPage = () => {
     phone: "",
     website: "",
     instagram: "",
+    bookingUrl: "",
     priceRange: 2,
     openingHours: "",
   });
@@ -99,6 +100,7 @@ const VenueDetailPage = () => {
         phone: venue.phone || venue.phoneNumber || "",
         website: venue.website || "",
         instagram: venue.instagram || "",
+        bookingUrl: venue.bookingUrl || "",
         priceRange: venue.priceRange || 2,
         openingHours: venue.openingHours || "",
       });
@@ -397,6 +399,27 @@ const VenueDetailPage = () => {
                   className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
                   style={inter}
                 >
+                  Booking URL
+                </label>
+                <input
+                  type="text"
+                  name="bookingUrl"
+                  value={form.bookingUrl}
+                  onChange={handleChange}
+                  placeholder="https://booketing.com/... or https://mtix.me/..."
+                  className={inputClass}
+                  style={inter}
+                />
+                <p className="text-[#6B6B6B] text-xs mt-1" style={inter}>
+                  Paste the venue&apos;s booking page link — customers will be directed here from the app
+                </p>
+              </div>
+
+              <div>
+                <label
+                  className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                  style={inter}
+                >
                   Opening Hours
                 </label>
                 <input
@@ -657,6 +680,23 @@ const VenueDetailPage = () => {
                     <span className="text-xs text-[#B0B0B0]" style={inter}>
                       {venue.instagram}
                     </span>
+                  </div>
+                )}
+                {venue.bookingUrl && (
+                  <div className="flex items-start gap-2">
+                    <Calendar
+                      size={14}
+                      className="text-[#C4707E] mt-0.5 flex-shrink-0"
+                    />
+                    <a
+                      href={venue.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-[#E8A0B0] hover:underline"
+                      style={inter}
+                    >
+                      Booking Link
+                    </a>
                   </div>
                 )}
                 {venue.openingHours && (
