@@ -30,9 +30,9 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
   static const _vibes = [
     {'label': 'Chill dinner & drinks', 'icon': Icons.restaurant_outlined},
     {'label': 'Dinner & dancing', 'icon': Icons.nightlife},
-    {'label': 'Beach club day party', 'icon': Icons.beach_access_outlined},
-    {'label': 'Date night', 'icon': Icons.favorite_outline},
     {'label': 'Up late', 'icon': Icons.dark_mode_outlined},
+    {'label': 'Date night', 'icon': Icons.favorite_outline},
+    {'label': 'Beach club day party', 'icon': Icons.beach_access_outlined},
   ];
 
   void _selectArea(String area) {
