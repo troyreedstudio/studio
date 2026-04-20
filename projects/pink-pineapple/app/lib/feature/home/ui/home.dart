@@ -1074,7 +1074,7 @@ class _CategorySection extends StatelessWidget {
   static const _curatedOrder = <String, List<String>>{
     'NIGHTLIFE': ['savaya', 'desa-kitsune', 'shady-pig', 'mesa', 'miss-fish'],
     'BEACH_CLUB': ['finns-beach-club', 'el-kabron', 'atlas-beach-club', 'desa-kitsune', 'potato-head-seminyak', 'ku-de-ta'],
-    'RESTAURANT': ['gimme-shelter', 'da-maria', 'yuki', 'muda', 'suka'],
+    'RESTAURANT': ['gimme-shelter', 'da-maria', 'yuki', 'muda-suka'],
     'WELLNESS': ['nirvana-fitness', 'obsidian', 'power-and-revive', 'body-factory', 'bamboo-fitness'],
   };
 
