@@ -4,7 +4,7 @@ On-demand nightlife venue video verification. Users pay $15-20 for a 60-second H
 
 **Tagline**: "Know Before You Go"
 
-**Status**: MVP/prototype complete -- fully functional UI flows with mock data. No backend yet.
+**Status**: MVP/prototype complete — fully functional UI flows with mock data. No backend yet.
 
 ## Tech Stack
 
@@ -12,8 +12,8 @@ On-demand nightlife venue video verification. Users pay $15-20 for a 60-second H
 - **Routing**: Expo Router ~6.0.23 (file-based with grouped routes)
 - **UI**: Native StyleSheet API (no CSS-in-JS library)
 - **Icons**: Expo Vector Icons 15.1.1
-- **State**: Local component state only (`useState`) -- no global state management
-- **Data**: All mock data embedded in components -- no API layer
+- **State**: Local component state only (`useState`) — no global state management
+- **Data**: All mock data embedded in components — no API layer
 - **Code location**: `lmc-app/`
 - **Entry point**: `lmc-app/app/_layout.tsx` (root Stack, dark theme)
 
@@ -28,7 +28,7 @@ npm run android   # Android emulator
 npm run web       # Browser
 ```
 
-No build/deploy scripts configured -- Expo handles compilation.
+No build/deploy scripts configured — Expo handles compilation.
 
 ## Architecture
 
@@ -36,7 +36,7 @@ No build/deploy scripts configured -- Expo handles compilation.
 ```
 app/
   _layout.tsx         Root Stack (dark theme, no headers)
-  index.tsx           Splash -- role selection (User vs Checker)
+  index.tsx           Splash — role selection (User vs Checker)
   (user)/
     _layout.tsx       User stack
     home.tsx          Venue browsing (5 mock venues, city filters)
@@ -55,10 +55,10 @@ app/
 ```
 
 ### User Flow
-Splash -> Home (browse venues) -> Venue (pick tier) -> Payment (review) -> Waiting (countdown) -> Delivery (watch + rate)
+Splash → Home (browse venues) → Venue (pick tier) → Payment (review) → Waiting (countdown) → Delivery (watch + rate)
 
 ### Checker Flow
-Splash -> Dashboard (go online, accept request) -> Filming (record 60s) -> Submitted (earn) -> Earnings (view payouts)
+Splash → Dashboard (go online, accept request) → Filming (record 60s) → Submitted (earn) → Earnings (view payouts)
 
 ### Screen Sizes
 Total: ~2,674 lines of TSX across 11 screens + 4 layouts. No extracted utilities, hooks, or service layer.
@@ -80,7 +80,7 @@ Cards:    dark rounded containers, 1-2px borders
 Logo:     88px fontWeight 900, letterSpacing 3
 ```
 
-No theme file -- colours are inline in each screen's `StyleSheet.create()`.
+No theme file — colours are inline in each screen's `StyleSheet.create()`.
 
 ## Pricing Model
 
@@ -130,11 +130,11 @@ Root level:
 
 ## Documentation
 
-- `lmc-app/CLAUDE.md` -- internal project doc (exists but this file supersedes)
-- `docs/BUSINESS-PLAN.md` -- comprehensive business strategy
-- `docs/LMC-Pitch-Deck*.pdf` -- 3 pitch deck versions
-- `docs/LMC-Business-Plan.pdf` -- formatted business plan
-- `MVP-PLAN.md` -- original Telegram bot MVP strategy (pre-app)
+- `lmc-app/CLAUDE.md` — internal project doc (exists but this file supersedes)
+- `docs/BUSINESS-PLAN.md` — comprehensive business strategy
+- `docs/LMC-Pitch-Deck*.pdf` — 3 pitch deck versions
+- `docs/LMC-Business-Plan.pdf` — formatted business plan
+- `MVP-PLAN.md` — original Telegram bot MVP strategy (pre-app)
 
 ## Next Steps
 
@@ -148,3 +148,14 @@ Root level:
 8. Geolocation for Checker dispatch
 9. Push notifications (Expo Notifications + FCM)
 10. Beta launch in one city (originally planned: Miami)
+
+---
+
+## RuFlo V3 Integration
+
+This project is initialised for RuFlo V3 (`.claude/`, `.claude-flow/`, `.mcp.json`). The full RuFlo swarm/memory/MCP configuration lives in `~/CLAUDE.md` (global) and `~/studio/CLAUDE.md` (studio-wide) — no need to duplicate it here.
+
+- **Topology**: hierarchical-mesh · **Max Agents**: 15 · **Memory**: hybrid · **HNSW + Neural**: enabled
+- **CLI**: `ruflo` (not `claude-flow`) — e.g. `ruflo swarm init`, `ruflo memory search`, `ruflo daemon start`
+- **File rules**: never save working files/tests/docs to root — use `/src`, `/tests`, `/docs`, `/scripts`
+- **Security**: never commit `.env` or credentials; validate input at boundaries

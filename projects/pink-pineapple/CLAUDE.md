@@ -1,5 +1,7 @@
 # Pink Pineapple
 
+ claude --resume champ
+
 Premium Bali lifestyle guide and booking app. Curated discovery of clubs, restaurants, bars, beach clubs, and gyms with instant booking. Think Monocle meets Time Out meets a local insider's WhatsApp group.
 
 **Status**: LIVE on App Store + Google Play. Backend, dashboard, and Flutter app all deployed.
