@@ -38,7 +38,7 @@ export default function VenueScreen() {
         {/* Info Row */}
         <View style={styles.infoRow}>
           <View style={styles.infoChip}>
-            <Text style={styles.infoChipText}>🕐 Checkers Nearby</Text>
+            <Text style={styles.infoChipText}>🕐 Scouts Nearby</Text>
           </View>
           <View style={styles.infoChip}>
             <Text style={styles.infoChipText}>⚡ Fast Delivery</Text>
@@ -75,7 +75,7 @@ export default function VenueScreen() {
             <Text style={styles.tierLabel}>Priority</Text>
             <Text style={styles.tierPrice}>$20</Text>
             <Text style={styles.tierTime}>~7 min</Text>
-            <Text style={styles.tierDesc}>Rush delivery + priority checker</Text>
+            <Text style={styles.tierDesc}>Rush delivery + priority scout</Text>
             {selectedTier === 'priority' && (
               <View style={[styles.selectedBadge, styles.selectedBadgeAmber]}>
                 <Text style={styles.selectedBadgeText}>✓</Text>
@@ -96,7 +96,7 @@ export default function VenueScreen() {
           style={styles.ctaButton}
           onPress={() =>
             router.push({
-              pathname: '/(user)/payment',
+              pathname: '/(seeker)/payment',
               params: { venue: name, city, tier: selectedTier, price: tier.price, time: tier.time },
             })
           }

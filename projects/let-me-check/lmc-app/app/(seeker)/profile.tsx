@@ -31,7 +31,7 @@ export default function ProfileScreen() {
           <Text style={styles.memberSince}>Member since January 2026</Text>
           <View style={styles.verifiedRow}>
             <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedText}>✓ Verified User</Text>
+              <Text style={styles.verifiedText}>✓ Verified Seeker</Text>
             </View>
           </View>
         </View>
@@ -92,9 +92,9 @@ export default function ProfileScreen() {
         {/* Switch Mode */}
         <TouchableOpacity
           style={styles.switchModeBtn}
-          onPress={() => router.push('/(checker)/dashboard')}
+          onPress={() => router.push('/(scout)/dashboard')}
         >
-          <Text style={styles.switchModeBtnText}>Switch to Checker Mode →</Text>
+          <Text style={styles.switchModeBtnText}>Switch to Scout Mode →</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.signOutBtn}>

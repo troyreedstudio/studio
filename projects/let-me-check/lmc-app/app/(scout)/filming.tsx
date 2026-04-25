@@ -92,7 +92,7 @@ export default function FilmingScreen() {
           style={[styles.recordBtn, recording && styles.recordBtnActive]}
           onPress={() => {
             if (recordSecs >= 60) {
-              router.push('/(checker)/submitted');
+              router.push('/(scout)/submitted');
             } else {
               setRecording(!recording);
             }

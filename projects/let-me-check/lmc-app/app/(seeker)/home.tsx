@@ -8,8 +8,9 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 
-const CITIES = ['Miami', 'New York', 'London', 'Dubai'];
+const CITIES = ['All', 'Miami', 'New York', 'London', 'Dubai'];
 
 const VENUES = [
   { id: '1', name: 'Komodo', city: 'Miami', vibe: 'Rooftop Bar' },
@@ -21,6 +22,12 @@ const VENUES = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [selectedCity, setSelectedCity] = useState('All');
+
+  const filteredVenues =
+    selectedCity === 'All'
+      ? VENUES
+      : VENUES.filter((v) => v.city === selectedCity);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,7 +40,7 @@ export default function HomeScreen() {
           </View>
           <TouchableOpacity
             style={styles.profilePill}
-            onPress={() => router.push('/(user)/profile')}
+            onPress={() => router.push('/(seeker)/profile')}
           >
             <Text style={styles.profileInitials}>TR</Text>
           </TouchableOpacity>
@@ -57,56 +64,72 @@ export default function HomeScreen() {
           style={styles.cityScroll}
           contentContainerStyle={styles.cityRow}
         >
-          {CITIES.map((city, i) => (
-            <TouchableOpacity
-              key={city}
-              style={[styles.cityPill, i === 0 && styles.cityPillActive]}
-            >
-              <Text style={[styles.cityPillText, i === 0 && styles.cityPillTextActive]}>
-                {city}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {CITIES.map((city) => {
+            const isActive = city === selectedCity;
+            return (
+              <TouchableOpacity
+                key={city}
+                style={[styles.cityPill, isActive && styles.cityPillActive]}
+                onPress={() => setSelectedCity(city)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.cityPillText, isActive && styles.cityPillTextActive]}>
+                  {city}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Trending Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>TRENDING TONIGHT</Text>
+          <Text style={styles.sectionTitle}>
+            {selectedCity === 'All'
+              ? 'TRENDING TONIGHT'
+              : `TRENDING IN ${selectedCity.toUpperCase()}`}
+          </Text>
           <View style={styles.liveIndicator}>
             <View style={styles.liveBlip} />
             <Text style={styles.liveLabel}>LIVE</Text>
           </View>
         </View>
 
-        {/* Venue Cards */}
-        {VENUES.map((venue) => (
-          <TouchableOpacity
-            key={venue.id}
-            style={styles.venueCard}
-            onPress={() =>
-              router.push({
-                pathname: '/(user)/venue',
-                params: { name: venue.name, city: venue.city },
-              })
-            }
-            activeOpacity={0.8}
-          >
-            <View style={styles.venuePhotoPlaceholder}>
-              <Text style={styles.venuePhotoText}>{venue.name[0]}</Text>
-            </View>
-            <View style={styles.venueInfo}>
-              <View style={styles.liveRow}>
-                <View style={styles.greenDot} />
-                <Text style={styles.liveText}>LIVE</Text>
+        {/* Empty state OR Venue Cards */}
+        {filteredVenues.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No venues yet in {selectedCity}.</Text>
+            <Text style={styles.emptyStateSub}>Try another city or check back soon.</Text>
+          </View>
+        ) : (
+          filteredVenues.map((venue) => (
+            <TouchableOpacity
+              key={venue.id}
+              style={styles.venueCard}
+              onPress={() =>
+                router.push({
+                  pathname: '/(seeker)/venue',
+                  params: { name: venue.name, city: venue.city },
+                })
+              }
+              activeOpacity={0.8}
+            >
+              <View style={styles.venuePhotoPlaceholder}>
+                <Text style={styles.venuePhotoText}>{venue.name[0]}</Text>
               </View>
-              <Text style={styles.venueName}>{venue.name}</Text>
-              <Text style={styles.venueCity}>{venue.city} · {venue.vibe}</Text>
-            </View>
-            <View style={styles.venueArrow}>
-              <Text style={styles.arrowText}>›</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+              <View style={styles.venueInfo}>
+                <View style={styles.liveRow}>
+                  <View style={styles.greenDot} />
+                  <Text style={styles.liveText}>LIVE</Text>
+                </View>
+                <Text style={styles.venueName}>{venue.name}</Text>
+                <Text style={styles.venueCity}>{venue.city} · {venue.vibe}</Text>
+              </View>
+              <View style={styles.venueArrow}>
+                <Text style={styles.arrowText}>›</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
 
         {/* Nav Footer */}
         <View style={styles.navBar}>
@@ -114,11 +137,11 @@ export default function HomeScreen() {
             <Text style={styles.navIcon}>🏠</Text>
             <Text style={[styles.navLabel, styles.navLabelActive]}>Home</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(user)/history')}>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(seeker)/history')}>
             <Text style={styles.navIcon}>📋</Text>
             <Text style={styles.navLabel}>History</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(user)/profile')}>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(seeker)/profile')}>
             <Text style={styles.navIcon}>👤</Text>
             <Text style={styles.navLabel}>Profile</Text>
           </TouchableOpacity>
@@ -230,6 +253,21 @@ const styles = StyleSheet.create({
   venueCity: { fontSize: 12, color: '#888' },
   venueArrow: { paddingLeft: 8 },
   arrowText: { fontSize: 22, color: '#444' },
+  emptyState: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  emptyStateSub: {
+    color: '#555',
+    fontSize: 12,
+  },
   navBar: {
     position: 'absolute',
     bottom: 0,

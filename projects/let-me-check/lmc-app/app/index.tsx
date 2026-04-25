@@ -15,22 +15,22 @@ export default function SplashScreen() {
       <View style={styles.buttons}>
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => router.push('/(user)/home')}
+          onPress={() => router.push('/(seeker)/home')}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryButtonText}>I'm a User</Text>
+          <Text style={styles.primaryButtonText}>I'm a Seeker</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.outlineButton}
-          onPress={() => router.push('/(checker)/dashboard')}
+          onPress={() => router.push('/(scout)/dashboard')}
           activeOpacity={0.85}
         >
-          <Text style={styles.outlineButtonText}>I'm a Checker</Text>
+          <Text style={styles.outlineButtonText}>I'm a Scout</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.footer}>Powered by real humans, in real time</Text>
+      <Text style={styles.footer}>Real Eyes. Right Now. Anywhere.</Text>
     </SafeAreaView>
   );
 }

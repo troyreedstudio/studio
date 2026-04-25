@@ -98,7 +98,7 @@ export default function PaymentScreen() {
           style={styles.ctaButton}
           onPress={() =>
             router.push({
-              pathname: '/(user)/waiting',
+              pathname: '/(seeker)/waiting',
               params: { venue, city, tier, time },
             })
           }
@@ -106,7 +106,7 @@ export default function PaymentScreen() {
         >
           <Text style={styles.ctaButtonText}>CONFIRM & PAY {total}</Text>
         </TouchableOpacity>
-        <Text style={styles.disclaimer}>Secure payment · No refunds after checker departs</Text>
+        <Text style={styles.disclaimer}>Secure payment · No refunds after scout departs</Text>
       </View>
     </SafeAreaView>
   );

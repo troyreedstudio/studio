@@ -65,14 +65,14 @@ export default function DeliveryScreen() {
           </Text>
         )}
 
-        {/* Checker Info */}
-        <View style={styles.checkerCard}>
-          <View style={styles.checkerAvatar}>
-            <Text style={styles.checkerAvatarText}>J</Text>
+        {/* Scout Info */}
+        <View style={styles.scoutCard}>
+          <View style={styles.scoutAvatar}>
+            <Text style={styles.scoutAvatarText}>J</Text>
           </View>
-          <View style={styles.checkerInfo}>
-            <Text style={styles.checkerName}>Jake C.</Text>
-            <Text style={styles.checkerRating}>⭐ 4.9 · 247 clips</Text>
+          <View style={styles.scoutInfo}>
+            <Text style={styles.scoutName}>Jake C.</Text>
+            <Text style={styles.scoutRating}>⭐ 4.9 · 247 clips</Text>
           </View>
           <View style={styles.verifiedBadge}>
             <Text style={styles.verifiedText}>✓ Verified</Text>
@@ -82,7 +82,7 @@ export default function DeliveryScreen() {
         {/* Action Buttons */}
         <TouchableOpacity
           style={styles.primaryBtn}
-          onPress={() => router.push('/(user)/home')}
+          onPress={() => router.push('/(seeker)/home')}
           activeOpacity={0.85}
         >
           <Text style={styles.primaryBtnText}>CHECK ANOTHER VENUE</Text>
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   star: { fontSize: 36, color: '#222' },
   starActive: { color: '#f59e0b' },
   ratingFeedback: { color: '#888', fontSize: 13, marginBottom: 20 },
-  checkerCard: {
+  scoutCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#111',
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     marginTop: 8,
   },
-  checkerAvatar: {
+  scoutAvatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -213,10 +213,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  checkerAvatarText: { color: '#fff', fontWeight: '700', fontSize: 18 },
-  checkerInfo: { flex: 1 },
-  checkerName: { color: '#fff', fontWeight: '700', fontSize: 15, marginBottom: 2 },
-  checkerRating: { color: '#888', fontSize: 12 },
+  scoutAvatarText: { color: '#fff', fontWeight: '700', fontSize: 18 },
+  scoutInfo: { flex: 1 },
+  scoutName: { color: '#fff', fontWeight: '700', fontSize: 15, marginBottom: 2 },
+  scoutRating: { color: '#888', fontSize: 12 },
   verifiedBadge: {
     backgroundColor: '#14532d',
     borderRadius: 6,

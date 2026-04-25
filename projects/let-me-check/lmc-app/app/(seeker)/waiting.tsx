@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 const STEPS = [
   { id: 0, label: 'Paid', done: true },
-  { id: 1, label: 'Checker Assigned', done: true },
+  { id: 1, label: 'Scout Assigned', done: true },
   { id: 2, label: 'Recording', done: false, active: true },
   { id: 3, label: 'Delivered', done: false },
 ];
@@ -43,7 +43,7 @@ export default function WaitingScreen() {
           </View>
         </View>
 
-        <Text style={styles.title}>YOUR CHECKER{'\n'}IS ON THE WAY</Text>
+        <Text style={styles.title}>YOUR SCOUT{'\n'}IS ON THE WAY</Text>
         <Text style={styles.venueName}>{venue} · {city}</Text>
 
         {/* Countdown */}
@@ -91,7 +91,7 @@ export default function WaitingScreen() {
           style={styles.simulateBtn}
           onPress={() =>
             router.replace({
-              pathname: '/(user)/delivery',
+              pathname: '/(seeker)/delivery',
               params: { venue, city, tier },
             })
           }

@@ -13,7 +13,7 @@ export default function SubmittedScreen() {
         </View>
 
         <Text style={styles.title}>CLIP DELIVERED!</Text>
-        <Text style={styles.subtitle}>Your check has been sent to the user</Text>
+        <Text style={styles.subtitle}>Your check has been sent to the Seeker</Text>
 
         {/* Earnings Cards */}
         <View style={styles.earningsGroup}>
@@ -48,7 +48,7 @@ export default function SubmittedScreen() {
 
         {/* Rating from user */}
         <View style={styles.ratingCard}>
-          <Text style={styles.ratingLabel}>User rated your clip</Text>
+          <Text style={styles.ratingLabel}>Seeker rated your clip</Text>
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((s) => (
               <Text key={s} style={[styles.star, s <= 5 && styles.starActive]}>★</Text>
@@ -61,7 +61,7 @@ export default function SubmittedScreen() {
         <View style={styles.buttonsGroup}>
           <TouchableOpacity
             style={styles.primaryBtn}
-            onPress={() => router.push('/(checker)/dashboard')}
+            onPress={() => router.push('/(scout)/dashboard')}
             activeOpacity={0.85}
           >
             <Text style={styles.primaryBtnText}>KEEP EARNING</Text>
@@ -69,7 +69,7 @@ export default function SubmittedScreen() {
 
           <TouchableOpacity
             style={styles.secondaryBtn}
-            onPress={() => router.push('/(checker)/earnings')}
+            onPress={() => router.push('/(scout)/earnings')}
             activeOpacity={0.8}
           >
             <Text style={styles.secondaryBtnText}>WITHDRAW</Text>

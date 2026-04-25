@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Swi
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-export default function CheckerDashboard() {
+export default function ScoutDashboard() {
   const router = useRouter();
   const [online, setOnline] = useState(true);
 
@@ -12,12 +12,12 @@ export default function CheckerDashboard() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.mode}>CHECKER MODE</Text>
+            <Text style={styles.mode}>SCOUT MODE</Text>
             <Text style={styles.subMode}>{online ? 'You are online' : 'You are offline'}</Text>
           </View>
           <TouchableOpacity
             style={styles.profilePill}
-            onPress={() => router.push('/(user)/profile')}
+            onPress={() => router.push('/(seeker)/profile')}
           >
             <Text style={styles.profileInitials}>TR</Text>
           </TouchableOpacity>
@@ -31,7 +31,7 @@ export default function CheckerDashboard() {
             <View style={styles.earningsChip}>
               <Text style={styles.earningsChipText}>12 clips delivered</Text>
             </View>
-            <TouchableOpacity onPress={() => router.push('/(checker)/earnings')}>
+            <TouchableOpacity onPress={() => router.push('/(scout)/earnings')}>
               <Text style={styles.viewAllText}>View All →</Text>
             </TouchableOpacity>
           </View>
@@ -102,7 +102,7 @@ export default function CheckerDashboard() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.acceptBtn}
-                  onPress={() => router.push('/(checker)/filming')}
+                  onPress={() => router.push('/(scout)/filming')}
                   activeOpacity={0.85}
                 >
                   <Text style={styles.acceptBtnText}>Accept → Earn $10</Text>
@@ -118,11 +118,11 @@ export default function CheckerDashboard() {
             <Text style={styles.navIcon}>📡</Text>
             <Text style={[styles.navLabel, styles.navLabelActive]}>Dashboard</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(checker)/earnings')}>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(scout)/earnings')}>
             <Text style={styles.navIcon}>💰</Text>
             <Text style={styles.navLabel}>Earnings</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(user)/profile')}>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(seeker)/profile')}>
             <Text style={styles.navIcon}>👤</Text>
             <Text style={styles.navLabel}>Profile</Text>
           </TouchableOpacity>

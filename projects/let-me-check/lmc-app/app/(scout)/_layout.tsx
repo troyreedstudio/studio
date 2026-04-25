@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-export default function CheckerLayout() {
+export default function ScoutLayout() {
   return (
     <Stack
       screenOptions={{
