@@ -118,7 +118,7 @@ export default function HomeScreen() {
               </View>
               <View style={styles.venueInfo}>
                 <View style={styles.liveRow}>
-                  <View style={styles.greenDot} />
+                  <View style={styles.orangeDot} />
                   <Text style={styles.liveText}>LIVE</Text>
                 </View>
                 <Text style={styles.venueName}>{venue.name}</Text>
@@ -221,9 +221,9 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#22c55e',
+    backgroundColor: '#F47B20',
   },
-  liveLabel: { fontSize: 11, color: '#22c55e', fontWeight: '700', letterSpacing: 1 },
+  liveLabel: { fontSize: 11, color: '#F47B20', fontWeight: '700', letterSpacing: 1 },
   venueCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -247,8 +247,8 @@ const styles = StyleSheet.create({
   venuePhotoText: { fontSize: 22, fontWeight: '700', color: '#444' },
   venueInfo: { flex: 1 },
   liveRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
-  greenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22c55e' },
-  liveText: { fontSize: 10, color: '#22c55e', fontWeight: '700', letterSpacing: 1 },
+  orangeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#F47B20' },
+  liveText: { fontSize: 10, color: '#F47B20', fontWeight: '700', letterSpacing: 1 },
   venueName: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 2 },
   venueCity: { fontSize: 12, color: '#888' },
   venueArrow: { paddingLeft: 8 },

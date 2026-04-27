@@ -51,19 +51,19 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 88,
     fontWeight: '900',
-    color: '#ffffff',
+    color: '#F47B20',
     letterSpacing: 8,
     marginBottom: 8,
   },
   brand: {
     fontSize: 18,
-    color: '#888888',
+    color: '#ffffff',
     letterSpacing: 3,
     marginBottom: 12,
   },
   tagline: {
     fontSize: 14,
-    color: '#555555',
+    color: '#888888',
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     textAlign: 'center',
-    color: '#333333',
+    color: '#555555',
     fontSize: 12,
     marginTop: 24,
   },
