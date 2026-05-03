@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:pineapple/core/const/user_info/user_info_controller.dart';
 import 'package:pineapple/core/global_widgets/logout_dialog.dart';
 import 'package:pineapple/core/local/local_data.dart';
@@ -54,6 +55,11 @@ class ProfileTabPage extends StatelessWidget {
 
                 // Profile Header
                 _buildProfileHeader(userInfoController),
+
+                SizedBox(height: 16.h),
+
+                // Refer a friend — viral hook
+                _buildReferralCard(),
 
                 SizedBox(height: 16.h),
 
@@ -267,6 +273,99 @@ class ProfileTabPage extends StatelessWidget {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
     return parts[0][0].toUpperCase();
+  }
+
+  Widget _buildReferralCard() {
+    return Builder(
+      builder: (context) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _shareReferral(context),
+          borderRadius: BorderRadius.circular(18.r),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF8B4060),
+                  Color(0xFFC4707E),
+                  Color(0xFFE8A0B0),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF8B4060).withOpacity(0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44.w,
+                  height: 44.w,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.ios_share_rounded, color: Colors.white, size: 22.sp),
+                ),
+                SizedBox(width: 14.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Invite friends to Bali',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w800,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        'Share Pink Pineapple with someone who needs it',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white.withOpacity(0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Icon(Icons.chevron_right, color: Colors.white, size: 22.sp),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _shareReferral(BuildContext context) {
+    // MVP-1: no per-user code yet. Tracked-link version will replace this URL
+    // with `https://pinkpineapple.app/r/<userCode>` once the backend supports it.
+    const message =
+        'Try Pink Pineapple — Bali’s curated nightlife guide. Knows which night to go to which venue.\n\n'
+        'https://apps.apple.com/app/id6758339469';
+    final box = context.findRenderObject() as RenderBox?;
+    Share.share(
+      message,
+      subject: 'Pink Pineapple — Bali nightlife',
+      // Required on iPad and iOS 17+ Simulator — anchor for the share popover.
+      sharePositionOrigin: box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null,
+    );
   }
 
   Widget _buildMenuSection(ProfileTabController controller) {
