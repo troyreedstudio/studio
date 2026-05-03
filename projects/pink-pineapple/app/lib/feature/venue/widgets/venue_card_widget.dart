@@ -20,6 +20,17 @@ class VenueCardWidget extends StatelessWidget {
     return category.replaceAll('_', ' ').toUpperCase();
   }
 
+  /// Compact vibe summary for venue cards: "Packed · Great · Lit"
+  String _vibeSummary(Map<String, dynamic> vibe) {
+    const crowdShort = ['Empty', 'Chill', 'Filling', 'Packed', 'Capped'];
+    const musicShort = ['Silent', 'Background', 'Good', 'Great', 'Incredible'];
+    const energyShort = ['Dead', 'Mellow', 'Warming', 'Lit', 'Fire'];
+    final c = (vibe['crowd'] as num?)?.toInt().clamp(0, 4) ?? 2;
+    final m = (vibe['music'] as num?)?.toInt().clamp(0, 4) ?? 2;
+    final e = (vibe['energy'] as num?)?.toInt().clamp(0, 4) ?? 2;
+    return '${crowdShort[c]} · ${musicShort[m]} · ${energyShort[e]}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final venueController = Get.find<VenueController>();
@@ -199,6 +210,29 @@ class VenueCardWidget extends StatelessWidget {
                     area: venue.area,
                     fontSize: 9,
                   ),
+
+                  // Recent vibe row — only shows if a vibe was reported in the last 4hrs
+                  if (venue.recentVibe != null) ...[
+                    SizedBox(height: 6.h),
+                    Row(
+                      children: [
+                        Text('🔥', style: TextStyle(fontSize: 11.sp)),
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: Text(
+                            _vibeSummary(venue.recentVibe!),
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFFE8A0B0),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

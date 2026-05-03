@@ -426,6 +426,11 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     return AppColors.successColor;
   }
 
+  String _formatCount(int n) {
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
+    return n.toString();
+  }
+
   // ── Rating ────────────────────────────────────────────────────────────────
 
   Widget _buildRating(VenueModel venue) {
@@ -434,81 +439,75 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Venue's average rating
-          if (venue.rating > 0)
+          // Pink Pineapple rating — show if any reviews
+          if (venue.ppRating != null && (venue.ppRatingCount ?? 0) > 0) ...[
             Row(
               children: [
+                SizedBox(
+                  width: 28.sp,
+                  child: Center(
+                    child: Image.asset(
+                      'assets/images/pinaple.png',
+                      width: 26.sp,
+                      height: 26.sp,
+                      color: const Color(0xFFE8A0B0),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10.w),
                 Text(
-                  venue.rating.toStringAsFixed(1),
+                  venue.ppRating!.toStringAsFixed(1),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFE8A0B0), // brand rose-gold on the number
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Text(
+                  '${venue.ppRatingCount} Pink Pineapple rating${venue.ppRatingCount == 1 ? "" : "s"}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+          ],
+          // Google rating (yellow star) — show if available
+          if (venue.googleRating != null) ...[
+            Row(
+              children: [
+                SizedBox(
+                  width: 28.sp,
+                  child: Center(
+                    child: Icon(Icons.star_rounded, color: AppColors.ratingColor, size: 22.sp),
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Text(
+                  venue.googleRating!.toStringAsFixed(1),
                   style: GoogleFonts.poppins(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
                     color: AppColors.ratingColor,
                   ),
                 ),
-                SizedBox(width: 4.w),
-                ...List.generate(5, (i) {
-                  final starValue = i + 1;
-                  return Icon(
-                    starValue <= venue.rating.round()
-                        ? Icons.star_rounded
-                        : Icons.star_outline_rounded,
-                    color: AppColors.ratingColor,
-                    size: 18.sp,
-                  );
-                }),
-              ],
-            ),
-          SizedBox(height: 12.h),
-          // User's interactive rating
-          Obx(() {
-            final userRating = _ratingService.getUserRating(venue.slug);
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                SizedBox(width: 8.w),
                 Text(
-                  userRating != null ? 'Your rating' : 'Rate this venue',
+                  '${_formatCount(venue.googleRatingCount ?? 0)} on Google',
                   style: GoogleFonts.poppins(
-                    fontSize: 11.sp,
-                    color: AppColors.textMuted,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 0.3,
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
                   ),
                 ),
-                SizedBox(height: 6.h),
-                Row(
-                  children: List.generate(5, (i) {
-                    final starValue = (i + 1).toDouble();
-                    final isFilled = userRating != null && starValue <= userRating;
-                    return GestureDetector(
-                      onTap: () async {
-                        if (!await AuthGuard.requireAuth()) return;
-                        _ratingService.rateVenue(venue.slug, starValue);
-                        Get.snackbar(
-                          'Thanks!',
-                          'You rated ${venue.name} ${starValue.toInt()} star${starValue > 1 ? 's' : ''}',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: AppColors.surface,
-                          colorText: AppColors.textPrimary,
-                          duration: const Duration(seconds: 2),
-                        );
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 6.w),
-                        child: Icon(
-                          isFilled ? Icons.star_rounded : Icons.star_outline_rounded,
-                          color: isFilled
-                              ? AppColors.accentRoseGold
-                              : AppColors.textMuted,
-                          size: 28.sp,
-                        ),
-                      ),
-                    );
-                  }),
-                ),
               ],
-            );
-          }),
+            ),
+          ],
+          // User-rate UI removed 2026-05-03 — rating now happens from the
+          // Bookings tab "Rate where you went" section, gated to people who've
+          // actually been to the venue (booked through the app).
         ],
       ),
     );
@@ -542,8 +541,8 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                   Text(
                     '${(vibe['count'] as int? ?? 0)} report${(vibe['count'] as int? ?? 0) != 1 ? 's' : ''}',
                     style: GoogleFonts.poppins(
-                      fontSize: 10.sp,
-                      color: AppColors.textMuted,
+                      fontSize: 11.sp,
+                      color: AppColors.textSecondary,
                     ),
                   ),
               ],
@@ -709,6 +708,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                     crowd: crowd.value,
                     music: music.value,
                     energy: energy.value,
+                    venueId: venue.id,
                   );
                   Get.back();
                   Get.snackbar(
@@ -926,8 +926,8 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                         Text(
                           day['night']!,
                           style: GoogleFonts.poppins(
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w400,
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w500,
                             color: AppColors.gradientMid,
                           ),
                           maxLines: 2,
@@ -939,9 +939,9 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                         Text(
                           day['time']!,
                           style: GoogleFonts.poppins(
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w300,
-                            color: AppColors.textMuted,
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],

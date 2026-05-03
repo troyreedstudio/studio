@@ -77,6 +77,11 @@ class Urls {
   static const String venueDetails = '$baseUrl/venues'; // GET — append /:id
   static const String toggleVenueFavorite = '$baseUrl/venues'; // POST — append /:id/favorite
   static const String whatsOn = '$baseUrl/venues/whats-on'; // GET — weekly schedule
+  static const String venueRating = '$baseUrl/venues'; // POST — append /:id/rating, auth
+  static const String venueVibe = '$baseUrl/venues'; // POST — append /:id/vibe, auth
+  static const String ratableBookings = '$baseUrl/venues/ratable'; // GET — auth
+  static const String tonightVibeBookings = '$baseUrl/venues/tonight-vibe'; // GET — auth
+  static const String favoriteVenues = '$baseUrl/venues/favorites'; // GET — auth
 
   /// google places
   static const String googlePlacesSearch = '$baseUrl/places/search'; // GET

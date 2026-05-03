@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pineapple/core/network_caller/endpoints.dart';
+import 'package:pineapple/core/network_caller/network_config.dart';
 
-/// Live vibe check service — users report crowd level, music, and energy.
-/// Phase 1: local/device. Phase 2: sync to backend for cross-user data.
+/// Live vibe check service — local rolling average for instant UI + backend
+/// sync for cross-user aggregate. Server stores append-only and returns a
+/// 4-hour rolling aggregate.
 class VenueVibeService extends GetxController {
   static const _storageKey = 'venue_vibes';
 
@@ -15,17 +18,20 @@ class VenueVibeService extends GetxController {
   static const musicLevels = ['No music', 'Background', 'Good', 'Great', 'Incredible'];
   static const energyLevels = ['Dead', 'Mellow', 'Warming up', 'Lit', 'On fire'];
 
+  final _netConfig = NetworkConfigV1();
+
   @override
   void onInit() {
     super.onInit();
     _loadFromStorage();
   }
 
-  /// Submit a vibe check for a venue
+  /// Submit a vibe check for a venue. Pass [venueId] to also sync to backend.
   Future<void> submitVibe(String slug, {
     required int crowd,
     required int music,
     required int energy,
+    String? venueId,
   }) async {
     final existing = vibeData[slug];
     final count = (existing?['count'] as int? ?? 0) + 1;
@@ -50,6 +56,19 @@ class VenueVibeService extends GetxController {
     };
 
     await _saveToStorage();
+
+    // Backend sync — best-effort.
+    if (venueId == null || venueId.isEmpty) return;
+    try {
+      await _netConfig.ApiRequestHandler(
+        RequestMethod.POST,
+        '${Urls.venueVibe}/$venueId/vibe',
+        jsonEncode({'crowd': crowd, 'music': music, 'energy': energy}),
+        is_auth: true,
+      );
+    } catch (_) {
+      // Local copy preserved.
+    }
   }
 
   /// Get vibe data for a venue (null if no reports)

@@ -24,6 +24,14 @@ class VenueModel {
   final bool isFavorite;
   final List<String> tags;
   final Map<String, dynamic>? weeklySchedule;
+  // Pink Pineapple aggregate rating (computed server-side from VenueRating)
+  final double? ppRating;
+  final int? ppRatingCount;
+  // Google Places rating + total ratings count (backfilled)
+  final double? googleRating;
+  final int? googleRatingCount;
+  // Recent vibe check (averaged over last 4 hours), null if none
+  final Map<String, dynamic>? recentVibe;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -53,6 +61,11 @@ class VenueModel {
     this.bookingUrl = '',
     this.isFavorite = false,
     this.tags = const [],
+    this.ppRating,
+    this.ppRatingCount,
+    this.googleRating,
+    this.googleRatingCount,
+    this.recentVibe,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -91,6 +104,13 @@ class VenueModel {
       bookingUrl: json['bookingUrl']?.toString() ?? '',
       isFavorite: json['isFavorite'] as bool? ?? false,
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      ppRating: (json['ppRating'] as num?)?.toDouble(),
+      ppRatingCount: (json['ppRatingCount'] as num?)?.toInt(),
+      googleRating: (json['googleRating'] as num?)?.toDouble(),
+      googleRatingCount: (json['googleRatingCount'] as num?)?.toInt(),
+      recentVibe: json['recentVibe'] is Map<String, dynamic>
+          ? json['recentVibe'] as Map<String, dynamic>
+          : null,
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
           DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??

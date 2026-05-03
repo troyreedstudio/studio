@@ -1,14 +1,18 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pineapple/core/network_caller/endpoints.dart';
+import 'package:pineapple/core/network_caller/network_config.dart';
 
-/// Local venue rating service — stores user ratings on device.
-/// Phase 1: local only. Phase 2: sync to backend for aggregate ratings.
+/// Venue rating service — local cache for instant UI + backend sync for
+/// cross-user aggregate. Backend POST is best-effort; local save persists either way.
 class VenueRatingService extends GetxController {
   static const _storageKey = 'venue_user_ratings';
 
   /// User's own ratings: slug -> rating (1-5)
   final RxMap<String, double> userRatings = <String, double>{}.obs;
+
+  final _netConfig = NetworkConfigV1();
 
   @override
   void onInit() {
@@ -16,11 +20,25 @@ class VenueRatingService extends GetxController {
     _loadFromStorage();
   }
 
-  /// Rate a venue (1.0 to 5.0)
-  Future<void> rateVenue(String slug, double rating) async {
+  /// Rate a venue (1.0 to 5.0). Pass [venueId] to also sync to backend.
+  Future<void> rateVenue(String slug, double rating, {String? venueId}) async {
     if (slug.isEmpty || rating < 1 || rating > 5) return;
+    // Optimistic local save first.
     userRatings[slug] = rating;
     await _saveToStorage();
+
+    // Backend sync — best-effort, don't surface errors to user.
+    if (venueId == null || venueId.isEmpty) return;
+    try {
+      await _netConfig.ApiRequestHandler(
+        RequestMethod.POST,
+        '${Urls.venueRating}/$venueId/rating',
+        jsonEncode({'score': rating.toInt()}),
+        is_auth: true,
+      );
+    } catch (_) {
+      // Local copy preserved; backend will resync next time user rates.
+    }
   }
 
   /// Get user's rating for a venue (null if not rated)
