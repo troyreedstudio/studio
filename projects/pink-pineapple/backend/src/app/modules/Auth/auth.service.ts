@@ -281,6 +281,13 @@ const verifyRegisterOtp = async (payload: { email: string; otp: number }) => {
     },
   });
 
+  // Send welcome email — non-fatal, user is in regardless. CLUB users
+  // (venue admins) get welcomed when their account is approved, not here.
+  if (user.role !== UserRole.CLUB) {
+    const notify = (await import("../../../shared/notifyService")).default;
+    await notify.sendWelcome(user.email, user.fullName);
+  }
+
   const accessToken = jwtHelpers.generateToken(
     {
       id: user.id,

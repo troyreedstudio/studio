@@ -1,54 +1,44 @@
 import nodemailer from "nodemailer";
-//import config from "../config";
+import config from "../config";
 
-// const emailSender = async (email: string, html: string, subject: string) => {
-//   const transporter = nodemailer.createTransport({
-//     host: "smtp.titan.email",
-//     port: 465,
-//     secure: true,
-//     auth: {
-//       user: "pixelteam@smtech24.com", 
-//       pass: "@pixel321team", 
-//     },
-//   });
-  
+/// Transactional email sender via Brevo SMTP relay.
+///
+/// Credentials are read from environment variables (config.smtp). The
+/// previous version of this file had SMTP user/pass and the FROM address
+/// hardcoded — both have been moved to .env. Rotate the Brevo password
+/// and update SMTP_PASS once the migration off the Fiverr dev's email is
+/// complete.
+const emailSender = async (to: string, html: string, subject: string) => {
+  const { host, port, user, pass, from } = config.smtp;
 
-//   const info = await transporter.sendMail({
-//     from: "pixelteam@smtech24.com",
-//     to: email,
-//     subject: subject,
-//     html,
-//   });
-// };
+  if (!user || !pass || !from) {
+    throw new Error(
+      "Email transport not configured. Set SMTP_USER, SMTP_PASS, EMAIL_FROM in .env."
+    );
+  }
 
-// export default emailSender;
-
-const emailSender = async (to: string,  html: string, subject: string) => {
   try {
-  const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 2525,
-  secure: false, // Use TLS, `false` ensures STARTTLS
- auth: {
-  user: "88803c001@smtp-brevo.com", // Your email address
-  pass: "OzqM8PBhVxbNYEUt", // Your app-specific password
-  },
-  })
-  const mailOptions = {
-  from: `<akonhasan680@gmail.com>`,  // Sender's name and email
-  to, // Recipient's email
-  subject, // Email subject
-  text: html.replace(/<[^>]+>/g, ""), // Generate plain text version by stripping HTML tags
-  html, // HTML email body
-  }
-  // Send the email
-  const info = await transporter.sendMail(mailOptions)
-  return info.messageId
-  } catch (error) {
-  // @ts-ignore
-  console.error(`Error sending email: ${error.message}`)
-  throw new Error("Failed to send email. Please try again later.")
-  }
-  }
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: false, // Use STARTTLS on port 2525
+      auth: { user, pass },
+    });
 
-  export default emailSender;
+    const info = await transporter.sendMail({
+      from,
+      to,
+      subject,
+      text: html.replace(/<[^>]+>/g, ""), // plain-text fallback
+      html,
+    });
+
+    return info.messageId;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`Error sending email to ${to}: ${msg}`);
+    throw new Error("Failed to send email. Please try again later.");
+  }
+};
+
+export default emailSender;

@@ -69,4 +69,40 @@ const newAccEmail = (email: string, password: string) => {
 };
 
 
-export { generateOtpEmail, newAccEmail };
+/// Welcome email — sent after OTP verification, when user becomes ACTIVE.
+const welcomeEmail = (name: string) => {
+  const firstName = (name || "").split(" ")[0] || "there";
+  const appStoreUrl = "https://apps.apple.com/app/id6758339469";
+  return `
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #FFFFFF; padding: 40px 20px; background-color: #000000;">
+      <div style="max-width: 500px; margin: 0 auto; background-color: #1A1A1A; padding: 40px 30px; border-radius: 16px; border: 1px solid #2A2A2A;">
+          <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="font-size: 28px; font-weight: 900; letter-spacing: 3px; margin: 0;">
+                  <span style="background: linear-gradient(135deg, #8B4060, #E8A0B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PINK</span>
+              </h1>
+              <p style="font-size: 11px; letter-spacing: 6px; color: #B0B0B0; margin: 4px 0 0 0; font-weight: 300;">PINEAPPLE</p>
+          </div>
+          <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 30px auto;"></div>
+          <h2 style="font-size: 22px; text-align: center; margin-bottom: 16px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.5px;">
+              Welcome, ${firstName}.
+          </h2>
+          <p style="font-size: 15px; color: #B0B0B0; line-height: 1.6; text-align: center; margin-bottom: 28px;">
+              You're in. Pink Pineapple is your insider's guide to Bali — curated nightlife, restaurants, beach clubs, and gyms with real-time vibes from people on the ground.
+          </p>
+          <div style="text-align: center; margin-bottom: 28px;">
+              <a href="${appStoreUrl}" style="display: inline-block; padding: 14px 36px; background: linear-gradient(135deg, #8B4060, #C4707E, #E8A0B0); color: #000000; text-decoration: none; border-radius: 12px; font-weight: 700; letter-spacing: 1.5px; font-size: 14px;">
+                  OPEN PINK PINEAPPLE
+              </a>
+          </div>
+          <p style="font-size: 13px; color: #B0B0B0; line-height: 1.7; text-align: center; margin-bottom: 20px;">
+              Start with <strong style="color: #FFFFFF;">Plan My Night</strong> if you don't know where to begin, or hit <strong style="color: #FFFFFF;">This Week</strong> for tonight's curated picks.
+          </p>
+          <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 20px auto;"></div>
+          <p style="font-size: 11px; color: #6B6B6B; text-align: center; letter-spacing: 0.5px;">
+              Pink Pineapple — Know Bali Like a Local
+          </p>
+      </div>
+    </div>`;
+};
+
+export { generateOtpEmail, newAccEmail, welcomeEmail };
