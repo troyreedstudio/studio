@@ -6,6 +6,7 @@ import 'package:pineapple/feature/auth/ui/9.change_password_page.dart';
 import 'package:pineapple/feature/auth/ui/1.login_ui.dart';
 
 import '../../favorites/ui/favorite_event_screen.dart';
+import '../../favorites/ui/favorite_venues_screen.dart';
 import '../subflow/profile_edit/ui/profile_edit_ui.dart';
 import '../ui/privacy_policy_page.dart';
 import '../ui/terms_conditions_page.dart';
@@ -68,10 +69,9 @@ class ProfileTabController extends GetxController {
   }
 
   static void _onFavTap() {
-    Get.to(
-      // () => UnifiedPostsPage(postType: PostType.favourites),
-      () => FavoriteEventScreen(),
-    ); // Add navigation logic here
+    // Profile "Favourites" = saved VENUES (restaurants, bars, clubs, etc.)
+    // FavoriteEventScreen is kept for the events section elsewhere.
+    Get.to(() => const FavoriteVenuesScreen());
   }
 
   static void _onChangePasswordTap() {
