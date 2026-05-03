@@ -107,26 +107,28 @@ class TermsConditionsPage extends StatelessWidget {
         GestureDetector(
           onTap: () => Get.back(),
           child: Container(
-            padding: EdgeInsets.all(5.w),
+            padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              color: AppColors.backgroundSurface,
+              color: AppColors.backgroundCard,
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.borderSubtle, width: 0.5),
             ),
             child: Icon(
-              Icons.arrow_back_ios,
-              size: 18.sp,
-              color: AppColors.accentRoseGold,
+              Icons.arrow_back_ios_new,
+              size: 14.sp,
+              color: AppColors.textPrimary,
             ),
           ),
         ),
-        SizedBox(width: 10.w),
+        SizedBox(width: 14.w),
         Text(
-          'Terms & Conditions',
-          style: GoogleFonts.cormorantGaramond(
+          'TERMS & CONDITIONS',
+          style: GoogleFonts.outfit(
             fontSize: 20.sp,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w800,
+            fontStyle: FontStyle.italic,
             color: AppColors.textPrimary,
+            letterSpacing: 3,
           ),
         ),
       ],
