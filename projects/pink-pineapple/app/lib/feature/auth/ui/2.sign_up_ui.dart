@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/const/app_colors.dart';
 import '../../../core/const/image_path.dart';
 import '../../../core/global_widgets/app_loading.dart';
+import '../../../core/global_widgets/app_snackbar.dart';
 import '../../../core/global_widgets/country_code_picker.dart';
 import '../controller/2.sign_up_cnt.dart';
 import '1.login_ui.dart';
@@ -483,14 +484,35 @@ class SignUpPage extends StatelessWidget {
                               ),
                             ),
                             onPressed: () {
-                              // Build DOB string if all parts selected
-                              String dobStr = '';
-                              if (selectedYear.value != null &&
-                                  selectedMonth.value != null &&
-                                  selectedDay.value != null) {
-                                dobStr =
-                                    '${selectedYear.value}-${selectedMonth.value.toString().padLeft(2, '0')}-${selectedDay.value.toString().padLeft(2, '0')}';
+                              // Require complete DOB
+                              if (selectedYear.value == null ||
+                                  selectedMonth.value == null ||
+                                  selectedDay.value == null) {
+                                AppSnackbar.showWarning(
+                                    "Please enter your full date of birth");
+                                return;
                               }
+
+                              // 18+ age check — Pink Pineapple is a nightlife app
+                              final dob = DateTime(
+                                  selectedYear.value!,
+                                  selectedMonth.value!,
+                                  selectedDay.value!);
+                              final today = DateTime.now();
+                              int age = today.year - dob.year;
+                              if (today.month < dob.month ||
+                                  (today.month == dob.month &&
+                                      today.day < dob.day)) {
+                                age--;
+                              }
+                              if (age < 18) {
+                                AppSnackbar.showWarning(
+                                    "You must be 18 or over to use Pink Pineapple.");
+                                return;
+                              }
+
+                              final dobStr =
+                                  '${selectedYear.value}-${selectedMonth.value.toString().padLeft(2, '0')}-${selectedDay.value.toString().padLeft(2, '0')}';
                               controller.registerUser(
                                 nameController.text,
                                 emailController.text,

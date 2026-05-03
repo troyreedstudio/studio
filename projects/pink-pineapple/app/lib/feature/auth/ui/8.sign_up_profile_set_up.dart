@@ -187,25 +187,11 @@ class SignUpProfileSetUp extends StatelessWidget {
                             prefixIcon: Icons.location_city_outlined,
                           ),
                         ),
-                        SizedBox(height: 20.h),
+                        // DOB and Instagram intentionally NOT collected here —
+                        // both are captured on the Stage 1 sign-up form.
+                        // Re-asking would overwrite Stage 1 values via
+                        // _buildRequestBody and create user friction.
 
-                        // Date of Birth
-                        _buildFieldLabel('Date of Birth'),
-                        SizedBox(height: 6.h),
-                        Obx(
-                          () => _buildDobField(context),
-                        ),
-                        SizedBox(height: 20.h),
-
-                        // Instagram
-                        _buildFieldLabel('Instagram (optional)'),
-                        SizedBox(height: 6.h),
-                        _buildTextField(
-                          controller: controller.instagramController,
-                          hintText: 'your_handle',
-                          prefixIcon: Icons.camera_alt_outlined,
-                          prefixText: '@ ',
-                        ),
                         SizedBox(height: 32.h),
                       ],
                     ),
