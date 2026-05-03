@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -28,11 +30,11 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
 
   static const _areas = ['Canggu', 'Seminyak', 'Uluwatu', 'Surprise me'];
   static const _vibes = [
-    {'label': 'Chill dinner & drinks', 'icon': Icons.restaurant_outlined},
-    {'label': 'Dinner & dancing', 'icon': Icons.nightlife},
-    {'label': 'Up late', 'icon': Icons.dark_mode_outlined},
-    {'label': 'Date night', 'icon': Icons.favorite_outline},
-    {'label': 'Beach club day party', 'icon': Icons.beach_access_outlined},
+    {'label': 'Chill dinner & drinks', 'icon': Icons.restaurant_outlined, 'subtitle': '2 stops · relaxed'},
+    {'label': 'Dinner & dancing', 'icon': Icons.nightlife, 'subtitle': '4 stops · full night'},
+    {'label': 'Up late', 'icon': Icons.dark_mode_outlined, 'subtitle': '3 stops · club hopping'},
+    {'label': 'Date night', 'icon': Icons.favorite_outline, 'subtitle': '2 stops · romantic'},
+    {'label': 'Beach club day party', 'icon': Icons.beach_access_outlined, 'subtitle': '4 stops · all day into night'},
   ];
 
   void _selectArea(String area) {
@@ -107,125 +109,101 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
     final bars = [...restaurants, ...beachClubs]..shuffle();
 
     final stops = <_ItineraryStop>[];
+    final usedSlugs = <String>{};
+
+    // Pick the closest venue to `from` from the candidate pool, with a small
+    // randomisation among the top 3 closest so the shuffle button still
+    // surfaces variety. Falls back to first candidate if no coords are usable.
+    VenueModel? pickClosest(VenueModel? from, List<VenueModel> pool) {
+      final candidates = pool.where((v) => !usedSlugs.contains(v.slug)).toList();
+      if (candidates.isEmpty) return null;
+      if (from == null || from.latitude == null || from.longitude == null) {
+        return candidates.first;
+      }
+      final withCoords = candidates
+          .where((v) => v.latitude != null && v.longitude != null)
+          .toList();
+      if (withCoords.isEmpty) return candidates.first;
+      withCoords.sort((a, b) {
+        final da = _haversineKm(from.latitude!, from.longitude!, a.latitude!, a.longitude!);
+        final db = _haversineKm(from.latitude!, from.longitude!, b.latitude!, b.longitude!);
+        return da.compareTo(db);
+      });
+      final topN = withCoords.take(3).toList()..shuffle();
+      return topN.first;
+    }
+
+    void addStop(String time, String label, VenueModel? venue, VenueModel? prev) {
+      if (venue == null) return;
+      double? dist;
+      if (prev != null &&
+          prev.latitude != null && prev.longitude != null &&
+          venue.latitude != null && venue.longitude != null) {
+        dist = _haversineKm(prev.latitude!, prev.longitude!, venue.latitude!, venue.longitude!);
+      }
+      stops.add(_ItineraryStop(
+        time: time,
+        label: label,
+        venue: venue,
+        distanceKmFromPrev: dist,
+      ));
+      usedSlugs.add(venue.slug);
+    }
 
     if (_vibe == 'Beach club day party') {
-      // Afternoon beach club flow — pull from all Bali
       if (beachClubs.isNotEmpty) {
-        stops.add(_ItineraryStop(
-          time: '12:00 PM',
-          label: 'Beach club',
-          venue: beachClubs.first,
-        ));
-      }
-      if (beachClubs.length > 1) {
-        stops.add(_ItineraryStop(
-          time: '3:00 PM',
-          label: 'Pool party',
-          venue: beachClubs[1],
-        ));
-      }
-      if (beachClubs.length > 2) {
-        stops.add(_ItineraryStop(
-          time: '5:30 PM',
-          label: 'Sunset session',
-          venue: beachClubs[2],
-        ));
-      }
-      if (restaurants.isNotEmpty) {
-        stops.add(_ItineraryStop(
-          time: '8:00 PM',
-          label: 'Dinner',
-          venue: restaurants.first,
-        ));
+        final v1 = beachClubs.first; // Curated first beach club
+        addStop('12:00 PM', 'Beach club', v1, null);
+        final v2 = pickClosest(v1, beachClubs);
+        if (v2 != null) {
+          addStop('3:00 PM', 'Pool party', v2, v1);
+          final v3 = pickClosest(v2, beachClubs);
+          if (v3 != null) addStop('5:30 PM', 'Sunset session', v3, v2);
+        }
+        final dinnerFrom = stops.isNotEmpty ? stops.last.venue : v1;
+        final r = pickClosest(dinnerFrom, restaurants);
+        if (r != null) addStop('8:00 PM', 'Dinner', r, dinnerFrom);
       }
     } else if (_vibe == 'Chill dinner & drinks') {
-      // Relaxed evening
       if (restaurants.isNotEmpty) {
-        stops.add(_ItineraryStop(
-          time: '7:00 PM',
-          label: 'Dinner',
-          venue: restaurants.first,
-        ));
-      }
-      if (bars.isNotEmpty) {
-        final bar = bars.firstWhere(
-          (v) => v.slug != (restaurants.isNotEmpty ? restaurants.first.slug : ''),
-          orElse: () => bars.first,
-        );
-        stops.add(_ItineraryStop(
-          time: '9:30 PM',
-          label: 'Drinks & vibes',
-          venue: bar,
-        ));
+        final r = restaurants.first;
+        addStop('7:00 PM', 'Dinner', r, null);
+        final b = pickClosest(r, bars);
+        if (b != null) addStop('9:30 PM', 'Drinks & vibes', b, r);
       }
     } else if (_vibe == 'Date night') {
-      // Romantic evening
       if (restaurants.isNotEmpty) {
-        stops.add(_ItineraryStop(
-          time: '7:00 PM',
-          label: 'Dinner for two',
-          venue: restaurants.first,
-        ));
-      }
-      if (bars.isNotEmpty) {
-        stops.add(_ItineraryStop(
-          time: '9:30 PM',
-          label: 'Cocktails',
-          venue: bars.first,
-        ));
+        final r = restaurants.first;
+        addStop('7:00 PM', 'Dinner for two', r, null);
+        final b = pickClosest(r, bars);
+        if (b != null) addStop('9:30 PM', 'Cocktails', b, r);
       }
     } else if (_vibe == 'Up late') {
-      // Club hopping — no dinner, just nightlife
       if (nightlife.isNotEmpty) {
-        stops.add(_ItineraryStop(
-          time: '10:00 PM',
-          label: 'Warm up',
-          venue: nightlife.first,
-        ));
-      }
-      if (nightlife.length > 1) {
-        stops.add(_ItineraryStop(
-          time: '12:00 AM',
-          label: 'Main event',
-          venue: nightlife[1],
-        ));
-      }
-      if (nightlife.length > 2) {
-        stops.add(_ItineraryStop(
-          time: '2:00 AM',
-          label: 'After hours',
-          venue: nightlife[2],
-        ));
+        final v1 = nightlife.first;
+        addStop('10:00 PM', 'Warm up', v1, null);
+        final v2 = pickClosest(v1, nightlife);
+        if (v2 != null) {
+          addStop('12:00 AM', 'Main event', v2, v1);
+          final v3 = pickClosest(v2, nightlife);
+          if (v3 != null) addStop('2:00 AM', 'After hours', v3, v2);
+        }
       }
     } else {
       // Dinner & dancing — dinner → drinks → club → late night
       if (restaurants.isNotEmpty) {
-        stops.add(_ItineraryStop(
-          time: '7:30 PM',
-          label: 'Dinner',
-          venue: restaurants.first,
-        ));
-      }
-      if (bars.isNotEmpty) {
-        stops.add(_ItineraryStop(
-          time: '9:30 PM',
-          label: 'Pre-drinks',
-          venue: bars.first,
-        ));
-      }
-      if (nightlife.isNotEmpty) {
-        stops.add(_ItineraryStop(
-          time: '11:00 PM',
-          label: 'Main event',
-          venue: nightlife.first,
-        ));
-      }
-      if (nightlife.length > 1) {
-        stops.add(_ItineraryStop(
-          time: '1:00 AM',
-          label: 'Late night',
-          venue: nightlife[1],
-        ));
+        final r = restaurants.first;
+        addStop('7:30 PM', 'Dinner', r, null);
+        final b = pickClosest(r, bars);
+        if (b != null) {
+          addStop('9:30 PM', 'Pre-drinks', b, r);
+          final n1 = pickClosest(b, nightlife);
+          if (n1 != null) {
+            addStop('11:00 PM', 'Main event', n1, b);
+            final n2 = pickClosest(n1, nightlife);
+            if (n2 != null) addStop('1:00 AM', 'Late night', n2, n1);
+          }
+        }
       }
     }
 
@@ -385,15 +363,30 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
                     children: [
                       Icon(vibe['icon'] as IconData, color: AppColors.accentRoseGold, size: 20.sp),
                       SizedBox(width: 14.w),
-                      Text(
-                        vibe['label'] as String,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              vibe['label'] as String,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(height: 2.h),
+                            Text(
+                              vibe['subtitle'] as String,
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const Spacer(),
                       Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20.sp),
                     ],
                   ),
@@ -674,11 +667,29 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
                       Text(
                         '${stop.venue.category.replaceAll("_", " ")} · ${stop.venue.area}',
                         style: GoogleFonts.poppins(
-                          fontSize: 10.sp,
-                          color: AppColors.textMuted,
+                          fontSize: 11.sp,
+                          color: AppColors.textSecondary,
                           letterSpacing: 0.5,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
+                      if (stop.distanceKmFromPrev != null) ...[
+                        SizedBox(height: 8.h),
+                        Row(
+                          children: [
+                            Icon(Icons.directions_outlined, size: 14.sp, color: AppColors.textSecondary),
+                            SizedBox(width: 6.w),
+                            Text(
+                              '${_estimateTripMinutes(stop.distanceKmFromPrev!)} min · ${stop.distanceKmFromPrev!.toStringAsFixed(1)} km from last stop',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.sp,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       if (stop.venue.rating > 0) ...[
                         SizedBox(height: 4.h),
                         Row(
@@ -711,10 +722,28 @@ class _ItineraryStop {
   final String time;
   final String label;
   final VenueModel venue;
+  final double? distanceKmFromPrev;
 
   _ItineraryStop({
     required this.time,
     required this.label,
     required this.venue,
+    this.distanceKmFromPrev,
   });
 }
+
+// Haversine great-circle distance in km between two lat/lng points.
+double _haversineKm(double lat1, double lng1, double lat2, double lng2) {
+  const r = 6371.0;
+  final dLat = (lat2 - lat1) * math.pi / 180;
+  final dLng = (lng2 - lng1) * math.pi / 180;
+  final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+      math.cos(lat1 * math.pi / 180) *
+          math.cos(lat2 * math.pi / 180) *
+          math.sin(dLng / 2) *
+          math.sin(dLng / 2);
+  return r * 2 * math.asin(math.min(1.0, math.sqrt(a)));
+}
+
+// Approximate scooter travel time in Bali — ~12 km/h average through traffic.
+int _estimateTripMinutes(double km) => (km / 12.0 * 60).round();

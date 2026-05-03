@@ -643,13 +643,13 @@ class _HomeSearchResults extends StatelessWidget {
                             )),
                           if (address.isNotEmpty)
                             Text(address, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(fontSize: 10.sp, color: AppColors.textMuted)),
+                              style: GoogleFonts.poppins(fontSize: 12.sp, color: AppColors.textSecondary)),
                           if (rating > 0)
                             Row(children: [
-                              Icon(Icons.star_rounded, size: 11.sp, color: AppColors.ratingColor),
-                              SizedBox(width: 2.w),
+                              Icon(Icons.star_rounded, size: 13.sp, color: AppColors.ratingColor),
+                              SizedBox(width: 3.w),
                               Text(rating.toStringAsFixed(1), style: GoogleFonts.poppins(
-                                fontSize: 10.sp, color: AppColors.textMuted,
+                                fontSize: 11.sp, color: AppColors.textSecondary,
                               )),
                             ]),
                         ],
@@ -1033,7 +1033,7 @@ class _FeaturedEventCard extends StatelessWidget {
                   Text(
                     event['venue'] ?? '',
                     style: GoogleFonts.poppins(
-                      fontSize: 10.sp,
+                      fontSize: 12.sp,
                       color: AppColors.accentRoseGold,
                       letterSpacing: 0.5,
                     ),
@@ -1042,8 +1042,8 @@ class _FeaturedEventCard extends StatelessWidget {
                   Text(
                     event['lineup'] ?? '',
                     style: GoogleFonts.poppins(
-                      fontSize: 9.sp,
-                      color: AppColors.textMuted,
+                      fontSize: 11.sp,
+                      color: AppColors.textSecondary,
                       height: 1.3,
                     ),
                     maxLines: 2,
@@ -1459,8 +1459,8 @@ class _DayCard extends StatelessWidget {
                               Text(
                                 specialName,
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.w400,
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w500,
                                   color: AppColors.gradientMid,
                                 ),
                                 maxLines: 1,
@@ -1470,18 +1470,18 @@ class _DayCard extends StatelessWidget {
                               Text(
                                 timeRange,
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.w300,
-                                  color: AppColors.textMuted,
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColors.textSecondary,
                                 ),
                               )
                             else if (specialName == null)
                               Text(
                                 'Open',
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.w300,
-                                  color: AppColors.textMuted,
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                           ],
@@ -1497,8 +1497,8 @@ class _DayCard extends StatelessWidget {
               child: Text(
                 '+${venues.length - 3} more',
                 style: GoogleFonts.poppins(
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w400,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w500,
                   color: AppColors.gradientMid,
                 ),
               ),
