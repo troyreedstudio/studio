@@ -112,6 +112,8 @@ const getListFromDb = async (
       photos: true,
       priceRange: true,
       rating: true,
+      googleRating: true,
+      googleRatingCount: true,
       isActive: true,
       isFeatured: true,
       latitude: true,
@@ -139,11 +141,44 @@ const getListFromDb = async (
   }));
 
   const withVibes = await attachRecentVibes(enrichedVenues);
+  const withPp = await attachPpRatings(withVibes);
 
   return {
     meta: { page, limit, total },
-    data: withVibes,
+    data: withPp,
   };
+};
+
+/// Batches one groupBy across N venue IDs to attach `ppRating` (avg score)
+/// and `ppRatingCount` to each. Used by list endpoints so the dashboard
+/// can show Pink Pineapple ratings without N+1 queries.
+const attachPpRatings = async <T extends { id: string }>(
+  venues: T[]
+): Promise<(T & { ppRating: number | null; ppRatingCount: number })[]> => {
+  if (venues.length === 0)
+    return venues as (T & { ppRating: number | null; ppRatingCount: number })[];
+  const ids = venues.map((v) => v.id);
+  const grouped = await prisma.venueRating.groupBy({
+    by: ["venueId"],
+    where: { venueId: { in: ids } },
+    _avg: { score: true },
+    _count: { _all: true },
+  });
+  const byVenue = new Map<string, { avg: number | null; count: number }>();
+  for (const g of grouped) {
+    byVenue.set(g.venueId, {
+      avg: g._avg.score ?? null,
+      count: g._count._all,
+    });
+  }
+  return venues.map((v) => {
+    const agg = byVenue.get(v.id);
+    return {
+      ...v,
+      ppRating: agg?.avg ?? null,
+      ppRatingCount: agg?.count ?? 0,
+    };
+  });
 };
 
 /// Batches one query across N venue IDs to attach a `recentVibe` aggregate
@@ -760,6 +795,84 @@ const getTonightVibeBookings = async (userId: string) => {
   return bookings;
 };
 
+/// Venues owned by this user — used by dashboard CLUB section to surface
+/// "your venues" without a global venue list.
+const getOwnedVenues = async (userId: string) => {
+  const venues = await prisma.venue.findMany({
+    where: { ownerId: userId },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      area: true,
+      category: true,
+      heroImage: true,
+      isActive: true,
+      isFeatured: true,
+      rating: true,
+      googleRating: true,
+      googleRatingCount: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  return venues;
+};
+
+/// Stats package for a single venue — used by dashboard owner stats panel
+/// AND admin venue detail page. Returns: PP aggregate, Google rating,
+/// recent vibe, favorites count, last 5 ratings (anonymous scores), last
+/// 5 vibe reports.
+const getVenueOwnerStats = async (venueId: string) => {
+  const venue = await prisma.venue.findUnique({
+    where: { id: venueId },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      rating: true,
+      googleRating: true,
+      googleRatingCount: true,
+    },
+  });
+  if (!venue) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Venue not found");
+  }
+
+  const ppAgg = await getPpAggregateForVenue(venueId);
+  const recentVibe = await getRecentVibeForVenue(venueId);
+
+  const favoritesCount = await prisma.venueFavorite.count({
+    where: { venueId },
+  });
+
+  const recentRatings = await prisma.venueRating.findMany({
+    where: { venueId },
+    select: { id: true, score: true, createdAt: true, updatedAt: true },
+    orderBy: { updatedAt: "desc" },
+    take: 5,
+  });
+
+  const recentVibes = await prisma.venueVibe.findMany({
+    where: { venueId },
+    select: { id: true, crowd: true, music: true, energy: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  });
+
+  return {
+    venue,
+    ppRating: ppAgg.ppRating,
+    ppRatingCount: ppAgg.ppRatingCount,
+    googleRating: venue.googleRating,
+    googleRatingCount: venue.googleRatingCount,
+    recentVibe,
+    favoritesCount,
+    recentRatings,
+    recentVibes,
+  };
+};
+
 export const venueService = {
   createIntoDb,
   getListFromDb,
@@ -776,6 +889,8 @@ export const venueService = {
   getRatableBookings,
   getTonightVibeBookings,
   getFavoriteVenues,
+  getOwnedVenues,
+  getVenueOwnerStats,
   getPpAggregateForVenue,
   getRecentVibeForVenue,
 };

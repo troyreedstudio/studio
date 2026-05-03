@@ -24,6 +24,11 @@ const createSchema = z.object({
   instagram: z.string().optional(),
   priceRange: z.number().int().min(1).max(4).optional(),
   openingHours: z.any().optional(),
+  weeklySchedule: z.any().optional(),
+  bookingUrl: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  heroImage: z.string().optional(),
+  photos: z.array(z.string()).optional(),
 });
 
 const updateSchema = z.object({
@@ -40,9 +45,15 @@ const updateSchema = z.object({
   instagram: z.string().optional(),
   priceRange: z.number().int().min(1).max(4).optional(),
   openingHours: z.any().optional(),
+  weeklySchedule: z.any().optional(),
+  bookingUrl: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   heroImage: z.string().optional(),
+  photos: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
+  googleRating: z.number().optional(),
+  googleRatingCount: z.number().int().optional(),
 });
 
 export const VenueValidation = {

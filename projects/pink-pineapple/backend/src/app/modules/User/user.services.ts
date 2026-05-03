@@ -317,6 +317,7 @@ const updateProfile = async (req: Request) => {
       country: parseData.country ?? existingUser.country,
       city: parseData.city ?? existingUser.city,
       instagram: parseData.instagram ?? existingUser.instagram,
+      gender: parseData.gender ?? existingUser.gender,
       isCompleteProfile:parseData.isCompleteProfile|| existingUser.isCompleteProfile,
       bio: parseData.bio || existingUser.bio,
       phoneNumber: parseData.phoneNumber || existingUser.phoneNumber,
