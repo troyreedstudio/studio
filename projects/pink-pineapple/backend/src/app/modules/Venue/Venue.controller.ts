@@ -124,6 +124,70 @@ const getWhatsOn = catchAsync(async (req, res) => {
   });
 });
 
+const submitRating = catchAsync(async (req, res) => {
+  const score = Number(req.body?.score);
+  const result = await venueService.submitRating(
+    req.params.id,
+    req.user.id,
+    score
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Rating submitted",
+    data: result,
+  });
+});
+
+const submitVibe = catchAsync(async (req, res) => {
+  const crowd = Number(req.body?.crowd);
+  const music = Number(req.body?.music);
+  const energy = Number(req.body?.energy);
+  const result = await venueService.submitVibe(
+    req.params.id,
+    req.user.id,
+    crowd,
+    music,
+    energy
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Vibe check submitted",
+    data: result,
+  });
+});
+
+const getRatableBookings = catchAsync(async (req, res) => {
+  const result = await venueService.getRatableBookings(req.user.id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Ratable bookings retrieved",
+    data: result,
+  });
+});
+
+const getTonightVibeBookings = catchAsync(async (req, res) => {
+  const result = await venueService.getTonightVibeBookings(req.user.id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Tonight vibe bookings retrieved",
+    data: result,
+  });
+});
+
+const getFavoriteVenues = catchAsync(async (req, res) => {
+  const result = await venueService.getFavoriteVenues(req.user.id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Favorite venues retrieved",
+    data: result,
+  });
+});
+
 export const VenueController = {
   createVenue,
   getVenueList,
@@ -135,4 +199,9 @@ export const VenueController = {
   deleteVenue,
   toggleFavorite,
   getWhatsOn,
+  submitRating,
+  submitVibe,
+  getRatableBookings,
+  getTonightVibeBookings,
+  getFavoriteVenues,
 };

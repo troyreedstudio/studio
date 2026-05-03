@@ -138,11 +138,51 @@ const getListFromDb = async (
     isFavorite: favoriteIds.has(venue.id),
   }));
 
+  const withVibes = await attachRecentVibes(enrichedVenues);
+
   return {
     meta: { page, limit, total },
-    data: enrichedVenues,
+    data: withVibes,
   };
 };
+
+/// Batches one query across N venue IDs to attach a `recentVibe` aggregate
+/// (avg crowd/music/energy from last 4 hours) to each. Used by list endpoints.
+const attachRecentVibes = async <T extends { id: string }>(
+  venues: T[]
+): Promise<(T & { recentVibe: unknown })[]> => {
+  if (venues.length === 0) return venues as (T & { recentVibe: unknown })[];
+  const ids = venues.map((v) => v.id);
+  const cutoff = new Date(Date.now() - VIBE_FRESHNESS_HOURS_FOR_LIST * 60 * 60 * 1000);
+  const allVibes = await prisma.venueVibe.findMany({
+    where: { venueId: { in: ids }, createdAt: { gte: cutoff } },
+    select: { venueId: true, crowd: true, music: true, energy: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  const byVenue = new Map<string, typeof allVibes>();
+  for (const v of allVibes) {
+    if (!byVenue.has(v.venueId)) byVenue.set(v.venueId, []);
+    byVenue.get(v.venueId)!.push(v);
+  }
+  return venues.map((v) => {
+    const vs = byVenue.get(v.id) ?? [];
+    if (vs.length === 0) return { ...v, recentVibe: null };
+    const avg = (key: "crowd" | "music" | "energy") =>
+      Math.round(vs.reduce((s, x) => s + x[key], 0) / vs.length);
+    return {
+      ...v,
+      recentVibe: {
+        crowd: avg("crowd"),
+        music: avg("music"),
+        energy: avg("energy"),
+        count: vs.length,
+        mostRecentAt: vs[0].createdAt,
+      },
+    };
+  });
+};
+
+const VIBE_FRESHNESS_HOURS_FOR_LIST = 4;
 
 const getByArea = async (area: string, userId?: string) => {
   const venueArea = area.toUpperCase() as VenueArea;
@@ -212,6 +252,8 @@ const getByIdFromDb = async (id: string, userId?: string) => {
       isActive: true,
       isFeatured: true,
       rating: true,
+      googleRating: true,
+      googleRatingCount: true,
       createdAt: true,
       updatedAt: true,
       owner: {
@@ -243,7 +285,10 @@ const getByIdFromDb = async (id: string, userId?: string) => {
     isFavorite = !!favorite;
   }
 
-  return { ...result, isFavorite };
+  const ppData = await getPpAggregateForVenue(id);
+  const recentVibe = await getRecentVibeForVenue(id);
+
+  return { ...result, isFavorite, ...ppData, recentVibe };
 };
 
 const updateIntoDb = async (id: string, data: any) => {
@@ -491,6 +536,230 @@ const getWhatsOn = async (day?: string, area?: string) => {
   return grouped;
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Pink Pineapple ratings + vibe checks (server-side aggregate, 2026-05-03)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const VIBE_FRESHNESS_HOURS = 4;
+
+/// Aggregate Pink Pineapple ratings for a single venue.
+const getPpAggregateForVenue = async (venueId: string) => {
+  const agg = await prisma.venueRating.aggregate({
+    where: { venueId },
+    _avg: { score: true },
+    _count: { _all: true },
+  });
+  return {
+    ppRating: agg._avg.score ?? null,
+    ppRatingCount: agg._count._all,
+  };
+};
+
+/// Most recent vibe check (last 4 hours) for a single venue, averaged.
+const getRecentVibeForVenue = async (venueId: string) => {
+  const cutoff = new Date(Date.now() - VIBE_FRESHNESS_HOURS * 60 * 60 * 1000);
+  const vibes = await prisma.venueVibe.findMany({
+    where: { venueId, createdAt: { gte: cutoff } },
+    select: { crowd: true, music: true, energy: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  if (vibes.length === 0) return null;
+  const avg = (key: "crowd" | "music" | "energy") =>
+    vibes.reduce((sum, v) => sum + v[key], 0) / vibes.length;
+  return {
+    crowd: Math.round(avg("crowd")),
+    music: Math.round(avg("music")),
+    energy: Math.round(avg("energy")),
+    count: vibes.length,
+    mostRecentAt: vibes[0].createdAt,
+  };
+};
+
+/// Submit (or update) a user's rating for a venue.
+const submitRating = async (venueId: string, userId: string, score: number) => {
+  if (score < 1 || score > 5 || !Number.isInteger(score)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Score must be an integer 1-5");
+  }
+  const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { id: true } });
+  if (!venue) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Venue not found");
+  }
+
+  const rating = await prisma.venueRating.upsert({
+    where: { userId_venueId: { userId, venueId } },
+    create: { userId, venueId, score },
+    update: { score },
+  });
+
+  const aggregate = await getPpAggregateForVenue(venueId);
+
+  return { rating, aggregate };
+};
+
+/// Submit a vibe check (append-only — each report is its own row).
+const submitVibe = async (
+  venueId: string,
+  userId: string,
+  crowd: number,
+  music: number,
+  energy: number
+) => {
+  for (const [name, val] of [["crowd", crowd], ["music", music], ["energy", energy]] as const) {
+    if (val < 0 || val > 4 || !Number.isInteger(val)) {
+      throw new ApiError(httpStatus.BAD_REQUEST, `${name} must be an integer 0-4`);
+    }
+  }
+  const venue = await prisma.venue.findUnique({ where: { id: venueId }, select: { id: true } });
+  if (!venue) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Venue not found");
+  }
+
+  const vibe = await prisma.venueVibe.create({
+    data: { venueId, userId, crowd, music, energy },
+  });
+
+  const recentVibe = await getRecentVibeForVenue(venueId);
+  return { vibe, recentVibe };
+};
+
+/// List the user's accepted past bookings whose venue they haven't rated yet.
+/// Returns booking + event + venue details for the bookings page to render
+/// "How was last night?" prompts.
+const getRatableBookings = async (userId: string) => {
+  const now = new Date();
+  const bookings = await prisma.booking.findMany({
+    where: {
+      userId,
+      status: "ACCEPTED",
+      event: { endDate: { lt: now }, venueId: { not: null } },
+    },
+    select: {
+      id: true,
+      createdAt: true,
+      event: {
+        select: {
+          id: true,
+          eventName: true,
+          startDate: true,
+          endDate: true,
+          venue: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              area: true,
+              category: true,
+              heroImage: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Filter out venues the user has already rated.
+  const venueIds = bookings
+    .map((b) => b.event.venue?.id)
+    .filter((id): id is string => !!id);
+  if (venueIds.length === 0) return [];
+  const existingRatings = await prisma.venueRating.findMany({
+    where: { userId, venueId: { in: venueIds } },
+    select: { venueId: true },
+  });
+  const ratedSet = new Set(existingRatings.map((r) => r.venueId));
+  return bookings.filter(
+    (b) => b.event.venue && !ratedSet.has(b.event.venue.id)
+  );
+};
+
+/// List the user's bookings where the event is happening now or ended within
+/// the last 24 hours — for "share the vibe" prompts. Wider window than rating
+/// because users often vibe-check while there OR the morning after.
+const VIBE_PROMPT_WINDOW_HOURS = 24;
+
+/// List the user's favorited venues, with full venue data.
+const getFavoriteVenues = async (userId: string) => {
+  const favorites = await prisma.venueFavorite.findMany({
+    where: { userId },
+    select: {
+      createdAt: true,
+      venue: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          area: true,
+          category: true,
+          tags: true,
+          address: true,
+          heroImage: true,
+          bookingUrl: true,
+          photos: true,
+          priceRange: true,
+          rating: true,
+          googleRating: true,
+          googleRatingCount: true,
+          isActive: true,
+          isFeatured: true,
+          latitude: true,
+          longitude: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  // Flatten + mark isFavorite=true (these are by definition favorites)
+  const venues = favorites
+    .filter((f) => f.venue !== null)
+    .map((f) => ({ ...f.venue!, isFavorite: true }));
+  // Attach recent vibes so cards show vibe row when applicable
+  const withVibes = await attachRecentVibes(venues);
+  return withVibes;
+};
+
+const getTonightVibeBookings = async (userId: string) => {
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - VIBE_PROMPT_WINDOW_HOURS * 60 * 60 * 1000);
+  const bookings = await prisma.booking.findMany({
+    where: {
+      userId,
+      status: "ACCEPTED",
+      event: {
+        startDate: { lte: now },
+        endDate: { gte: cutoff },
+        venueId: { not: null },
+      },
+    },
+    select: {
+      id: true,
+      event: {
+        select: {
+          id: true,
+          eventName: true,
+          startDate: true,
+          endDate: true,
+          venue: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              area: true,
+              category: true,
+              heroImage: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { event: { startDate: "desc" } },
+  });
+  return bookings;
+};
+
 export const venueService = {
   createIntoDb,
   getListFromDb,
@@ -502,4 +771,11 @@ export const venueService = {
   searchVenues,
   toggleFavorite,
   getWhatsOn,
+  submitRating,
+  submitVibe,
+  getRatableBookings,
+  getTonightVibeBookings,
+  getFavoriteVenues,
+  getPpAggregateForVenue,
+  getRecentVibeForVenue,
 };

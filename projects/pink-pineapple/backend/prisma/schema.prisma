@@ -56,6 +56,8 @@ model User {
   Events             Events[]
   venues             Venue[]          @relation("VenueOwner")
   venueFavorites     VenueFavorite[]  @relation("VenueFavorites")
+  venueRatings       VenueRating[]
+  venueVibes         VenueVibe[]
 
   blocker   BlockUser[] @relation("blocker")
   blocked   BlockUser[] @relation("blocked")
@@ -381,13 +383,17 @@ model Venue {
   bookingUrl      String         @default("")
   isActive        Boolean        @default(true)
   isFeatured      Boolean        @default(false)
-  rating          Float          @default(0)
-  ownerId         String         @db.ObjectId
-  owner           User           @relation("VenueOwner", fields: [ownerId], references: [id])
-  events          Events[]       @relation("VenueEvents")
-  favorites       VenueFavorite[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  rating            Float          @default(0)
+  googleRating      Float?
+  googleRatingCount Int?
+  ownerId           String         @db.ObjectId
+  owner             User           @relation("VenueOwner", fields: [ownerId], references: [id])
+  events            Events[]       @relation("VenueEvents")
+  favorites         VenueFavorite[]
+  ratings           VenueRating[]
+  vibes             VenueVibe[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   @@map("venues")
 }
@@ -402,6 +408,39 @@ model VenueFavorite {
   updatedAt DateTime @updatedAt
 
   @@map("venue_favorites")
+}
+
+// Pink Pineapple user rating — one per (user, venue), upsertable.
+model VenueRating {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  venueId   String   @db.ObjectId
+  venue     Venue    @relation(fields: [venueId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  score     Int      // 1-5
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, venueId])
+  @@index([venueId])
+  @@map("venue_ratings")
+}
+
+// Pink Pineapple live vibe check — append-only, time-bounded.
+// Aggregation queries should filter to recent (e.g. last 4 hours).
+model VenueVibe {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  venueId   String   @db.ObjectId
+  venue     Venue    @relation(fields: [venueId], references: [id])
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  crowd     Int      // 0-4 (Empty → At capacity)
+  music     Int      // 0-4 (No music → Incredible)
+  energy    Int      // 0-4 (Dead → On fire)
+  createdAt DateTime @default(now())
+
+  @@index([venueId, createdAt])
+  @@map("venue_vibes")
 }
 
 enum BookingType {

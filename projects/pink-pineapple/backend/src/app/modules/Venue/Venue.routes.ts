@@ -14,6 +14,9 @@ router.get("/area/:area", optionalAuth, VenueController.getByArea);
 router.get("/search", optionalAuth, VenueController.searchVenues);
 router.get("/whats-on", optionalAuth, VenueController.getWhatsOn);
 router.get("/whats-on/:day", optionalAuth, VenueController.getWhatsOn);
+router.get("/ratable", auth(), VenueController.getRatableBookings);
+router.get("/tonight-vibe", auth(), VenueController.getTonightVibeBookings);
+router.get("/favorites", auth(), VenueController.getFavoriteVenues);
 router.get("/:id", optionalAuth, VenueController.getVenueById);
 
 // Protected routes
@@ -34,5 +37,7 @@ router.put(
 router.delete("/:id", auth("ADMIN"), VenueController.deleteVenue);
 
 router.post("/:id/favorite", auth(), VenueController.toggleFavorite);
+router.post("/:id/rating", auth(), VenueController.submitRating);
+router.post("/:id/vibe", auth(), VenueController.submitVibe);
 
 export const VenueRoutes = router;
