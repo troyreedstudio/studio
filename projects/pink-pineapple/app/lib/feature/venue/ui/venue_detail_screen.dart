@@ -1012,27 +1012,34 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
   }
 
   Widget _buildActionButtons(VenueModel venue) {
+    final isGym = venue.category == 'WELLNESS' || venue.category == 'GYM';
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
         children: [
           PpPrimaryButton(
-            label: 'BOOK A TABLE',
-            icon: Icons.table_bar_outlined,
+            label: isGym ? 'BOOK A CLASS' : 'BOOK A TABLE',
+            icon: isGym
+                ? Icons.fitness_center_rounded
+                : Icons.table_bar_outlined,
             onTap: () async {
               if (!await AuthGuard.requireAuth()) return;
               _openBooking(venue);
             },
           ),
-          SizedBox(height: 14.h),
-          PpSecondaryButton(
-            label: 'VIP RESERVATION',
-            icon: Icons.star_outline,
-            onTap: () async {
-              if (!await AuthGuard.requireAuth()) return;
-              _openBooking(venue);
-            },
-          ),
+          // VIP reservation only makes sense for nightlife/clubs/beach clubs.
+          // Gyms (and arguably restaurants) shouldn't show it.
+          if (!isGym) ...[
+            SizedBox(height: 14.h),
+            PpSecondaryButton(
+              label: 'VIP RESERVATION',
+              icon: Icons.star_outline,
+              onTap: () async {
+                if (!await AuthGuard.requireAuth()) return;
+                _openBooking(venue);
+              },
+            ),
+          ],
         ],
       ),
     );
