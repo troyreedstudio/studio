@@ -50,7 +50,7 @@ const UserInfo = () => {
         <div className="flex justify-between items-center gap-2">
           <h2
             className="text-xl font-semibold text-[#FFFFFF]"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             Personal Information
           </h2>
@@ -102,7 +102,7 @@ const UserInfo = () => {
       <div className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-5">
         <h2
           className="text-xl font-semibold text-[#FFFFFF]"
-          style={{ fontFamily: 'Cormorant Garamond, serif' }}
+          style={{ fontFamily: 'Outfit, sans-serif' }}
         >
           Change Password
         </h2>

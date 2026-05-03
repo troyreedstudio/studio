@@ -2,7 +2,7 @@
 import ManageEvents from "@/components/modules/ManageEvents/ManageEvents";
 
 const poppins = { fontFamily: "Poppins, sans-serif" };
-const garamond = { fontFamily: "Cormorant Garamond, serif" };
+const garamond = { fontFamily: "Outfit, sans-serif" };
 
 const ClubEventsPage = () => {
   return (

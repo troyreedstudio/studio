@@ -49,7 +49,7 @@ const Navbar = () => {
       {/* Page title */}
       <h2
         className="md:inline-block hidden text-2xl font-bold text-[#FFFFFF]"
-        style={{ fontFamily: 'Playfair Display, serif', letterSpacing: '0.05em' }}
+        style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.05em' }}
       >
         {currentPage}
       </h2>
@@ -65,7 +65,7 @@ const Navbar = () => {
             <div className="mt-6 mb-8 text-center">
               <span
                 className="text-lg font-bold text-[#FFFFFF] tracking-widest"
-                style={{ fontFamily: 'Playfair Display, serif' }}
+                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 PINK PINEAPPLE
               </span>

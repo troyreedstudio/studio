@@ -3,12 +3,13 @@
 import { useMyEventsQuery } from "@/redux/features/events/events.spi";
 import { useAllBookingsQuery } from "@/redux/features/events/events.spi";
 import ManageEvents from "@/components/modules/ManageEvents/ManageEvents";
+import VenueStatsPanel from "@/components/modules/VenueStats/VenueStatsPanel";
 import Link from "next/link";
 import { useMemo } from "react";
 import { CalendarPlus, CalendarRange, CalendarCheck2, Clock, TrendingUp, Users } from "lucide-react";
 
 const poppins = { fontFamily: "Poppins, sans-serif" };
-const garamond = { fontFamily: "Cormorant Garamond, serif" };
+const garamond = { fontFamily: "Outfit, sans-serif" };
 
 const ClubHomePage = () => {
   const { data: allEventsData } = useMyEventsQuery([
@@ -159,6 +160,9 @@ const ClubHomePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Venue performance — PP ratings, Google ratings, favourites, vibes */}
+      <VenueStatsPanel />
 
       {/* Events Management */}
       <div>

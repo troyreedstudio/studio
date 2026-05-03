@@ -33,7 +33,7 @@ const DetailsModal = ({ id, status }: { id: string; status: "CLUB" | "USER" }) =
         <DialogHeader>
           <DialogTitle
             className="text-lg font-semibold text-[#FFFFFF]"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             {status === "USER" ? "User Profile" : "Club Profile"}
           </DialogTitle>
@@ -56,7 +56,7 @@ const DetailsModal = ({ id, status }: { id: string; status: "CLUB" | "USER" }) =
                 />
               ) : (
                 <div className="flex items-center justify-center w-full h-full text-[#C4707E] font-bold text-2xl"
-                  style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                  style={{ fontFamily: 'Outfit, sans-serif' }}>
                   {userData.fullName?.charAt(0) || "U"}
                 </div>
               )}
@@ -73,6 +73,10 @@ const DetailsModal = ({ id, status }: { id: string; status: "CLUB" | "USER" }) =
                 { label: "Email", value: userData.email },
                 userData.phoneNumber && { label: "Phone", value: userData.phoneNumber },
                 { label: "DOB", value: formatDate(userData.dob) },
+                userData.gender && { label: "Gender", value: userData.gender },
+                userData.instagram && { label: "Instagram", value: userData.instagram },
+                userData.country && { label: "Country", value: userData.country },
+                userData.city && { label: "City", value: userData.city },
                 ...(status === "USER" ? [
                   { label: "Profile Complete", value: userData.isCompleteProfile ? "Yes" : "No" },
                   { label: "Privacy", value: userData.profilePrivacy || "N/A" },

@@ -8,7 +8,7 @@ import Pagination from "@/components/common/Pagination";
 import DetailsModal from "./DetailsModal";
 
 const poppins = { fontFamily: "Poppins, sans-serif" };
-const garamond = { fontFamily: "Cormorant Garamond, serif" };
+const garamond = { fontFamily: "Outfit, sans-serif" };
 
 const roleBadge = (role: string) => {
   const map: Record<string, { label: string; classes: string }> = {

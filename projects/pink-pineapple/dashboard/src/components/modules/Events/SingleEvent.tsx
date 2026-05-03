@@ -31,7 +31,7 @@ const SingleEvent = () => {
       <div className="space-y-2">
         <h1
           className="text-3xl font-semibold text-[#FFFFFF]"
-          style={{ fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.03em' }}
+          style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.03em' }}
         >
           {event.eventName}
         </h1>
@@ -92,7 +92,7 @@ const SingleEvent = () => {
       <div className="space-y-4">
         <h2
           className="text-2xl font-semibold text-[#FFFFFF]"
-          style={{ fontFamily: 'Cormorant Garamond, serif' }}
+          style={{ fontFamily: 'Outfit, sans-serif' }}
         >
           Tickets
         </h2>
@@ -138,7 +138,7 @@ const SingleEvent = () => {
       <div className="space-y-4">
         <h2
           className="text-2xl font-semibold text-[#FFFFFF]"
-          style={{ fontFamily: 'Cormorant Garamond, serif' }}
+          style={{ fontFamily: 'Outfit, sans-serif' }}
         >
           Tables
         </h2>

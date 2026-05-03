@@ -70,13 +70,13 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-outfit), var(--font-inter), system-ui, sans-serif;
   }
 
-  /* Headings use Playfair Display — luxury editorial */
+  /* Headings use Outfit — locked Pink Pineapple brand font */
   h1, h2, h3 {
-    font-family: var(--font-playfair), serif;
-    font-weight: 600;
+    font-family: var(--font-outfit), sans-serif;
+    font-weight: 700;
     letter-spacing: 0.02em;
   }
 }

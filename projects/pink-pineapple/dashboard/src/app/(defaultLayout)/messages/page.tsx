@@ -2,7 +2,7 @@
 import { MessageCircle } from "lucide-react";
 
 const inter = { fontFamily: "Poppins, sans-serif" };
-const playfair = { fontFamily: "Cormorant Garamond, serif" };
+const playfair = { fontFamily: "Outfit, sans-serif" };
 
 const MessagesPage = () => {
   return (

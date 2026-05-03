@@ -40,7 +40,7 @@ const ForgotPasswordForm = () => {
       <div className="space-y-3 text-center">
         <h3
           className="md:text-3xl text-2xl font-semibold text-[#FFFFFF]"
-          style={{ fontFamily: 'Cormorant Garamond, serif' }}
+          style={{ fontFamily: 'Outfit, sans-serif' }}
         >
           Forgot Password
         </h3>

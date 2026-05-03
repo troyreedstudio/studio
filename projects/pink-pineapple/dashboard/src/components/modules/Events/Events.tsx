@@ -16,7 +16,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 const poppins = { fontFamily: "Poppins, sans-serif" };
-const garamond = { fontFamily: "Cormorant Garamond, serif" };
+const garamond = { fontFamily: "Outfit, sans-serif" };
 
 const statusBadge = (status: string) => {
   const map: Record<string, string> = {

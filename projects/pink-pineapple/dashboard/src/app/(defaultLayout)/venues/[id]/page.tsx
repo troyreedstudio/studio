@@ -6,6 +6,7 @@ import {
   useGetVenueQuery,
   useUpdateVenueMutation,
   useDeleteVenueMutation,
+  useGetVenueStatsQuery,
 } from "@/redux/features/venues/venuesApi";
 import { useAllEventsQuery } from "@/redux/features/events/events.spi";
 import Spinner from "@/components/common/Spinner";
@@ -26,30 +27,76 @@ import {
   Globe,
   Phone,
   Instagram,
+  Heart,
+  Activity,
+  Plus,
 } from "lucide-react";
 
 const inter = { fontFamily: "Inter, sans-serif" };
-const garamond = { fontFamily: "Cormorant Garamond, serif" };
+const outfit = { fontFamily: "Outfit, sans-serif" };
 
 const venueTypes = [
-  { value: "Beach Club", label: "Beach Club" },
-  { value: "Nightclub", label: "Nightclub" },
-  { value: "Bar", label: "Bar" },
-  { value: "Lounge", label: "Lounge" },
-  { value: "Restaurant", label: "Restaurant" },
-  { value: "Wellness", label: "Wellness" },
-  { value: "Gym", label: "Gym" },
+  { value: "BEACH_CLUB", label: "Beach Club" },
+  { value: "NIGHTLIFE", label: "Nightclub" },
+  { value: "RESTAURANT", label: "Restaurant" },
+  { value: "WELLNESS", label: "Wellness" },
+  { value: "EVENTS", label: "Events" },
 ];
 
 const areaOptions = [
-  { value: "Canggu", label: "Canggu" },
-  { value: "Seminyak", label: "Seminyak" },
-  { value: "Uluwatu", label: "Uluwatu" },
-  { value: "Ubud", label: "Ubud" },
+  { value: "CANGGU", label: "Canggu" },
+  { value: "SEMINYAK", label: "Seminyak" },
+  { value: "ULUWATU", label: "Uluwatu" },
+  { value: "UBUD", label: "Ubud" },
 ];
+
+const tagOptions = [
+  "beach_club",
+  "nightlife",
+  "restaurant",
+  "bar",
+  "lounge",
+  "wellness",
+  "gym",
+];
+
+const daysOfWeek = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+type DayKey = (typeof daysOfWeek)[number];
+const dayLabels: Record<DayKey, string> = {
+  mon: "Monday",
+  tue: "Tuesday",
+  wed: "Wednesday",
+  thu: "Thursday",
+  fri: "Friday",
+  sat: "Saturday",
+  sun: "Sunday",
+};
+
+type ScheduleEntry = {
+  startTime?: string;
+  endTime?: string;
+  genre?: string;
+  description?: string;
+};
 
 const inputClass =
   "w-full bg-[#000000] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#C4707E] transition-colors";
+
+const crowdShort = ["Empty", "Chill", "Filling", "Packed", "Capped"];
+const musicShort = ["Silent", "Background", "Good", "Great", "Incredible"];
+const energyShort = ["Dead", "Mellow", "Warming", "Lit", "Fire"];
+
+const formatRelative = (iso?: string) => {
+  if (!iso) return "—";
+  const ts = new Date(iso).getTime();
+  const mins = Math.round((Date.now() - ts) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} hr ago`;
+  const days = Math.round(hrs / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+};
 
 const VenueDetailPage = () => {
   const params = useParams();
@@ -58,10 +105,12 @@ const VenueDetailPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading } = useGetVenueQuery(id);
+  const { data: statsData } = useGetVenueStatsQuery(id, { skip: !id });
   const [updateVenue, { isLoading: isUpdating }] = useUpdateVenueMutation();
   const [deleteVenue] = useDeleteVenueMutation();
 
   const venue = data?.data;
+  const stats = statsData?.data;
 
   const { data: eventsData, isLoading: eventsLoading } = useAllEventsQuery([
     { name: "limit", value: 10 },
@@ -85,6 +134,17 @@ const VenueDetailPage = () => {
     priceRange: 2,
     openingHours: "",
   });
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagDraft, setTagDraft] = useState("");
+  const [schedule, setSchedule] = useState<Record<DayKey, ScheduleEntry>>({
+    mon: {},
+    tue: {},
+    wed: {},
+    thu: {},
+    fri: {},
+    sat: {},
+    sun: {},
+  });
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
 
@@ -102,8 +162,37 @@ const VenueDetailPage = () => {
         instagram: venue.instagram || "",
         bookingUrl: venue.bookingUrl || "",
         priceRange: venue.priceRange || 2,
-        openingHours: venue.openingHours || "",
+        openingHours:
+          typeof venue.openingHours === "string"
+            ? venue.openingHours
+            : venue.openingHours
+              ? JSON.stringify(venue.openingHours)
+              : "",
       });
+      setTags(Array.isArray(venue.tags) ? venue.tags : []);
+      const fresh: Record<DayKey, ScheduleEntry> = {
+        mon: {},
+        tue: {},
+        wed: {},
+        thu: {},
+        fri: {},
+        sat: {},
+        sun: {},
+      };
+      const ws = venue.weeklySchedule;
+      if (ws && typeof ws === "object") {
+        for (const day of daysOfWeek) {
+          if (ws[day] && typeof ws[day] === "object") {
+            fresh[day] = {
+              startTime: ws[day].startTime || "",
+              endTime: ws[day].endTime || "",
+              genre: ws[day].genre || "",
+              description: ws[day].description || "",
+            };
+          }
+        }
+      }
+      setSchedule(fresh);
     }
   }, [venue]);
 
@@ -114,6 +203,31 @@ const VenueDetailPage = () => {
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  const updateSchedule = (
+    day: DayKey,
+    key: keyof ScheduleEntry,
+    value: string
+  ) => {
+    setSchedule({
+      ...schedule,
+      [day]: { ...schedule[day], [key]: value },
+    });
+  };
+
+  const clearScheduleDay = (day: DayKey) => {
+    setSchedule({ ...schedule, [day]: {} });
+  };
+
+  const addTag = (raw: string) => {
+    const t = raw.trim().toLowerCase().replace(/\s+/g, "_");
+    if (!t) return;
+    if (tags.includes(t)) return;
+    setTags([...tags, t]);
+    setTagDraft("");
+  };
+
+  const removeTag = (t: string) => setTags(tags.filter((x) => x !== t));
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -132,17 +246,37 @@ const VenueDetailPage = () => {
   const handleSave = async () => {
     const toastId = toast.loading("Updating venue...");
     try {
-      const formData = new FormData();
-      Object.entries(form).forEach(([key, value]) => {
-        if (value !== "" && value != null) {
-          formData.append(key, String(value));
-        }
-      });
-      newPhotos.forEach((photo) => {
-        formData.append("photos", photo);
+      // Build clean weeklySchedule, dropping empty days
+      const cleanSchedule: Record<string, ScheduleEntry> = {};
+      for (const day of daysOfWeek) {
+        const entry = schedule[day];
+        const hasContent = entry.startTime || entry.endTime || entry.genre || entry.description;
+        if (hasContent) cleanSchedule[day] = entry;
+      }
+
+      const payload: Record<string, unknown> = {
+        name: form.name || undefined,
+        category: form.category || undefined,
+        area: form.area || undefined,
+        address: form.address,
+        description: form.description,
+        editorial: form.editorial,
+        phone: form.phone,
+        website: form.website,
+        instagram: form.instagram,
+        bookingUrl: form.bookingUrl,
+        priceRange: Number(form.priceRange) || 2,
+        openingHours: form.openingHours,
+        tags,
+        weeklySchedule: Object.keys(cleanSchedule).length > 0 ? cleanSchedule : null,
+      };
+
+      // Drop empty/undefined keys to satisfy the strict zod validation
+      Object.keys(payload).forEach((k) => {
+        if (payload[k] === undefined) delete payload[k];
       });
 
-      await updateVenue({ id, data: formData }).unwrap();
+      await updateVenue({ id, data: payload }).unwrap();
       toast.success("Venue updated!", { id: toastId });
       setEditing(false);
       setNewPhotos([]);
@@ -192,8 +326,7 @@ const VenueDetailPage = () => {
     );
   }
 
-  const heroImage =
-    venue.heroImage || venue.photos?.[0] || venue.profileImage;
+  const heroImage = venue.heroImage || venue.photos?.[0] || venue.profileImage;
   const gallery = venue.photos || [];
   const venueName = venue.name || venue.fullName || "N/A";
 
@@ -307,6 +440,83 @@ const VenueDetailPage = () => {
                   className={inputClass}
                   style={inter}
                 />
+              </div>
+
+              {/* Tags editor */}
+              <div>
+                <label
+                  className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                  style={inter}
+                >
+                  Tags
+                </label>
+                <p className="text-[#6B6B6B] text-xs mb-2" style={inter}>
+                  Cross-category tags. e.g. add{" "}
+                  <span className="text-[#E8A0B0]">nightlife</span> to a beach
+                  club like Savaya so it appears in both sections.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {tags.map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-[#E8A0B0] bg-[#E8A0B0]/10 border border-[#E8A0B0]/30"
+                      style={inter}
+                    >
+                      {t}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(t)}
+                        className="hover:text-white"
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  ))}
+                  {tags.length === 0 && (
+                    <span className="text-[#6B6B6B] text-xs" style={inter}>
+                      No tags yet
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <input
+                    type="text"
+                    value={tagDraft}
+                    onChange={(e) => setTagDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addTag(tagDraft);
+                      }
+                    }}
+                    placeholder="Add a tag and press Enter"
+                    className={inputClass + " flex-1 min-w-[200px]"}
+                    style={inter}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => addTag(tagDraft)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#C4707E] border border-[#C4707E]/40 hover:border-[#C4707E] hover:bg-[#C4707E]/5 transition-all"
+                    style={inter}
+                  >
+                    <Plus size={12} />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {tagOptions
+                    .filter((opt) => !tags.includes(opt))
+                    .map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => addTag(opt)}
+                        className="px-2.5 py-1 rounded-full text-[10px] text-[#6B6B6B] border border-[#2A2A2A] hover:text-[#E8A0B0] hover:border-[#E8A0B0]/40"
+                        style={inter}
+                      >
+                        + {opt}
+                      </button>
+                    ))}
+                </div>
               </div>
 
               <div>
@@ -433,6 +643,100 @@ const VenueDetailPage = () => {
                 />
               </div>
 
+              {/* Weekly Schedule Editor */}
+              <div>
+                <label
+                  className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                  style={inter}
+                >
+                  Weekly Schedule
+                </label>
+                <p className="text-[#6B6B6B] text-xs mb-3" style={inter}>
+                  Per-day curated content. Leave a day blank to skip it. Used by the &quot;This Week&quot; carousel in the app.
+                </p>
+                <div className="space-y-2">
+                  {daysOfWeek.map((day) => {
+                    const entry = schedule[day];
+                    const hasContent =
+                      entry.startTime ||
+                      entry.endTime ||
+                      entry.genre ||
+                      entry.description;
+                    return (
+                      <div
+                        key={day}
+                        className="rounded-xl border border-[#2A2A2A] bg-[#0A0A0A] p-3"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className="text-xs font-semibold text-[#E8A0B0] uppercase tracking-wider"
+                            style={inter}
+                          >
+                            {dayLabels[day]}
+                          </span>
+                          {hasContent && (
+                            <button
+                              type="button"
+                              onClick={() => clearScheduleDay(day)}
+                              className="text-[10px] text-[#6B6B6B] hover:text-red-400"
+                              style={inter}
+                            >
+                              Clear day
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <input
+                            type="text"
+                            placeholder="Start (e.g. 22:00)"
+                            value={entry.startTime || ""}
+                            onChange={(e) =>
+                              updateSchedule(day, "startTime", e.target.value)
+                            }
+                            className={inputClass + " py-2 text-xs"}
+                            style={inter}
+                          />
+                          <input
+                            type="text"
+                            placeholder="End (e.g. 03:00)"
+                            value={entry.endTime || ""}
+                            onChange={(e) =>
+                              updateSchedule(day, "endTime", e.target.value)
+                            }
+                            className={inputClass + " py-2 text-xs"}
+                            style={inter}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Genre"
+                            value={entry.genre || ""}
+                            onChange={(e) =>
+                              updateSchedule(day, "genre", e.target.value)
+                            }
+                            className={inputClass + " py-2 text-xs"}
+                            style={inter}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Description"
+                            value={entry.description || ""}
+                            onChange={(e) =>
+                              updateSchedule(
+                                day,
+                                "description",
+                                e.target.value
+                              )
+                            }
+                            className={inputClass + " py-2 text-xs"}
+                            style={inter}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div>
                 <label
                   className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
@@ -467,7 +771,7 @@ const VenueDetailPage = () => {
                 </div>
               </div>
 
-              {/* Photo upload */}
+              {/* Photo upload (display-only — backend multer not wired on this route yet) */}
               <div>
                 <label
                   className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
@@ -475,6 +779,9 @@ const VenueDetailPage = () => {
                 >
                   Add Photos
                 </label>
+                <p className="text-[#6B6B6B] text-xs mb-2" style={inter}>
+                  Note: photo upload on the venue edit form is not yet wired to the backend. Use the create-venue form for new photos for now.
+                </p>
                 {newPreviews.length > 0 && (
                   <div className="grid grid-cols-4 gap-2 mb-3">
                     {newPreviews.map((preview, i) => (
@@ -512,6 +819,7 @@ const VenueDetailPage = () => {
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-[#2A2A2A] text-[#B0B0B0] text-sm hover:border-[#C4707E]/40 transition-colors"
                   style={inter}
+                  disabled
                 >
                   <Upload size={14} />
                   Upload photos
@@ -553,10 +861,10 @@ const VenueDetailPage = () => {
             <div>
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <h1
-                      className="md:text-3xl text-2xl font-semibold text-[#FFFFFF]"
-                      style={{ ...garamond, letterSpacing: "0.02em" }}
+                      className="md:text-3xl text-2xl font-bold italic text-[#FFFFFF]"
+                      style={{ ...outfit, letterSpacing: "0.5px" }}
                     >
                       {venueName}
                     </h1>
@@ -574,7 +882,7 @@ const VenueDetailPage = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3 mt-2">
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
                     {(venue.area || venue.category) && (
                       <span
                         className="text-xs text-[#6B6B6B] uppercase tracking-[0.15em]"
@@ -582,31 +890,25 @@ const VenueDetailPage = () => {
                       >
                         {[venue.category, venue.area]
                           .filter(Boolean)
-                          .join(" \u00B7 ")}
-                      </span>
-                    )}
-                    {venue.rating != null && (
-                      <span className="flex items-center gap-1">
-                        <Star
-                          size={12}
-                          className="text-[#FFB800] fill-[#FFB800]"
-                        />
-                        <span
-                          className="text-xs text-[#FFFFFF]"
-                          style={inter}
-                        >
-                          {Number(venue.rating).toFixed(1)}
-                        </span>
+                          .join(" · ")}
                       </span>
                     )}
                     {venue.priceRange && (
-                      <span
-                        className="text-xs text-[#C4707E]"
-                        style={inter}
-                      >
+                      <span className="text-xs text-[#C4707E]" style={inter}>
                         {"$".repeat(venue.priceRange)}
                       </span>
                     )}
+                    {Array.isArray(venue.tags) &&
+                      venue.tags.length > 0 &&
+                      venue.tags.map((t: string) => (
+                        <span
+                          key={t}
+                          className="text-[10px] text-[#E8A0B0] bg-[#E8A0B0]/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
+                          style={inter}
+                        >
+                          {t}
+                        </span>
+                      ))}
                   </div>
                 </div>
 
@@ -629,6 +931,61 @@ const VenueDetailPage = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Read-only stats block */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                <StatTile
+                  icon={<span className="text-base">🍍</span>}
+                  label="PP rating"
+                  primary={
+                    stats?.ppRating != null
+                      ? Number(stats.ppRating).toFixed(1)
+                      : "—"
+                  }
+                  secondary={`${stats?.ppRatingCount ?? 0} review${stats?.ppRatingCount === 1 ? "" : "s"}`}
+                />
+                <StatTile
+                  icon={<Star size={14} className="text-[#FFB800]" />}
+                  label="Google rating"
+                  primary={
+                    stats?.googleRating != null
+                      ? Number(stats.googleRating).toFixed(1)
+                      : "—"
+                  }
+                  secondary={`${stats?.googleRatingCount ?? 0} on Google`}
+                />
+                <StatTile
+                  icon={<Heart size={14} className="text-[#C4707E]" />}
+                  label="Favourited by"
+                  primary={String(stats?.favoritesCount ?? 0)}
+                  secondary="users"
+                />
+                <StatTile
+                  icon={<Activity size={14} className="text-[#E8A0B0]" />}
+                  label="Vibe right now"
+                  primary={
+                    stats?.recentVibe
+                      ? `${stats.recentVibe.count} report${stats.recentVibe.count === 1 ? "" : "s"}`
+                      : "—"
+                  }
+                  secondary={
+                    stats?.recentVibe
+                      ? `${crowdShort[stats.recentVibe.crowd]} · ${musicShort[stats.recentVibe.music]} · ${energyShort[stats.recentVibe.energy]}`
+                      : "no recent vibes"
+                  }
+                />
+              </div>
+
+              {/* Lat/lng tile */}
+              {(venue.latitude != null || venue.longitude != null) && (
+                <div className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-4 mb-6">
+                  <div className="flex items-center gap-2 text-xs text-[#B0B0B0]" style={inter}>
+                    <MapPin size={12} className="text-[#C4707E]" />
+                    Coordinates: {venue.latitude ?? "—"},{" "}
+                    {venue.longitude ?? "—"}
+                  </div>
+                </div>
+              )}
 
               {/* Info Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
@@ -706,7 +1063,9 @@ const VenueDetailPage = () => {
                       className="text-[#C4707E] mt-0.5 flex-shrink-0"
                     />
                     <span className="text-xs text-[#B0B0B0]" style={inter}>
-                      {venue.openingHours}
+                      {typeof venue.openingHours === "string"
+                        ? venue.openingHours
+                        : JSON.stringify(venue.openingHours)}
                     </span>
                   </div>
                 )}
@@ -716,12 +1075,15 @@ const VenueDetailPage = () => {
               {(venue.description || venue.bio) && (
                 <div className="mb-6">
                   <h3
-                    className="text-lg font-semibold text-[#FFFFFF] mb-2"
-                    style={garamond}
+                    className="text-lg font-bold italic text-[#FFFFFF] mb-2"
+                    style={outfit}
                   >
                     About
                   </h3>
-                  <p className="text-sm text-[#B0B0B0] leading-relaxed" style={inter}>
+                  <p
+                    className="text-sm text-[#B0B0B0] leading-relaxed"
+                    style={inter}
+                  >
                     {venue.description || venue.bio}
                   </p>
                 </div>
@@ -731,8 +1093,8 @@ const VenueDetailPage = () => {
               {venue.editorial && (
                 <div className="mb-6">
                   <h3
-                    className="text-lg font-semibold text-[#FFFFFF] mb-2"
-                    style={garamond}
+                    className="text-lg font-bold italic text-[#FFFFFF] mb-2"
+                    style={outfit}
                   >
                     Editorial
                   </h3>
@@ -745,12 +1107,141 @@ const VenueDetailPage = () => {
                 </div>
               )}
 
+              {/* Weekly schedule preview */}
+              {venue.weeklySchedule &&
+                typeof venue.weeklySchedule === "object" &&
+                Object.keys(venue.weeklySchedule).length > 0 && (
+                  <div className="mb-6">
+                    <h3
+                      className="text-lg font-bold italic text-[#FFFFFF] mb-3"
+                      style={outfit}
+                    >
+                      Weekly Schedule
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {daysOfWeek.map((day) => {
+                        const entry = (venue.weeklySchedule as any)?.[day];
+                        if (!entry) return null;
+                        return (
+                          <div
+                            key={day}
+                            className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-3"
+                          >
+                            <p
+                              className="text-xs font-semibold text-[#E8A0B0] uppercase tracking-wider mb-1"
+                              style={inter}
+                            >
+                              {dayLabels[day]}
+                            </p>
+                            {(entry.startTime || entry.endTime) && (
+                              <p
+                                className="text-xs text-[#B0B0B0]"
+                                style={inter}
+                              >
+                                {entry.startTime || "—"} – {entry.endTime || "—"}
+                              </p>
+                            )}
+                            {entry.genre && (
+                              <p
+                                className="text-xs text-[#FFFFFF] mt-1"
+                                style={inter}
+                              >
+                                {entry.genre}
+                              </p>
+                            )}
+                            {entry.description && (
+                              <p
+                                className="text-[11px] text-[#6B6B6B] mt-1"
+                                style={inter}
+                              >
+                                {entry.description}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+              {/* Recent ratings + vibes */}
+              {stats &&
+                ((stats.recentRatings?.length ?? 0) > 0 ||
+                  (stats.recentVibes?.length ?? 0) > 0) && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    {stats.recentRatings &&
+                      stats.recentRatings.length > 0 && (
+                        <div className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-4">
+                          <p
+                            className="text-xs font-semibold text-white uppercase tracking-wider mb-3"
+                            style={inter}
+                          >
+                            🍍 Recent PP ratings
+                          </p>
+                          <ul className="space-y-1.5">
+                            {stats.recentRatings.map((r: any) => (
+                              <li
+                                key={r.id}
+                                className="flex items-center justify-between"
+                              >
+                                <span
+                                  className="text-[#E8A0B0] text-sm font-bold"
+                                  style={inter}
+                                >
+                                  {r.score} ★
+                                </span>
+                                <span
+                                  className="text-[#6B6B6B] text-[11px]"
+                                  style={inter}
+                                >
+                                  {formatRelative(r.updatedAt || r.createdAt)}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    {stats.recentVibes && stats.recentVibes.length > 0 && (
+                      <div className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-4">
+                        <p
+                          className="text-xs font-semibold text-white uppercase tracking-wider mb-3"
+                          style={inter}
+                        >
+                          Recent vibe checks
+                        </p>
+                        <ul className="space-y-1.5">
+                          {stats.recentVibes.map((v: any) => (
+                            <li
+                              key={v.id}
+                              className="flex items-center justify-between"
+                            >
+                              <span
+                                className="text-[#E8A0B0] text-[11px]"
+                                style={inter}
+                              >
+                                {crowdShort[v.crowd]} · {musicShort[v.music]} ·{" "}
+                                {energyShort[v.energy]}
+                              </span>
+                              <span
+                                className="text-[#6B6B6B] text-[11px]"
+                                style={inter}
+                              >
+                                {formatRelative(v.createdAt)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
               {/* Gallery */}
               {gallery.length > 1 && (
                 <div className="mb-6">
                   <h3
-                    className="text-lg font-semibold text-[#FFFFFF] mb-3"
-                    style={garamond}
+                    className="text-lg font-bold italic text-[#FFFFFF] mb-3"
+                    style={outfit}
                   >
                     Gallery
                   </h3>
@@ -779,8 +1270,8 @@ const VenueDetailPage = () => {
       {/* Events Section */}
       <div className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 sm:p-8">
         <h3
-          className="text-lg font-semibold text-[#FFFFFF] mb-5"
-          style={garamond}
+          className="text-lg font-bold italic text-[#FFFFFF] mb-5"
+          style={outfit}
         >
           Venue Events
         </h3>
@@ -807,7 +1298,7 @@ const VenueDetailPage = () => {
                   ) : (
                     <div
                       className="w-11 h-11 rounded-lg bg-[#000000] border border-[#2A2A2A] flex items-center justify-center text-[#C4707E] text-xs flex-shrink-0"
-                      style={garamond}
+                      style={outfit}
                     >
                       PP
                     </div>
@@ -870,5 +1361,35 @@ const VenueDetailPage = () => {
     </div>
   );
 };
+
+const StatTile = ({
+  icon,
+  label,
+  primary,
+  secondary,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  primary: string;
+  secondary: string;
+}) => (
+  <div className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-4">
+    <div className="flex items-center justify-between mb-2">
+      <p
+        className="text-[10px] text-[#B0B0B0] uppercase tracking-wider"
+        style={inter}
+      >
+        {label}
+      </p>
+      {icon}
+    </div>
+    <p className="text-xl font-bold text-[#FFFFFF]" style={outfit}>
+      {primary}
+    </p>
+    <p className="text-[11px] text-[#6B6B6B] mt-0.5" style={inter}>
+      {secondary}
+    </p>
+  </div>
+);
 
 export default VenueDetailPage;

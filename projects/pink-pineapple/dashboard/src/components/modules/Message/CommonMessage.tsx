@@ -58,7 +58,7 @@ export default function CommonMessage() {
         <div className="p-4 border-b border-[#2A2A2A]">
           <h1
             className="text-xl font-semibold text-[#FFFFFF]"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             Messages
           </h1>
@@ -213,7 +213,7 @@ export default function CommonMessage() {
               <CircleUser className="mx-auto h-14 w-14 text-[#2A2A2A]" />
               <h3
                 className="text-xl font-semibold text-[#FFFFFF]"
-                style={{ fontFamily: 'Cormorant Garamond, serif' }}
+                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 Select a conversation
               </h3>

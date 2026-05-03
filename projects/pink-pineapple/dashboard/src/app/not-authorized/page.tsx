@@ -14,7 +14,7 @@ const NotAuthorizedPage = () => {
         <div className="space-y-2">
           <h1
             className="text-2xl font-semibold text-[#FFFFFF]"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             Access Denied
           </h1>

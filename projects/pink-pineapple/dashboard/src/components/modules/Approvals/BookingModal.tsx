@@ -46,7 +46,7 @@ const BookingModal = ({ data }: { data: any }) => {
         <DialogHeader>
           <DialogTitle
             className="text-xl font-semibold text-[#FFFFFF] mb-2"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             Booking Details
           </DialogTitle>
@@ -69,7 +69,7 @@ const BookingModal = ({ data }: { data: any }) => {
                   />
                 ) : (
                   <div className="flex items-center justify-center w-full h-full text-[#C4707E] font-bold text-lg"
-                    style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                    style={{ fontFamily: 'Outfit, sans-serif' }}>
                     {data?.user?.fullName?.charAt(0) || "U"}
                   </div>
                 )}

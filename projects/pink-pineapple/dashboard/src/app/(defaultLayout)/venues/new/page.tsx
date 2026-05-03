@@ -9,7 +9,7 @@ import { useCreateVenueMutation } from "@/redux/features/venues/venuesApi";
 import Image from "next/image";
 
 const inter = { fontFamily: "Inter, sans-serif" };
-const playfair = { fontFamily: "Playfair Display, serif" };
+const playfair = { fontFamily: "Outfit, sans-serif" };
 
 const venueTypes = [
   { value: "", label: "Select category" },

@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import Events from "@/components/modules/Events/Events";
 
 const poppins = { fontFamily: "Poppins, sans-serif" };
-const garamond = { fontFamily: "Cormorant Garamond, serif" };
+const garamond = { fontFamily: "Outfit, sans-serif" };
 
 const EventPage = () => {
   return (

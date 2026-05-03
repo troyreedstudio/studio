@@ -19,7 +19,7 @@ const VerifyOtp = () => {
           </div>
           <h1
             className="text-5xl font-semibold text-[#FFFFFF] tracking-widest"
-            style={{ fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.15em' }}
+            style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.15em' }}
           >
             PINK PINEAPPLE
           </h1>
@@ -42,7 +42,7 @@ const VerifyOtp = () => {
         <div className="md:hidden text-center mb-8">
           <h1
             className="text-3xl font-semibold text-[#FFFFFF] tracking-widest"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             PINK PINEAPPLE
           </h1>

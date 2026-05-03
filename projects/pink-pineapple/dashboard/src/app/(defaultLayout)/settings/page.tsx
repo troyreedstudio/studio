@@ -6,7 +6,7 @@ const page = () => {
             <div className="mb-2">
                 <h1
                     className="md:text-3xl text-2xl font-semibold text-[#FFFFFF]"
-                    style={{ fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.02em' }}
+                    style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.02em' }}
                 >
                     Settings
                 </h1>

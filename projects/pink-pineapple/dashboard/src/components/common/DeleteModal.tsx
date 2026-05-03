@@ -111,7 +111,7 @@ const DeleteModal = ({
             <div className="flex flex-col items-center text-center gap-5 pt-2">
               <h3
                 className="text-lg font-semibold text-[#FFFFFF]"
-                style={{ fontFamily: 'Cormorant Garamond, serif' }}
+                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 {`Are you sure you want to ${message.toLowerCase()} this?`}
               </h3>

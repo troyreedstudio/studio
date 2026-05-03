@@ -13,7 +13,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 const inter = { fontFamily: "Inter, sans-serif" };
-const playfair = { fontFamily: "Playfair Display, serif" };
+const playfair = { fontFamily: "Outfit, sans-serif" };
 
 const AREAS = ["All", "Canggu", "Uluwatu", "Seminyak", "Ubud"] as const;
 const CATEGORIES = [
@@ -223,17 +223,55 @@ const VenuesPage = () => {
                   )}
                 </div>
 
-                {venue?.rating != null && (
-                  <div className="flex items-center gap-1 mt-1.5">
-                    <Star
-                      size={12}
-                      className="text-[#FFB800] fill-[#FFB800]"
-                    />
-                    <span className="text-xs text-[#FFFFFF]" style={inter}>
-                      {Number(venue.rating).toFixed(1)}
+                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  {venue?.ppRating != null && (
+                    <span
+                      className="flex items-center gap-1 text-xs text-[#E8A0B0]"
+                      style={inter}
+                      title={`Pink Pineapple rating · ${venue.ppRatingCount ?? 0} review${venue.ppRatingCount === 1 ? "" : "s"}`}
+                    >
+                      <span>🍍</span>
+                      <span className="font-semibold">
+                        {Number(venue.ppRating).toFixed(1)}
+                      </span>
+                      <span className="text-[#6B6B6B]">
+                        ({venue.ppRatingCount ?? 0})
+                      </span>
                     </span>
-                  </div>
-                )}
+                  )}
+                  {venue?.googleRating != null && (
+                    <span
+                      className="flex items-center gap-1 text-xs text-[#FFFFFF]"
+                      style={inter}
+                      title={`Google rating · ${venue.googleRatingCount ?? 0} on Google`}
+                    >
+                      <Star
+                        size={12}
+                        className="text-[#FFB800] fill-[#FFB800]"
+                      />
+                      <span>{Number(venue.googleRating).toFixed(1)}</span>
+                      {venue.googleRatingCount != null && (
+                        <span className="text-[#6B6B6B]">
+                          ({venue.googleRatingCount})
+                        </span>
+                      )}
+                    </span>
+                  )}
+                  {venue?.ppRating == null &&
+                    venue?.googleRating == null &&
+                    venue?.rating != null && (
+                      <span
+                        className="flex items-center gap-1 text-xs text-[#FFFFFF]"
+                        style={inter}
+                      >
+                        <Star
+                          size={12}
+                          className="text-[#FFB800] fill-[#FFB800]"
+                        />
+                        {Number(venue.rating).toFixed(1)}
+                      </span>
+                    )}
+                </div>
 
                 <div className="flex items-center gap-2 mt-4">
                   <Link

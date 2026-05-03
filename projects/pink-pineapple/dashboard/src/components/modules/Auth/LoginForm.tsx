@@ -50,7 +50,7 @@ const LoginForm = () => {
       <div className="space-y-2">
         <h2
           className="text-3xl font-semibold text-[#FFFFFF]"
-          style={{ fontFamily: 'Cormorant Garamond, serif' }}
+          style={{ fontFamily: 'Outfit, sans-serif' }}
         >
           Sign In
         </h2>

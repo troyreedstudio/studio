@@ -26,7 +26,7 @@ const btnDanger = "px-3 py-2 rounded-lg text-xs font-medium border border-red-50
 const sectionTitle = (text: string) => (
   <h2
     className="text-2xl font-semibold text-[#FFFFFF] border-b border-[#2A2A2A] pb-3"
-    style={{ fontFamily: 'Cormorant Garamond, serif' }}
+    style={{ fontFamily: 'Outfit, sans-serif' }}
   >
     {text}
   </h2>
@@ -168,7 +168,7 @@ const CreateEvent = () => {
         <div className="rounded-2xl border border-[#2A2A2A] bg-[#000000] p-8">
           <h1
             className="text-3xl font-semibold text-[#FFFFFF] mb-8 text-center"
-            style={{ fontFamily: 'Cormorant Garamond, serif', letterSpacing: '0.05em' }}
+            style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.05em' }}
           >
             Create New Event
           </h1>

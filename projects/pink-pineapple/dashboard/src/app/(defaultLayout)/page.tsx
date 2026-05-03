@@ -10,7 +10,7 @@ import { useAllUserQuery } from "@/redux/features/user/user.api";
 import DeleteModal from "@/components/common/DeleteModal";
 
 const inter = { fontFamily: "Inter, sans-serif" };
-const playfair = { fontFamily: "Playfair Display, serif" };
+const playfair = { fontFamily: "Outfit, sans-serif" };
 
 const CommonLayoutHomePage = () => {
   const { data: eventsData } = useAllEventsQuery([

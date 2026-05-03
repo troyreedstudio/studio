@@ -112,7 +112,7 @@ const RegisterForm = () => {
   const sectionLabel = (text: string) => (
     <h3
       className="md:text-3xl text-2xl font-semibold text-[#FFFFFF] text-center"
-      style={{ fontFamily: 'Cormorant Garamond, serif' }}
+      style={{ fontFamily: 'Outfit, sans-serif' }}
     >
       {text}
     </h3>

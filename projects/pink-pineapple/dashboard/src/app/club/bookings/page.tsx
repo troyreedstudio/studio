@@ -6,7 +6,7 @@ import { useAllBookingsQuery } from "@/redux/features/events/events.spi";
 import Spinner from "@/components/common/Spinner";
 
 const poppins = { fontFamily: "Poppins, sans-serif" };
-const garamond = { fontFamily: "Cormorant Garamond, serif" };
+const garamond = { fontFamily: "Outfit, sans-serif" };
 
 const tabs = ["All", "Confirmed", "Pending", "Cancelled"] as const;
 

@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 const inter = { fontFamily: "Inter, sans-serif" };
-const playfair = { fontFamily: "Playfair Display, serif" };
+const playfair = { fontFamily: "Outfit, sans-serif" };
 
 const statusBadge = (status: string) => {
   const map: Record<string, string> = {

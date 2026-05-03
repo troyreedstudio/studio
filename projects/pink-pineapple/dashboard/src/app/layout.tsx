@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Outfit, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import ReduxProvider from "@/redux/provider/ReduxProvider";
 
-const playfair = Playfair_Display({
+const outfit = Outfit({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-playfair",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-outfit",
 });
 
 const inter = Inter({
@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${playfair.variable} ${inter.variable} ${inter.className} antialiased`}>
+      <body className={`${outfit.variable} ${inter.variable} ${inter.className} antialiased`}>
         <Toaster
           position="bottom-right"
           richColors

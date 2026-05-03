@@ -12,7 +12,7 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const poppins = { fontFamily: "Poppins, sans-serif" };
-const garamond = { fontFamily: "Cormorant Garamond, serif" };
+const garamond = { fontFamily: "Outfit, sans-serif" };
 
 const ClubModal = ({ id, status }: { id: string; status: "CLUB" | "USER" }) => {
   const { data, isLoading } = useSingleUserQuery(id);

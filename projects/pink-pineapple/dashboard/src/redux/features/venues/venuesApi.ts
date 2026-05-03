@@ -62,6 +62,25 @@ export const venuesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Venue"],
     }),
+
+    // CLUB venue owners — list of venues owned by current user
+    getOwnedVenues: builder.query({
+      query: () => ({
+        url: "/venues/owned",
+        method: "GET",
+      }),
+      providesTags: ["Venue"],
+    }),
+
+    // Stats for one venue (PP rating, Google rating, vibe, favorites, recent
+    // ratings + vibes). Used by both club home stats panel + admin venue edit.
+    getVenueStats: builder.query({
+      query: (id) => ({
+        url: `/venues/${id}/stats`,
+        method: "GET",
+      }),
+      providesTags: ["Venue"],
+    }),
   }),
 });
 
@@ -72,4 +91,6 @@ export const {
   useCreateVenueMutation,
   useUpdateVenueMutation,
   useDeleteVenueMutation,
+  useGetOwnedVenuesQuery,
+  useGetVenueStatsQuery,
 } = venuesApi;

@@ -48,7 +48,7 @@ const Availability = () => {
     <div className="space-y-8 mt-8">
       <h3
         className="md:text-3xl text-2xl font-semibold text-[#FFFFFF]"
-        style={{ fontFamily: 'Cormorant Garamond, serif' }}
+        style={{ fontFamily: 'Outfit, sans-serif' }}
       >
         Availability
       </h3>
