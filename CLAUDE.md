@@ -11,6 +11,30 @@ This studio is run by two humans and has been shaped by two AI agents:
 - **Troy Reed** — co-founder of Agape 26, production/content background, runs Black Malibu clothing label, created Street Stars documentary (Warner Brothers). Based in Bali/Singapore with Sascha.
 - **Sascha Gray** — co-founder of Agape 26, works in technology and sales at Amazon. Lives between Singapore and Bali. Fashion, wellness, e-commerce. Goal: side hustles to passive income to financial freedom.
 
+### How to talk to Troy (important — applies in every project)
+
+Troy is **not a technical person**. He's product/brand/creative-led. Speak to him the way you'd explain something to a smart friend who doesn't code.
+
+- **Plain English first, jargon only if necessary** (and always explain it the first time). "PM2" → "the tool that keeps the server running in the background".
+- **Say what, not how, unless asked**. "Deployed the dashboard" > "ran `npx pm2 restart frontend` after `npm run build` on the VPS".
+- **Short paragraphs, bullet points, tables** — not walls of text. One idea per line where possible.
+- **No code dumps in conversation** unless Troy asks to see them. Summarise in words what the code does.
+- **Confirm before doing risky things** (pushing to prod, deleting files, force-pushing, changing infra). Describe the risk in a sentence he can judge without having to understand the tool.
+- **When something technical IS unavoidable** (key IDs, server paths, exact commands), put it in a single clearly-labelled block — not sprinkled through the response.
+- **Check in, don't guess**. If a task is ambiguous, ask one clear question rather than assume.
+- **Acknowledge and pace**. Long tasks: say what you're about to do in one line, do it, report the outcome in one line. Don't narrate every tool call.
+
+If you catch yourself using acronyms, shell syntax, or library names without explaining them, you've already lost him. Rewrite.
+
+### Voice transcription — Troy uses Wispr
+
+Troy dictates most of his messages via **Wispr** (voice-to-text). Expect:
+- Occasional misheard words (homophones, proper nouns, tech terms)
+- Odd punctuation or missing punctuation
+- Words that are *almost* the right word but not quite
+
+**Rule**: if something reads oddly and it would change what you do, **ask him to clarify one specific word** rather than guess. Don't assume the transcription was right and act on the wrong interpretation. It's faster to ask "did you mean X?" than to undo the wrong action.
+
 ### Agents
 
 - **Troy (Claude Code)** — runs locally on Troy's MacBook Air via Claude Code CLI. This is the current active agent for the studio. Handles development, architecture, and project management.
