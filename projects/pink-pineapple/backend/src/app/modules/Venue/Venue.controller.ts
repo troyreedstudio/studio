@@ -4,8 +4,50 @@ import catchAsync from "../../../shared/catchAsync";
 import { venueService } from "./Venue.service";
 import { venueFilterableFields } from "./Venue.interface";
 import pick from "../../../shared/pick";
+import { fileUploader } from "../../../helpers/fileUploader";
+
+// Upload any heroImage / photos files attached via multer and merge the
+// resulting Cloudinary URLs into the venue payload. Photos are appended
+// to whatever `photos` array is already present in the body (the create
+// route gets an empty list, the update route preserves existing).
+const mergeUploadedFiles = async (req: any) => {
+  const files = req.files as
+    | { heroImage?: Express.Multer.File[]; photos?: Express.Multer.File[] }
+    | undefined;
+  if (!files) return;
+
+  if (files.heroImage && files.heroImage[0]) {
+    const result = await fileUploader.uploadToCloudinary(files.heroImage[0]);
+    req.body.heroImage = result.Location;
+  }
+
+  if (files.photos && files.photos.length > 0) {
+    const uploads = await Promise.all(
+      files.photos.map((f) => fileUploader.uploadToCloudinary(f))
+    );
+    const newUrls = uploads.map((u) => u.Location);
+    const existing = Array.isArray(req.body.photos) ? req.body.photos : [];
+    req.body.photos = [...existing, ...newUrls];
+  }
+};
 
 const createVenue = catchAsync(async (req, res) => {
+  await mergeUploadedFiles(req);
+  // Default ownership to the authenticated user. Admins can still override
+  // by passing ownerId explicitly in the body if they're creating venues
+  // on behalf of a CLUB user.
+  if (!req.body.ownerId && (req as any).user?.id) {
+    req.body.ownerId = (req as any).user.id;
+  }
+  // If the user uploaded photos but didn't set heroImage, promote the
+  // first photo to hero so the venue card has something to render.
+  if (
+    (!req.body.heroImage || req.body.heroImage === "") &&
+    Array.isArray(req.body.photos) &&
+    req.body.photos.length > 0
+  ) {
+    req.body.heroImage = req.body.photos[0];
+  }
   const result = await venueService.createIntoDb(req.body);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -78,6 +120,7 @@ const getVenueById = catchAsync(async (req, res) => {
 });
 
 const updateVenue = catchAsync(async (req, res) => {
+  await mergeUploadedFiles(req);
   const result = await venueService.updateIntoDb(req.params.id, req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -188,6 +231,26 @@ const getFavoriteVenues = catchAsync(async (req, res) => {
   });
 });
 
+const getOwnedVenues = catchAsync(async (req, res) => {
+  const result = await venueService.getOwnedVenues(req.user.id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Owned venues retrieved",
+    data: result,
+  });
+});
+
+const getVenueOwnerStats = catchAsync(async (req, res) => {
+  const result = await venueService.getVenueOwnerStats(req.params.id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Venue stats retrieved",
+    data: result,
+  });
+});
+
 export const VenueController = {
   createVenue,
   getVenueList,
@@ -204,4 +267,6 @@ export const VenueController = {
   getRatableBookings,
   getTonightVibeBookings,
   getFavoriteVenues,
+  getOwnedVenues,
+  getVenueOwnerStats,
 };

@@ -67,6 +67,11 @@ const uploadPost = upload.fields([
   { name: "photos", maxCount: 500 },
   { name: "videos", maxCount: 100 },
 ]);
+// Venue create / update — accepts up to 1 hero image and 15 gallery photos.
+const venue = upload.fields([
+  { name: "heroImage", maxCount: 1 },
+  { name: "photos", maxCount: 15 },
+]);
 // ✅ Fixed Cloudinary Upload (Now supports buffer)
 const uploadToCloudinary = async (file: Express.Multer.File): Promise<{ Location: string; public_id: string }> => {
   if (!file) {
@@ -208,5 +213,6 @@ export const fileUploader = {
   uploadToCloudinary,
   uploadPost,
   event,
+  venue,
   uploadToGoogleCloud
 };

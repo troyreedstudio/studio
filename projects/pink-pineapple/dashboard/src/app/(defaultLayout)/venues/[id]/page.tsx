@@ -276,7 +276,19 @@ const VenueDetailPage = () => {
         if (payload[k] === undefined) delete payload[k];
       });
 
-      await updateVenue({ id, data: payload }).unwrap();
+      // If the user added new photos, ship as multipart/form-data with
+      // a `data` JSON field. Otherwise send plain JSON.
+      let body: FormData | typeof payload;
+      if (newPhotos.length > 0) {
+        const fd = new FormData();
+        fd.append("data", JSON.stringify(payload));
+        newPhotos.forEach((p) => fd.append("photos", p));
+        body = fd;
+      } else {
+        body = payload;
+      }
+
+      await updateVenue({ id, data: body }).unwrap();
       toast.success("Venue updated!", { id: toastId });
       setEditing(false);
       setNewPhotos([]);
@@ -771,7 +783,7 @@ const VenueDetailPage = () => {
                 </div>
               </div>
 
-              {/* Photo upload (display-only — backend multer not wired on this route yet) */}
+              {/* Photo upload */}
               <div>
                 <label
                   className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
@@ -780,7 +792,7 @@ const VenueDetailPage = () => {
                   Add Photos
                 </label>
                 <p className="text-[#6B6B6B] text-xs mb-2" style={inter}>
-                  Note: photo upload on the venue edit form is not yet wired to the backend. Use the create-venue form for new photos for now.
+                  Photos are appended to the venue&apos;s existing gallery. Up to 15 per save. They&apos;ll upload to Cloudinary when you hit Save.
                 </p>
                 {newPreviews.length > 0 && (
                   <div className="grid grid-cols-4 gap-2 mb-3">
@@ -819,7 +831,6 @@ const VenueDetailPage = () => {
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-[#2A2A2A] text-[#B0B0B0] text-sm hover:border-[#C4707E]/40 transition-colors"
                   style={inter}
-                  disabled
                 >
                   <Upload size={14} />
                   Upload photos

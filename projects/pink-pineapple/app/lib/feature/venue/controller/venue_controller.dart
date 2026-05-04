@@ -178,14 +178,16 @@ class VenueController extends GetxController {
     };
 
     const curated = <String, List<String>>{
-      // Canggu venues first, then Seminyak (Da Maria, Iron Fairies, ShiShi, La Favela all Mon-Sun)
-      'mon': ['bella', 'luigi', 'mesa', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'tue': ['desa-kitsune', 'mesa', 'miss-fish', 'shady-pig', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'wed': ['bella', 'mesa', 'shady-pig', 'miss-fish', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'thu': ['jade', 'shady-pig', 'miss-fish', 'mesa', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'fri': ['desa-kitsune', 'morabito', 'miss-fish', 'mesa', 'shady-pig', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'sat': ['sardine', 'savaya', 'mesa', 'miss-fish', 'shady-pig', 'il-salotto', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'sun': ['savaya', 'il-salotto', 'single-fin', 'amavi', 'back-room', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
+      // Canggu venues first, then Seminyak (Da Maria + La Favela run Mon-Sun).
+      // iron-fairies + shishi were referenced previously but aren't seeded
+      // yet — add them back here once Sascha confirms the data.
+      'mon': ['bella', 'luigi', 'mesa', 'da-maria', 'la-favela'],
+      'tue': ['desa-kitsune', 'mesa', 'miss-fish', 'shady-pig', 'da-maria', 'la-favela'],
+      'wed': ['bella', 'mesa', 'shady-pig', 'miss-fish', 'da-maria', 'la-favela'],
+      'thu': ['jade', 'shady-pig', 'miss-fish', 'mesa', 'da-maria', 'la-favela'],
+      'fri': ['desa-kitsune', 'morabito', 'miss-fish', 'mesa', 'shady-pig', 'da-maria', 'la-favela'],
+      'sat': ['sardine', 'savaya', 'mesa', 'miss-fish', 'shady-pig', 'il-salotto', 'da-maria', 'la-favela'],
+      'sun': ['savaya', 'il-salotto', 'single-fin', 'amavi', 'back-room', 'da-maria', 'la-favela'],
     };
 
     final updated = <String, List<VenueModel>>{};
@@ -235,14 +237,17 @@ class VenueController extends GetxController {
   }
 
   void _buildFallbackSchedule() {
-    const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const shortKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const longKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
     final schedule = <String, List<VenueModel>>{};
-    for (var i = 0; i < dayKeys.length; i++) {
+    for (var i = 0; i < shortKeys.length; i++) {
       final openOnDay = venues.where((v) {
         if (v.openingHours == null) return true; // assume open if no data
-        final dayData = v.openingHours![dayKeys[i]];
+        // Seed venues use short keys ('mon', 'tue', ...). Older Fiverr data
+        // may use long keys. Try both before deciding the venue is closed.
+        final dayData =
+            v.openingHours![shortKeys[i]] ?? v.openingHours![longKeys[i]];
         if (dayData == null) return false;
         if (dayData is Map && dayData['closed'] == true) return false;
         return true;

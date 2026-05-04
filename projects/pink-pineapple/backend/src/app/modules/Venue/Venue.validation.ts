@@ -13,7 +13,9 @@ const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
   area: VenueAreaEnum,
   category: VenueCategoryEnum,
-  ownerId: z.string().min(1, "Owner ID is required"),
+  // ownerId is injected server-side from the authenticated user — clients
+  // don't need to (and can't) supply it.
+  ownerId: z.string().optional(),
   description: z.string().optional(),
   editorial: z.string().optional(),
   address: z.string().optional(),

@@ -11,23 +11,22 @@ import Image from "next/image";
 const inter = { fontFamily: "Inter, sans-serif" };
 const playfair = { fontFamily: "Outfit, sans-serif" };
 
+// Values must match the Prisma VenueCategory + VenueArea enums.
 const venueTypes = [
   { value: "", label: "Select category" },
-  { value: "Beach Club", label: "Beach Club" },
-  { value: "Nightclub", label: "Nightclub" },
-  { value: "Bar", label: "Bar" },
-  { value: "Lounge", label: "Lounge" },
-  { value: "Restaurant", label: "Restaurant" },
-  { value: "Wellness", label: "Wellness" },
-  { value: "Gym", label: "Gym" },
+  { value: "BEACH_CLUB", label: "Beach Club" },
+  { value: "NIGHTLIFE", label: "Nightclub / Bar / Lounge" },
+  { value: "RESTAURANT", label: "Restaurant" },
+  { value: "WELLNESS", label: "Wellness / Gym" },
+  { value: "EVENTS", label: "Events" },
 ];
 
 const areas = [
   { value: "", label: "Select area" },
-  { value: "Canggu", label: "Canggu" },
-  { value: "Seminyak", label: "Seminyak" },
-  { value: "Uluwatu", label: "Uluwatu" },
-  { value: "Ubud", label: "Ubud" },
+  { value: "CANGGU", label: "Canggu" },
+  { value: "SEMINYAK", label: "Seminyak" },
+  { value: "ULUWATU", label: "Uluwatu" },
+  { value: "UBUD", label: "Ubud" },
 ];
 
 const priceRanges = [

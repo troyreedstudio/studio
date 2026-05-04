@@ -21,6 +21,8 @@ interface VenueData {
   phone: string;
   website: string;
   instagram: string;
+  heroImage?: string;
+  photos?: string[];
 }
 
 // Standard opening hours by venue type
@@ -1109,6 +1111,133 @@ const venues: VenueData[] = [
   },
 
   // ─────────────────────────────────────────────
+  // WELLNESS / FITNESS — SEMINYAK (4 venues)
+  // Verified 2026-05-04 against official sites:
+  //   Found Wellness  → thefoundwellness.com
+  //   The Compound    → thecompoundseminyak.com (IG @thecompound.bali)
+  //   Bali Fitness    → balifitness.asia (Sunset Road) — long-running
+  //   Bodyworks Bali  → bodyworksbali.com (Jl. Lebak Sari, Petitenget)
+  // ─────────────────────────────────────────────
+  {
+    name: "Found Wellness",
+    slug: "found-wellness",
+    description:
+      "Premium Seminyak gym and wellness centre — strength, functional, and cardio zones plus red-light therapy and a recovery menu.",
+    editorial:
+      "Found Wellness Center is built around the idea that your body is your only home — so it should be properly looked after. The training floor is brand-new and runs the full range from free weights and squat racks to cable machines and a serious functional area. The recovery offering is what sets it apart in Seminyak: red-light therapy, photobiomodulation panels, and a clean-fuel smoothie bar designed to actually support training. Premium, intentional, and quietly serious.",
+    area: VenueArea.SEMINYAK,
+    category: VenueCategory.WELLNESS,
+    tags: [],
+    address: "Seminyak, Bali",
+    latitude: -8.6815,
+    longitude: 115.1555,
+    priceRange: 3,
+    isFeatured: true,
+    rating: 4.7,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "https://thefoundwellness.com",
+    instagram: "@thefoundwellness",
+    heroImage:
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80",
+    photos: [
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80",
+      "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1600&q=80",
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1600&q=80",
+    ],
+  },
+  {
+    name: "The Compound",
+    slug: "the-compound-seminyak",
+    description:
+      "State-of-the-art Seminyak gym and wellness centre — 500m² across two levels with rooftop pool, sauna, and Bali's biggest ice bath.",
+    editorial:
+      "The Compound is two expansive levels of properly built gym — over 500m² of strength and cardio space, more than 50 world-class machines, and the kind of equipment depth Bali used to lack. Above it sits a Japanese-inspired rooftop garden with chilled beats, a pool, and a wholefood café. Recovery is the headline act: a 20-person traditional sauna, contrast therapy, and one of Bali's largest ice baths. The most fully resolved gym in Seminyak.",
+    area: VenueArea.SEMINYAK,
+    category: VenueCategory.WELLNESS,
+    tags: [],
+    address: "Seminyak, Bali",
+    latitude: -8.6820,
+    longitude: 115.1560,
+    priceRange: 3,
+    isFeatured: true,
+    rating: 4.7,
+    openingHours: GYM_HOURS,
+    weeklySchedule: null,
+    phone: "",
+    website: "https://thecompoundseminyak.com",
+    instagram: "@thecompound.bali",
+    heroImage:
+      "https://thecompoundseminyak.com/wp-content/uploads/2025/10/Untitled-520-x-680-px.png",
+    photos: [
+      "https://thecompoundseminyak.com/wp-content/uploads/2025/10/1-576x1024.png",
+      "https://thecompoundseminyak.com/wp-content/uploads/2025/10/2-576x1024.png",
+      "https://thecompoundseminyak.com/wp-content/uploads/2025/10/3-576x1024.png",
+      "https://thecompoundseminyak.com/wp-content/uploads/2025/10/11.jpg",
+      "https://thecompoundseminyak.com/wp-content/uploads/2025/10/12.jpg",
+    ],
+  },
+  {
+    name: "Bali Fitness Seminyak",
+    slug: "bali-fitness-seminyak",
+    description:
+      "Long-running Seminyak gym on Sunset Road — full equipment, group classes, and the most established fitness space in the area.",
+    editorial:
+      "Bali Fitness has been the Seminyak default for years and stays popular for a reason. The floor is well-equipped (machines, free weights, a proper functional area), the group-class schedule covers most of what you'd want — yoga, HIIT, conditioning — and the location on Sunset Road keeps it accessible from anywhere in Seminyak. It's not the flashiest option, but it's the one regulars keep showing up to.",
+    area: VenueArea.SEMINYAK,
+    category: VenueCategory.WELLNESS,
+    tags: [],
+    address: "Jl. Sunset Road No.333, Seminyak, Bali",
+    latitude: -8.6890,
+    longitude: 115.1700,
+    priceRange: 2,
+    isFeatured: false,
+    rating: 4.4,
+    openingHours: { ...GYM_HOURS, mon: "06:00-23:00", tue: "06:00-23:00", wed: "06:00-23:00", thu: "06:00-23:00", fri: "06:00-23:00", sat: "06:00-23:00", sun: "06:00-23:00" },
+    weeklySchedule: null,
+    phone: "",
+    website: "https://www.balifitness.asia",
+    instagram: "@balifitnessseminyak",
+    heroImage:
+      "https://static.wixstatic.com/media/009665_acd66c5a80fe43e697ec1d3a329bb0b9~mv2.png",
+    photos: [
+      "https://static.wixstatic.com/media/009665_acd66c5a80fe43e697ec1d3a329bb0b9~mv2.png",
+      "https://static.wixstatic.com/media/009665_b3e29b812a814ad3a2ed2d0e0ceed1c3~mv2.png",
+      "https://static.wixstatic.com/media/009665_2a91fe8f0e574474ad86ec412387e5c8~mv2.png",
+    ],
+  },
+  {
+    name: "Bodyworks Bali",
+    slug: "bodyworks-bali",
+    description:
+      "Twenty-year Seminyak institution — fitness, Pilates, full spa, and recovery in one Petitenget courtyard.",
+    editorial:
+      "Bodyworks has been a Seminyak fixture for over twenty years — heralded as the original Seminyak day-spa concept and still one of the best. The fitness side covers personal training, Pilates reformer, and a well-equipped gym floor; cross the courtyard and there's a full spa with traditional Balinese and Moroccan-inspired treatments, plus a large central pool. The vibe is grown-up — expats, residents, and travellers who want something more curated than a hotel gym.",
+    area: VenueArea.SEMINYAK,
+    category: VenueCategory.WELLNESS,
+    tags: ["spa"],
+    address: "Jl. Lebak Sari No.3, Petitenget, Seminyak, Bali",
+    latitude: -8.6810,
+    longitude: 115.1565,
+    priceRange: 3,
+    isFeatured: false,
+    rating: 4.6,
+    openingHours: { ...GYM_HOURS, mon: "09:00-21:00", tue: "09:00-21:00", wed: "09:00-21:00", thu: "09:00-21:00", fri: "09:00-21:00", sat: "09:00-21:00", sun: "09:00-21:00" },
+    weeklySchedule: null,
+    phone: "+62 878 15299000",
+    website: "https://www.bodyworksbali.com",
+    instagram: "@bodyworksbali",
+    heroImage:
+      "https://images.squarespace-cdn.com/content/v1/643a21360476a6182deeef55/928ab67d-1798-4281-83a6-2be1c87b4acd/BW_Banner_Home.jpg",
+    photos: [
+      "https://images.squarespace-cdn.com/content/v1/643a21360476a6182deeef55/7c2be97c-001f-445b-a68e-9102ad3aa624/HomePage3.jpg",
+      "https://images.squarespace-cdn.com/content/v1/643a21360476a6182deeef55/40e53a89-6e34-45f4-b31b-1400b9201f2d/BW_Portrait_Home.jpg",
+      "https://images.squarespace-cdn.com/content/v1/643a21360476a6182deeef55/087e6382-55e9-4872-916e-b0e2c4726bc8/BW_Portrait_Home4.jpg",
+    ],
+  },
+
+  // ─────────────────────────────────────────────
   // SEMINYAK (10 venues)
   // ─────────────────────────────────────────────
   {
@@ -1393,6 +1522,12 @@ async function seedVenues() {
   let updated = 0;
 
   for (const venue of venues) {
+    // Only update photos/heroImage when the seed actually provides them —
+    // skip otherwise so we don't blow away dashboard-uploaded images on re-runs.
+    const imageUpdate: { heroImage?: string; photos?: string[] } = {};
+    if (venue.heroImage !== undefined) imageUpdate.heroImage = venue.heroImage;
+    if (venue.photos !== undefined) imageUpdate.photos = venue.photos;
+
     const result = await prisma.venue.upsert({
       where: { slug: venue.slug },
       update: {
@@ -1413,6 +1548,7 @@ async function seedVenues() {
         phone: venue.phone,
         website: venue.website,
         instagram: venue.instagram,
+        ...imageUpdate,
         isActive: true,
       },
       create: {
@@ -1434,8 +1570,8 @@ async function seedVenues() {
         phone: venue.phone,
         website: venue.website,
         instagram: venue.instagram,
-        photos: [],
-        heroImage: "",
+        photos: venue.photos ?? [],
+        heroImage: venue.heroImage ?? "",
         isActive: true,
         ownerId: admin.id,
       },
