@@ -147,6 +147,14 @@ const VenueDetailPage = () => {
   });
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
+  // Existing gallery photos in their current order (with deletions applied).
+  // Initialized from venue.photos when the venue loads. Sent back as the
+  // canonical photos array on save — the backend appends any newly-uploaded
+  // files after these.
+  const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
+  // Hero image URL — either an existing photo URL or pending new upload.
+  // Initialized from venue.heroImage. Saved back on submit.
+  const [heroImage, setHeroImage] = useState<string>("");
 
   useEffect(() => {
     if (venue) {
@@ -170,6 +178,8 @@ const VenueDetailPage = () => {
               : "",
       });
       setTags(Array.isArray(venue.tags) ? venue.tags : []);
+      setExistingPhotos(Array.isArray(venue.photos) ? venue.photos : []);
+      setHeroImage(venue.heroImage || "");
       const fresh: Record<DayKey, ScheduleEntry> = {
         mon: {},
         tue: {},
@@ -269,6 +279,11 @@ const VenueDetailPage = () => {
         openingHours: form.openingHours,
         tags,
         weeklySchedule: Object.keys(cleanSchedule).length > 0 ? cleanSchedule : null,
+        // Send the (possibly trimmed) existing-photo array — backend will
+        // append any newly-uploaded files after these. Lets users delete
+        // existing photos by removing them from this array.
+        photos: existingPhotos,
+        heroImage: heroImage,
       };
 
       // Drop empty/undefined keys to satisfy the strict zod validation
@@ -338,7 +353,8 @@ const VenueDetailPage = () => {
     );
   }
 
-  const heroImage = venue.heroImage || venue.photos?.[0] || venue.profileImage;
+  const displayHero =
+    venue.heroImage || venue.photos?.[0] || venue.profileImage;
   const gallery = venue.photos || [];
   const venueName = venue.name || venue.fullName || "N/A";
 
@@ -357,10 +373,10 @@ const VenueDetailPage = () => {
       {/* Hero + Header Card */}
       <div className="rounded-xl border border-[#2A2A2A] bg-[#000000] overflow-hidden">
         {/* Hero Image */}
-        {heroImage && !editing && (
+        {displayHero && !editing && (
           <div className="relative h-56 sm:h-72 bg-[#1A1A1A]">
             <Image
-              src={heroImage}
+              src={displayHero}
               alt={venueName}
               fill
               className="object-cover"
@@ -783,7 +799,79 @@ const VenueDetailPage = () => {
                 </div>
               </div>
 
-              {/* Photo upload */}
+              {/* Existing photos — gallery management */}
+              {existingPhotos.length > 0 && (
+                <div>
+                  <label
+                    className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                    style={inter}
+                  >
+                    Existing Gallery ({existingPhotos.length})
+                  </label>
+                  <p className="text-[#6B6B6B] text-xs mb-3" style={inter}>
+                    Hover a photo to remove it or set it as the hero image. Hero image shows on the venue card.
+                  </p>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {existingPhotos.map((url) => {
+                      const isHero = url === heroImage;
+                      return (
+                        <div
+                          key={url}
+                          className={`relative group rounded-lg overflow-hidden h-24 border ${
+                            isHero
+                              ? "border-[#C4707E] ring-2 ring-[#C4707E]/30"
+                              : "border-[#2A2A2A]"
+                          }`}
+                        >
+                          <Image
+                            src={url}
+                            alt="venue"
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                          {isHero && (
+                            <span
+                              className="absolute top-1 left-1 text-[9px] px-1.5 py-0.5 rounded bg-[#C4707E] text-white uppercase tracking-wider"
+                              style={inter}
+                            >
+                              Hero
+                            </span>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            {!isHero && (
+                              <button
+                                type="button"
+                                onClick={() => setHeroImage(url)}
+                                title="Set as hero"
+                                className="px-2 py-1 rounded text-[10px] font-semibold bg-[#C4707E] text-white"
+                                style={inter}
+                              >
+                                Set Hero
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setExistingPhotos(
+                                  existingPhotos.filter((u) => u !== url)
+                                );
+                                if (heroImage === url) setHeroImage("");
+                              }}
+                              title="Remove from gallery"
+                              className="p-1.5 rounded-full bg-red-500/90 text-white"
+                            >
+                              <X size={11} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Photo upload (add new) */}
               <div>
                 <label
                   className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
@@ -792,7 +880,7 @@ const VenueDetailPage = () => {
                   Add Photos
                 </label>
                 <p className="text-[#6B6B6B] text-xs mb-2" style={inter}>
-                  Photos are appended to the venue&apos;s existing gallery. Up to 15 per save. They&apos;ll upload to Cloudinary when you hit Save.
+                  New photos upload to Cloudinary on Save and append to the existing gallery. Up to 15 per save.
                 </p>
                 {newPreviews.length > 0 && (
                   <div className="grid grid-cols-4 gap-2 mb-3">
