@@ -28,7 +28,7 @@ class ProfileTabController extends GetxController {
       onTap: () => _onEditProfileTap(),
     ),
     ProfileMenuItem(
-      title: 'Favorites',
+      title: 'My Wishlist',
       iconPath: 'assets/icons/fav.png',
       onTap: () => _onFavTap(),
     ),

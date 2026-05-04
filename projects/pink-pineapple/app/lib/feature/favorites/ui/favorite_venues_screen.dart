@@ -109,7 +109,7 @@ class _FavoriteVenuesScreenState extends State<FavoriteVenuesScreen> {
           ),
           SizedBox(width: 14.w),
           Text(
-            'FAVOURITES',
+            'MY WISHLIST',
             style: GoogleFonts.outfit(
               fontSize: 20.sp,
               fontWeight: FontWeight.w800,
@@ -145,7 +145,7 @@ class _FavoriteVenuesScreenState extends State<FavoriteVenuesScreen> {
             ),
             SizedBox(height: 20.h),
             Text(
-              'No favourites yet',
+              'Your wishlist is empty',
               style: GoogleFonts.outfit(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w800,
@@ -155,7 +155,7 @@ class _FavoriteVenuesScreenState extends State<FavoriteVenuesScreen> {
             ),
             SizedBox(height: 8.h),
             Text(
-              'Tap the heart on any venue to save it here',
+              'Tap the heart on any venue to add it here',
               style: GoogleFonts.poppins(
                 fontSize: 13.sp,
                 color: AppColors.textMuted,
