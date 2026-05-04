@@ -150,7 +150,15 @@ class VenueController extends GetxController {
             }
           }
           weeklySchedule.assignAll(schedule);
-          _applyCuratedSchedule();
+          // Curation is an "All Bali" overlay — it filters the global feed
+          // down to Troy's hand-picked Mon-Sun lineup (mostly Canggu +
+          // Seminyak). When the user has explicitly selected an area, we
+          // skip curation and show whatever the API returned for that area.
+          // Without this guard, picking Uluwatu wiped the schedule because
+          // none of the curated slugs are Uluwatu venues.
+          if (area == null || area.isEmpty) {
+            _applyCuratedSchedule();
+          }
           return;
         }
       }
