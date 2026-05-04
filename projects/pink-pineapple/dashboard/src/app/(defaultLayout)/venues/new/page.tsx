@@ -18,6 +18,10 @@ import OpeningHoursPicker, {
   blankOpeningHours,
   serializeOpeningHours,
 } from "@/components/forms/OpeningHoursPicker";
+import BookingSection, {
+  BookingValue,
+  blankBooking,
+} from "@/components/forms/BookingSection";
 
 const inter = { fontFamily: "Inter, sans-serif" };
 const playfair = { fontFamily: "Outfit, sans-serif" };
@@ -65,7 +69,6 @@ const NewVenuePage = () => {
     editorial: "",
     website: "",
     instagram: "",
-    bookingUrl: "",
     priceRange: 2,
   });
   const [address, setAddress] = useState<StructuredAddress>(blankAddress());
@@ -73,6 +76,7 @@ const NewVenuePage = () => {
   const [openingHours, setOpeningHours] = useState<OpeningHoursValue>(
     blankOpeningHours()
   );
+  const [booking, setBooking] = useState<BookingValue>(blankBooking());
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -137,9 +141,17 @@ const NewVenuePage = () => {
       if (phone.trim()) dataPayload.phone = phone.trim();
       if (form.website) dataPayload.website = form.website;
       if (form.instagram) dataPayload.instagram = form.instagram;
-      if (form.bookingUrl) dataPayload.bookingUrl = form.bookingUrl;
       if (address.latitude != null) dataPayload.latitude = address.latitude;
       if (address.longitude != null) dataPayload.longitude = address.longitude;
+      // Booking fields — only send the ones relevant to the chosen provider.
+      if (booking.provider) dataPayload.bookingProvider = booking.provider;
+      if (booking.url) dataPayload.bookingUrl = booking.url;
+      if (booking.phone) dataPayload.bookingPhone = booking.phone;
+      if (booking.whatsapp) dataPayload.bookingWhatsapp = booking.whatsapp;
+      if (booking.instagram) dataPayload.bookingInstagram = booking.instagram;
+      if (booking.dailyUrls && Object.keys(booking.dailyUrls).length > 0) {
+        dataPayload.bookingDailyUrls = booking.dailyUrls;
+      }
 
       formData.append("data", JSON.stringify(dataPayload));
       photos.forEach((photo) => {
@@ -346,26 +358,23 @@ const NewVenuePage = () => {
               />
             </div>
           </div>
-          <div>
-            <label
-              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
-              style={inter}
-            >
-              Booking URL
-            </label>
-            <input
-              type="text"
-              name="bookingUrl"
-              value={form.bookingUrl}
-              onChange={handleChange}
-              placeholder="https://booketing.com/... or https://mtix.me/..."
-              className={inputClass}
-              style={inter}
-            />
-            <p className="text-[#6B6B6B] text-xs mt-1" style={inter}>
-              Customers will be directed here from the app to make a booking.
-            </p>
-          </div>
+        </div>
+
+        <div className="border-t border-[#2A2A2A]" />
+
+        {/* Booking */}
+        <div className="space-y-3">
+          <h2
+            className="text-sm uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            Booking
+          </h2>
+          <p className="text-[11px] text-[#6B6B6B] -mt-1" style={inter}>
+            How guests book this venue. We track every &ldquo;Book&rdquo; tap so you can
+            show owners how much traffic Pink Pineapple drives.
+          </p>
+          <BookingSection value={booking} onChange={setBooking} />
         </div>
 
         <div className="border-t border-[#2A2A2A]" />

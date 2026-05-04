@@ -5,6 +5,7 @@ import validateRequest from "../../middlewares/validateRequest";
 import { VenueValidation } from "./Venue.validation";
 import { optionalAuth } from "./Venue.optionalAuth";
 import { fileUploader } from "../../../helpers/fileUploader";
+import { BookingClickController } from "./BookingClick.controller";
 
 const router = express.Router();
 
@@ -65,5 +66,13 @@ router.delete("/:id", auth("ADMIN"), VenueController.deleteVenue);
 router.post("/:id/favorite", auth(), VenueController.toggleFavorite);
 router.post("/:id/rating", auth(), VenueController.submitRating);
 router.post("/:id/vibe", auth(), VenueController.submitVibe);
+
+// Booking attribution — log every click on a venue's "Book" CTA so we
+// can show venue owners how much traffic Pink Pineapple drove. Returns
+// the redirect URL with utm_source + pp_click_id appended for dashboard
+// attribution in the venue's own analytics.
+router.post("/:id/booking-click", optionalAuth, BookingClickController.recordClick);
+// Aggregate click metrics for one venue — accessible to ADMIN + CLUB owners.
+router.get("/:id/booking-clicks", auth("ADMIN", "CLUB"), BookingClickController.getStats);
 
 export const VenueRoutes = router;

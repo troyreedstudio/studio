@@ -58,6 +58,7 @@ model User {
   venueFavorites     VenueFavorite[]  @relation("VenueFavorites")
   venueRatings       VenueRating[]
   venueVibes         VenueVibe[]
+  venueBookingClicks VenueBookingClick[] @relation("UserBookingClicks")
 
   blocker   BlockUser[] @relation("blocker")
   blocked   BlockUser[] @relation("blocked")
@@ -360,6 +361,22 @@ enum VenueCategory {
   EVENTS
 }
 
+enum BookingProvider {
+  BOOKETING        // Indonesian — possibly API-able
+  MTIX             // Indonesian event ticketing — has API docs
+  CROWDSTACK
+  OPENTABLE        // Partnership-gated; URL only for now
+  RESY             // Partnership-gated
+  RESDIARY
+  TOAST
+  SEVENROOMS       // Partnership-gated
+  CUSTOM_WEB       // Their own form / WordPress
+  PHONE            // Call to book
+  WHATSAPP
+  INSTAGRAM_DM
+  NONE             // Walk-in only
+}
+
 model Venue {
   id              String         @id @default(auto()) @map("_id") @db.ObjectId
   name            String
@@ -380,7 +397,18 @@ model Venue {
   weeklySchedule  Json?
   photos          String[]
   heroImage       String         @default("")
-  bookingUrl      String         @default("")
+  // ── Booking integration ───────────────────────────────────────────
+  // Tier 2 today (URL + provider metadata + per-day routing).
+  // Tier 3 future (apiKey + externalVenueId enable native integration).
+  bookingUrl              String           @default("")     // primary URL for online providers
+  bookingProvider         BookingProvider?                  // which system the venue uses
+  bookingPhone            String           @default("")     // for PHONE provider
+  bookingWhatsapp         String           @default("")     // for WHATSAPP provider
+  bookingInstagram        String           @default("")     // for INSTAGRAM_DM provider
+  bookingDailyUrls        Json?                             // { mon: "...", tue: "...", ... }
+  bookingExternalVenueId  String           @default("")     // for native API later
+  bookingApiKeyEncrypted  String           @default("")     // for native API later (encrypted)
+  // ──────────────────────────────────────────────────────────────────
   isActive        Boolean        @default(true)
   isFeatured      Boolean        @default(false)
   rating            Float          @default(0)
@@ -392,10 +420,41 @@ model Venue {
   favorites         VenueFavorite[]
   ratings           VenueRating[]
   vibes             VenueVibe[]
+  bookingClicks     VenueBookingClick[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
   @@map("venues")
+}
+
+// Pink Pineapple booking attribution log. Every time a user taps the
+// "Book" CTA on a venue card or detail screen, we log a row here so we
+// can later prove "Pink Pineapple drove X bookings this month" to the
+// venue. The redirect URL we send users to includes a pp_click_id query
+// param matching this row's id, so if/when we wire native integrations
+// we can correlate the click with the actual confirmed booking.
+model VenueBookingClick {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  venueId     String   @db.ObjectId
+  venue       Venue    @relation(fields: [venueId], references: [id])
+  userId      String?  @db.ObjectId
+  user        User?    @relation("UserBookingClicks", fields: [userId], references: [id])
+  /// MOBILE_APP, DASHBOARD, WEB, etc — where the click originated.
+  source      String   @default("MOBILE_APP")
+  /// Provider the click was routed to (snapshotted from venue at click time).
+  provider    String   @default("")
+  /// The destination URL the user was sent to (with utm + pp_click_id appended).
+  redirectUrl String   @default("")
+  /// Coarse client device identifier — populated when available.
+  deviceId    String   @default("")
+  /// Filled in later if/when we get a confirmed booking back via native API.
+  convertedAt DateTime?
+  /// Native-integration booking ID from the third-party provider, if any.
+  externalBookingId String @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([venueId, createdAt])
+  @@map("venue_booking_clicks")
 }
 
 model VenueFavorite {
