@@ -5,12 +5,16 @@ import { venueService } from "./Venue.service";
 import { venueFilterableFields } from "./Venue.interface";
 import pick from "../../../shared/pick";
 import { fileUploader } from "../../../helpers/fileUploader";
+import prisma from "../../../shared/prisma";
 
 // Upload any heroImage / photos files attached via multer and merge the
-// resulting Cloudinary URLs into the venue payload. Photos are appended
-// to whatever `photos` array is already present in the body (the create
-// route gets an empty list, the update route preserves existing).
-const mergeUploadedFiles = async (req: any) => {
+// resulting Cloudinary URLs into the venue payload.
+//
+// Photos are APPENDED to the existing gallery — if the venue already has
+// 3 photos in the DB and the user uploads 2 more, the result is 5. This
+// preserves photos uploaded earlier even when the dashboard's edit form
+// doesn't echo the existing array back in the payload.
+const mergeUploadedFiles = async (req: any, venueId?: string) => {
   const files = req.files as
     | { heroImage?: Express.Multer.File[]; photos?: Express.Multer.File[] }
     | undefined;
@@ -26,7 +30,21 @@ const mergeUploadedFiles = async (req: any) => {
       files.photos.map((f) => fileUploader.uploadToCloudinary(f))
     );
     const newUrls = uploads.map((u) => u.Location);
-    const existing = Array.isArray(req.body.photos) ? req.body.photos : [];
+
+    // Order of precedence for "existing photos":
+    //   1. an explicit `photos` array in req.body — caller wants to set it
+    //   2. the existing venue.photos in the DB (update flow)
+    //   3. an empty array (create flow)
+    let existing: string[] = [];
+    if (Array.isArray(req.body.photos)) {
+      existing = req.body.photos;
+    } else if (venueId) {
+      const venue = await prisma.venue.findUnique({
+        where: { id: venueId },
+        select: { photos: true },
+      });
+      existing = venue?.photos ?? [];
+    }
     req.body.photos = [...existing, ...newUrls];
   }
 };
@@ -120,7 +138,7 @@ const getVenueById = catchAsync(async (req, res) => {
 });
 
 const updateVenue = catchAsync(async (req, res) => {
-  await mergeUploadedFiles(req);
+  await mergeUploadedFiles(req, req.params.id);
   const result = await venueService.updateIntoDb(req.params.id, req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
