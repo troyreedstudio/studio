@@ -37,14 +37,18 @@ const PRESETS: {
     start: "11:00",
     end: "00:00",
   },
-  { id: "dinner", label: "Dinner", start: "18:00", end: "23:00" },
+  {
+    id: "dinner",
+    label: "Dinner (5pm–midnight)",
+    start: "17:00",
+    end: "00:00",
+  },
   {
     id: "all-day",
     label: "All Day (8am–midnight)",
     start: "08:00",
     end: "00:00",
   },
-  { id: "evening", label: "Evening Only", start: "17:00", end: "23:00" },
   {
     id: "club",
     label: "Club Hours (10pm–4am)",
