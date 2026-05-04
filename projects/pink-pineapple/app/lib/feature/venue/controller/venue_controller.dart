@@ -178,16 +178,16 @@ class VenueController extends GetxController {
     };
 
     const curated = <String, List<String>>{
-      // Canggu venues first, then Seminyak (Da Maria + La Favela run Mon-Sun).
-      // iron-fairies + shishi were referenced previously but aren't seeded
-      // yet — add them back here once Sascha confirms the data.
-      'mon': ['bella', 'luigi', 'mesa', 'da-maria', 'la-favela'],
-      'tue': ['desa-kitsune', 'mesa', 'miss-fish', 'shady-pig', 'da-maria', 'la-favela'],
-      'wed': ['bella', 'mesa', 'shady-pig', 'miss-fish', 'da-maria', 'la-favela'],
-      'thu': ['jade', 'shady-pig', 'miss-fish', 'mesa', 'da-maria', 'la-favela'],
-      'fri': ['desa-kitsune', 'morabito', 'miss-fish', 'mesa', 'shady-pig', 'da-maria', 'la-favela'],
-      'sat': ['sardine', 'savaya', 'mesa', 'miss-fish', 'shady-pig', 'il-salotto', 'da-maria', 'la-favela'],
-      'sun': ['savaya', 'il-salotto', 'single-fin', 'amavi', 'back-room', 'da-maria', 'la-favela'],
+      // Canggu venues first, then Seminyak (Da Maria, Iron Fairies, ShiShi,
+      // La Favela run Mon-Sun). Confirmed all slugs exist in production DB
+      // 2026-05-04 (iron-fairies + shishi were added via dashboard, not seed).
+      'mon': ['bella', 'luigi', 'mesa', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
+      'tue': ['desa-kitsune', 'mesa', 'miss-fish', 'shady-pig', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
+      'wed': ['bella', 'mesa', 'shady-pig', 'miss-fish', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
+      'thu': ['jade', 'shady-pig', 'miss-fish', 'mesa', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
+      'fri': ['desa-kitsune', 'morabito', 'miss-fish', 'mesa', 'shady-pig', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
+      'sat': ['sardine', 'savaya', 'mesa', 'miss-fish', 'shady-pig', 'il-salotto', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
+      'sun': ['savaya', 'il-salotto', 'single-fin', 'amavi', 'back-room', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
     };
 
     final updated = <String, List<VenueModel>>{};
