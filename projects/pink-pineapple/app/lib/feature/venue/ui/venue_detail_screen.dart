@@ -10,9 +10,11 @@ import 'package:pineapple/core/global_widgets/pp_button.dart';
 import 'package:pineapple/core/helpers/auth_guard.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
+import 'package:pineapple/core/services/venue_booking_service.dart';
 import 'package:pineapple/core/services/venue_rating_service.dart';
 import 'package:pineapple/core/services/venue_vibe_service.dart';
 import 'package:pineapple/feature/venue/ui/venue_booking_webview.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class VenueDetailScreen extends StatefulWidget {
   const VenueDetailScreen({super.key, required this.venueId});
@@ -976,30 +978,41 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     },
   };
 
-  void _openBooking(VenueModel venue) {
-    // Check venue's own bookingUrl first, then fall back to known URLs
-    var url = venue.bookingUrl;
+  void _openBooking(VenueModel venue) async {
+    // 1) Track the click + get the attributed redirect URL from backend.
+    //    The backend appends utm_source=pinkpineapple + pp_click_id so
+    //    venues see Pink Pineapple in their analytics, and we get a row
+    //    in venue_booking_clicks for revenue attribution dashboards.
+    final today = DateTime.now().weekday;
+    final dayKey = VenueBookingService.dayKeyFromWeekday(today);
 
+    // Always fire the tracking call. It returns the redirect URL the
+    // backend chose based on the venue's bookingProvider (URL for online
+    // providers, tel:/wa.me/ig.me for contact-only providers, daily URL
+    // override if the venue uses Mesa-style routing).
+    final attributedUrl = await VenueBookingService.recordClick(
+      venueId: venue.id,
+      dayKey: dayKey,
+      source: 'MOBILE_APP',
+    );
+
+    // 2) If the backend returned an attributed URL, prefer it.
+    var url = attributedUrl ?? '';
+
+    // 3) Fallback chain for venues that haven't been migrated yet:
+    //    venue.bookingUrl → hardcoded _knownBookingUrls → daily map.
+    if (url.isEmpty) url = venue.bookingUrl;
     if (url.isEmpty) {
       url = _knownBookingUrls[venue.slug] ?? '';
     }
-
-    // Check daily booking URLs (venues with different links per night)
     if (url.isEmpty) {
       final dailyUrls = _knownDailyBookingUrls[venue.slug];
       if (dailyUrls != null) {
-        final today = DateTime.now().weekday; // 1=Mon..7=Sun
         url = dailyUrls[today] ?? dailyUrls.values.first;
       }
     }
 
-    if (url.isNotEmpty) {
-      _venueController.trackVenueTap(venue.slug, isBooking: true);
-      Get.to(() => VenueBookingWebView(
-        bookingUrl: url,
-        venueName: venue.name,
-      ));
-    } else {
+    if (url.isEmpty) {
       Get.snackbar(
         'Booking Coming Soon',
         '${venue.name} booking will be available shortly.',
@@ -1008,28 +1021,93 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
         colorText: AppColors.textPrimary,
         duration: const Duration(seconds: 3),
       );
+      return;
+    }
+
+    _venueController.trackVenueTap(venue.slug, isBooking: true);
+
+    // 4) Dispatch by URL scheme. tel:/wa.me/ig.me URLs need launchUrl,
+    //    not WebView. Everything else (the http/https booking pages)
+    //    opens in the in-app WebView with auto-fill JS injection.
+    final uri = Uri.tryParse(url);
+    if (uri != null && (uri.scheme == 'tel' || uri.scheme == 'sms' || uri.scheme == 'mailto')) {
+      await launchUrl(uri);
+      return;
+    }
+    if (uri != null && (uri.host == 'wa.me' || uri.host == 'ig.me' || uri.host.endsWith('whatsapp.com'))) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      return;
+    }
+    Get.to(() => VenueBookingWebView(
+      bookingUrl: url,
+      venueName: venue.name,
+    ));
+  }
+
+  /// CTA label dispatch — varies by booking provider so the button
+  /// matches what tapping it actually does. Matches BookingProvider
+  /// enum values in backend/prisma/schema.prisma.
+  String _bookingCtaLabel(VenueModel venue) {
+    final isGym = venue.category == 'WELLNESS' || venue.category == 'GYM';
+    switch (venue.bookingProvider) {
+      case 'PHONE':
+        return 'CALL TO BOOK';
+      case 'WHATSAPP':
+        return 'MESSAGE ON WHATSAPP';
+      case 'INSTAGRAM_DM':
+        return 'DM ON INSTAGRAM';
+      case 'NONE':
+        return isGym ? 'WALK-IN' : 'WALK-IN ONLY';
+      default:
+        // Online providers (CUSTOM_WEB, BOOKETING, MTIX, OPENTABLE, etc)
+        // and unset venues: keep the existing label.
+        return isGym ? 'BOOK A CLASS' : 'BOOK A TABLE';
+    }
+  }
+
+  IconData _bookingCtaIcon(VenueModel venue) {
+    final isGym = venue.category == 'WELLNESS' || venue.category == 'GYM';
+    switch (venue.bookingProvider) {
+      case 'PHONE':
+        return Icons.phone_in_talk_outlined;
+      case 'WHATSAPP':
+        return Icons.chat_bubble_outline;
+      case 'INSTAGRAM_DM':
+        return Icons.alternate_email;
+      case 'NONE':
+        return Icons.directions_walk;
+      default:
+        return isGym ? Icons.fitness_center_rounded : Icons.table_bar_outlined;
     }
   }
 
   Widget _buildActionButtons(VenueModel venue) {
     final isGym = venue.category == 'WELLNESS' || venue.category == 'GYM';
+    // Hide the booking buttons entirely for venues marked NONE — they
+    // accept walk-ins only and showing a button you can't take action
+    // on is worse UX than no button at all.
+    if (venue.bookingProvider == 'NONE') {
+      return const SizedBox.shrink();
+    }
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
         children: [
           PpPrimaryButton(
-            label: isGym ? 'BOOK A CLASS' : 'BOOK A TABLE',
-            icon: isGym
-                ? Icons.fitness_center_rounded
-                : Icons.table_bar_outlined,
+            label: _bookingCtaLabel(venue),
+            icon: _bookingCtaIcon(venue),
             onTap: () async {
               if (!await AuthGuard.requireAuth()) return;
               _openBooking(venue);
             },
           ),
-          // VIP reservation only makes sense for nightlife/clubs/beach clubs.
-          // Gyms (and arguably restaurants) shouldn't show it.
-          if (!isGym) ...[
+          // VIP reservation only makes sense for nightlife/clubs/beach clubs
+          // that have an online booking provider. Gyms and contact-only
+          // venues (phone/whatsapp/instagram) shouldn't show it.
+          if (!isGym &&
+              venue.bookingProvider != 'PHONE' &&
+              venue.bookingProvider != 'WHATSAPP' &&
+              venue.bookingProvider != 'INSTAGRAM_DM') ...[
             SizedBox(height: 14.h),
             PpSecondaryButton(
               label: 'VIP RESERVATION',

@@ -79,6 +79,11 @@ class Urls {
   static const String whatsOn = '$baseUrl/venues/whats-on'; // GET — weekly schedule
   static const String venueRating = '$baseUrl/venues'; // POST — append /:id/rating, auth
   static const String venueVibe = '$baseUrl/venues'; // POST — append /:id/vibe, auth
+  // Booking attribution — POST /venues/:id/booking-click logs the click
+  // and returns an attributed redirect URL (utm_source=pinkpineapple +
+  // pp_click_id appended). Use the response's redirectUrl, NOT the raw
+  // bookingUrl, so we get attribution + click tracking.
+  static const String venueBookingClick = '$baseUrl/venues'; // POST — append /:id/booking-click
   static const String ratableBookings = '$baseUrl/venues/ratable'; // GET — auth
   static const String tonightVibeBookings = '$baseUrl/venues/tonight-vibe'; // GET — auth
   static const String favoriteVenues = '$baseUrl/venues/favorites'; // GET — auth

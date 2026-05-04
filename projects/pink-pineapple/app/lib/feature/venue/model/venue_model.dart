@@ -21,6 +21,16 @@ class VenueModel {
   final double rating;
   final String ownerId;
   final String bookingUrl;
+  // Booking integration metadata. bookingProvider tells the UI how to
+  // dispatch the "Book" action (URL/phone/whatsapp/instagram). The
+  // contact-only providers don't use bookingUrl.
+  final String bookingProvider;
+  final String bookingPhone;
+  final String bookingWhatsapp;
+  final String bookingInstagram;
+  /// Per-day URL routing (e.g. Mesa: different URL Mon/Tue/Wed). Keys are
+  /// short day names: 'mon', 'tue', etc.
+  final Map<String, dynamic>? bookingDailyUrls;
   final bool isFavorite;
   final List<String> tags;
   final Map<String, dynamic>? weeklySchedule;
@@ -59,6 +69,11 @@ class VenueModel {
     this.rating = 0.0,
     this.ownerId = '',
     this.bookingUrl = '',
+    this.bookingProvider = '',
+    this.bookingPhone = '',
+    this.bookingWhatsapp = '',
+    this.bookingInstagram = '',
+    this.bookingDailyUrls,
     this.isFavorite = false,
     this.tags = const [],
     this.ppRating,
@@ -102,6 +117,13 @@ class VenueModel {
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       ownerId: json['ownerId']?.toString() ?? '',
       bookingUrl: json['bookingUrl']?.toString() ?? '',
+      bookingProvider: json['bookingProvider']?.toString() ?? '',
+      bookingPhone: json['bookingPhone']?.toString() ?? '',
+      bookingWhatsapp: json['bookingWhatsapp']?.toString() ?? '',
+      bookingInstagram: json['bookingInstagram']?.toString() ?? '',
+      bookingDailyUrls: json['bookingDailyUrls'] is Map<String, dynamic>
+          ? json['bookingDailyUrls'] as Map<String, dynamic>
+          : null,
       isFavorite: json['isFavorite'] as bool? ?? false,
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       ppRating: (json['ppRating'] as num?)?.toDouble(),
