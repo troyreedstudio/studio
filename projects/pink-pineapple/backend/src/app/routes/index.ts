@@ -19,10 +19,18 @@ import { VenueRoutes } from "../modules/Venue/Venue.routes";
 import { VenueFavoriteRoutes } from "../modules/VenueFavorite/VenueFavorite.routes";
 import { PaymentRoutes } from "../modules/Payment/Payment.routes";
 import { GooglePlacesRoutes } from "../modules/GooglePlaces/GooglePlaces.routes";
+import { HealthRoutes } from "../modules/Health/Health.routes";
 
 const router = express.Router();
 
 const moduleRoutes = [
+  // Health/uptime probes — kept first so they don't accidentally pick up
+  // auth or rate-limit middleware added later. /health = liveness (fast),
+  // /health/ready = readiness (DB check, returns 503 if degraded).
+  {
+    path: "/health",
+    route: HealthRoutes,
+  },
   {
     path: "/users",
     route: userRoutes,
