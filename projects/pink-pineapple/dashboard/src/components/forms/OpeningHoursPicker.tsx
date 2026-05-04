@@ -28,22 +28,26 @@ const PRESETS: {
   end: string;
   hint?: string;
 }[] = [
-  { id: "breakfast", label: "Breakfast", start: "07:00", end: "11:00" },
+  { id: "breakfast", label: "Breakfast (8am–2pm)", start: "08:00", end: "14:00" },
   { id: "brunch", label: "Brunch", start: "09:00", end: "14:00" },
   { id: "lunch", label: "Lunch", start: "11:00", end: "15:00" },
-  { id: "lunch-dinner", label: "Lunch + Dinner", start: "11:00", end: "23:00" },
-  { id: "dinner", label: "Dinner", start: "18:00", end: "23:00" },
-  { id: "all-day", label: "All Day (10–22)", start: "10:00", end: "22:00" },
   {
-    id: "all-day-late",
-    label: "All Day + Late (10–02)",
-    start: "10:00",
-    end: "02:00",
+    id: "lunch-dinner",
+    label: "Lunch + Dinner (11am–midnight)",
+    start: "11:00",
+    end: "00:00",
+  },
+  { id: "dinner", label: "Dinner", start: "18:00", end: "23:00" },
+  {
+    id: "all-day",
+    label: "All Day (8am–midnight)",
+    start: "08:00",
+    end: "00:00",
   },
   { id: "evening", label: "Evening Only", start: "17:00", end: "23:00" },
   {
     id: "club",
-    label: "Club Hours (22–04)",
+    label: "Club Hours (10pm–4am)",
     start: "22:00",
     end: "04:00",
   },
