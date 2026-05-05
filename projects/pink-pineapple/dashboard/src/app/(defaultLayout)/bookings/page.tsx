@@ -15,25 +15,48 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarCheck2 } from "lucide-react";
+import { CalendarCheck2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 const inter = { fontFamily: "Inter, sans-serif" };
 const playfair = { fontFamily: "Outfit, sans-serif" };
 
+// Booking status enum from Prisma — only three values exist.
+// Confirm action sets ACCEPTED; Cancel sets REJECTED.
 const statusBadge = (status: string) => {
   const map: Record<string, string> = {
     PENDING: "text-yellow-400 bg-yellow-400/10",
-    CONFIRMED: "text-emerald-400 bg-emerald-400/10",
     ACCEPTED: "text-emerald-400 bg-emerald-400/10",
-    CANCELLED: "text-red-400 bg-red-400/10",
     REJECTED: "text-red-400 bg-red-400/10",
   };
   return map[status] || "text-[#B0B0B0] bg-[#B0B0B0]/10";
 };
 
-type TabValue = "ALL" | "PENDING" | "CONFIRMED" | "CANCELLED";
+const statusLabel = (status: string) => {
+  if (status === "ACCEPTED") return "Accepted";
+  if (status === "REJECTED") return "Rejected";
+  if (status === "PENDING") return "Pending";
+  return status;
+};
+
+// Indonesian Rupiah formatter — Bali venues invoice in IDR. Show
+// 1500000 → 'Rp 1,500,000'. Backend stores Int so no decimals.
+const formatIDR = (amount: number | null | undefined): string => {
+  if (amount == null) return "—";
+  try {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `Rp ${amount.toLocaleString()}`;
+  }
+};
+
+type TabValue = "ALL" | "PENDING" | "ACCEPTED" | "REJECTED";
 
 const BookingsPage = () => {
   const [activeTab, setActiveTab] = useState<TabValue>("ALL");
@@ -72,27 +95,25 @@ const BookingsPage = () => {
     bookingId: string,
     status: "ACCEPTED" | "REJECTED"
   ) => {
-    const label = status === "ACCEPTED" ? "Confirm" : "Cancel";
-    const toastId = toast.loading(`${label} booking in progress...`);
+    const verb = status === "ACCEPTED" ? "Accept" : "Reject";
+    const toastId = toast.loading(`${verb}ing booking…`);
     try {
       const res = await updateBookingStatus({
         status,
         bookingId,
       }).unwrap();
       if (res?.data) {
-        toast.success(`Booking ${label.toLowerCase()}ed successfully!`, {
-          id: toastId,
-        });
+        toast.success(`Booking ${verb.toLowerCase()}ed.`, { id: toastId });
         router.refresh();
       } else {
         toast.error(
-          res?.error?.data?.message || `Failed to ${label.toLowerCase()} booking`,
+          res?.error?.data?.message || `Failed to ${verb.toLowerCase()} booking`,
           { id: toastId }
         );
       }
     } catch (err: any) {
       toast.error(
-        err?.data?.message || `Failed to ${label.toLowerCase()} booking`,
+        err?.data?.message || `Failed to ${verb.toLowerCase()} booking`,
         { id: toastId }
       );
     }
@@ -105,8 +126,8 @@ const BookingsPage = () => {
   const tabs: { label: string; value: TabValue }[] = [
     { label: "All", value: "ALL" },
     { label: "Pending", value: "PENDING" },
-    { label: "Confirmed", value: "CONFIRMED" },
-    { label: "Cancelled", value: "CANCELLED" },
+    { label: "Accepted", value: "ACCEPTED" },
+    { label: "Rejected", value: "REJECTED" },
   ];
 
   return (
@@ -120,8 +141,29 @@ const BookingsPage = () => {
           Bookings
         </h1>
         <p className="text-[#B0B0B0] text-sm mt-2" style={inter}>
-          Manage guest reservations and bookings
+          In-app reservations and ticket purchases for Pink Pineapple events.
         </p>
+      </div>
+
+      {/* Scope banner — explains what this page IS and IS NOT */}
+      <div
+        className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-4 flex gap-3"
+      >
+        <Info size={16} className="text-[#E8A0B0] flex-shrink-0 mt-0.5" />
+        <div className="text-xs leading-relaxed" style={inter}>
+          <p className="text-[#FFFFFF] font-medium mb-1">
+            What this page shows
+          </p>
+          <p className="text-[#B0B0B0]">
+            Reservations and ticket sales made <em>directly through Pink Pineapple</em>{" "}
+            for events we list (table reservations + ticket purchases). Approve
+            or reject pending bookings here.
+          </p>
+          <p className="text-[#6B6B6B] mt-2">
+            Click-throughs to external booking systems (OpenTable, Booketing,
+            WhatsApp, etc.) are tracked separately under attribution analytics.
+          </p>
+        </div>
       </div>
 
       {/* Tabs + Search */}
@@ -163,7 +205,7 @@ const BookingsPage = () => {
           </svg>
           <input
             type="text"
-            placeholder="Search by user or event..."
+            placeholder="Search by guest or event…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 pr-4 py-2.5 rounded-xl border border-[#2A2A2A] bg-[#000000] text-[#FFFFFF] text-sm placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#8B4060]/50 transition-colors w-full sm:w-64"
@@ -181,13 +223,13 @@ const BookingsPage = () => {
                 className="text-xs text-[#B0B0B0] font-medium tracking-widest uppercase py-4"
                 style={inter}
               >
-                User Name
+                Guest
               </TableHead>
               <TableHead
                 className="text-xs text-[#B0B0B0] font-medium tracking-widest uppercase py-4 hidden sm:table-cell"
                 style={inter}
               >
-                Event Name
+                Event
               </TableHead>
               <TableHead
                 className="text-xs text-[#B0B0B0] font-medium tracking-widest uppercase py-4 hidden md:table-cell"
@@ -229,55 +271,74 @@ const BookingsPage = () => {
           </TableHeader>
           <TableBody>
             {filteredBookings?.map((item: any) => {
-              const bookingStatus =
-                item?.status || item?.bookingStatus || "PENDING";
-              const isPending =
-                bookingStatus === "PENDING";
+              const status = item?.status || "PENDING";
+              const isPending = status === "PENDING";
+              const guestCount = item?.guest ?? 0;
+              const female = item?.numberOfFemale ?? 0;
+              const male = item?.numberOfMale ?? 0;
+              const breakdown =
+                female || male ? `${female}F · ${male}M` : null;
+
               return (
                 <TableRow
                   key={item?.id || item?._id}
                   className="border-b border-[#2A2A2A] bg-[#000000] hover:bg-[#1A1A1A] transition-colors"
                 >
                   <TableCell className="py-4">
-                    <span
-                      className="text-sm font-medium text-[#FFFFFF]"
-                      style={inter}
-                    >
-                      {item?.user?.fullName || item?.userName || "N/A"}
-                    </span>
+                    <div>
+                      <p
+                        className="text-sm font-medium text-[#FFFFFF]"
+                        style={inter}
+                      >
+                        {item?.user?.fullName || "—"}
+                      </p>
+                      {item?.user?.email && (
+                        <p
+                          className="text-[10px] text-[#6B6B6B] mt-0.5"
+                          style={inter}
+                        >
+                          {item.user.email}
+                        </p>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell
                     className="text-[#B0B0B0] text-sm hidden sm:table-cell"
                     style={inter}
                   >
-                    {item?.event?.eventName || item?.eventName || "N/A"}
+                    {item?.event?.eventName || "—"}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <span
                       className="text-xs px-2.5 py-1 rounded-full font-medium text-[#C4707E] bg-[#C4707E]/10"
                       style={inter}
                     >
-                      {item?.bookingType || "TICKET"}
+                      {item?.bookingType || "—"}
                     </span>
                   </TableCell>
                   <TableCell
-                    className="text-[#B0B0B0] text-sm hidden lg:table-cell"
+                    className="text-sm hidden lg:table-cell"
                     style={inter}
                   >
-                    {item?.guestCount || item?.additionalGuests || 0}
+                    <span className="text-[#FFFFFF]">{guestCount}</span>
+                    {breakdown && (
+                      <span className="text-[10px] text-[#6B6B6B] ml-2">
+                        {breakdown}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell
-                    className="text-[#B0B0B0] text-sm hidden lg:table-cell"
+                    className="text-[#FFFFFF] text-sm hidden lg:table-cell"
                     style={inter}
                   >
-                    ${item?.paidAmount || item?.totalAmount || "0.00"}
+                    {formatIDR(item?.paidAmount)}
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusBadge(bookingStatus)}`}
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusBadge(status)}`}
                       style={inter}
                     >
-                      {bookingStatus}
+                      {statusLabel(status)}
                     </span>
                   </TableCell>
                   <TableCell
@@ -286,7 +347,7 @@ const BookingsPage = () => {
                   >
                     {item?.createdAt
                       ? new Date(item.createdAt).toLocaleDateString()
-                      : "N/A"}
+                      : "—"}
                   </TableCell>
                   <TableCell>
                     {isPending ? (
@@ -305,7 +366,7 @@ const BookingsPage = () => {
                             ...inter,
                           }}
                         >
-                          Confirm
+                          Accept
                         </button>
                         <button
                           onClick={() =>
@@ -317,7 +378,7 @@ const BookingsPage = () => {
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 border border-red-400/40 hover:border-red-400 hover:bg-red-400/5 tracking-wide transition-all duration-200"
                           style={inter}
                         >
-                          Cancel
+                          Reject
                         </button>
                       </div>
                     ) : (
@@ -325,7 +386,7 @@ const BookingsPage = () => {
                         className="text-xs text-[#6B6B6B]"
                         style={inter}
                       >
-                        --
+                        —
                       </span>
                     )}
                   </TableCell>
@@ -346,15 +407,15 @@ const BookingsPage = () => {
               className="text-[#FFFFFF] font-medium text-sm"
               style={inter}
             >
-              {search ? `No bookings matching "${search}"` : "No bookings found"}
+              {search ? `No bookings matching "${search}"` : "No bookings yet"}
             </p>
             <p
               className="text-[#B0B0B0] text-xs max-w-xs"
               style={inter}
             >
               {search
-                ? "Try adjusting your search terms."
-                : "Bookings will appear here once guests start reserving spots at your events."}
+                ? "Try a different search term."
+                : "Bookings appear here once guests reserve a table or buy a ticket through Pink Pineapple."}
             </p>
           </div>
         </div>
