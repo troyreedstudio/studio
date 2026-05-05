@@ -10,14 +10,16 @@ import {
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-const CITIES = ['All', 'Miami', 'New York', 'London', 'Dubai'];
+const CITIES = ['All', 'Miami', 'New York', 'Los Angeles', 'London', 'Dubai'];
 
 const VENUES = [
   { id: '1', name: 'Komodo', city: 'Miami', vibe: 'Rooftop Bar' },
   { id: '2', name: '1 OAK', city: 'New York', vibe: 'Nightclub' },
-  { id: '3', name: 'Fabric', city: 'London', vibe: 'Underground Club' },
-  { id: '4', name: 'White Dubai', city: 'Dubai', vibe: 'Beach Club' },
-  { id: '5', name: 'Swan Miami', city: 'Miami', vibe: 'Restaurant & Bar' },
+  { id: '3', name: 'The Nice Guy', city: 'Los Angeles', vibe: 'Restaurant & Bar' },
+  { id: '4', name: 'Catch LA', city: 'Los Angeles', vibe: 'Rooftop' },
+  { id: '5', name: 'Fabric', city: 'London', vibe: 'Underground Club' },
+  { id: '6', name: 'White Dubai', city: 'Dubai', vibe: 'Beach Club' },
+  { id: '7', name: 'Swan Miami', city: 'Miami', vibe: 'Restaurant & Bar' },
 ];
 
 export default function HomeScreen() {

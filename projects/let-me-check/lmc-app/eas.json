@@ -1,0 +1,39 @@
+{
+  "cli": {
+    "version": ">= 7.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "ios": {
+        "simulator": false
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "blackmalibuinc@gmail.com",
+        "ascAppId": "6764298662",
+        "appleTeamId": "YNCLWQN2B8",
+        "ascApiKeyPath": "/Users/troyreed/.private_keys/AuthKey_XPS8JFNPFY.p8",
+        "ascApiKeyId": "XPS8JFNPFY",
+        "ascApiKeyIssuerId": "9f7da45d-e6c4-4ecf-8279-1da73f25facc"
+      }
+    }
+  }
+}

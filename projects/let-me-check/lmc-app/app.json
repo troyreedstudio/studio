@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "lmc-app",
+    "name": "Let Me Check",
     "slug": "lmc-app",
     "scheme": "lmc",
     "version": "1.0.0",
@@ -13,9 +13,11 @@
       "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "Com.BlackMalibuinc.letmecheck"
     },
     "android": {
+      "package": "com.blackmalibuinc.letmecheck",
       "adaptiveIcon": {
         "backgroundColor": "#000000",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -29,6 +31,13 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b5ec275f-0b7d-4672-b929-22cb5291c05f"
+      }
+    },
+    "owner": "troyreed"
   }
 }
