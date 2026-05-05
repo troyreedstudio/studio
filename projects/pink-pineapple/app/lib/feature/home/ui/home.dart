@@ -14,6 +14,7 @@ import 'package:pineapple/core/network_caller/endpoints.dart';
 import 'package:pineapple/core/network_caller/network_config.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
+import 'package:pineapple/feature/home/model/event_model.dart';
 import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
 import 'package:pineapple/feature/home/ui/plan_my_night_screen.dart';
 import 'package:pineapple/feature/venue/ui/venue_booking_webview.dart';
@@ -882,41 +883,108 @@ class _PlanMyNightCard extends StatelessWidget {
 class _FeaturedEventsSection extends StatelessWidget {
   const _FeaturedEventsSection();
 
-  // Hardcoded featured events — move to backend when deployed
-  static final _events = [
+  // Anchor event — Day Zero Bali pinned first as the flagship festival
+  // until/unless an editor flips its data. All other tiles come from the
+  // backend (HomeController.allEventList, populated by /api/v1/events).
+  static final _anchorEvents = [
     {
       'title': 'Day Zero Bali',
       'subtitle': 'Journey to the Centre of the Universe',
       'venue': 'Savaya · GWK Cultural Park',
       'dates': 'Apr 14–19, 2026',
-      'lineup': 'Bonobo · Damian Lazarus · Jamie Jones · Jan Blomqvist · Âme · John Summit',
+      'lineup':
+          'Bonobo · Damian Lazarus · Jamie Jones · Jan Blomqvist · Âme · John Summit',
       'ticketUrl': 'https://megatix.co.id/events/day-zero-bali',
-      'imageUrl': 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80',
     },
   ];
 
+  String _formatDate(DateTime? d) {
+    if (d == null) return '';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
+  Map<String, String> _toCardData(AllEventModel event) {
+    final imageUrl =
+        (event.eventImages != null && event.eventImages!.isNotEmpty)
+            ? event.eventImages!.first
+            : '';
+    final venueName = event.user?.fullName ?? '';
+    final dates = _formatDate(event.startDate);
+    final time =
+        '${event.startTime ?? ''}${(event.endTime != null && event.endTime!.isNotEmpty) ? ' – ${event.endTime}' : ''}';
+    return {
+      'title': event.eventName ?? 'Event',
+      'subtitle': event.descriptions ?? '',
+      'venue': venueName.isNotEmpty ? venueName : (dates.isNotEmpty ? dates : ''),
+      'dates': dates,
+      'lineup': time.trim(),
+      'ticketUrl': '',
+      'imageUrl': imageUrl,
+      'eventId': event.id ?? '',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader(
           title: 'Featured Events',
-          subtitle: 'Don\'t miss out',
+          subtitle: "Don't miss out",
         ),
         SizedBox(height: 12.h),
-        SizedBox(
-          height: 220.h,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            itemCount: _events.length,
-            itemBuilder: (context, index) {
-              final event = _events[index];
-              return _FeaturedEventCard(event: event);
-            },
-          ),
-        ),
+        Obx(() {
+          // Filter to APPROVED events with at least an image; drop ones we
+          // can't render usefully. Keep newest-first by createdAt (backend
+          // orders by createdAt desc by default).
+          final apiEvents = controller.allEventList
+              .where((e) =>
+                  e.eventStatus == 'APPROVED' &&
+                  e.eventName != null &&
+                  e.eventName!.isNotEmpty)
+              .map(_toCardData)
+              .toList();
+
+          // Anchor event(s) first, then API events. If the API has 0
+          // events, the anchor still renders so the section never empties.
+          final cards = [..._anchorEvents, ...apiEvents];
+
+          if (cards.isEmpty) {
+            return SizedBox(
+              height: 60.h,
+              child: Center(
+                child: Text(
+                  'No featured events yet.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.sp,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return SizedBox(
+            height: 220.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              itemCount: cards.length,
+              itemBuilder: (context, index) {
+                return _FeaturedEventCard(event: cards[index]);
+              },
+            ),
+          );
+        }),
       ],
     );
   }
