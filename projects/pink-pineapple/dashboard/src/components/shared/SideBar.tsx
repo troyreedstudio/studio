@@ -20,6 +20,7 @@ import {
   Home,
   MapPin,
   Building,
+  TrendingUp,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -48,6 +49,11 @@ const admin = [
     title: "Bookings",
     url: "/bookings",
     icon: CalendarCheck2,
+  },
+  {
+    title: "Attribution",
+    url: "/analytics",
+    icon: TrendingUp,
   },
   {
     title: "Users",
@@ -81,6 +87,11 @@ const club = [
     title: "Bookings",
     url: "/club/bookings",
     icon: CalendarCheck2,
+  },
+  {
+    title: "Attribution",
+    url: "/analytics",
+    icon: TrendingUp,
   },
   {
     title: "Messages",

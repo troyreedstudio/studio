@@ -13,6 +13,23 @@ import Spinner from "@/components/common/Spinner";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
+import AddressAutocomplete, {
+  StructuredAddress,
+  buildAddressString,
+  blankAddress,
+} from "@/components/forms/AddressAutocomplete";
+import PhoneInput from "@/components/forms/PhoneInput";
+import OpeningHoursPicker, {
+  OpeningHoursValue,
+  blankOpeningHours,
+  serializeOpeningHours,
+  parseOpeningHours,
+} from "@/components/forms/OpeningHoursPicker";
+import BookingSection, {
+  BookingValue,
+  BookingProvider,
+  blankBooking,
+} from "@/components/forms/BookingSection";
 import {
   ArrowLeft,
   MapPin,
@@ -155,6 +172,14 @@ const VenueDetailPage = () => {
   // Hero image URL — either an existing photo URL or pending new upload.
   // Initialized from venue.heroImage. Saved back on submit.
   const [heroImage, setHeroImage] = useState<string>("");
+  // Structured form state for the new components — kept in sync with the
+  // legacy `form` flat state so the existing Save handler still works.
+  const [address, setAddress] = useState<StructuredAddress>(blankAddress());
+  const [phone, setPhone] = useState<string>("+62 ");
+  const [openingHours, setOpeningHours] = useState<OpeningHoursValue>(
+    blankOpeningHours()
+  );
+  const [booking, setBooking] = useState<BookingValue>(blankBooking());
 
   useEffect(() => {
     if (venue) {
@@ -180,6 +205,33 @@ const VenueDetailPage = () => {
       setTags(Array.isArray(venue.tags) ? venue.tags : []);
       setExistingPhotos(Array.isArray(venue.photos) ? venue.photos : []);
       setHeroImage(venue.heroImage || "");
+
+      // Hydrate the new structured components from the venue's stored shape.
+      // Address: best-effort split of the single string back into parts.
+      setAddress({
+        street: venue.address || "",
+        city: "",
+        postcode: "",
+        country: "Indonesia",
+        latitude: typeof venue.latitude === "number" ? venue.latitude : undefined,
+        longitude:
+          typeof venue.longitude === "number" ? venue.longitude : undefined,
+        formatted: venue.address || "",
+      });
+      setPhone(venue.phone || "+62 ");
+      setOpeningHours(parseOpeningHours(venue.openingHours));
+      setBooking({
+        provider: (venue.bookingProvider || "") as BookingProvider,
+        url: venue.bookingUrl || "",
+        phone: venue.bookingPhone || "",
+        whatsapp: venue.bookingWhatsapp || "",
+        instagram: venue.bookingInstagram || "",
+        dailyUrls:
+          venue.bookingDailyUrls &&
+          typeof venue.bookingDailyUrls === "object"
+            ? (venue.bookingDailyUrls as Record<string, string>)
+            : null,
+      });
       const fresh: Record<DayKey, ScheduleEntry> = {
         mon: {},
         tue: {},
@@ -264,19 +316,36 @@ const VenueDetailPage = () => {
         if (hasContent) cleanSchedule[day] = entry;
       }
 
+      // Address: prefer the structured form's serialized string when the
+      // user actually picked or edited it; fall back to the legacy text input.
+      const structuredAddress = buildAddressString(address);
+      const finalAddress = structuredAddress || form.address;
+
       const payload: Record<string, unknown> = {
         name: form.name || undefined,
         category: form.category || undefined,
         area: form.area || undefined,
-        address: form.address,
+        address: finalAddress,
         description: form.description,
         editorial: form.editorial,
-        phone: form.phone,
+        phone: phone.trim() || form.phone,
         website: form.website,
         instagram: form.instagram,
-        bookingUrl: form.bookingUrl,
+        bookingUrl: booking.url || form.bookingUrl,
+        // New booking fields — provider determines which contact field matters.
+        bookingProvider: booking.provider || undefined,
+        bookingPhone: booking.phone || undefined,
+        bookingWhatsapp: booking.whatsapp || undefined,
+        bookingInstagram: booking.instagram || undefined,
+        bookingDailyUrls:
+          booking.dailyUrls && Object.keys(booking.dailyUrls).length > 0
+            ? booking.dailyUrls
+            : null,
+        // Lat/lng from address autocomplete if the user picked a place.
+        ...(address.latitude != null ? { latitude: address.latitude } : {}),
+        ...(address.longitude != null ? { longitude: address.longitude } : {}),
         priceRange: Number(form.priceRange) || 2,
-        openingHours: form.openingHours,
+        openingHours: serializeOpeningHours(openingHours),
         tags,
         weeklySchedule: Object.keys(cleanSchedule).length > 0 ? cleanSchedule : null,
         // Send the (possibly trimmed) existing-photo array — backend will
@@ -458,15 +527,12 @@ const VenueDetailPage = () => {
                   className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
                   style={inter}
                 >
-                  Address
+                  Location
                 </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={form.address}
-                  onChange={handleChange}
-                  className={inputClass}
-                  style={inter}
+                <AddressAutocomplete
+                  value={address}
+                  onChange={setAddress}
+                  venueNameHint={form.name}
                 />
               </div>
 
@@ -581,23 +647,17 @@ const VenueDetailPage = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label
-                    className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
-                    style={inter}
-                  >
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    className={inputClass}
-                    style={inter}
-                  />
-                </div>
+              <div>
+                <label
+                  className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                  style={inter}
+                >
+                  Phone
+                </label>
+                <PhoneInput value={phone} onChange={setPhone} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label
                     className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
@@ -637,20 +697,9 @@ const VenueDetailPage = () => {
                   className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
                   style={inter}
                 >
-                  Booking URL
+                  Booking
                 </label>
-                <input
-                  type="text"
-                  name="bookingUrl"
-                  value={form.bookingUrl}
-                  onChange={handleChange}
-                  placeholder="https://booketing.com/... or https://mtix.me/..."
-                  className={inputClass}
-                  style={inter}
-                />
-                <p className="text-[#6B6B6B] text-xs mt-1" style={inter}>
-                  Paste the venue&apos;s booking page link — customers will be directed here from the app
-                </p>
+                <BookingSection value={booking} onChange={setBooking} />
               </div>
 
               <div>
@@ -660,14 +709,9 @@ const VenueDetailPage = () => {
                 >
                   Opening Hours
                 </label>
-                <input
-                  type="text"
-                  name="openingHours"
-                  value={form.openingHours}
-                  onChange={handleChange}
-                  placeholder="e.g. Mon-Sun 10:00-02:00"
-                  className={inputClass}
-                  style={inter}
+                <OpeningHoursPicker
+                  value={openingHours}
+                  onChange={setOpeningHours}
                 />
               </div>
 

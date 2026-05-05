@@ -72,6 +72,13 @@ router.post("/:id/vibe", auth(), VenueController.submitVibe);
 // the redirect URL with utm_source + pp_click_id appended for dashboard
 // attribution in the venue's own analytics.
 router.post("/:id/booking-click", optionalAuth, BookingClickController.recordClick);
+// Cross-venue overview for the analytics dashboard — must come BEFORE
+// the /:id pattern so Express doesn't mistake "booking-clicks" for an id.
+router.get(
+  "/booking-clicks/overview",
+  auth("ADMIN", "CLUB"),
+  BookingClickController.getOverview
+);
 // Aggregate click metrics for one venue — accessible to ADMIN + CLUB owners.
 router.get("/:id/booking-clicks", auth("ADMIN", "CLUB"), BookingClickController.getStats);
 

@@ -10,7 +10,7 @@ import {
 } from "react-hook-form";
 import MyFormInput from "@/components/form/MyFormInput";
 import { useCreateEventMutation } from "@/redux/features/events/events.spi";
-import { useAllUserQuery } from "@/redux/features/user/user.api";
+import { useGetVenuesQuery } from "@/redux/features/venues/venuesApi";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Trash2, Plus } from "lucide-react";
@@ -35,13 +35,14 @@ const sectionTitle = (text: string) => (
 const CreateEvent = () => {
   const router = useRouter();
   const [createEvent] = useCreateEventMutation();
-  const { data: venuesData } = useAllUserQuery([
-    { name: "role", value: "CLUB" },
-    { name: "limit", value: 100 },
+  // Pull from the actual Venue catalogue rather than the legacy
+  // "every CLUB user is a venue" model. Admins see every venue;
+  // future: scope to current user's owned venues for CLUB role.
+  const { data: venuesData } = useGetVenuesQuery([
+    { name: "limit", value: 200 },
     { name: "page", value: "1" },
-    { name: "status", value: "ACTIVE" },
   ]);
-  const venues = venuesData?.data?.data ?? [];
+  const venues = venuesData?.data?.data ?? venuesData?.data ?? [];
 
   const methods = useForm({
     defaultValues: {
@@ -193,7 +194,8 @@ const CreateEvent = () => {
                     <option value="">Select venue...</option>
                     {venues.map((venue: any) => (
                       <option key={venue.id} value={venue.id}>
-                        {venue.fullName}
+                        {venue.name}
+                        {venue.area ? ` · ${venue.area}` : ""}
                       </option>
                     ))}
                   </select>

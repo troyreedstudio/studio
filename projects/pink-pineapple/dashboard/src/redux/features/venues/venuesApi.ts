@@ -81,6 +81,23 @@ export const venuesApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Venue"],
     }),
+
+    // Booking-click attribution stats — overview across all venues in scope.
+    // ADMIN sees everything; CLUB sees only their owned venues.
+    getBookingClicksOverview: builder.query({
+      query: (windowDays: number = 30) => ({
+        url: `/venues/booking-clicks/overview?windowDays=${windowDays}`,
+        method: "GET",
+      }),
+    }),
+
+    // Per-venue click stats — total + windowed + byDay sparkline + last click.
+    getVenueBookingClicks: builder.query({
+      query: (args: { id: string; windowDays?: number }) => ({
+        url: `/venues/${args.id}/booking-clicks?windowDays=${args.windowDays ?? 30}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -93,4 +110,6 @@ export const {
   useDeleteVenueMutation,
   useGetOwnedVenuesQuery,
   useGetVenueStatsQuery,
+  useGetBookingClicksOverviewQuery,
+  useGetVenueBookingClicksQuery,
 } = venuesApi;
