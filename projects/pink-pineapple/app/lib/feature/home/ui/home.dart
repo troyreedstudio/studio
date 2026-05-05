@@ -883,10 +883,11 @@ class _PlanMyNightCard extends StatelessWidget {
 class _FeaturedEventsSection extends StatelessWidget {
   const _FeaturedEventsSection();
 
-  // Anchor event — Day Zero Bali pinned first as the flagship festival
-  // until/unless an editor flips its data. All other tiles come from the
-  // backend (HomeController.allEventList, populated by /api/v1/events).
-  static final _anchorEvents = [
+  // Filler tile shown AFTER any active backend events. Kept as an
+  // editorial example until we have enough real events to never need
+  // a placeholder. Backend events always rank before this so a live
+  // event (e.g. tonight at Savaya) outranks a past festival.
+  static final _fillerEvents = [
     {
       'title': 'Day Zero Bali',
       'subtitle': 'Journey to the Centre of the Universe',
@@ -930,6 +931,19 @@ class _FeaturedEventsSection extends StatelessWidget {
     };
   }
 
+  /// "Active" = endDate is today or later. For single-night events the
+  /// service auto-fills endDate = startDate so this still works correctly.
+  /// We compare at midnight-of-today UTC so an event ending today still
+  /// shows up until the calendar rolls over.
+  bool _isActive(AllEventModel event) {
+    final end = event.endDate ?? event.startDate;
+    if (end == null) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+    return !endDay.isBefore(today);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<HomeController>();
@@ -943,20 +957,36 @@ class _FeaturedEventsSection extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
         Obx(() {
-          // Filter to APPROVED events with at least an image; drop ones we
-          // can't render usefully. Keep newest-first by createdAt (backend
-          // orders by createdAt desc by default).
-          final apiEvents = controller.allEventList
+          // Pipeline: APPROVED + has name + still active (not past) →
+          // sort by startDate ASC (soonest first), then by createdAt DESC
+          // for a stable rotation when multiple events share the same day
+          // (newer-created event takes the lead until the editor reorders).
+          final upcoming = controller.allEventList
               .where((e) =>
                   e.eventStatus == 'APPROVED' &&
                   e.eventName != null &&
-                  e.eventName!.isNotEmpty)
-              .map(_toCardData)
-              .toList();
+                  e.eventName!.isNotEmpty &&
+                  _isActive(e))
+              .toList()
+            ..sort((a, b) {
+              final aStart = a.startDate ?? DateTime(2099);
+              final bStart = b.startDate ?? DateTime(2099);
+              final byStart = aStart.compareTo(bStart);
+              if (byStart != 0) return byStart;
+              // Same day → newest-created first
+              final aCreated = a.createdAt ?? DateTime(1970);
+              final bCreated = b.createdAt ?? DateTime(1970);
+              return bCreated.compareTo(aCreated);
+            });
 
-          // Anchor event(s) first, then API events. If the API has 0
-          // events, the anchor still renders so the section never empties.
-          final cards = [..._anchorEvents, ...apiEvents];
+          // Live, sorted backend events first; filler examples after so
+          // the section never looks empty. The filler is editorial
+          // padding — once we have 3+ real upcoming events it can be
+          // removed entirely (just delete _fillerEvents).
+          final cards = [
+            ...upcoming.map(_toCardData),
+            ..._fillerEvents,
+          ];
 
           if (cards.isEmpty) {
             return SizedBox(
