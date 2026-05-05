@@ -38,12 +38,24 @@ const createIntoDb = async (req: Request) => {
     )
   );
 
+  // Coerce feeAmount to String — schema stores it as String (Fiverr quirk,
+  // see TODO in schema.prisma) but the dashboard form sends Number from
+  // <input type="number">. Without this cast, PrismaClientValidationError.
+  const toFeeString = (v: any): string => {
+    if (v == null) return "0";
+    return String(v);
+  };
+
   const result = await prisma.$transaction(async (tx) => {
     const event = await tx.events.create({
       data: {
         eventName: eventData.eventName,
         descriptions: eventData.descriptions,
-        userId:req.user.id,
+        userId: req.user.id,
+        // venueId is optional; set when the form supplies it (it does
+        // since we wired the venue dropdown to /venues, but older clients
+        // may omit it).
+        ...(eventData.venueId ? { venueId: eventData.venueId } : {}),
         startDate: new Date(eventData.startDate),
         endDate: new Date(eventData.endDate),
         startTime: eventData.startTime,
@@ -52,8 +64,8 @@ const createIntoDb = async (req: Request) => {
         lastRegTime: eventData.lastRegTime,
         arriveDate: new Date(eventData.arriveDate),
         arriveTime: eventData.arriveTime,
-        additionalGuests: eventData.additionalGuests,
-        extraRequirements: eventData.extraRequirements,
+        additionalGuests: Number(eventData.additionalGuests) || 0,
+        extraRequirements: eventData.extraRequirements || "",
         eventImages: eventImageUrls,
       },
     });
@@ -61,9 +73,9 @@ const createIntoDb = async (req: Request) => {
     const eventTicket = await tx.eventTickets.create({
       data: {
         eventId: event.id,
-        maleAdmission: ticketData.maleAdmission,
-        femaleAdmission: ticketData.femaleAdmission,
-        ticketLimitation: ticketData.ticketLimitation,
+        maleAdmission: Number(ticketData.maleAdmission) || 0,
+        femaleAdmission: Number(ticketData.femaleAdmission) || 0,
+        ticketLimitation: Number(ticketData.ticketLimitation) || 0,
       },
     });
 
@@ -71,8 +83,8 @@ const createIntoDb = async (req: Request) => {
       await tx.ticketCharges.createMany({
         data: ticketData.ticketCharges.map((charge: any) => ({
           eventTicketId: eventTicket.id,
-          feeName: charge.feeName,
-          feeAmount: charge.feeAmount,
+          feeName: charge.feeName || "",
+          feeAmount: toFeeString(charge.feeAmount),
         })),
       });
     }
@@ -82,9 +94,9 @@ const createIntoDb = async (req: Request) => {
         data: {
           tableName: table.tableName,
           tableDetails: table.tableDetails,
-          maxAdditionGuest: table.maxAdditionGuest,
-          minimumSpentAmount: table.minimumSpentAmount,
-          isIncludedFoodBeverage: table.isIncludedFoodBeverage,
+          maxAdditionGuest: Number(table.maxAdditionGuest) || 0,
+          minimumSpentAmount: Number(table.minimumSpentAmount) || 0,
+          isIncludedFoodBeverage: !!table.isIncludedFoodBeverage,
           tableImages: tableImageUrls,
           eventId: event.id,
         },
@@ -94,8 +106,8 @@ const createIntoDb = async (req: Request) => {
         await tx.tableCharges.createMany({
           data: table.tableCharges.map((charge: any) => ({
             eventTableId: createdTable.id,
-            feeName: charge.feeName,
-            feeAmount: charge.feeAmount,
+            feeName: charge.feeName || "",
+            feeAmount: toFeeString(charge.feeAmount),
           })),
         });
       }
