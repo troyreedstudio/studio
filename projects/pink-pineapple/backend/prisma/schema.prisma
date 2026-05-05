@@ -176,22 +176,33 @@ model ClubAvailableTimes {
 model Events {
   id                String          @id @default(auto()) @map("_id") @db.ObjectId
   eventName         String
-  descriptions      String
+  descriptions      String          @default("")
+  // Date/time fields. Most events are single-night, so endDate defaults
+  // to startDate when the form omits it. lastRegDate/arriveDate are
+  // legacy fields from the original PP-direct ticketing flow — kept
+  // optional so the simple link-out form doesn't have to fill them.
   startDate         DateTime
   endDate           DateTime
-  startTime         String
-  endTime           String
-  lastRegDate       DateTime
-  lastRegTime       String
-  arriveDate        DateTime
-  arriveTime        String
-  additionalGuests  Int
-  extraRequirements String
+  startTime         String          @default("")
+  endTime           String          @default("")
+  lastRegDate       DateTime?
+  lastRegTime       String          @default("")
+  arriveDate        DateTime?
+  arriveTime        String          @default("")
+  additionalGuests  Int             @default(0)
+  extraRequirements String          @default("")
   userId            String          @db.ObjectId
   user              User            @relation(fields: [userId], references: [id])
   venueId           String?         @db.ObjectId
   venue             Venue?          @relation("VenueEvents", fields: [venueId], references: [id])
   eventImages       String[]
+  // ── Booking integration (mirrors Venue) ─────────────────────────
+  // Event-level booking URL takes precedence over venue.bookingUrl
+  // when set — lets a venue have one default booking page but a
+  // specific event override (e.g. Mesa's per-night Mtix link).
+  bookingUrl        String          @default("")
+  bookingProvider   BookingProvider?
+  // ─────────────────────────────────────────────────────────────────
   eventStatus       EventStatus     @default(PENDING)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt

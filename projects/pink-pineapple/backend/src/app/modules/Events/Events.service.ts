@@ -8,6 +8,14 @@ import { paginationHelper } from "../../../helpers/paginationHelper";
 import { eventSearchableFields, IEventFilterRequest } from "./Events.interface";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 
+// Coerce feeAmount to String — schema stores it as String (Fiverr quirk,
+// see TODO in schema.prisma) but the dashboard form sends Number from
+// <input type="number">. Without this cast, PrismaClientValidationError.
+const toFeeString = (v: any): string => {
+  if (v == null) return "0";
+  return String(v);
+};
+
 const createIntoDb = async (req: Request) => {
   const files = req.files as any;
   const eventData = req.body.eventData ? JSON.parse(req.body.eventData) : null;
@@ -16,100 +24,120 @@ const createIntoDb = async (req: Request) => {
     ? JSON.parse(req.body.ticketData)
     : null;
 
-  if (!files?.eventImages || !files?.tableImages) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Missing event or table images");
+  // Required: eventData with name + dates + at least one event image.
+  // OPTIONAL: ticketData, tableData, tableImages — only used when PP is
+  // selling tickets/tables directly. The simple "link out" event flow
+  // omits all of those.
+  if (!eventData) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Missing event data");
   }
-  if (!eventData || !ticketData || !tableData?.length) {
+  if (!eventData.eventName || !eventData.startDate) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Missing event, ticket, or table data"
+      "eventName and startDate are required"
     );
   }
+  if (!files?.eventImages || files.eventImages.length === 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "At least one event image is required");
+  }
 
+  // Upload event images. Table images only required when tableData is provided.
   const eventImageUrls = await Promise.all(
     files.eventImages.map((img: any) =>
       fileUploader.uploadToCloudinary(img).then((res) => res.Location)
     )
   );
 
-  const tableImageUrls = await Promise.all(
-    files.tableImages.map((img: any) =>
-      fileUploader.uploadToCloudinary(img).then((res) => res.Location)
-    )
-  );
-
-  // Coerce feeAmount to String — schema stores it as String (Fiverr quirk,
-  // see TODO in schema.prisma) but the dashboard form sends Number from
-  // <input type="number">. Without this cast, PrismaClientValidationError.
-  const toFeeString = (v: any): string => {
-    if (v == null) return "0";
-    return String(v);
-  };
+  let tableImageUrls: string[] = [];
+  if (tableData?.length && files?.tableImages?.length) {
+    tableImageUrls = await Promise.all(
+      files.tableImages.map((img: any) =>
+        fileUploader.uploadToCloudinary(img).then((res) => res.Location)
+      )
+    );
+  }
 
   const result = await prisma.$transaction(async (tx) => {
+    // Single-night events default endDate = startDate when omitted.
+    const startDate = new Date(eventData.startDate);
+    const endDate = eventData.endDate ? new Date(eventData.endDate) : startDate;
+
     const event = await tx.events.create({
       data: {
         eventName: eventData.eventName,
-        descriptions: eventData.descriptions,
+        descriptions: eventData.descriptions || "",
         userId: req.user.id,
-        // venueId is optional; set when the form supplies it (it does
-        // since we wired the venue dropdown to /venues, but older clients
-        // may omit it).
         ...(eventData.venueId ? { venueId: eventData.venueId } : {}),
-        startDate: new Date(eventData.startDate),
-        endDate: new Date(eventData.endDate),
-        startTime: eventData.startTime,
-        endTime: eventData.endTime,
-        lastRegDate: new Date(eventData.lastRegDate),
-        lastRegTime: eventData.lastRegTime,
-        arriveDate: new Date(eventData.arriveDate),
-        arriveTime: eventData.arriveTime,
+        startDate,
+        endDate,
+        startTime: eventData.startTime || "",
+        endTime: eventData.endTime || "",
+        ...(eventData.lastRegDate
+          ? { lastRegDate: new Date(eventData.lastRegDate) }
+          : {}),
+        lastRegTime: eventData.lastRegTime || "",
+        ...(eventData.arriveDate
+          ? { arriveDate: new Date(eventData.arriveDate) }
+          : {}),
+        arriveTime: eventData.arriveTime || "",
         additionalGuests: Number(eventData.additionalGuests) || 0,
         extraRequirements: eventData.extraRequirements || "",
         eventImages: eventImageUrls,
+        // Booking link-out fields. Empty bookingUrl means "fall back to
+        // the venue's bookingUrl" — Flutter checks event first, then venue.
+        bookingUrl: eventData.bookingUrl || "",
+        ...(eventData.bookingProvider
+          ? { bookingProvider: eventData.bookingProvider }
+          : {}),
       },
     });
 
-    const eventTicket = await tx.eventTickets.create({
-      data: {
-        eventId: event.id,
-        maleAdmission: Number(ticketData.maleAdmission) || 0,
-        femaleAdmission: Number(ticketData.femaleAdmission) || 0,
-        ticketLimitation: Number(ticketData.ticketLimitation) || 0,
-      },
-    });
-
-    if (ticketData.ticketCharges?.length) {
-      await tx.ticketCharges.createMany({
-        data: ticketData.ticketCharges.map((charge: any) => ({
-          eventTicketId: eventTicket.id,
-          feeName: charge.feeName || "",
-          feeAmount: toFeeString(charge.feeAmount),
-        })),
-      });
-    }
-
-    for (const table of tableData) {
-      const createdTable = await tx.eventTable.create({
+    // PP-direct ticketing path — only run when ticketData was supplied.
+    if (ticketData) {
+      const eventTicket = await tx.eventTickets.create({
         data: {
-          tableName: table.tableName,
-          tableDetails: table.tableDetails,
-          maxAdditionGuest: Number(table.maxAdditionGuest) || 0,
-          minimumSpentAmount: Number(table.minimumSpentAmount) || 0,
-          isIncludedFoodBeverage: !!table.isIncludedFoodBeverage,
-          tableImages: tableImageUrls,
           eventId: event.id,
+          maleAdmission: Number(ticketData.maleAdmission) || 0,
+          femaleAdmission: Number(ticketData.femaleAdmission) || 0,
+          ticketLimitation: Number(ticketData.ticketLimitation) || 0,
         },
       });
 
-      if (table.tableCharges?.length) {
-        await tx.tableCharges.createMany({
-          data: table.tableCharges.map((charge: any) => ({
-            eventTableId: createdTable.id,
+      if (ticketData.ticketCharges?.length) {
+        await tx.ticketCharges.createMany({
+          data: ticketData.ticketCharges.map((charge: any) => ({
+            eventTicketId: eventTicket.id,
             feeName: charge.feeName || "",
             feeAmount: toFeeString(charge.feeAmount),
           })),
         });
+      }
+    }
+
+    // PP-direct table booking path — only run when tableData was supplied.
+    if (tableData?.length) {
+      for (const table of tableData) {
+        const createdTable = await tx.eventTable.create({
+          data: {
+            tableName: table.tableName,
+            tableDetails: table.tableDetails,
+            maxAdditionGuest: Number(table.maxAdditionGuest) || 0,
+            minimumSpentAmount: Number(table.minimumSpentAmount) || 0,
+            isIncludedFoodBeverage: !!table.isIncludedFoodBeverage,
+            tableImages: tableImageUrls,
+            eventId: event.id,
+          },
+        });
+
+        if (table.tableCharges?.length) {
+          await tx.tableCharges.createMany({
+            data: table.tableCharges.map((charge: any) => ({
+              eventTableId: createdTable.id,
+              feeName: charge.feeName || "",
+              feeAmount: toFeeString(charge.feeAmount),
+            })),
+          });
+        }
       }
     }
 

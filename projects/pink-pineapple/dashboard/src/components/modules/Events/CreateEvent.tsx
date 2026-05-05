@@ -1,347 +1,531 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import {
-  useForm,
-  useFieldArray,
-  FieldValues,
-  SubmitHandler,
-  FormProvider,
-} from "react-hook-form";
-import MyFormInput from "@/components/form/MyFormInput";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import Image from "next/image";
+import Link from "next/link";
+import { Upload, X, Info, ExternalLink } from "lucide-react";
 import { useCreateEventMutation } from "@/redux/features/events/events.spi";
 import { useGetVenuesQuery } from "@/redux/features/venues/venuesApi";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { Trash2, Plus } from "lucide-react";
 
-const btnPrimary = "px-4 py-2.5 rounded-xl text-sm font-semibold text-[#000000] transition-all duration-200 hover:opacity-90";
-const btnPrimaryStyle = {
-  background: 'linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)',
-  fontFamily: 'Poppins, sans-serif',
-};
-const btnOutline = "px-4 py-2.5 rounded-xl text-sm font-medium border border-[#2A2A2A] text-[#B0B0B0] hover:text-[#FFFFFF] hover:border-[#3A3A3A] transition-all";
-const btnDanger = "px-3 py-2 rounded-lg text-xs font-medium border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all";
+const inter = { fontFamily: "Inter, sans-serif" };
+const outfit = { fontFamily: "Outfit, sans-serif" };
 
-const sectionTitle = (text: string) => (
-  <h2
-    className="text-2xl font-semibold text-[#FFFFFF] border-b border-[#2A2A2A] pb-3"
-    style={{ fontFamily: 'Outfit, sans-serif' }}
-  >
-    {text}
-  </h2>
-);
+const inputClass =
+  "w-full bg-[#000000] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#C4707E] transition-colors";
 
+const PROVIDER_OPTIONS = [
+  { value: "", label: "Inherit from venue (recommended)" },
+  { value: "BOOKETING", label: "Booketing" },
+  { value: "MTIX", label: "Mtix" },
+  { value: "CROWDSTACK", label: "Crowdstack" },
+  { value: "OPENTABLE", label: "OpenTable" },
+  { value: "RESY", label: "Resy" },
+  { value: "RESDIARY", label: "Resdiary" },
+  { value: "TOAST", label: "Toast" },
+  { value: "SEVENROOMS", label: "SevenRooms" },
+  { value: "CUSTOM_WEB", label: "Custom website" },
+  { value: "PHONE", label: "Phone only" },
+  { value: "WHATSAPP", label: "WhatsApp" },
+  { value: "INSTAGRAM_DM", label: "Instagram DM" },
+  { value: "NONE", label: "Walk-in only" },
+];
+
+/// The simple "link out for tickets" event form. Most events use this —
+/// it announces what's on at a venue and routes users to the venue's
+/// existing booking system (or an event-specific override URL).
+///
+/// For the rare PP-direct ticketed/table flow, see the heavier
+/// CreateTicketedEvent at /event/create-ticketed.
 const CreateEvent = () => {
   const router = useRouter();
-  const [createEvent] = useCreateEventMutation();
-  // Pull from the actual Venue catalogue rather than the legacy
-  // "every CLUB user is a venue" model. Admins see every venue;
-  // future: scope to current user's owned venues for CLUB role.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [createEvent, { isLoading }] = useCreateEventMutation();
+
   const { data: venuesData } = useGetVenuesQuery([
     { name: "limit", value: 200 },
     { name: "page", value: "1" },
   ]);
   const venues = venuesData?.data?.data ?? venuesData?.data ?? [];
 
-  const methods = useForm({
-    defaultValues: {
-      venueId: "",
-      eventName: "",
-      descriptions: "",
-      startDate: "",
-      endDate: "",
-      startTime: "",
-      endTime: "",
-      lastRegDate: "",
-      lastRegTime: "",
-      arriveDate: "",
-      arriveTime: "",
-      additionalGuests: 0,
-      extraRequirements: "",
-      eventImages: null,
-      tableImages: null,
-      maleAdmission: 0,
-      femaleAdmission: 0,
-      ticketLimitation: 0,
-      ticketCharges: [{ feeName: "", feeAmount: 0 }],
-      tables: [
-        {
-          tableName: "",
-          tableDetails: "",
-          maxAdditionGuest: 0,
-          minimumSpentAmount: 0,
-          isIncludedFoodBeverage: "false",
-          tableCharges: [{ feeName: "", feeAmount: 0 }],
-        },
-      ],
-    },
+  const [eventImages, setEventImages] = useState<File[]>([]);
+  const [eventPreviews, setEventPreviews] = useState<string[]>([]);
+
+  const [form, setForm] = useState({
+    venueId: "",
+    eventName: "",
+    descriptions: "",
+    startDate: "",
+    startTime: "",
+    endTime: "",
+    endDate: "", // optional — defaults to startDate
+    bookingUrl: "",
+    bookingProvider: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { control, handleSubmit, formState: { errors }, setError } = methods;
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (errors[name]) setErrors({ ...errors, [name]: "" });
+  };
 
-  const { fields: ticketFields, append: appendTicket, remove: removeTicket } =
-    useFieldArray({ control, name: "ticketCharges" });
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setEventImages([...eventImages, ...files]);
+    const previews = files.map((f) => URL.createObjectURL(f));
+    setEventPreviews([...eventPreviews, ...previews]);
+  };
 
-  const { fields: tableFields, append: appendTable, remove: removeTable } =
-    useFieldArray({ control, name: "tables" });
+  const removeImage = (index: number) => {
+    URL.revokeObjectURL(eventPreviews[index]);
+    setEventImages(eventImages.filter((_, i) => i !== index));
+    setEventPreviews(eventPreviews.filter((_, i) => i !== index));
+  };
 
-  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
-    const toastId = toast.loading("Creating event...");
+  const validate = () => {
+    const next: Record<string, string> = {};
+    if (!form.eventName.trim()) next.eventName = "Event name is required";
+    if (!form.venueId) next.venueId = "Pick the venue this event is at";
+    if (!form.startDate) next.startDate = "Start date required";
+    if (!form.startTime) next.startTime = "Start time required";
+    if (eventImages.length === 0) next.eventImages = "At least one image";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
-    if (!data.eventImages || data.eventImages.length === 0) {
-      setError("eventImages", { message: "Please upload at least one event image" });
-      toast.error("Event image required", { id: toastId });
-      return;
-    }
-    if (!data.tableImages || data.tableImages.length === 0) {
-      setError("tableImages", { message: "Please upload at least one table image" });
-      toast.error("Table image required", { id: toastId });
-      return;
-    }
+  const onSubmit = async () => {
+    if (!validate()) return;
 
-    const formData = new FormData();
-
-    const eventData = {
-      venueId: data.venueId,
-      eventName: data.eventName,
-      descriptions: data.descriptions,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      lastRegDate: data.lastRegDate,
-      lastRegTime: data.lastRegTime,
-      arriveDate: data.arriveDate,
-      arriveTime: data.arriveTime,
-      additionalGuests: Number(data.additionalGuests),
-      extraRequirements: data.extraRequirements,
-      maleAdmission: Number(data.maleAdmission),
-      femaleAdmission: Number(data.femaleAdmission),
-      ticketLimitation: Number(data.ticketLimitation),
-    };
-    formData.append("eventData", JSON.stringify(eventData));
-
-    Array.from(data.eventImages).forEach((file: any) => {
-      formData.append("eventImages", file);
-    });
-
-    const ticketData = {
-      maleAdmission: Number(data.maleAdmission),
-      femaleAdmission: Number(data.femaleAdmission),
-      ticketLimitation: Number(data.ticketLimitation),
-      ticketCharges: data.ticketCharges.map((c: any) => ({
-        feeName: c.feeName,
-        feeAmount: c.feeAmount,
-      })),
-    };
-    formData.append("ticketData", JSON.stringify(ticketData));
-
-    const tableData = data.tables.map((t: any) => ({
-      tableName: t.tableName,
-      tableDetails: t.tableDetails,
-      maxAdditionGuest: Number(t.maxAdditionGuest),
-      minimumSpentAmount: Number(t.minimumSpentAmount),
-      isIncludedFoodBeverage: t.isIncludedFoodBeverage === "true",
-      tableCharges: t.tableCharges.map((c: any) => ({
-        feeName: c.feeName,
-        feeAmount: c.feeAmount,
-      })),
-    }));
-    formData.append("tableData", JSON.stringify(tableData));
-
-    Array.from(data.tableImages).forEach((file: any) => {
-      formData.append("tableImages", file);
-    });
-
+    const toastId = toast.loading("Creating event…");
     try {
-      await createEvent(formData).unwrap();
+      const fd = new FormData();
+      const eventData = {
+        venueId: form.venueId,
+        eventName: form.eventName,
+        descriptions: form.descriptions,
+        startDate: form.startDate,
+        endDate: form.endDate || form.startDate,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        bookingUrl: form.bookingUrl,
+        bookingProvider: form.bookingProvider || undefined,
+      };
+      fd.append("eventData", JSON.stringify(eventData));
+      eventImages.forEach((f) => fd.append("eventImages", f));
+
+      await createEvent(fd).unwrap();
       toast.success("Event created!", { id: toastId });
-      router.push("/club");
+      router.push("/event");
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to create event", { id: toastId });
+      toast.error(err?.data?.message || "Failed to create event", {
+        id: toastId,
+      });
     }
   };
 
+  // Derive the selected venue's bookingProvider so we can hint the user
+  // about what will happen when bookingUrl/provider are left blank.
+  const selectedVenue = venues.find((v: any) => v.id === form.venueId);
+
   return (
-    <div className="bg-[#000000] min-h-screen py-8">
-      <div className="max-w-5xl mx-auto">
-        <div className="rounded-2xl border border-[#2A2A2A] bg-[#000000] p-8">
+    <div className="max-w-3xl space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
           <h1
-            className="text-3xl font-semibold text-[#FFFFFF] mb-8 text-center"
-            style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.05em' }}
+            className="md:text-4xl text-3xl font-bold text-[#FFFFFF]"
+            style={{ ...outfit, letterSpacing: "0.02em" }}
           >
-            Create New Event
+            Create Event
           </h1>
+          <p className="text-[#B0B0B0] text-sm mt-2" style={inter}>
+            Add a new event tile. Tickets link out to the venue&apos;s booking
+            system — Pink Pineapple tracks every Buy click for attribution.
+          </p>
+        </div>
+        <Link
+          href="/event/create-ticketed"
+          className="text-[11px] text-[#6B6B6B] hover:text-[#E8A0B0] transition-colors"
+          style={inter}
+        >
+          Selling tickets directly? Use the ticketed flow →
+        </Link>
+      </div>
 
-          <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-              {/* Basic Info */}
-              {sectionTitle("Event Details")}
-              <div className="grid md:grid-cols-2 gap-5">
-                <div className="md:col-span-2">
-                  <label
-                    className="block text-xs text-[#888899] uppercase tracking-wider mb-2"
-                    style={{ fontFamily: 'Poppins, sans-serif' }}
-                  >
-                    Venue <span className="text-red-400">*</span>
-                  </label>
-                  <select
-                    {...methods.register("venueId")}
-                    className="w-full bg-[#0A0A0F] border border-[#2A2A3C] rounded-xl px-4 py-3 text-sm text-[#F5F5F0] focus:outline-none focus:border-[#D4A574] transition-colors appearance-none"
-                    style={{ fontFamily: 'Poppins, sans-serif' }}
-                  >
-                    <option value="">Select venue...</option>
-                    {venues.map((venue: any) => (
-                      <option key={venue.id} value={venue.id}>
-                        {venue.name}
-                        {venue.area ? ` · ${venue.area}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <MyFormInput name="eventName" label="Event Name" />
-                <MyFormInput name="additionalGuests" label="Additional Guests" type="number" />
-                <MyFormInput name="startDate" label="Start Date" type="date" />
-                <MyFormInput name="endDate" label="End Date" type="date" />
-                <MyFormInput name="startTime" label="Start Time" type="time" />
-                <MyFormInput name="endTime" label="End Time" type="time" />
-                <MyFormInput name="lastRegDate" label="Last Registration Date" type="date" />
-                <MyFormInput name="lastRegTime" label="Last Registration Time" type="time" />
-                <MyFormInput name="arriveDate" label="Arrival Date" type="date" />
-                <MyFormInput name="arriveTime" label="Arrival Time" type="time" />
-                <MyFormInput name="descriptions" label="Description" type="textarea" />
-                <MyFormInput name="extraRequirements" label="Extra Requirements" type="textarea" />
-              </div>
+      {/* Info banner */}
+      <div className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-4 flex gap-3">
+        <Info size={16} className="text-[#E8A0B0] flex-shrink-0 mt-0.5" />
+        <div className="text-xs leading-relaxed" style={inter}>
+          <p className="text-[#FFFFFF] font-medium mb-1">
+            Most events should use this form
+          </p>
+          <p className="text-[#B0B0B0]">
+            For events where the venue handles bookings on their own system
+            (Booketing, Mtix, OpenTable, WhatsApp, Instagram, phone, etc.).
+            Pink Pineapple shows the event tile and routes the user to the
+            booking page with attribution tracking.
+          </p>
+        </div>
+      </div>
 
-              {/* Event Images */}
-              <div>
-                {sectionTitle("Event Images")}
-                <div className="mt-5">
-                  <MyFormInput name="eventImages" type="file" label="Upload Event Images" isMultiple />
-                  {errors.eventImages && (
-                    <p className="text-red-400 text-xs mt-1"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      {errors.eventImages.message}
-                    </p>
-                  )}
-                </div>
-              </div>
+      <div className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-6 space-y-6">
+        {/* Basics */}
+        <div className="space-y-4">
+          <h2
+            className="text-sm uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            Basics
+          </h2>
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
+              Event Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              name="eventName"
+              value={form.eventName}
+              onChange={handleChange}
+              placeholder="e.g. Bali Day Zero · French Montana Live"
+              className={`${inputClass} ${errors.eventName ? "border-red-400" : ""}`}
+              style={inter}
+            />
+            {errors.eventName && (
+              <p className="text-red-400 text-xs mt-1" style={inter}>
+                {errors.eventName}
+              </p>
+            )}
+          </div>
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
+              Venue <span className="text-red-400">*</span>
+            </label>
+            <select
+              name="venueId"
+              value={form.venueId}
+              onChange={handleChange}
+              className={`${inputClass} ${errors.venueId ? "border-red-400" : ""}`}
+              style={inter}
+            >
+              <option value="">Select a venue…</option>
+              {venues.map((v: any) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                  {v.area ? ` · ${v.area}` : ""}
+                </option>
+              ))}
+            </select>
+            {errors.venueId && (
+              <p className="text-red-400 text-xs mt-1" style={inter}>
+                {errors.venueId}
+              </p>
+            )}
+          </div>
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
+              Description
+            </label>
+            <textarea
+              name="descriptions"
+              value={form.descriptions}
+              onChange={handleChange}
+              rows={4}
+              placeholder="The pitch — what makes this night worth showing up for. Lineup, vibe, dress code, anything special."
+              className={inputClass + " resize-none"}
+              style={inter}
+            />
+          </div>
+        </div>
 
-              {/* Ticket Info */}
-              {sectionTitle("Ticket Information")}
-              <div className="grid md:grid-cols-3 gap-5">
-                <MyFormInput name="maleAdmission" label="Male Admission ($)" type="number" />
-                <MyFormInput name="femaleAdmission" label="Female Admission ($)" type="number" />
-                <MyFormInput name="ticketLimitation" label="Ticket Limit" type="number" />
-              </div>
+        <div className="border-t border-[#2A2A2A]" />
 
-              <div>
-                <p className="text-xs text-[#B0B0B0] uppercase tracking-widest mb-4"
-                  style={{ fontFamily: 'Poppins, sans-serif' }}>
-                  Ticket Charges
-                </p>
-                <div className="space-y-3">
-                  {ticketFields.map((field, idx) => (
-                    <div key={field.id} className="grid md:grid-cols-3 gap-4 items-end">
-                      <MyFormInput name={`ticketCharges.${idx}.feeName`} label="Fee Name" />
-                      <MyFormInput name={`ticketCharges.${idx}.feeAmount`} label="Amount ($)" type="number" />
-                      {ticketFields.length > 1 && (
-                        <button type="button" className={btnDanger} onClick={() => removeTicket(idx)}>
-                          <Trash2 size={14} className="inline mr-1" />Remove
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  className={`${btnOutline} mt-3 flex items-center gap-1.5`}
-                  style={{ fontFamily: 'Poppins, sans-serif' }}
-                  onClick={() => appendTicket({ feeName: "", feeAmount: 0 })}
-                >
-                  <Plus size={14} />Add Ticket Charge
-                </button>
-              </div>
-
-              {/* Table Info */}
-              {sectionTitle("Table Information")}
-              <div className="space-y-6">
-                {tableFields.map((table, tIdx) => (
-                  <div key={table.id} className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-6 space-y-5">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm font-medium text-[#C4707E]"
-                        style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        Table {tIdx + 1}
-                      </p>
-                      {tableFields.length > 0 && (
-                        <button type="button" className={btnDanger} onClick={() => removeTable(tIdx)}>
-                          <Trash2 size={14} className="inline mr-1" />Remove
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-5">
-                      <MyFormInput name={`tables.${tIdx}.tableName`} label="Table Name" />
-                      <MyFormInput name={`tables.${tIdx}.maxAdditionGuest`} label="Max Guests" type="number" />
-                      <MyFormInput name={`tables.${tIdx}.minimumSpentAmount`} label="Minimum Spend ($)" type="number" />
-                      <MyFormInput name={`tables.${tIdx}.isIncludedFoodBeverage`} label="Includes F&B (true/false)" placeholder="true / false" />
-                      <MyFormInput name={`tables.${tIdx}.tableDetails`} type="textarea" label="Table Details" />
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-[#B0B0B0] uppercase tracking-widest mb-3"
-                        style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        Table Charges
-                      </p>
-                      <TableCharges index={tIdx} control={control} />
-                    </div>
-                  </div>
-                ))}
-
-                <button
-                  type="button"
-                  className={`${btnOutline} flex items-center gap-1.5`}
-                  style={{ fontFamily: 'Poppins, sans-serif' }}
-                  onClick={() =>
-                    appendTable({
-                      tableName: "",
-                      tableDetails: "",
-                      maxAdditionGuest: 0,
-                      minimumSpentAmount: 0,
-                      isIncludedFoodBeverage: "false",
-                      tableCharges: [{ feeName: "", feeAmount: 0 }],
-                    })
-                  }
-                >
-                  <Plus size={14} />Add New Table
-                </button>
-              </div>
-
-              {/* Table Images */}
-              <div>
-                {sectionTitle("Table Images")}
-                <div className="mt-5">
-                  <MyFormInput name="tableImages" type="file" label="Upload Table Images" isMultiple />
-                  {errors.tableImages && (
-                    <p className="text-red-400 text-xs mt-1"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      {errors.tableImages.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                className={`${btnPrimary} w-full py-4 text-base`}
-                style={btnPrimaryStyle}
+        {/* When */}
+        <div className="space-y-4">
+          <h2
+            className="text-sm uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            When
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label
+                className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                style={inter}
               >
-                Create Event
-              </button>
-            </form>
-          </FormProvider>
+                Date <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="date"
+                name="startDate"
+                value={form.startDate}
+                onChange={handleChange}
+                className={`${inputClass} ${errors.startDate ? "border-red-400" : ""}`}
+                style={inter}
+              />
+              {errors.startDate && (
+                <p className="text-red-400 text-xs mt-1" style={inter}>
+                  {errors.startDate}
+                </p>
+              )}
+            </div>
+            <div>
+              <label
+                className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                style={inter}
+              >
+                Start Time <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="time"
+                name="startTime"
+                value={form.startTime}
+                onChange={handleChange}
+                className={`${inputClass} ${errors.startTime ? "border-red-400" : ""}`}
+                style={inter}
+              />
+              {errors.startTime && (
+                <p className="text-red-400 text-xs mt-1" style={inter}>
+                  {errors.startTime}
+                </p>
+              )}
+            </div>
+            <div>
+              <label
+                className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                style={inter}
+              >
+                End Time
+              </label>
+              <input
+                type="time"
+                name="endTime"
+                value={form.endTime}
+                onChange={handleChange}
+                className={inputClass}
+                style={inter}
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              className="block text-[10px] text-[#6B6B6B] uppercase tracking-wider mb-1.5"
+              style={inter}
+            >
+              Multi-day event? End date (optional)
+            </label>
+            <input
+              type="date"
+              name="endDate"
+              value={form.endDate}
+              onChange={handleChange}
+              className={inputClass + " py-2"}
+              style={inter}
+            />
+            <p className="text-[10px] text-[#6B6B6B] mt-1.5" style={inter}>
+              Defaults to the start date for single-night events.
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-[#2A2A2A]" />
+
+        {/* Tickets / Booking */}
+        <div className="space-y-4">
+          <h2
+            className="text-sm uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            Tickets / Booking
+          </h2>
+          <p className="text-[11px] text-[#6B6B6B] -mt-1" style={inter}>
+            Where guests buy tickets or reserve. Leave both blank to use the
+            venue&apos;s default booking flow.
+          </p>
+
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
+              Event-specific booking URL
+            </label>
+            <input
+              type="url"
+              name="bookingUrl"
+              value={form.bookingUrl}
+              onChange={handleChange}
+              placeholder="https://booketing.com/savaya/bali-day-zero"
+              className={inputClass}
+              style={inter}
+            />
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-[10px] text-[#6B6B6B]" style={inter}>
+                {selectedVenue?.bookingUrl
+                  ? `Will inherit ${selectedVenue.bookingUrl} if left blank.`
+                  : "If blank, Pink Pineapple uses the venue's default booking URL."}
+              </p>
+              {form.bookingUrl && (
+                <a
+                  href={form.bookingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[10px] text-[#E8A0B0] hover:underline"
+                  style={inter}
+                >
+                  <ExternalLink size={10} />
+                  Test link
+                </a>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
+              Booking Provider Override
+            </label>
+            <select
+              name="bookingProvider"
+              value={form.bookingProvider}
+              onChange={handleChange}
+              className={inputClass}
+              style={inter}
+            >
+              {PROVIDER_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-[#6B6B6B] mt-1.5" style={inter}>
+              Only set this if the event uses a different booking system than
+              the venue&apos;s default
+              {selectedVenue?.bookingProvider
+                ? ` (${selectedVenue.bookingProvider})`
+                : ""}
+              .
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-[#2A2A2A]" />
+
+        {/* Photos */}
+        <div className="space-y-3">
+          <h2
+            className="text-sm uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            Photos <span className="text-red-400">*</span>
+          </h2>
+          <p className="text-[11px] text-[#6B6B6B]" style={inter}>
+            First image becomes the event tile&apos;s hero on the home screen.
+            Recommended size 1080×1080.
+          </p>
+
+          {eventPreviews.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {eventPreviews.map((preview, i) => (
+                <div
+                  key={i}
+                  className="relative group rounded-lg overflow-hidden h-24"
+                >
+                  <Image
+                    src={preview}
+                    alt={`Photo ${i + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute top-1 right-1 p-1 rounded-full bg-[#000000]/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={12} />
+                  </button>
+                  {i === 0 && (
+                    <span
+                      className="absolute bottom-1 left-1 text-[10px] px-1.5 py-0.5 rounded bg-[#8B4060]/80 text-white"
+                      style={inter}
+                    >
+                      Hero
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-xl p-8 text-center hover:border-[#C4707E]/40 transition-colors cursor-pointer ${
+              errors.eventImages ? "border-red-400" : "border-[#2A2A2A]"
+            }`}
+          >
+            <Upload size={24} className="text-[#C4707E] mx-auto mb-2" />
+            <p className="text-[#B0B0B0] text-sm" style={inter}>
+              Drag & drop, or click to upload
+            </p>
+            <p className="text-[#6B6B6B] text-xs mt-1" style={inter}>
+              PNG / JPG up to 5MB.
+            </p>
+          </div>
+          {errors.eventImages && (
+            <p className="text-red-400 text-xs" style={inter}>
+              {errors.eventImages}
+            </p>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={isLoading}
+            className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:opacity-50"
+            style={{
+              ...inter,
+              background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
+            }}
+          >
+            {isLoading ? "Creating…" : "Create Event"}
+          </button>
+          <Link
+            href="/event"
+            className="px-6 py-2.5 rounded-xl text-sm font-medium text-[#B0B0B0] border border-[#2A2A2A] hover:text-[#FFFFFF] hover:border-[#3A3A3A] transition-all"
+            style={inter}
+          >
+            Cancel
+          </Link>
         </div>
       </div>
     </div>
@@ -349,39 +533,3 @@ const CreateEvent = () => {
 };
 
 export default CreateEvent;
-
-const TableCharges = ({ index, control }: { index: number; control: any }) => {
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: `tables.${index}.tableCharges`,
-  });
-
-  return (
-    <div className="space-y-3">
-      {fields.map((charge, idx) => (
-        <div key={charge.id} className="grid md:grid-cols-3 gap-4 items-end">
-          <MyFormInput name={`tables.${index}.tableCharges.${idx}.feeName`} label="Fee Name" />
-          <MyFormInput name={`tables.${index}.tableCharges.${idx}.feeAmount`} label="Amount ($)" type="number" />
-          {fields.length > 1 && (
-            <button
-              type="button"
-              className="px-3 py-2 rounded-lg text-xs font-medium border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all"
-              style={{ fontFamily: 'Poppins, sans-serif' }}
-              onClick={() => remove(idx)}
-            >
-              <Trash2 size={14} className="inline mr-1" />Remove
-            </button>
-          )}
-        </div>
-      ))}
-      <button
-        type="button"
-        className="px-4 py-2.5 rounded-xl text-sm font-medium border border-[#2A2A2A] text-[#B0B0B0] hover:text-[#FFFFFF] hover:border-[#3A3A3A] transition-all flex items-center gap-1.5 mt-2"
-        style={{ fontFamily: 'Poppins, sans-serif' }}
-        onClick={() => append({ feeName: "", feeAmount: 0 })}
-      >
-        <Plus size={14} />Add Charge
-      </button>
-    </div>
-  );
-};
