@@ -37,6 +37,7 @@ export default function SplashScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.primaryButtonText}>I'm a Seeker</Text>
+            <Text style={styles.primaryButtonSub}>Order a 30-sec video check</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -45,6 +46,7 @@ export default function SplashScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.outlineButtonText}>I'm a Scout</Text>
+            <Text style={styles.outlineButtonSub}>Film checks · earn cash</Text>
           </TouchableOpacity>
         </View>
 
@@ -121,6 +123,13 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
     textTransform: 'uppercase',
   },
+  primaryButtonSub: {
+    fontFamily: 'Inter_400Regular',
+    color: 'rgba(0,0,0,0.6)',
+    fontSize: 10,
+    letterSpacing: 0.5,
+    marginTop: 4,
+  },
   outlineButton: {
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.6)',
@@ -135,6 +144,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 3,
     textTransform: 'uppercase',
+  },
+  outlineButtonSub: {
+    fontFamily: 'Inter_400Regular',
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 10,
+    letterSpacing: 0.5,
+    marginTop: 4,
   },
   footer: {
     fontFamily: 'Inter_300Light',

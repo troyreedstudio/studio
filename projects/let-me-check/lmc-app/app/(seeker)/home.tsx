@@ -10,7 +10,19 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const LIVE_FEED = [
+  'Just verified: Komodo · Brickell · 2 min ago',
+  'Just verified: JFK Terminal 4 · 4 min ago',
+  'Just verified: Soho House New York · 6 min ago',
+  'Just verified: DMV - Miami Beach · 8 min ago',
+  'Just verified: Equinox Hudson Yards · 11 min ago',
+  'Just verified: Heathrow Terminal 5 · 13 min ago',
+  'Just verified: Apple Fifth Avenue · 16 min ago',
+  'Just verified: Nikki Beach Miami · 18 min ago',
+  'Just verified: Burj Al Arab · 21 min ago',
+];
 
 const FEATURED = [
   {
@@ -68,6 +80,15 @@ const POPULAR = [
 export default function HomeScreen() {
   const router = useRouter();
   const [selectedCity, setSelectedCity] = useState('All');
+  const [feedIdx, setFeedIdx] = useState(0);
+
+  // Rotate live activity feed every 4 seconds
+  useEffect(() => {
+    const t = setInterval(() => {
+      setFeedIdx((i) => (i + 1) % LIVE_FEED.length);
+    }, 4000);
+    return () => clearInterval(t);
+  }, []);
 
   const filteredVenues =
     selectedCity === 'All'
@@ -118,7 +139,6 @@ export default function HomeScreen() {
         {/* Featured Section */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>FEATURED QUEUES</Text>
-          <Text style={styles.featuredTagSmall}>SPONSORED</Text>
         </View>
         <ScrollView
           horizontal
@@ -158,13 +178,11 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* Big CTA: Where do you need eyes? */}
+        {/* Big CTA: Where do you need eyes? — opens search */}
         <TouchableOpacity
           style={styles.cta}
           activeOpacity={0.85}
-          onPress={() => {
-            // TODO: open search/location-input flow
-          }}
+          onPress={() => router.push('/(seeker)/search')}
         >
           <Text style={styles.ctaIcon}>🔍</Text>
           <View style={styles.ctaTextWrap}>
@@ -173,6 +191,19 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.ctaArrow}>›</Text>
         </TouchableOpacity>
+
+        {/* Plain-English value prop + live network signal under CTA */}
+        <Text style={styles.trustItem}>Get a 30-second video in 7-10 min · from $15</Text>
+        <View style={styles.statusRow}>
+          <View style={styles.statusDot} />
+          <Text style={styles.statusText}>142 Scouts ready near you</Text>
+        </View>
+
+        {/* Live activity ticker — rotates through recent verifications */}
+        <View style={styles.tickerRow}>
+          <Text style={styles.tickerCheck}>✓</Text>
+          <Text style={styles.tickerText} numberOfLines={1}>{LIVE_FEED[feedIdx]}</Text>
+        </View>
 
         {/* POPULAR */}
         <View style={styles.sectionRow}>
@@ -205,7 +236,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(seeker)/history')}>
             <Text style={styles.navIcon}>📋</Text>
-            <Text style={styles.navLabel}>History</Text>
+            <Text style={styles.navLabel}>Activity</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(seeker)/profile')}>
             <Text style={styles.navIcon}>👤</Text>
@@ -345,6 +376,71 @@ const styles = StyleSheet.create({
     color: '#FF8533',
     letterSpacing: 4,
     textTransform: 'uppercase',
+  },
+  trustRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: -6,
+    marginBottom: 22,
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  trustItem: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: '#cccccc',
+    letterSpacing: 0.3,
+    textAlign: 'center',
+    marginTop: -8,
+    marginBottom: 6,
+    paddingHorizontal: 24,
+  },
+  trustDot: {
+    fontSize: 10,
+    color: '#666',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 4,
+    gap: 7,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#22c55e',
+  },
+  statusText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11.5,
+    color: '#22c55e',
+    letterSpacing: 1.6,
+  },
+  tickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    marginTop: 6,
+    marginBottom: 22,
+    gap: 6,
+  },
+  tickerCheck: {
+    fontSize: 10,
+    color: '#22c55e',
+    fontWeight: '700',
+  },
+  tickerText: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 10.5,
+    color: '#888',
+    letterSpacing: 0.3,
+    flexShrink: 1,
   },
   savedEmpty: {
     marginHorizontal: 20,

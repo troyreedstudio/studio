@@ -11,14 +11,14 @@ const STEPS = [
 
 export default function WaitingScreen() {
   const router = useRouter();
-  const { venue = 'Komodo', city = 'Miami', tier = 'standard', time = '15' } = useLocalSearchParams<{
+  const { venue = 'Komodo', city = 'Miami', tier = 'standard', time = '10' } = useLocalSearchParams<{
     venue: string;
     city: string;
     tier: string;
     time: string;
   }>();
 
-  const minutes = parseInt(time.replace(/\D/g, ''), 10) || 15;
+  const minutes = parseInt(time.replace(/\D/g, ''), 10) || 10;
   const [secondsLeft, setSecondsLeft] = useState(minutes * 60);
 
   useEffect(() => {
@@ -127,19 +127,25 @@ const styles = StyleSheet.create({
   },
   pulseEmoji: { fontSize: 36 },
   title: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontFamily: 'BodoniModa_700Bold',
+    fontSize: 26,
     color: '#fff',
     textAlign: 'center',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     lineHeight: 32,
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  venueName: { fontSize: 14, color: '#888', marginBottom: 28 },
+  venueName: {
+    fontFamily: 'CormorantGaramond_700Bold',
+    fontSize: 18,
+    color: '#cccccc',
+    letterSpacing: 0.4,
+    marginBottom: 30,
+  },
   countdownBox: {
-    backgroundColor: '#111',
+    backgroundColor: '#0d0d0d',
     borderRadius: 20,
-    padding: 24,
+    padding: 26,
     alignItems: 'center',
     width: '100%',
     borderWidth: 1,
@@ -147,20 +153,26 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   countdownLabel: {
+    fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#555',
-    fontWeight: '700',
-    letterSpacing: 2,
-    marginBottom: 8,
+    color: '#FF8533',
+    letterSpacing: 3,
+    marginBottom: 10,
+    textTransform: 'uppercase',
   },
   countdown: {
-    fontSize: 56,
-    fontWeight: '900',
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 60,
     color: '#fff',
     letterSpacing: 4,
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  countdownSub: { fontSize: 12, color: '#22c55e', fontWeight: '600' },
+  countdownSub: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 11.5,
+    color: '#22c55e',
+    letterSpacing: 1.2,
+  },
   stepsContainer: { width: '100%', paddingLeft: 16, marginBottom: 32 },
   stepRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 0 },
   stepLeft: { alignItems: 'center', width: 32, marginRight: 14 },
@@ -176,7 +188,11 @@ const styles = StyleSheet.create({
   },
   stepDotDone: { backgroundColor: '#14532d', borderColor: '#22c55e' },
   stepDotActive: { backgroundColor: '#1a2e1a', borderColor: '#22c55e' },
-  stepCheck: { fontSize: 12, color: '#22c55e', fontWeight: '800' },
+  stepCheck: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 12,
+    color: '#22c55e',
+  },
   stepPulse: {
     width: 10,
     height: 10,
@@ -191,16 +207,26 @@ const styles = StyleSheet.create({
   },
   stepLineDone: { backgroundColor: '#22c55e' },
   stepLabel: {
-    fontSize: 15,
-    color: '#444',
+    fontFamily: 'Inter_500Medium',
+    fontSize: 14,
+    color: '#666',
     paddingTop: 4,
     paddingBottom: 32,
+    letterSpacing: 0.2,
   },
-  stepLabelDone: { color: '#666' },
-  stepLabelActive: { color: '#fff', fontWeight: '700' },
+  stepLabelDone: { color: '#888' },
+  stepLabelActive: {
+    color: '#fff',
+    fontFamily: 'Inter_700Bold',
+  },
   simulateBtn: {
     marginTop: 'auto',
     paddingBottom: 16,
   },
-  simulateBtnText: { color: '#333', fontSize: 13 },
+  simulateBtnText: {
+    fontFamily: 'Inter_500Medium',
+    color: '#444',
+    fontSize: 12,
+    letterSpacing: 0.5,
+  },
 });

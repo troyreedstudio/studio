@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Let Me Check (LMC)** — universal visual verification on demand. Seekers pay to have a Scout (a real person on the ground) film a 60-second clip of any location anywhere. Phase 1 launch: nightlife wedge in Miami, "Know Before You Go." Long-term vision: any location on earth (DMV queues, airports, restaurants, real estate, used cars, retail, events, etc.).
+**Let Me Check (LMC)** — universal visual verification on demand. Seekers pay to have a Scout (a real person on the ground) film a 30-second clip of any location anywhere. Phase 1 launch: nightlife wedge in Miami, "Know Before You Go." Long-term vision: any location on earth (DMV queues, airports, restaurants, real estate, hotels, gyms, retail, events, beach clubs, etc.).
 
 Two roles, both as separate route groups in Expo Router:
 - **Seekers** — browse venues, request checks, pay, watch delivered clips
@@ -60,7 +60,7 @@ app/
 
 **Seeker**: Splash → Home (browse venues) → Venue (select tier) → Payment → Waiting (countdown) → Delivery (video + rating)
 
-**Scout**: Splash → Dashboard (go online) → Accept request → Filming (record 60s) → Submitted (earnings)
+**Scout**: Splash → Dashboard (go online) → Accept request → Filming (record 30s) → Submitted (earnings)
 
 ## Current State
 
@@ -68,7 +68,7 @@ This is an MVP/prototype with fully functional UI flows but no backend integrati
 
 ## Pricing Model
 
-- Standard: $15 Seeker → $8 Scout, 15-minute delivery, $7 platform margin
+- Standard: $15 Seeker → $8 Scout, 10-minute delivery, $7 platform margin
 - Priority: $20 Seeker → $12 Scout, 7-minute delivery, $8 platform margin
 
 ## Brand

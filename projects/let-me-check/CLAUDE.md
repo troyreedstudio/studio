@@ -2,7 +2,7 @@
 
 **Agent name**: Guy — the Claude Code agent for this project. (Other studio projects have their own named agents; use Guy only in `let-me-check/`.)
 
-Universal visual verification on demand. A **Seeker** pays to have a **Scout** (a real person on the ground) film a 60-second clip of any location — DMV queues, airports, restaurants, used cars, real estate, gyms, retail, events, nightclubs, anywhere. Delivered in 7–15 minutes.
+Universal visual verification on demand. A **Seeker** pays to have a **Scout** (a real person on the ground) film a 30-second clip of any location — DMV queues, airports, restaurants, real estate, gyms, retail, events, hotels, beach clubs, anywhere. Delivered in 7–10 minutes.
 
 **Tagline (primary)**: "Know Before You Go."
 **Tagline (secondary)**: "Real Eyes. Right Now. Anywhere."
@@ -47,14 +47,14 @@ app/
     home.tsx          Venue browsing (5 mock venues, city filters)
     venue.tsx         Venue detail + tier selection (Standard/Priority)
     payment.tsx       Order summary + fee breakdown
-    waiting.tsx       15-min countdown + progress steps
+    waiting.tsx       7-10 min countdown + progress steps
     delivery.tsx      Video player + 5-star rating + Scout info
     history.tsx       Past checks + stats
     profile.tsx       Account settings + referrals + switch to Scout mode
   (scout)/
     _layout.tsx       Scout stack
     dashboard.tsx     Online/offline toggle + incoming requests
-    filming.tsx       Recording UI + 7-min countdown + 60-sec timer
+    filming.tsx       Recording UI + 7-min countdown + 30-sec timer
     submitted.tsx     Success confirmation + earnings
     earnings.tsx      Weekly bar chart + payout history
 ```

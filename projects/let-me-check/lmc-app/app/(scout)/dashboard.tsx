@@ -12,8 +12,9 @@ export default function ScoutDashboard() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.mode}>SCOUT MODE</Text>
-            <Text style={styles.subMode}>{online ? 'You are online' : 'You are offline'}</Text>
+            <Text style={styles.mode}>Scout Mode</Text>
+            <View style={styles.greetingRule} />
+            <Text style={styles.subMode}>{online ? 'You are online · ready to earn' : 'You are offline'}</Text>
           </View>
           <TouchableOpacity
             style={styles.profilePill}
@@ -29,20 +30,24 @@ export default function ScoutDashboard() {
           <Text style={styles.earningsValue}>$127.00</Text>
           <View style={styles.earningsRow}>
             <View style={styles.earningsChip}>
+              <View style={styles.earningsDot} />
               <Text style={styles.earningsChipText}>12 clips delivered</Text>
             </View>
             <TouchableOpacity onPress={() => router.push('/(scout)/earnings')}>
-              <Text style={styles.viewAllText}>View All →</Text>
+              <Text style={styles.viewAllText}>VIEW ALL ›</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Online Toggle */}
         <View style={styles.toggleCard}>
-          <View>
-            <Text style={styles.toggleTitle}>
-              {online ? '🟢 Online — Accepting Requests' : '⚫ Offline — Not Available'}
-            </Text>
+          <View style={{ flex: 1 }}>
+            <View style={styles.toggleTitleRow}>
+              <View style={[styles.statusBubble, online ? styles.statusBubbleOn : styles.statusBubbleOff]} />
+              <Text style={styles.toggleTitle}>
+                {online ? 'Online — Accepting Requests' : 'Offline — Not Available'}
+              </Text>
+            </View>
             <Text style={styles.toggleSub}>
               {online ? 'You will receive check requests nearby' : 'Go online to start earning'}
             </Text>
@@ -67,9 +72,9 @@ export default function ScoutDashboard() {
 
             <View style={styles.requestCard}>
               <View style={styles.requestTop}>
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.requestVenue}>Komodo Miami</Text>
-                  <Text style={styles.requestDistance}>📍 0.3 miles away</Text>
+                  <Text style={styles.requestDistance}>📍 0.3 miles · Brickell</Text>
                 </View>
                 <View style={styles.priorityBadge}>
                   <Text style={styles.priorityBadgeText}>PRIORITY</Text>
@@ -78,18 +83,18 @@ export default function ScoutDashboard() {
 
               <View style={styles.requestDetails}>
                 <View style={styles.requestDetail}>
-                  <Text style={styles.requestDetailLabel}>You earn</Text>
+                  <Text style={styles.requestDetailLabel}>YOU EARN</Text>
                   <Text style={styles.requestDetailValue}>$10.00</Text>
                 </View>
                 <View style={styles.requestDetailDivider} />
                 <View style={styles.requestDetail}>
-                  <Text style={styles.requestDetailLabel}>Delivery</Text>
+                  <Text style={styles.requestDetailLabel}>DELIVERY</Text>
                   <Text style={styles.requestDetailValue}>7 min</Text>
                 </View>
                 <View style={styles.requestDetailDivider} />
                 <View style={styles.requestDetail}>
-                  <Text style={styles.requestDetailLabel}>Clip</Text>
-                  <Text style={styles.requestDetailValue}>60s HD</Text>
+                  <Text style={styles.requestDetailLabel}>CLIP</Text>
+                  <Text style={styles.requestDetailValue}>30s HD</Text>
                 </View>
               </View>
 
@@ -98,14 +103,14 @@ export default function ScoutDashboard() {
                   style={styles.declineBtn}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.declineBtnText}>Decline</Text>
+                  <Text style={styles.declineBtnText}>DECLINE</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.acceptBtn}
                   onPress={() => router.push('/(scout)/filming')}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.acceptBtnText}>Accept → Earn $10</Text>
+                  <Text style={styles.acceptBtnText}>ACCEPT · EARN $10</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -141,10 +146,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 16,
+    paddingBottom: 20,
   },
-  mode: { fontSize: 22, fontWeight: '900', color: '#fff', letterSpacing: 1 },
-  subMode: { fontSize: 13, color: '#888', marginTop: 2 },
+  mode: {
+    fontFamily: 'BodoniModa_700Bold',
+    fontSize: 28,
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+  greetingRule: {
+    height: 2,
+    width: 36,
+    backgroundColor: '#22c55e',
+    marginTop: 8,
+  },
+  subMode: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#888',
+    marginTop: 8,
+    letterSpacing: 0.3,
+  },
   profilePill: {
     width: 40,
     height: 40,
@@ -155,73 +177,139 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  profileInitials: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  profileInitials: {
+    fontFamily: 'Inter_700Bold',
+    color: '#fff',
+    fontSize: 14,
+  },
   earningsCard: {
     backgroundColor: '#0d1a0d',
     borderRadius: 20,
     marginHorizontal: 20,
-    padding: 20,
+    padding: 22,
     borderWidth: 1,
-    borderColor: '#1a2e1a',
-    marginBottom: 12,
+    borderColor: '#1a3a1a',
+    marginBottom: 14,
   },
   earningsLabel: {
+    fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    fontWeight: '800',
     color: '#22c55e',
-    letterSpacing: 2,
-    marginBottom: 6,
+    letterSpacing: 3,
+    marginBottom: 8,
   },
-  earningsValue: { fontSize: 44, fontWeight: '900', color: '#fff', marginBottom: 12 },
-  earningsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  earningsValue: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 48,
+    color: '#fff',
+    letterSpacing: 0.5,
+    marginBottom: 14,
+  },
+  earningsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   earningsChip: {
-    backgroundColor: '#1a2e1a',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0a1f0a',
+    borderRadius: 100,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#1a3a1a',
   },
-  earningsChipText: { color: '#22c55e', fontSize: 12, fontWeight: '600' },
-  viewAllText: { color: '#888', fontSize: 13 },
+  earningsDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22c55e',
+  },
+  earningsChipText: {
+    fontFamily: 'Inter_600SemiBold',
+    color: '#22c55e',
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
+  viewAllText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#FF8533',
+    fontSize: 11,
+    letterSpacing: 2,
+  },
   toggleCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#111',
-    borderRadius: 16,
+    backgroundColor: '#0d0d0d',
+    borderRadius: 14,
     marginHorizontal: 20,
-    padding: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: '#1e1e1e',
-    marginBottom: 20,
+    marginBottom: 22,
+    gap: 12,
   },
-  toggleTitle: { fontSize: 14, fontWeight: '700', color: '#fff', marginBottom: 4 },
-  toggleSub: { fontSize: 12, color: '#555' },
+  toggleTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  statusBubble: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusBubbleOn: { backgroundColor: '#22c55e' },
+  statusBubbleOff: { backgroundColor: '#555' },
+  toggleTitle: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 13.5,
+    color: '#fff',
+    letterSpacing: 0.2,
+  },
+  toggleSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 16,
+  },
   requestSection: { paddingHorizontal: 20 },
   requestHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   requestTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#555',
-    letterSpacing: 2,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13,
+    color: '#FF8533',
+    letterSpacing: 4,
+    textTransform: 'uppercase',
   },
   newBadge: {
     backgroundColor: '#22c55e',
     borderRadius: 4,
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
     paddingVertical: 2,
   },
-  newBadgeText: { fontSize: 9, fontWeight: '900', color: '#000', letterSpacing: 1 },
+  newBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: '#000',
+    letterSpacing: 1.5,
+  },
   requestCard: {
-    backgroundColor: '#111',
-    borderRadius: 20,
+    backgroundColor: '#0d0d0d',
+    borderRadius: 16,
     padding: 18,
     borderWidth: 1.5,
-    borderColor: '#22c55e33',
+    borderColor: 'rgba(34,197,94,0.35)',
   },
   requestTop: {
     flexDirection: 'row',
@@ -229,44 +317,83 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 16,
   },
-  requestVenue: { fontSize: 20, fontWeight: '800', color: '#fff', marginBottom: 4 },
-  requestDistance: { fontSize: 13, color: '#888' },
+  requestVenue: {
+    fontFamily: 'CormorantGaramond_700Bold',
+    fontSize: 22,
+    color: '#fff',
+    letterSpacing: 0.4,
+    marginBottom: 4,
+  },
+  requestDistance: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#888',
+    letterSpacing: 0.3,
+  },
   priorityBadge: {
     backgroundColor: '#f59e0b',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  priorityBadgeText: { fontSize: 10, fontWeight: '900', color: '#000', letterSpacing: 1 },
+  priorityBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: '#000',
+    letterSpacing: 1.5,
+  },
   requestDetails: {
     flexDirection: 'row',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: '#0a0a0a',
     borderRadius: 12,
-    padding: 14,
+    paddingVertical: 14,
     marginBottom: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
   },
   requestDetail: { flex: 1, alignItems: 'center' },
-  requestDetailLabel: { fontSize: 10, color: '#555', marginBottom: 4, fontWeight: '600' },
-  requestDetailValue: { fontSize: 16, fontWeight: '800', color: '#fff' },
-  requestDetailDivider: { width: 1, height: 30, backgroundColor: '#1a1a1a' },
+  requestDetailLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: '#666',
+    letterSpacing: 1.5,
+    marginBottom: 5,
+  },
+  requestDetailValue: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 18,
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+  requestDetailDivider: { width: 1, height: 28, backgroundColor: '#1e1e1e' },
   requestActions: { flexDirection: 'row', gap: 10 },
   declineBtn: {
     flex: 1,
     backgroundColor: '#1a1a1a',
     borderRadius: 12,
-    paddingVertical: 15,
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  declineBtnText: { color: '#888', fontWeight: '700', fontSize: 14 },
+  declineBtnText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#888',
+    fontSize: 12,
+    letterSpacing: 2,
+  },
   acceptBtn: {
     flex: 2,
     backgroundColor: '#22c55e',
     borderRadius: 12,
-    paddingVertical: 15,
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  acceptBtnText: { color: '#000', fontWeight: '900', fontSize: 14 },
+  acceptBtnText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#000',
+    fontSize: 12,
+    letterSpacing: 2,
+  },
   navBar: {
     position: 'absolute',
     bottom: 0,
@@ -281,6 +408,11 @@ const styles = StyleSheet.create({
   },
   navItem: { flex: 1, alignItems: 'center', gap: 4 },
   navIcon: { fontSize: 20 },
-  navLabel: { fontSize: 10, color: '#555', fontWeight: '600' },
+  navLabel: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 10,
+    color: '#555',
+    letterSpacing: 0.5,
+  },
   navLabelActive: { color: '#fff' },
 });

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 const STEPS = [
   { id: 0, label: 'Walk to venue', done: true, active: false },
-  { id: 1, label: 'Film 60 seconds', done: false, active: true },
+  { id: 1, label: 'Film 30 seconds', done: false, active: true },
   { id: 2, label: 'Submit clip', done: false, active: false },
 ];
 
@@ -22,7 +22,7 @@ export default function FilmingScreen() {
 
   useEffect(() => {
     if (!recording) return;
-    if (recordSecs >= 60) {
+    if (recordSecs >= 30) {
       setRecording(false);
       return;
     }
@@ -75,7 +75,7 @@ export default function FilmingScreen() {
               ]}>
                 {step.label}
                 {step.active && recording && (
-                  <Text style={styles.recordProgress}> — {recordSecs}s / 60s</Text>
+                  <Text style={styles.recordProgress}> — {recordSecs}s / 30s</Text>
                 )}
               </Text>
             </View>
@@ -91,7 +91,7 @@ export default function FilmingScreen() {
         <TouchableOpacity
           style={[styles.recordBtn, recording && styles.recordBtnActive]}
           onPress={() => {
-            if (recordSecs >= 60) {
+            if (recordSecs >= 30) {
               router.push('/(scout)/submitted');
             } else {
               setRecording(!recording);
@@ -109,7 +109,7 @@ export default function FilmingScreen() {
             )}
           </View>
           <Text style={styles.recordHint}>
-            {recordSecs >= 60
+            {recordSecs >= 30
               ? 'Tap to submit clip →'
               : recording
               ? `Recording... ${recordSecs}s`
@@ -130,29 +130,67 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   inner: { flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 },
   acceptedBadge: {
-    backgroundColor: '#14532d',
-    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34,197,94,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.4)',
+    borderRadius: 100,
     paddingHorizontal: 14,
     paddingVertical: 6,
-    marginBottom: 16,
+    marginBottom: 18,
   },
-  acceptedText: { color: '#22c55e', fontSize: 12, fontWeight: '800', letterSpacing: 1 },
-  venueName: { fontSize: 26, fontWeight: '900', color: '#fff', marginBottom: 4 },
-  venueAddress: { fontSize: 13, color: '#888', marginBottom: 20 },
+  acceptedText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#22c55e',
+    fontSize: 11,
+    letterSpacing: 2,
+  },
+  venueName: {
+    fontFamily: 'CormorantGaramond_700Bold',
+    fontSize: 28,
+    color: '#fff',
+    letterSpacing: 0.4,
+    marginBottom: 4,
+  },
+  venueAddress: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#888',
+    letterSpacing: 0.3,
+    marginBottom: 24,
+  },
   countdownBox: {
-    backgroundColor: '#111',
+    backgroundColor: '#0d0d0d',
     borderRadius: 16,
-    padding: 18,
+    padding: 20,
     alignItems: 'center',
     width: '100%',
     borderWidth: 1,
     borderColor: '#1e1e1e',
-    marginBottom: 24,
+    marginBottom: 26,
   },
-  countdownLabel: { fontSize: 10, color: '#555', fontWeight: '700', letterSpacing: 2, marginBottom: 6 },
-  countdown: { fontSize: 44, fontWeight: '900', color: '#fff', letterSpacing: 4, marginBottom: 4 },
-  countdownSub: { fontSize: 12, color: '#f59e0b', fontWeight: '600' },
-  stepsBox: { width: '100%', paddingLeft: 8, marginBottom: 16 },
+  countdownLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: '#FF8533',
+    letterSpacing: 3,
+    marginBottom: 8,
+  },
+  countdown: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 52,
+    color: '#fff',
+    letterSpacing: 4,
+    marginBottom: 6,
+  },
+  countdownSub: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 11,
+    color: '#f59e0b',
+    letterSpacing: 1.2,
+  },
+  stepsBox: { width: '100%', paddingLeft: 8, marginBottom: 18 },
   stepRow: { flexDirection: 'row', alignItems: 'flex-start' },
   stepLeft: { alignItems: 'center', width: 32, marginRight: 12 },
   stepDot: {
@@ -167,24 +205,45 @@ const styles = StyleSheet.create({
   },
   stepDotDone: { backgroundColor: '#14532d', borderColor: '#22c55e' },
   stepDotActive: { backgroundColor: '#1a1a1a', borderColor: '#22c55e' },
-  stepCheck: { fontSize: 11, color: '#22c55e', fontWeight: '800' },
+  stepCheck: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: '#22c55e',
+  },
   stepPulse: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' },
   stepLine: { width: 2, height: 32, backgroundColor: '#1a1a1a', marginTop: 2 },
   stepLineDone: { backgroundColor: '#22c55e' },
-  stepLabel: { fontSize: 14, color: '#444', paddingTop: 3, paddingBottom: 28 },
-  stepLabelDone: { color: '#666' },
-  stepLabelActive: { color: '#fff', fontWeight: '700' },
+  stepLabel: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 14,
+    color: '#666',
+    paddingTop: 3,
+    paddingBottom: 28,
+    letterSpacing: 0.2,
+  },
+  stepLabelDone: { color: '#888' },
+  stepLabelActive: {
+    color: '#fff',
+    fontFamily: 'Inter_700Bold',
+  },
   recordProgress: { color: '#22c55e' },
   gpsBadge: {
-    backgroundColor: '#0d1a0d',
-    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34,197,94,0.1)',
+    borderRadius: 100,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    marginBottom: 24,
+    marginBottom: 26,
     borderWidth: 1,
-    borderColor: '#1a2e1a',
+    borderColor: 'rgba(34,197,94,0.35)',
   },
-  gpsText: { color: '#22c55e', fontSize: 12, fontWeight: '600' },
+  gpsText: {
+    fontFamily: 'Inter_600SemiBold',
+    color: '#22c55e',
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
   recordBtn: {
     alignItems: 'center',
     marginBottom: 16,
@@ -199,7 +258,7 @@ const styles = StyleSheet.create({
     borderColor: '#ef4444',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   recordInnerActive: {
     backgroundColor: '#ef4444',
@@ -218,6 +277,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   recordLabel: { fontSize: 28, color: '#ef4444' },
-  recordHint: { fontSize: 13, color: '#888' },
-  earningNote: { fontSize: 13, color: '#555', position: 'absolute', bottom: 32 },
+  recordHint: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12.5,
+    color: '#888',
+    letterSpacing: 0.3,
+  },
+  earningNote: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12,
+    color: '#22c55e',
+    position: 'absolute',
+    bottom: 32,
+    letterSpacing: 0.5,
+  },
 });

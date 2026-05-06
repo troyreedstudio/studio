@@ -1,4 +1,6 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, ImageBackground } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
@@ -6,9 +8,16 @@ export default function VenueScreen() {
   const router = useRouter();
   const { name = 'Komodo', city = 'Miami' } = useLocalSearchParams<{ name: string; city: string }>();
   const [selectedTier, setSelectedTier] = useState<'standard' | 'priority'>('standard');
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const [processing, setProcessing] = useState(false);
+
+  const player = useVideoPlayer(require('../../assets/lmc-trailer.mp4'), (p) => {
+    p.loop = true;
+    p.muted = true;
+  });
 
   const tier = selectedTier === 'standard'
-    ? { price: '$15', time: '15 min', label: 'Standard' }
+    ? { price: '$15', time: '10 min', label: 'Standard' }
     : { price: '$20', time: '7 min', label: 'Priority' };
 
   return (
@@ -23,11 +32,59 @@ export default function VenueScreen() {
           <Text style={styles.venueCity}>{city}</Text>
         </View>
 
-        {/* Photo Placeholder */}
-        <View style={styles.photoArea}>
-          <Text style={styles.photoLabel}>📸 LIVE PREVIEW</Text>
-          <Text style={styles.photoSub}>Real footage available after check</Text>
-        </View>
+        {/* Mock video preview window */}
+        {videoPlaying ? (
+          <View style={styles.photoArea}>
+            <VideoView
+              player={player}
+              style={StyleSheet.absoluteFillObject}
+              contentFit="cover"
+              nativeControls={false}
+            />
+            <View style={styles.photoBadge}>
+              <Text style={styles.photoBadgeText}>SAMPLE PREVIEW · 30s</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.photoCloseBtn}
+              onPress={() => {
+                player.pause();
+                setVideoPlaying(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.photoCloseIcon}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => {
+              player.play();
+              setVideoPlaying(true);
+            }}
+          >
+            <ImageBackground
+              source={require('../../assets/splash-assets/miami-night.jpg')}
+              style={styles.photoArea}
+              imageStyle={{ borderRadius: 16 }}
+            >
+              <LinearGradient
+                colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+                locations={[0, 1]}
+                style={styles.photoGradient}
+              />
+              <View style={styles.photoBadge}>
+                <Text style={styles.photoBadgeText}>SAMPLE PREVIEW · 30s</Text>
+              </View>
+              <View style={styles.photoPlayWrap}>
+                <View style={styles.photoPlayCircle}>
+                  <Text style={styles.photoPlayIcon}>▶</Text>
+                </View>
+              </View>
+              <Text style={styles.photoSub}>Tap to play sample · Real footage replaces this after your check</Text>
+            </ImageBackground>
+          </TouchableOpacity>
+        )}
 
         {/* Live Status */}
         <View style={styles.liveStatus}>
@@ -55,8 +112,8 @@ export default function VenueScreen() {
           >
             <Text style={styles.tierLabel}>Standard</Text>
             <Text style={styles.tierPrice}>$15</Text>
-            <Text style={styles.tierTime}>~15 min</Text>
-            <Text style={styles.tierDesc}>HD video clip of the venue</Text>
+            <Text style={styles.tierTime}>~10 min</Text>
+            <Text style={styles.tierDesc}>30-sec HD video of the queue</Text>
             {selectedTier === 'standard' && (
               <View style={styles.selectedBadge}>
                 <Text style={styles.selectedBadgeText}>✓</Text>
@@ -75,7 +132,7 @@ export default function VenueScreen() {
             <Text style={styles.tierLabel}>Priority</Text>
             <Text style={styles.tierPrice}>$20</Text>
             <Text style={styles.tierTime}>~7 min</Text>
-            <Text style={styles.tierDesc}>Rush delivery + priority scout</Text>
+            <Text style={styles.tierDesc}>30-sec HD video · rush delivery</Text>
             {selectedTier === 'priority' && (
               <View style={[styles.selectedBadge, styles.selectedBadgeAmber]}>
                 <Text style={styles.selectedBadgeText}>✓</Text>
@@ -93,16 +150,23 @@ export default function VenueScreen() {
           <Text style={styles.ctaSummaryText}>{tier.label} · {tier.price} · ~{tier.time}</Text>
         </View>
         <TouchableOpacity
-          style={styles.ctaButton}
-          onPress={() =>
-            router.push({
-              pathname: '/(seeker)/payment',
-              params: { venue: name, city, tier: selectedTier, price: tier.price, time: tier.time },
-            })
-          }
+          style={[styles.ctaButton, processing && styles.ctaButtonProcessing]}
+          disabled={processing}
+          onPress={() => {
+            setProcessing(true);
+            setTimeout(() => {
+              setProcessing(false);
+              router.push({
+                pathname: '/(seeker)/payment',
+                params: { venue: name, city, tier: selectedTier, price: tier.price, time: tier.time },
+              });
+            }, 900);
+          }}
           activeOpacity={0.85}
         >
-          <Text style={styles.ctaButtonText}>REQUEST CHECK</Text>
+          <Text style={styles.ctaButtonText}>
+            {processing ? 'FINDING SCOUTS...' : `PAY ${tier.price} · ${tier.label.toUpperCase()}`}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -119,15 +183,83 @@ const styles = StyleSheet.create({
   photoArea: {
     marginHorizontal: 20,
     height: 200,
-    backgroundColor: '#111',
     borderRadius: 16,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    backgroundColor: '#111',
+  },
+  photoGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 16,
+  },
+  photoBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderWidth: 1,
+    borderColor: '#FF8533',
+    borderRadius: 100,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  photoBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: '#FF8533',
+    letterSpacing: 1.5,
+  },
+  photoCloseBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#222',
   },
-  photoLabel: { fontSize: 16, color: '#444', marginBottom: 8 },
-  photoSub: { fontSize: 12, color: '#333' },
+  photoCloseIcon: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  photoPlayWrap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoPlayCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoPlayIcon: {
+    fontSize: 26,
+    color: '#000',
+    marginLeft: 4,
+  },
+  photoSub: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    paddingBottom: 14,
+    paddingHorizontal: 18,
+  },
   liveStatus: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -227,6 +359,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
+  },
+  ctaButtonProcessing: {
+    backgroundColor: '#cccccc',
   },
   ctaButtonText: {
     color: '#000',

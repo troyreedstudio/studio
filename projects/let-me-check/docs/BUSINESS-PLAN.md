@@ -49,7 +49,7 @@ Yet when it comes to one of the most basic questions — *"What does it look lik
 
 LMC is a two-sided marketplace:
 
-**Those who need eyes on the ground** pay $15 for a live 60-second video of any location on earth — delivered in under 7 minutes.
+**Those who need eyes on the ground** pay $15 for a live 30-second video of any location on earth — delivered in 7-10 minutes.
 
 **Those who ARE the eyes on the ground** earn $8 every time they answer a request near them.
 
@@ -73,7 +73,7 @@ This is what we call our contributors. Not "Checkers." Not "Contributors."
 
 **Scouts.**
 
-A Scout is someone who moves through the world with their eyes open and their phone ready. They're already at the venue, the event, the restaurant, the stadium. When a Seeker needs eyes on the ground nearby, the Scout answers the call — films 60 seconds — earns $8.
+A Scout is someone who moves through the world with their eyes open and their phone ready. They're already at the venue, the event, the restaurant, the stadium. When a Seeker needs eyes on the ground nearby, the Scout answers the call — films 30 seconds — earns $8.
 
 Scouts are:
 - The first responders of visual intelligence

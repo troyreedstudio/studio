@@ -8,7 +8,7 @@
 
 ## What it is
 
-**Universal visual verification on demand.** A phone-based marketplace where any user can request a 60-second video of any location (DMV queue, airport security, restaurant wait, hotel pool, used car, real-estate tour, retail queue, gym, club, anywhere) filmed in real time by another user already there. $15 standard / $20 priority. Same model as Uber — anyone is both Seeker (requester) or Scout (filmer), no employees, no human ops, runs itself once the app is in users' hands.
+**Universal visual verification on demand.** A phone-based marketplace where any user can request a 30-second video of any location (DMV queue, airport security, restaurant wait, hotel pool, real-estate tour, retail queue, gym, beach club, event, anywhere) filmed in real time by another user already there. $15 standard / $20 priority. Delivered in 7-10 minutes. Same model as Uber — anyone is both Seeker (requester) or Scout (filmer), no employees, no human ops, runs itself once the app is in users' hands.
 
 **Tagline:** "Real Eyes. Right Now. Anywhere." (primary), "Know Before You Go." (secondary)
 

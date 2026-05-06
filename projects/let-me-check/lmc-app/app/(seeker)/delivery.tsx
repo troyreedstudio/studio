@@ -32,12 +32,20 @@ export default function DeliveryScreen() {
             </View>
           </TouchableOpacity>
           <View style={styles.videoBadge}>
-            <Text style={styles.videoBadgeText}>HD · 60s</Text>
+            <Text style={styles.videoBadgeText}>HD · 30s</Text>
           </View>
           <View style={styles.liveTimestamp}>
             <View style={styles.liveBlip} />
             <Text style={styles.liveTime}>Filmed 2 min ago</Text>
           </View>
+        </View>
+
+        {/* AI Verdict — auto-generated 1-line summary of the clip */}
+        <View style={styles.aiVerdictRow}>
+          <View style={styles.aiBadge}>
+            <Text style={styles.aiBadgeText}>✦ AI VERDICT</Text>
+          </View>
+          <Text style={styles.aiVerdictText}>Short line · ~30 inside · medium energy</Text>
         </View>
 
         {/* Crowd Tags */}
@@ -89,7 +97,7 @@ export default function DeliveryScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.7}>
-          <Text style={styles.secondaryBtnText}>📤  SHARE CLIP</Text>
+          <Text style={styles.secondaryBtnText}>REPORT ISSUE</Text>
         </TouchableOpacity>
 
         <View style={{ height: 32 }} />
@@ -113,24 +121,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  checkMark: { fontSize: 36, color: '#22c55e', fontWeight: '900' },
-  readyTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#fff',
-    letterSpacing: 1,
-    marginBottom: 6,
+  checkMark: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 36,
+    color: '#22c55e',
   },
-  venueName: { fontSize: 14, color: '#888' },
+  readyTitle: {
+    fontFamily: 'BodoniModa_700Bold',
+    fontSize: 26,
+    color: '#fff',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  venueName: {
+    fontFamily: 'CormorantGaramond_700Bold',
+    fontSize: 18,
+    color: '#cccccc',
+    letterSpacing: 0.4,
+  },
   videoBox: {
     height: 220,
-    backgroundColor: '#111',
+    backgroundColor: '#0d0d0d',
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#222',
-    marginBottom: 24,
+    borderColor: '#1e1e1e',
+    marginBottom: 18,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -160,7 +177,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  videoBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  videoBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#fff',
+    fontSize: 9,
+    letterSpacing: 1.5,
+  },
   liveTimestamp: {
     position: 'absolute',
     bottom: 12,
@@ -170,74 +192,164 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22c55e' },
-  liveTime: { color: '#22c55e', fontSize: 11, fontWeight: '600' },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#555',
-    letterSpacing: 2,
-    marginBottom: 10,
-    marginTop: 4,
+  liveTime: {
+    fontFamily: 'Inter_600SemiBold',
+    color: '#22c55e',
+    fontSize: 10.5,
+    letterSpacing: 0.4,
   },
-  tagRow: { flexDirection: 'row', gap: 8, marginBottom: 20, flexWrap: 'wrap' },
+  aiVerdictRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,133,51,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,133,51,0.3)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 22,
+    gap: 10,
+  },
+  aiBadge: {
+    backgroundColor: '#FF8533',
+    borderRadius: 100,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  aiBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: '#000',
+    letterSpacing: 1,
+  },
+  aiVerdictText: {
+    flex: 1,
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12.5,
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+  sectionLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: '#FF8533',
+    letterSpacing: 3,
+    marginBottom: 12,
+    marginTop: 6,
+    textTransform: 'uppercase',
+  },
+  tagRow: { flexDirection: 'row', gap: 8, marginBottom: 22, flexWrap: 'wrap' },
   tag: {
-    backgroundColor: '#111',
-    borderRadius: 20,
+    backgroundColor: 'rgba(34,197,94,0.1)',
+    borderRadius: 100,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: '#22c55e44',
+    borderColor: 'rgba(34,197,94,0.35)',
   },
-  tagText: { color: '#22c55e', fontSize: 13, fontWeight: '600' },
-  starsRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  tagText: {
+    fontFamily: 'Inter_600SemiBold',
+    color: '#22c55e',
+    fontSize: 12,
+    letterSpacing: 0.4,
+  },
+  starsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   star: { fontSize: 36, color: '#222' },
   starActive: { color: '#f59e0b' },
-  ratingFeedback: { color: '#888', fontSize: 13, marginBottom: 20 },
+  ratingFeedback: {
+    fontFamily: 'Inter_400Regular',
+    color: '#888',
+    fontSize: 12.5,
+    marginBottom: 22,
+    letterSpacing: 0.3,
+  },
   scoutCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111',
+    backgroundColor: '#0d0d0d',
     borderRadius: 14,
-    padding: 14,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#1e1e1e',
-    marginBottom: 24,
+    marginBottom: 26,
     marginTop: 8,
   },
   scoutAvatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#222',
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  scoutAvatarText: { color: '#fff', fontWeight: '700', fontSize: 18 },
-  scoutInfo: { flex: 1 },
-  scoutName: { color: '#fff', fontWeight: '700', fontSize: 15, marginBottom: 2 },
-  scoutRating: { color: '#888', fontSize: 12 },
-  verifiedBadge: {
-    backgroundColor: '#14532d',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  scoutAvatarText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#fff',
+    fontSize: 16,
+    letterSpacing: 0.3,
   },
-  verifiedText: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
+  scoutInfo: { flex: 1 },
+  scoutName: {
+    fontFamily: 'CormorantGaramond_700Bold',
+    color: '#fff',
+    fontSize: 17,
+    letterSpacing: 0.3,
+    marginBottom: 3,
+  },
+  scoutRating: {
+    fontFamily: 'Inter_400Regular',
+    color: '#888',
+    fontSize: 11.5,
+    letterSpacing: 0.3,
+  },
+  verifiedBadge: {
+    backgroundColor: 'rgba(34,197,94,0.15)',
+    borderRadius: 100,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.4)',
+  },
+  verifiedText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#22c55e',
+    fontSize: 9,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
   primaryBtn: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FAF6F0',
     borderRadius: 14,
-    paddingVertical: 17,
+    paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  primaryBtnText: { color: '#000', fontWeight: '800', fontSize: 14, letterSpacing: 1 },
+  primaryBtnText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#000',
+    fontSize: 13,
+    letterSpacing: 2.5,
+  },
   secondaryBtn: {
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: 'rgba(255,255,255,0.4)',
     borderRadius: 14,
-    paddingVertical: 17,
+    paddingVertical: 18,
     alignItems: 'center',
   },
-  secondaryBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  secondaryBtnText: {
+    fontFamily: 'Inter_600SemiBold',
+    color: '#fff',
+    fontSize: 12.5,
+    letterSpacing: 2,
+  },
 });

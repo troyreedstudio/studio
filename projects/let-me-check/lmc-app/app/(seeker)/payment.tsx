@@ -1,14 +1,16 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 
 export default function PaymentScreen() {
   const router = useRouter();
+  const [processing, setProcessing] = useState(false);
   const {
     venue = 'Komodo',
     city = 'Miami',
     tier = 'standard',
     price = '$15',
-    time = '15 min',
+    time = '10 min',
   } = useLocalSearchParams<{
     venue: string;
     city: string;
@@ -95,18 +97,27 @@ export default function PaymentScreen() {
       {/* CTA */}
       <View style={styles.ctaContainer}>
         <TouchableOpacity
-          style={styles.ctaButton}
-          onPress={() =>
-            router.push({
-              pathname: '/(seeker)/waiting',
-              params: { venue, city, tier, time },
-            })
-          }
+          style={[styles.ctaButton, processing && styles.ctaButtonProcessing]}
+          disabled={processing}
+          onPress={() => {
+            setProcessing(true);
+            setTimeout(() => {
+              setProcessing(false);
+              router.push({
+                pathname: '/(seeker)/waiting',
+                params: { venue, city, tier, time },
+              });
+            }, 1800);
+          }}
           activeOpacity={0.85}
         >
-          <Text style={styles.ctaButtonText}>CONFIRM & PAY {total}</Text>
+          <Text style={styles.ctaButtonText}>
+            {processing ? 'PROCESSING PAYMENT...' : `CONFIRM & PAY ${total}`}
+          </Text>
         </TouchableOpacity>
-        <Text style={styles.disclaimer}>Secure payment · No refunds after scout departs</Text>
+        <Text style={styles.disclaimer}>
+          {processing ? 'Securing your payment with Stripe...' : 'Secure payment · No refunds after scout departs'}
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -114,30 +125,41 @@ export default function PaymentScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', paddingHorizontal: 20 },
-  header: { paddingTop: 12, paddingBottom: 20 },
-  backText: { color: '#888', fontSize: 16, marginBottom: 16 },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#fff',
-    letterSpacing: 1,
-    marginBottom: 4,
+  header: { paddingTop: 12, paddingBottom: 22 },
+  backText: {
+    fontFamily: 'Inter_500Medium',
+    color: '#FF8533',
+    fontSize: 14,
+    marginBottom: 18,
   },
-  subtitle: { fontSize: 13, color: '#888' },
+  title: {
+    fontFamily: 'BodoniModa_700Bold',
+    fontSize: 26,
+    color: '#fff',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: '#888',
+    letterSpacing: 0.3,
+  },
   card: {
-    backgroundColor: '#111',
+    backgroundColor: '#0d0d0d',
     borderRadius: 16,
-    padding: 18,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#1e1e1e',
     marginBottom: 12,
   },
   cardTitle: {
+    fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    fontWeight: '800',
-    color: '#555',
-    letterSpacing: 2,
+    color: '#FF8533',
+    letterSpacing: 3,
     marginBottom: 16,
+    textTransform: 'uppercase',
   },
   row: {
     flexDirection: 'row',
@@ -145,19 +167,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
   },
-  rowLabel: { fontSize: 14, color: '#888' },
-  rowValue: { fontSize: 14, color: '#fff', fontWeight: '600' },
-  totalLabel: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  totalValue: { fontSize: 20, fontWeight: '900', color: '#fff' },
+  rowLabel: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: '#888',
+    letterSpacing: 0.3,
+  },
+  rowValue: {
+    fontFamily: 'CormorantGaramond_700Bold',
+    fontSize: 16,
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+  totalLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13,
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  totalValue: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 24,
+    color: '#fff',
+    letterSpacing: 0.4,
+  },
   divider: { height: 1, backgroundColor: '#1a1a1a' },
   tierBadge: {
-    backgroundColor: '#222',
-    borderRadius: 6,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 100,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  tierBadgePriority: { backgroundColor: '#2a1f00' },
-  tierBadgeText: { fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.5 },
+  tierBadgePriority: { backgroundColor: 'rgba(245,158,11,0.15)' },
+  tierBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: '#fff',
+    letterSpacing: 1.5,
+  },
   tierBadgeTextPriority: { color: '#f59e0b' },
   deliveryCard: {
     flexDirection: 'row',
@@ -166,7 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#1a2e1a',
+    borderColor: '#1a3a1a',
     marginBottom: 12,
     gap: 12,
   },
@@ -174,13 +221,25 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1a2e1a',
+    backgroundColor: '#1a3a1a',
     justifyContent: 'center',
     alignItems: 'center',
   },
   deliveryEmoji: { fontSize: 18 },
-  deliveryTitle: { fontSize: 12, color: '#888', marginBottom: 2 },
-  deliveryTime: { fontSize: 18, fontWeight: '800', color: '#22c55e' },
+  deliveryTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: '#22c55e',
+    letterSpacing: 2,
+    marginBottom: 3,
+    textTransform: 'uppercase',
+  },
+  deliveryTime: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 20,
+    color: '#22c55e',
+    letterSpacing: 0.3,
+  },
   liveBlipContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -188,28 +247,63 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   liveBlip: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' },
-  liveLabel: { fontSize: 11, color: '#22c55e', fontWeight: '700' },
+  liveLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: '#22c55e',
+    letterSpacing: 1.5,
+  },
   paymentMethod: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#111',
+    backgroundColor: '#0d0d0d',
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#1e1e1e',
     marginBottom: 24,
   },
-  paymentMethodLabel: { color: '#fff', fontSize: 14 },
-  changeText: { color: '#888', fontSize: 13 },
+  paymentMethodLabel: {
+    fontFamily: 'Inter_500Medium',
+    color: '#fff',
+    fontSize: 13.5,
+    letterSpacing: 0.3,
+  },
+  changeText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#FF8533',
+    fontSize: 11,
+    letterSpacing: 1.5,
+  },
   ctaContainer: { marginTop: 'auto', paddingBottom: 8 },
   ctaButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FAF6F0',
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  ctaButtonText: { color: '#000', fontSize: 15, fontWeight: '800', letterSpacing: 1 },
-  disclaimer: { textAlign: 'center', color: '#444', fontSize: 11 },
+  ctaButtonProcessing: {
+    backgroundColor: '#cccccc',
+    opacity: 0.85,
+  },
+  ctaButtonText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#000',
+    fontSize: 13,
+    letterSpacing: 2.5,
+  },
+  disclaimer: {
+    fontFamily: 'Inter_400Regular',
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 11,
+    letterSpacing: 0.3,
+  },
 });
