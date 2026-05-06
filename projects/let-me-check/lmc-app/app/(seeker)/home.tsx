@@ -6,9 +6,42 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ImageBackground,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+
+const FEATURED = [
+  {
+    id: 'f1',
+    name: 'Nightlife',
+    city: 'Tonight',
+    vibe: 'Doors · Lines · Crowd',
+    image: require('../../assets/splash-assets/featured-1.jpg'),
+  },
+  {
+    id: 'f2',
+    name: 'Airports',
+    city: 'Worldwide',
+    vibe: 'Terminals · Lines · Lounges',
+    image: require('../../assets/splash-assets/featured-2.jpg'),
+  },
+  {
+    id: 'f3',
+    name: 'Events',
+    city: 'Live',
+    vibe: 'Doors · Pit · Stage',
+    image: require('../../assets/splash-assets/featured-3.jpg'),
+  },
+  {
+    id: 'f4',
+    name: 'Retail',
+    city: 'In-store',
+    vibe: 'Queues · Drops · Sales',
+    image: require('../../assets/splash-assets/featured-4.jpg'),
+  },
+];
 
 const CITIES = ['All', 'Miami', 'New York', 'Los Angeles', 'London', 'Dubai'];
 
@@ -20,6 +53,16 @@ const VENUES = [
   { id: '5', name: 'Fabric', city: 'London', vibe: 'Underground Club' },
   { id: '6', name: 'White Dubai', city: 'Dubai', vibe: 'Beach Club' },
   { id: '7', name: 'Swan Miami', city: 'Miami', vibe: 'Restaurant & Bar' },
+];
+
+const POPULAR = [
+  { label: 'Restaurants' },
+  { label: 'Gyms' },
+  { label: 'DMV / Gov' },
+  { label: 'Real Estate' },
+  { label: 'Used Cars' },
+  { label: 'Hotels' },
+  { label: 'Beach Clubs' },
 ];
 
 export default function HomeScreen() {
@@ -37,8 +80,8 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Good evening 👋</Text>
-            <Text style={styles.subGreeting}>Where are you headed tonight?</Text>
+            <Text style={styles.greeting}>Know Before You Go 👁️</Text>
+            <Text style={styles.subGreeting}>Where are you headed today?</Text>
           </View>
           <TouchableOpacity
             style={styles.profilePill}
@@ -46,17 +89,6 @@ export default function HomeScreen() {
           >
             <Text style={styles.profileInitials}>TR</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* Search */}
-        <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search venues..."
-            placeholderTextColor="#555"
-            returnKeyType="search"
-          />
         </View>
 
         {/* City Pills */}
@@ -83,55 +115,71 @@ export default function HomeScreen() {
           })}
         </ScrollView>
 
-        {/* Trending Section */}
+        {/* Featured Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {selectedCity === 'All'
-              ? 'TRENDING TONIGHT'
-              : `TRENDING IN ${selectedCity.toUpperCase()}`}
-          </Text>
-          <View style={styles.liveIndicator}>
-            <View style={styles.liveBlip} />
-            <Text style={styles.liveLabel}>LIVE</Text>
-          </View>
+          <Text style={styles.sectionTitle}>FEATURED</Text>
+          <Text style={styles.featuredTagSmall}>SPONSORED</Text>
         </View>
-
-        {/* Empty state OR Venue Cards */}
-        {filteredVenues.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No venues yet in {selectedCity}.</Text>
-            <Text style={styles.emptyStateSub}>Try another city or check back soon.</Text>
-          </View>
-        ) : (
-          filteredVenues.map((venue) => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.featuredRow}
+        >
+          {FEATURED.map((item) => (
             <TouchableOpacity
-              key={venue.id}
-              style={styles.venueCard}
+              key={item.id}
+              style={styles.featuredCard}
+              activeOpacity={0.9}
               onPress={() =>
                 router.push({
                   pathname: '/(seeker)/venue',
-                  params: { name: venue.name, city: venue.city },
+                  params: { name: item.name, city: item.city },
                 })
               }
-              activeOpacity={0.8}
             >
-              <View style={styles.venuePhotoPlaceholder}>
-                <Text style={styles.venuePhotoText}>{venue.name[0]}</Text>
-              </View>
-              <View style={styles.venueInfo}>
-                <View style={styles.liveRow}>
-                  <View style={styles.orangeDot} />
-                  <Text style={styles.liveText}>LIVE</Text>
+              <ImageBackground source={item.image} style={styles.featuredImage} imageStyle={{ borderRadius: 14 }}>
+                <LinearGradient
+                  colors={['rgba(0,0,0,0.15)', 'rgba(0,0,0,0.9)']}
+                  locations={[0.3, 1]}
+                  style={styles.featuredGradient}
+                />
+                <View style={styles.featuredContent}>
+                  <Text style={styles.featuredName}>{item.name}</Text>
+                  <Text style={styles.featuredVibe}>{item.vibe}</Text>
                 </View>
-                <Text style={styles.venueName}>{venue.name}</Text>
-                <Text style={styles.venueCity}>{venue.city} · {venue.vibe}</Text>
-              </View>
-              <View style={styles.venueArrow}>
-                <Text style={styles.arrowText}>›</Text>
-              </View>
+              </ImageBackground>
             </TouchableOpacity>
-          ))
-        )}
+          ))}
+        </ScrollView>
+
+        {/* Big CTA: Where do you need eyes? */}
+        <TouchableOpacity
+          style={styles.cta}
+          activeOpacity={0.85}
+          onPress={() => {
+            // TODO: open search/location-input flow
+          }}
+        >
+          <Text style={styles.ctaIcon}>🔍</Text>
+          <View style={styles.ctaTextWrap}>
+            <Text style={styles.ctaTitle}>Where do you need eyes?</Text>
+            <Text style={styles.ctaSubtitle}>TAP TO SEARCH ANY LOCATION</Text>
+          </View>
+          <Text style={styles.ctaArrow}>›</Text>
+        </TouchableOpacity>
+
+        {/* POPULAR */}
+        <View style={styles.sectionRow}>
+          <Text style={styles.sectionLabel}>POPULAR</Text>
+        </View>
+        <View style={styles.popularList}>
+          {POPULAR.map((item) => (
+            <TouchableOpacity key={item.label} style={styles.popularRowCard} activeOpacity={0.7}>
+              <Text style={styles.popularItemLabel}>{item.label}</Text>
+              <Text style={styles.popularArrow}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* Nav Footer */}
         <View style={styles.navBar}>
@@ -164,8 +212,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  greeting: { fontSize: 24, fontWeight: '700', color: '#fff' },
-  subGreeting: { fontSize: 14, color: '#888', marginTop: 2 },
+  greeting: { fontFamily: 'Anton_400Regular', fontSize: 26, color: '#fff', letterSpacing: 1.5, textTransform: 'uppercase' },
+  subGreeting: { fontFamily: 'Inter_300Light', fontSize: 13, color: '#cccccc', marginTop: 4, letterSpacing: 0.5 },
   profilePill: {
     width: 40,
     height: 40,
@@ -176,7 +224,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  profileInitials: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  profileInitials: { fontFamily: 'Inter_600SemiBold', color: '#fff', fontSize: 13, letterSpacing: 1 },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -190,7 +238,7 @@ const styles = StyleSheet.create({
     borderColor: '#222',
   },
   searchIcon: { fontSize: 16, marginRight: 8 },
-  searchInput: { flex: 1, color: '#fff', fontSize: 15 },
+  searchInput: { flex: 1, fontFamily: 'Inter_400Regular', color: '#fff', fontSize: 14, letterSpacing: 0.3 },
   cityScroll: { marginBottom: 4 },
   cityRow: { paddingHorizontal: 20, gap: 8, flexDirection: 'row' },
   cityPill: {
@@ -202,7 +250,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#111',
   },
   cityPillActive: { backgroundColor: '#fff', borderColor: '#fff' },
-  cityPillText: { color: '#888', fontSize: 13, fontWeight: '600' },
+  cityPillText: { fontFamily: 'Inter_500Medium', color: '#dddddd', fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase' },
   cityPillTextActive: { color: '#000' },
   sectionHeader: {
     flexDirection: 'row',
@@ -213,10 +261,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '800',
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 11,
     color: '#fff',
-    letterSpacing: 2,
+    letterSpacing: 3,
   },
   liveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   liveBlip: {
@@ -225,7 +273,194 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#F47B20',
   },
-  liveLabel: { fontSize: 11, color: '#F47B20', fontWeight: '700', letterSpacing: 1 },
+  liveLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#F47B20', letterSpacing: 2 },
+  cta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF6F0',
+    borderRadius: 50,
+    marginHorizontal: 20,
+    marginTop: 22,
+    marginBottom: 22,
+    paddingVertical: 18,
+    paddingHorizontal: 22,
+    gap: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  ctaIcon: {
+    fontSize: 18,
+  },
+  ctaTextWrap: {
+    flex: 1,
+  },
+  ctaTitle: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 19,
+    color: '#0A0A0A',
+    letterSpacing: 0.3,
+  },
+  ctaSubtitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11.5,
+    color: '#FF6B1A',
+    letterSpacing: 2.2,
+    marginTop: 4,
+  },
+  ctaArrow: {
+    fontSize: 22,
+    color: '#FF6B1A',
+    fontWeight: '500',
+  },
+  sectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginTop: 6,
+    marginBottom: 12,
+  },
+  sectionLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13,
+    color: '#FF8533',
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+  },
+  savedEmpty: {
+    marginHorizontal: 20,
+    marginBottom: 24,
+    padding: 20,
+    borderRadius: 16,
+    backgroundColor: '#0d0d0d',
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
+    borderStyle: 'dashed',
+  },
+  savedEmptyTitle: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 18,
+    color: '#fff',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  savedEmptySub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#888',
+    lineHeight: 18,
+    letterSpacing: 0.2,
+  },
+  savedScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
+    paddingBottom: 4,
+    marginBottom: 24,
+  },
+  savedCard: {
+    width: 200,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: '#111',
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
+  },
+  savedCardName: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 18,
+    color: '#fff',
+    marginBottom: 2,
+  },
+  savedCardCity: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 11,
+    color: '#888',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  savedCardLast: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 10,
+    color: '#666',
+    marginBottom: 10,
+  },
+  savedCardCta: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: '#FF6B1A',
+    letterSpacing: 2,
+  },
+  popularList: {
+    paddingHorizontal: 20,
+    gap: 10,
+    paddingBottom: 8,
+  },
+  popularRowCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0d0d0d',
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    gap: 14,
+  },
+  popularEmoji: { fontSize: 22 },
+  popularItemLabel: {
+    flex: 1,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 22,
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+  popularArrow: {
+    fontSize: 22,
+    color: '#FF6B1A',
+    fontWeight: '500',
+  },
+  featuredTagSmall: { fontFamily: 'Inter_400Regular', fontSize: 9, color: '#666', letterSpacing: 2 },
+  featuredRow: { paddingHorizontal: 20, gap: 12, flexDirection: 'row', paddingBottom: 4 },
+  featuredCard: {
+    width: 280,
+    height: 160,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#111',
+  },
+  featuredImage: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  featuredGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 14,
+  },
+  featuredContent: {
+    padding: 16,
+  },
+  featuredName: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 24,
+    color: '#fff',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  featuredVibe: {
+    fontFamily: 'Inter_300Light',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
   venueCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -246,13 +481,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 14,
   },
-  venuePhotoText: { fontSize: 22, fontWeight: '700', color: '#444' },
+  venuePhotoText: { fontFamily: 'GFSDidot_400Regular', fontSize: 26, color: '#666', letterSpacing: 1 },
   venueInfo: { flex: 1 },
   liveRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
   orangeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#F47B20' },
-  liveText: { fontSize: 10, color: '#F47B20', fontWeight: '700', letterSpacing: 1 },
-  venueName: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 2 },
-  venueCity: { fontSize: 12, color: '#888' },
+  liveText: { fontFamily: 'Inter_600SemiBold', fontSize: 9, color: '#F47B20', letterSpacing: 2 },
+  venueName: { fontFamily: 'GFSDidot_400Regular', fontSize: 22, color: '#fff', marginBottom: 4, letterSpacing: 0.5 },
+  venueCity: { fontFamily: 'Inter_300Light', fontSize: 12, color: '#888', letterSpacing: 0.5 },
   venueArrow: { paddingLeft: 8 },
   arrowText: { fontSize: 22, color: '#444' },
   emptyState: {
@@ -261,14 +496,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyStateText: {
+    fontFamily: 'Inter_500Medium',
     color: '#888',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
     marginBottom: 4,
+    letterSpacing: 0.5,
   },
   emptyStateSub: {
+    fontFamily: 'Inter_300Light',
     color: '#555',
-    fontSize: 12,
+    fontSize: 11,
+    letterSpacing: 0.5,
   },
   navBar: {
     position: 'absolute',
@@ -284,6 +522,6 @@ const styles = StyleSheet.create({
   },
   navItem: { flex: 1, alignItems: 'center', gap: 4 },
   navIcon: { fontSize: 20 },
-  navLabel: { fontSize: 10, color: '#555', fontWeight: '600' },
+  navLabel: { fontFamily: 'Inter_500Medium', fontSize: 10, color: '#555', letterSpacing: 1.5, textTransform: 'uppercase' },
   navLabelActive: { color: '#fff' },
 });

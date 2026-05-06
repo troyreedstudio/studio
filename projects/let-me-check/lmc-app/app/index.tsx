@@ -1,104 +1,147 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ImageBackground, SafeAreaView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 export default function SplashScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.hero}>
-        <Text style={styles.logo}>LMC</Text>
-        <Text style={styles.brand}>Let Me Check</Text>
-        <Text style={styles.tagline}>Know Before You Go</Text>
-      </View>
+    <ImageBackground
+      source={require('../assets/splash-assets/miami-night.jpg')}
+      style={styles.bg}
+      resizeMode="cover"
+    >
+      <LinearGradient
+        colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.55)']}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
 
-      <View style={styles.buttons}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => router.push('/(seeker)/home')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.primaryButtonText}>I'm a Seeker</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.hero}>
+          <View style={styles.monogramFrame}>
+            <View style={styles.ruleLine} />
+            <Text style={styles.monogram}>LMC</Text>
+            <View style={styles.ruleLine} />
+          </View>
 
-        <TouchableOpacity
-          style={styles.outlineButton}
-          onPress={() => router.push('/(scout)/dashboard')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.outlineButtonText}>I'm a Scout</Text>
-        </TouchableOpacity>
-      </View>
+          <Text style={styles.brandSerif}>LET ME CHECK</Text>
 
-      <Text style={styles.footer}>Real Eyes. Right Now. Anywhere.</Text>
-    </SafeAreaView>
+          <Text style={styles.tagline}>KNOW BEFORE YOU GO</Text>
+        </View>
+
+        <View style={styles.buttons}>
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={() => router.push('/(seeker)/home')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.primaryButtonText}>I'm a Seeker</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.outlineButton}
+            onPress={() => router.push('/(scout)/dashboard')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.outlineButtonText}>I'm a Scout</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.footer}>REAL EYES   ·   RIGHT NOW   ·   ANYWHERE</Text>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  bg: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  container: {
+    flex: 1,
     justifyContent: 'space-between',
     paddingHorizontal: 32,
     paddingBottom: 48,
+    paddingTop: 24,
   },
   hero: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingTop: 200,
   },
-  logo: {
-    fontSize: 88,
-    fontWeight: '900',
+  monogramFrame: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 35,
+  },
+  ruleLine: {
+    height: 1.5,
+    width: 48,
+    backgroundColor: '#F47B20',
+  },
+  monogram: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 18,
     color: '#F47B20',
     letterSpacing: 8,
+    marginHorizontal: 18,
+  },
+  brandSerif: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 40,
+    color: '#ffffff',
+    letterSpacing: 4,
+    textAlign: 'center',
+    lineHeight: 48,
     marginBottom: 8,
   },
-  brand: {
-    fontSize: 18,
-    color: '#ffffff',
-    letterSpacing: 3,
-    marginBottom: 12,
-  },
   tagline: {
-    fontSize: 14,
-    color: '#888888',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
+    fontFamily: 'Inter_400Regular',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 6,
+    textAlign: 'center',
   },
   buttons: {
     gap: 14,
   },
   primaryButton: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 4,
     paddingVertical: 18,
     alignItems: 'center',
   },
   primaryButtonText: {
+    fontFamily: 'Inter_600SemiBold',
     color: '#000000',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 1,
+    fontSize: 13,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
   },
   outlineButton: {
-    borderWidth: 1.5,
-    borderColor: '#ffffff',
-    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    borderRadius: 4,
     paddingVertical: 18,
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   outlineButtonText: {
+    fontFamily: 'Inter_500Medium',
     color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 1,
+    fontSize: 13,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
   },
   footer: {
+    fontFamily: 'Inter_300Light',
     textAlign: 'center',
-    color: '#555555',
-    fontSize: 12,
-    marginTop: 24,
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: 9,
+    letterSpacing: 4,
+    marginTop: 28,
   },
 });
