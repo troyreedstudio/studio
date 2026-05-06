@@ -24,7 +24,7 @@ const FEATURED = [
     id: 'f2',
     name: 'Airports',
     city: 'Worldwide',
-    vibe: 'Terminals · Lines · Lounges',
+    vibe: 'Terminal Lines · Traffic',
     image: require('../../assets/splash-assets/featured-2.jpg'),
   },
   {
@@ -60,7 +60,7 @@ const POPULAR = [
   { label: 'Gyms' },
   { label: 'DMV / Gov' },
   { label: 'Real Estate' },
-  { label: 'Used Cars' },
+  { label: 'Movie Theaters' },
   { label: 'Hotels' },
   { label: 'Beach Clubs' },
 ];
@@ -80,8 +80,8 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Know Before You Go 👁️</Text>
-            <Text style={styles.subGreeting}>Where are you headed today?</Text>
+            <Text style={styles.greeting}>Know Before You Go</Text>
+            <View style={styles.greetingRule} />
           </View>
           <TouchableOpacity
             style={styles.profilePill}
@@ -117,7 +117,7 @@ export default function HomeScreen() {
 
         {/* Featured Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>FEATURED</Text>
+          <Text style={styles.sectionTitle}>FEATURED QUEUES</Text>
           <Text style={styles.featuredTagSmall}>SPONSORED</Text>
         </View>
         <ScrollView
@@ -144,8 +144,14 @@ export default function HomeScreen() {
                   style={styles.featuredGradient}
                 />
                 <View style={styles.featuredContent}>
-                  <Text style={styles.featuredName}>{item.name}</Text>
-                  <Text style={styles.featuredVibe}>{item.vibe}</Text>
+                  <View style={styles.featuredTextBlock}>
+                    <Text style={styles.featuredName}>{item.name}</Text>
+                    <Text style={styles.featuredVibe}>{item.vibe}</Text>
+                  </View>
+                  <View style={styles.featuredCta}>
+                    <Text style={styles.featuredCtaText}>CHECK</Text>
+                    <Text style={styles.featuredCtaArrow}>›</Text>
+                  </View>
                 </View>
               </ImageBackground>
             </TouchableOpacity>
@@ -170,11 +176,21 @@ export default function HomeScreen() {
 
         {/* POPULAR */}
         <View style={styles.sectionRow}>
-          <Text style={styles.sectionLabel}>POPULAR</Text>
+          <Text style={styles.sectionLabel}>POPULAR QUEUES TO CHECK</Text>
         </View>
         <View style={styles.popularList}>
           {POPULAR.map((item) => (
-            <TouchableOpacity key={item.label} style={styles.popularRowCard} activeOpacity={0.7}>
+            <TouchableOpacity
+              key={item.label}
+              style={styles.popularRowCard}
+              activeOpacity={0.7}
+              onPress={() =>
+                router.push({
+                  pathname: '/(seeker)/venue',
+                  params: { name: item.label, city: 'Nearby' },
+                })
+              }
+            >
               <Text style={styles.popularItemLabel}>{item.label}</Text>
               <Text style={styles.popularArrow}>›</Text>
             </TouchableOpacity>
@@ -212,8 +228,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  greeting: { fontFamily: 'Anton_400Regular', fontSize: 26, color: '#fff', letterSpacing: 1.5, textTransform: 'uppercase' },
-  subGreeting: { fontFamily: 'Inter_300Light', fontSize: 13, color: '#cccccc', marginTop: 4, letterSpacing: 0.5 },
+  greeting: { fontFamily: 'BodoniModa_700Bold', fontSize: 28, color: '#fff', letterSpacing: 0.3 },
+  greetingRule: { height: 2, width: 36, backgroundColor: '#FF8533', marginTop: 8 },
   profilePill: {
     width: 40,
     height: 40,
@@ -446,20 +462,50 @@ const styles = StyleSheet.create({
   },
   featuredContent: {
     padding: 16,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  featuredTextBlock: {
+    flex: 1,
+    marginRight: 10,
   },
   featuredName: {
     fontFamily: 'GFSDidot_400Regular',
     fontSize: 24,
     color: '#fff',
     letterSpacing: 0.5,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   featuredVibe: {
-    fontFamily: 'Inter_300Light',
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.85)',
-    letterSpacing: 1,
+    fontFamily: 'Inter_500Medium',
+    fontSize: 10.5,
+    color: '#ffffff',
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
+  },
+  featuredCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderWidth: 1,
+    borderColor: '#FF8533',
+    borderRadius: 100,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    gap: 4,
+  },
+  featuredCtaText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: '#FF8533',
+    letterSpacing: 1.5,
+  },
+  featuredCtaArrow: {
+    fontSize: 13,
+    color: '#FF8533',
+    fontWeight: '600',
+    marginTop: -1,
   },
   venueCard: {
     flexDirection: 'row',
