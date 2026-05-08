@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pineapple/core/const/app_colors.dart';
+import 'package:pineapple/feature/home/services/plan_my_night_storage.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
 import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
@@ -37,11 +38,88 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
     {'label': 'Beach club day party', 'icon': Icons.beach_access_outlined, 'subtitle': '4 stops · all day into night'},
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _restoreSavedPlan();
+  }
+
+  // ── Persistence ──────────────────────────────────────────────────────────
+  // Auto-save on every state change. Auto-restore on screen open if a plan
+  // was saved within the last 24h. After 24h the storage layer self-clears
+  // because last night's plan stops being relevant.
+
+  Future<void> _restoreSavedPlan() async {
+    final saved = await PlanMyNightStorage.load();
+    if (saved == null) return;
+
+    // Rehydrate itinerary venues from VenueController. Stops whose venue is
+    // no longer in the list (deleted, deactivated) are skipped — we'd rather
+    // surface a partial plan than crash on a missing reference.
+    final venueCtrl = Get.find<VenueController>();
+    final venues = venueCtrl.venues.toList();
+    final restoredStops = <_ItineraryStop>[];
+    for (final s in saved.itinerary) {
+      final v = venues.firstWhereOrNull((x) => x.id == s.venueId);
+      if (v == null) continue;
+      restoredStops.add(_ItineraryStop(
+        time: s.time,
+        label: s.label,
+        venue: v,
+        distanceKmFromPrev: s.distanceKm,
+      ));
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _area = saved.area;
+      _vibe = saved.vibe;
+      _groupSize = saved.groupSize;
+      _itinerary = restoredStops;
+      // If the saved plan was at the itinerary step but venues couldn't be
+      // rehydrated (offline first load, etc.), step back to group-size step.
+      _step = saved.step == 3 && restoredStops.isEmpty ? 2 : saved.step;
+    });
+  }
+
+  Future<void> _persist() async {
+    await PlanMyNightStorage.save(SavedPlan(
+      savedAt: DateTime.now(),
+      step: _step,
+      area: _area,
+      vibe: _vibe,
+      groupSize: _groupSize,
+      itinerary: _itinerary
+          .map((s) => SavedStop(
+                venueId: s.venue.id,
+                venueSlug: s.venue.slug,
+                venueName: s.venue.name,
+                time: s.time,
+                label: s.label,
+                distanceKm: s.distanceKmFromPrev,
+              ))
+          .toList(),
+    ));
+  }
+
+  Future<void> _startOver() async {
+    await PlanMyNightStorage.clear();
+    if (!mounted) return;
+    setState(() {
+      _step = 0;
+      _area = '';
+      _vibe = '';
+      _groupSize = 2;
+      _itinerary = [];
+    });
+  }
+
   void _selectArea(String area) {
     setState(() {
       _area = area;
       _step = 1;
     });
+    _persist();
   }
 
   void _selectVibe(String vibe) {
@@ -49,12 +127,14 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
       _vibe = vibe;
       _step = 2;
     });
+    _persist();
   }
 
   void _setGroupSize(int size) {
     setState(() {
       _groupSize = size;
     });
+    _persist();
   }
 
   void _generateItinerary() {
@@ -211,6 +291,7 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
       _itinerary = stops;
       _step = 3;
     });
+    _persist();
   }
 
   @override
@@ -558,20 +639,36 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
 
           SizedBox(height: 28.h),
 
-          // Shuffle button
-          Center(
-            child: TextButton.icon(
-              onPressed: _generateItinerary,
-              icon: Icon(Icons.shuffle, color: AppColors.accentRoseGold, size: 18.sp),
-              label: Text(
-                'Shuffle',
-                style: GoogleFonts.poppins(
-                  color: AppColors.accentRoseGold,
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
+          // Shuffle + Start over actions
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: _generateItinerary,
+                icon: Icon(Icons.shuffle, color: AppColors.accentRoseGold, size: 18.sp),
+                label: Text(
+                  'Shuffle',
+                  style: GoogleFonts.poppins(
+                    color: AppColors.accentRoseGold,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
+              SizedBox(width: 8.w),
+              TextButton.icon(
+                onPressed: _startOver,
+                icon: Icon(Icons.refresh, color: AppColors.textMuted, size: 18.sp),
+                label: Text(
+                  'Start over',
+                  style: GoogleFonts.poppins(
+                    color: AppColors.textMuted,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
           ),
 
           SizedBox(height: 40.h),
