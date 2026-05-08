@@ -1174,7 +1174,9 @@ class _CategorySection extends StatelessWidget {
     'NIGHTLIFE': ['savaya', 'desa-kitsune', 'shady-pig', 'mesa', 'miss-fish', 'gimme-shelter'],
     'BEACH_CLUB': ['finns-beach-club', 'el-kabron', 'atlas-beach-club', 'potato-head-seminyak', 'ku-de-ta'],
     // Bella + Kong added; Gimme Shelter removed (moved to NIGHTLIFE).
-    'RESTAURANT': ['bella', 'kong-canggu', 'da-maria', 'yuki', 'muda-suka'],
+    // Motel Mexicola added — it's primarily nightlife but the kitchen +
+    // dining experience makes it a legit restaurant too.
+    'RESTAURANT': ['bella', 'kong-canggu', 'da-maria', 'yuki', 'muda-suka', 'motel-mexicola'],
     'WELLNESS': ['nirvana-fitness', 'obsidian', 'power-and-revive', 'body-factory', 'bamboo-fitness'],
   };
 
@@ -1198,8 +1200,16 @@ class _CategorySection extends StatelessWidget {
             }
 
             final allVenues = venueCtrl.venues;
+            // Match by category OR by tag — venues like Motel Mexicola are
+            // primarily nightlife but tagged "restaurant" so they should
+            // show up in Top Restaurants too. Mirrors the backend's
+            // category-OR-tags filter so the client doesn't strip out
+            // cross-category venues the API was happy to return.
+            final tagKey = category.toLowerCase();
             var filtered = allVenues
-                .where((v) => v.category.toUpperCase() == category)
+                .where((v) =>
+                    v.category.toUpperCase() == category ||
+                    v.tags.any((t) => t.toLowerCase() == tagKey))
                 .toList();
 
             // Apply curated order if one exists for this category.
