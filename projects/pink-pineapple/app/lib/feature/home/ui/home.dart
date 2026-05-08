@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -414,7 +416,10 @@ class _HomeSearchController extends GetxController {
         searchResults.clear();
       }
 
-      // Google Places (temporary local test)
+      // Google Places — direct call from client. The hardcoded API key is
+      // a known security debt to fix later by routing through our backend's
+      // /places/search. For now we just need richer fields (websiteUri +
+      // googleMapsUri) on the response so the tap-to-link-out works.
       try {
         const googleApiKey = 'AIzaSyCc43zTzs9uH4w5Y9McHyd2JYt8SzCFpy8';
         final googleReq = await http.post(
@@ -423,7 +428,7 @@ class _HomeSearchController extends GetxController {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': googleApiKey,
             'X-Goog-FieldMask':
-                'places.id,places.displayName,places.formattedAddress,places.rating,places.primaryType,places.photos',
+                'places.id,places.displayName,places.formattedAddress,places.rating,places.primaryType,places.photos,places.websiteUri,places.googleMapsUri',
           },
           body: json.encode({
             'textQuery': '$query in Bali, Indonesia',
@@ -442,11 +447,14 @@ class _HomeSearchController extends GetxController {
                   'https://places.googleapis.com/v1/$photoName/media?maxHeightPx=400&maxWidthPx=600&key=$googleApiKey';
             }
             return <String, dynamic>{
+              'placeId': p['id']?.toString() ?? '',
               'name': p['displayName']?['text'] ?? '',
               'address': p['formattedAddress'] ?? '',
               'category': (p['primaryType'] ?? '').toString().replaceAll('_', ' '),
               'rating': (p['rating'] ?? 0).toDouble(),
               'photoUrl': photoUrl,
+              'websiteUri': p['websiteUri']?.toString() ?? '',
+              'googleMapsUri': p['googleMapsUri']?.toString() ?? '',
               'source': 'google',
             };
           }).toList());
@@ -469,6 +477,31 @@ class _HomeSearchController extends GetxController {
     focusNode.unfocus();
     searchResults.clear();
     googleResults.clear();
+  }
+
+  /// Logs a redirect-out click to our backend so we can show external-place
+  /// demand in the dashboard. Non-blocking, never throws to the caller.
+  Future<void> logExternalClick({
+    required String placeId,
+    required String placeName,
+    required String placeAddress,
+    required String redirectUrl,
+  }) async {
+    try {
+      await _netConfig.ApiRequestHandler(
+        RequestMethod.POST,
+        Urls.placesExternalClick,
+        json.encode({
+          'placeId': placeId,
+          'placeName': placeName,
+          'placeAddress': placeAddress,
+          'redirectUrl': redirectUrl,
+        }),
+        is_auth: true, // Will be ignored if user not logged in (optionalAuth on backend).
+      );
+    } catch (_) {
+      // Swallow — attribution failure must not block the redirect UX.
+    }
   }
 }
 
@@ -656,8 +689,32 @@ class _HomeSearchResults extends StatelessWidget {
                         ],
                       ),
                       trailing: Icon(Icons.open_in_new, color: AppColors.textMuted, size: 14.sp),
-                      onTap: () {
+                      onTap: () async {
                         c.focusNode.unfocus();
+                        // Open the venue's website if Google has one,
+                        // otherwise fall back to its Google Maps listing.
+                        // Either way the user gets sent OUT to the place's
+                        // own surface — we don't have an internal venue page
+                        // for it (yet).
+                        final website = (place['websiteUri'] as String?) ?? '';
+                        final maps = (place['googleMapsUri'] as String?) ?? '';
+                        final target = website.isNotEmpty ? website : maps;
+                        if (target.isEmpty) return;
+
+                        // Fire-and-forget attribution log so we can later
+                        // tell prospective venue partners how much demand
+                        // we drove to them BEFORE they joined Pink Pineapple.
+                        unawaited(c.logExternalClick(
+                          placeId: (place['placeId'] as String?) ?? '',
+                          placeName: name,
+                          placeAddress: address,
+                          redirectUrl: target,
+                        ));
+
+                        await launchUrl(
+                          Uri.parse(target),
+                          mode: LaunchMode.externalApplication,
+                        );
                       },
                     );
                   }),

@@ -90,4 +90,5 @@ class Urls {
 
   /// google places
   static const String googlePlacesSearch = '$baseUrl/places/search'; // GET
+  static const String placesExternalClick = '$baseUrl/places/external-click'; // POST
 }

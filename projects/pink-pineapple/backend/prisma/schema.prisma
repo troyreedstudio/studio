@@ -65,6 +65,7 @@ model User {
   venueRatings       VenueRating[]
   venueVibes         VenueVibe[]
   venueBookingClicks VenueBookingClick[] @relation("UserBookingClicks")
+  externalPlaceClicks ExternalPlaceClick[] @relation("UserExternalPlaceClicks")
 
   blocker   BlockUser[] @relation("blocker")
   blocked   BlockUser[] @relation("blocked")
@@ -472,6 +473,26 @@ model VenueBookingClick {
 
   @@index([venueId, createdAt])
   @@map("venue_booking_clicks")
+}
+
+/// Pink Pineapple external-place click attribution. Fired when a user taps
+/// a Google Places result (a venue not in our curated DB) in the home
+/// search and we redirect them out to that place's website or Google Maps
+/// listing. Lets us see which non-onboarded venues have user demand and
+/// quantify the value of being on Pink Pineapple to prospective partners.
+model ExternalPlaceClick {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  placeId      String   // Google Places "places/XXXXX" id
+  placeName    String   @default("")
+  placeAddress String   @default("")
+  redirectUrl  String   @default("") // The URL we sent the user to
+  source       String   @default("GOOGLE")
+  userId       String?  @db.ObjectId
+  user         User?    @relation("UserExternalPlaceClicks", fields: [userId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([placeId, createdAt])
+  @@map("external_place_clicks")
 }
 
 model VenueFavorite {
