@@ -39,6 +39,7 @@ import {
   X,
   Sparkles,
   Image as ImageIcon,
+  Eye,
 } from "lucide-react";
 
 const inter = { fontFamily: "Inter, sans-serif" };
@@ -160,6 +161,10 @@ const PartnerVenuePage = () => {
   const [heroImage, setHeroImage] = useState<string>("");
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
+  // Preview modal — partner taps the Preview button in the header to see
+  // a phone-frame mock of how their listing renders in the consumer app.
+  // Lives in a modal rather than inline so it doesn't dominate the editor.
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (!venue) return;
@@ -414,20 +419,34 @@ const PartnerVenuePage = () => {
           </p>
         </div>
 
-        {venues.length > 1 && (
-          <select
-            value={venue.id}
-            onChange={(e) => setSelectedId(e.target.value)}
-            className={`${inputClass} w-auto max-w-xs`}
+        <div className="flex items-center gap-2">
+          {venues.length > 1 && (
+            <select
+              value={venue.id}
+              onChange={(e) => setSelectedId(e.target.value)}
+              className={`${inputClass} w-auto max-w-xs`}
+              style={inter}
+            >
+              {venues.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {/* Preview button — opens a modal with the consumer-app phone-frame
+              mock. Lives in the header so it's always one tap away while
+              editing, without taking up space in the page flow. */}
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-[#2A2A2A] text-[#FFFFFF] hover:border-[#C4707E]/50 hover:bg-[#1A1A1A] transition-colors"
             style={inter}
           >
-            {venues.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-        )}
+            <Eye size={14} className="text-[#E8A0B0]" />
+            Preview
+          </button>
+        </div>
       </div>
 
       {/* Edit-mode banner — every section below is live editable. Without
@@ -564,141 +583,6 @@ const PartnerVenuePage = () => {
         </p>
       </div>
 
-      {/* Consumer-app preview — what guests see in the Pink Pineapple app.
-          Mirrors the venue detail card visual language: dark hero with
-          gradient overlay, Outfit bold-italic venue name, "CATEGORY · AREA"
-          pill in rose-gold, rose-gold gradient Book CTA. Reads from live
-          editing state so it updates in real time as the partner edits. */}
-      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-4">
-        <div>
-          <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
-            Live preview
-          </p>
-          <p className="text-[11px] text-[#6B6B6B] mt-1" style={inter}>
-            How your listing looks to guests in the Pink Pineapple app. Updates as you edit.
-          </p>
-        </div>
-
-        <div className="mx-auto max-w-[320px] rounded-[28px] border-[6px] border-[#1A1A1A] bg-[#000000] overflow-hidden"
-          style={{ boxShadow: "0 12px 48px rgba(0, 0, 0, 0.6)" }}
-        >
-          {/* Hero with gradient overlay */}
-          <div className="relative aspect-[4/5] bg-[#1A1A1A]">
-            {previewHero ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={previewHero}
-                alt={venue.name}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-[#6B6B6B] text-xs" style={inter}>
-                Hero photo will appear here
-              </div>
-            )}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%)",
-              }}
-            />
-
-            {/* Bottom content overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-              <p
-                className="text-[10px] tracking-[0.25em] text-[#E8A0B0] uppercase"
-                style={inter}
-              >
-                {(venue.category || "").replace(/_/g, " ")}
-                {venue.area ? ` · ${venue.area}` : ""}
-              </p>
-              <h3
-                className="text-[26px] leading-tight text-white"
-                style={{
-                  fontFamily: "Outfit, sans-serif",
-                  fontWeight: 700,
-                  fontStyle: "italic",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {venue.name}
-              </h3>
-              {description && (
-                <p
-                  className="text-[11px] text-white/80"
-                  style={{
-                    ...inter,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }}
-                >
-                  {description}
-                </p>
-              )}
-              {todayHoursLabel && (
-                <p className="text-[10px] text-white/70" style={inter}>
-                  {todayHoursLabel}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Book CTA — rose-gold gradient, full-width, matches the app */}
-          {previewBookingCta && (
-            <div className="p-3 border-t border-[#1A1A1A]">
-              <div
-                className="w-full py-3 rounded-xl text-sm font-semibold text-[#000000] text-center"
-                style={{
-                  background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
-                  ...inter,
-                }}
-              >
-                {previewBookingCta}
-              </div>
-            </div>
-          )}
-          {!previewBookingCta && booking.provider === "NONE" && (
-            <div className="p-3 border-t border-[#1A1A1A]">
-              <p
-                className="text-center text-[11px] text-[#6B6B6B] italic py-2"
-                style={inter}
-              >
-                Walk-in only — no Book button
-              </p>
-            </div>
-          )}
-        </div>
-
-        <p className="text-[10px] text-[#6B6B6B] text-center" style={inter}>
-          Approximation — the actual app may render some details slightly differently.
-        </p>
-      </section>
-
-      {/* Description */}
-      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-3">
-        <label className="block text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
-          About your venue
-        </label>
-        <p className="text-[11px] text-[#6B6B6B]" style={inter}>
-          A few sentences for guests. What makes you different — the music, the food, the view.
-        </p>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={5}
-          maxLength={500}
-          placeholder="Tell guests what makes your venue special…"
-          className={inputClass}
-          style={inter}
-        />
-        <p className="text-[10px] text-[#6B6B6B] text-right" style={inter}>
-          {description.length}/500
-        </p>
-      </section>
-
       {/* Photos */}
       <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-4">
         <div className="flex items-center justify-between">
@@ -796,48 +680,26 @@ const PartnerVenuePage = () => {
         )}
       </section>
 
-      {/* Contact */}
-      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-4">
-        <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
-          Contact
+      {/* Description */}
+      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-3">
+        <label className="block text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
+          About your venue
+        </label>
+        <p className="text-[11px] text-[#6B6B6B]" style={inter}>
+          A few sentences for guests. What makes you different — the music, the food, the view.
         </p>
-
-        <div className="space-y-3">
-          <div>
-            <label className="flex items-center gap-2 text-[11px] text-[#6B6B6B] mb-2" style={inter}>
-              <Phone size={12} /> Phone
-            </label>
-            <PhoneInput value={phone} onChange={setPhone} />
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-[11px] text-[#6B6B6B] mb-2" style={inter}>
-              <Instagram size={12} /> Instagram handle
-            </label>
-            <input
-              type="text"
-              value={instagram}
-              onChange={(e) => setInstagram(e.target.value)}
-              placeholder="@yourvenue"
-              className={inputClass}
-              style={inter}
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-[11px] text-[#6B6B6B] mb-2" style={inter}>
-              <Globe size={12} /> Website (optional)
-            </label>
-            <input
-              type="url"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              placeholder="https://"
-              className={inputClass}
-              style={inter}
-            />
-          </div>
-        </div>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={5}
+          maxLength={500}
+          placeholder="Tell guests what makes your venue special…"
+          className={inputClass}
+          style={inter}
+        />
+        <p className="text-[10px] text-[#6B6B6B] text-right" style={inter}>
+          {description.length}/500
+        </p>
       </section>
 
       {/* Opening hours */}
@@ -1000,6 +862,50 @@ const PartnerVenuePage = () => {
         </div>
       </section>
 
+      {/* Contact */}
+      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-4">
+        <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
+          Contact
+        </p>
+
+        <div className="space-y-3">
+          <div>
+            <label className="flex items-center gap-2 text-[11px] text-[#6B6B6B] mb-2" style={inter}>
+              <Phone size={12} /> Phone
+            </label>
+            <PhoneInput value={phone} onChange={setPhone} />
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 text-[11px] text-[#6B6B6B] mb-2" style={inter}>
+              <Instagram size={12} /> Instagram handle
+            </label>
+            <input
+              type="text"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              placeholder="@yourvenue"
+              className={inputClass}
+              style={inter}
+            />
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 text-[11px] text-[#6B6B6B] mb-2" style={inter}>
+              <Globe size={12} /> Website (optional)
+            </label>
+            <input
+              type="url"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="https://"
+              className={inputClass}
+              style={inter}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Booking */}
       <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-3">
         <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
@@ -1027,6 +933,127 @@ const PartnerVenuePage = () => {
           {isSaving ? "Saving…" : "Save changes"}
         </button>
       </div>
+
+      {/* Preview modal — full overlay with the consumer-app phone-frame
+          mock. Reads from live editing state so mid-edit changes show up
+          when partner taps Preview. Click backdrop or X to close. */}
+      {previewOpen && (
+        <div
+          onClick={() => setPreviewOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
+          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-sm"
+          >
+            <button
+              onClick={() => setPreviewOpen(false)}
+              className="absolute -top-12 right-0 inline-flex items-center gap-2 text-sm text-white/80 hover:text-white"
+              style={inter}
+              aria-label="Close preview"
+            >
+              <X size={16} /> Close
+            </button>
+
+            <div
+              className="rounded-[28px] border-[6px] border-[#1A1A1A] bg-[#000000] overflow-hidden"
+              style={{ boxShadow: "0 20px 60px rgba(0, 0, 0, 0.7)" }}
+            >
+              <div className="relative aspect-[4/5] bg-[#1A1A1A]">
+                {previewHero ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewHero}
+                    alt={venue.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-[#6B6B6B] text-xs" style={inter}>
+                    Hero photo will appear here
+                  </div>
+                )}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%)",
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+                  <p
+                    className="text-[10px] tracking-[0.25em] text-[#E8A0B0] uppercase"
+                    style={inter}
+                  >
+                    {(venue.category || "").replace(/_/g, " ")}
+                    {venue.area ? ` · ${venue.area}` : ""}
+                  </p>
+                  <h3
+                    className="text-[26px] leading-tight text-white"
+                    style={{
+                      fontFamily: "Outfit, sans-serif",
+                      fontWeight: 700,
+                      fontStyle: "italic",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {venue.name}
+                  </h3>
+                  {description && (
+                    <p
+                      className="text-[11px] text-white/80"
+                      style={{
+                        ...inter,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {description}
+                    </p>
+                  )}
+                  {todayHoursLabel && (
+                    <p className="text-[10px] text-white/70" style={inter}>
+                      {todayHoursLabel}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {previewBookingCta && (
+                <div className="p-3 border-t border-[#1A1A1A]">
+                  <div
+                    className="w-full py-3 rounded-xl text-sm font-semibold text-[#000000] text-center"
+                    style={{
+                      background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
+                      ...inter,
+                    }}
+                  >
+                    {previewBookingCta}
+                  </div>
+                </div>
+              )}
+              {!previewBookingCta && booking.provider === "NONE" && (
+                <div className="p-3 border-t border-[#1A1A1A]">
+                  <p
+                    className="text-center text-[11px] text-[#6B6B6B] italic py-2"
+                    style={inter}
+                  >
+                    Walk-in only — no Book button
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <p
+              className="text-[10px] text-white/50 text-center mt-4"
+              style={inter}
+            >
+              Approximation — the actual app may render some details slightly differently.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
