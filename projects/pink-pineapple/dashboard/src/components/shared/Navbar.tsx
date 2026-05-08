@@ -17,6 +17,7 @@ import {
   Building,
   TrendingUp,
   Shield,
+  HelpCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { HiMenuAlt1 } from "react-icons/hi";
@@ -155,8 +156,20 @@ const Navbar = () => {
         </Sheet>
       </div>
 
-      {/* User avatar */}
-      <div className="flex gap-3 items-center">
+      {/* Right-hand cluster: Need help link + name/role + avatar.
+          Help link mailtos to a venue support inbox so a stuck partner
+          always has a way to reach us — no other dashboard surface today
+          exposes a contact channel. Hidden on smallest mobile to save
+          horizontal room next to the hamburger. */}
+      <div className="flex items-center gap-4">
+        <a
+          href="mailto:[email protected]?subject=Venue%20Partner%20Support"
+          className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#B0B0B0] hover:text-[#E8A0B0] transition-colors"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        >
+          <HelpCircle size={14} />
+          Need help?
+        </a>
         <div className="text-right">
           <p className="text-sm font-medium text-[#FFFFFF]" style={{ fontFamily: 'Inter, sans-serif' }}>
             {userData?.fullName || "Partner"}
