@@ -166,23 +166,30 @@ const Navbar = () => {
         <button
           type="button"
           onClick={async () => {
-            const email = "[email protected]";
-            // Try to copy to clipboard so they have the address even if their
-            // mail client doesn't open. Then attempt the mailto. Either way
-            // they get the email visible in a toast.
+            // Build the support address from parts to dodge any privacy
+            // extensions or proxy obfuscators that detect email regexes
+            // and replace them with "[email protected]" in displayed
+            // strings. The clipboard write itself isn't affected.
+            const local = "pinkpineappleapp";
+            const domain = "gmail.com";
+            const email = `${local}@${domain}`;
             try {
               await navigator.clipboard.writeText(email);
+              toast.success("Support email copied to your clipboard", {
+                description: "Paste it into your email app to send us a message.",
+                duration: 6000,
+              });
             } catch {
-              // Older browsers / permission denied — fall through, mailto will
-              // still try to open and the toast will display the address.
+              // Clipboard API unavailable or denied. Fall back to a toast
+              // that hints at the mailto opening, with no literal email
+              // string in the description so privacy-extension obfuscation
+              // doesn't mangle it.
+              toast.message("Opening your email app…", {
+                description: "If nothing happens, look for the support address in your welcome email.",
+                duration: 6000,
+              });
             }
-            toast.success(`Email us at ${email}`, {
-              description: "Address copied to your clipboard.",
-              duration: 6000,
-            });
-            // Best-effort mailto. If no mail client is configured the browser
-            // silently does nothing, but the toast above already gave them the
-            // address.
+            // Best-effort mailto in case the OS has a default mail handler.
             window.location.href = `mailto:${email}?subject=Venue%20Partner%20Support`;
           }}
           className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#B0B0B0] hover:text-[#E8A0B0] transition-colors cursor-pointer"
