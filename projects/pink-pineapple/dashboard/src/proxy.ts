@@ -24,7 +24,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/not-authorized", request.url));
   }
 
-  if (user.role === "CLUB" && !currentPath.startsWith("/club")) {
+  // Shared routes both ADMIN and CLUB can access. Today this is just the
+  // Attribution analytics page — backend scopes data per role (ADMIN sees
+  // all venues, CLUB sees only their owned venues), so the same UI safely
+  // serves both. Add more shared routes here if/when needed.
+  const sharedPaths = ["/analytics"];
+  const isShared = sharedPaths.some((p) => currentPath.startsWith(p));
+
+  if (user.role === "CLUB" && !currentPath.startsWith("/club") && !isShared) {
     return NextResponse.redirect(new URL("/not-authorized", request.url));
   }
 
