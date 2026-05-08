@@ -21,6 +21,7 @@ import {
   MapPin,
   Building,
   TrendingUp,
+  Shield,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -49,6 +50,11 @@ const admin = [
     title: "Bookings",
     url: "/bookings",
     icon: CalendarCheck2,
+  },
+  {
+    title: "Approvals",
+    url: "/approvals",
+    icon: Shield,
   },
   {
     title: "Attribution",
