@@ -3,9 +3,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -123,12 +121,11 @@ const SideBar = () => {
   return (
     <Sidebar className="border-r border-[#2A2A2A] bg-[#000000]">
       <SidebarContent className="bg-[#000000]">
-        <SidebarGroup />
-
-        {/* Brand header — adds a small "PARTNER" tag for venue partners so a
-            venue logging in immediately knows they're in their own portal,
-            not the admin tool. Same logo + same brand chrome for consistency. */}
-        <SidebarGroupLabel className="mb-10 mt-8 mx-auto flex flex-col items-center gap-2">
+        {/* Brand header — plain div, NOT SidebarGroupLabel. The shadcn label
+            component has a constrained height which made the PARTNER pill
+            overflow onto the first nav item. A regular div lets the header
+            grow to fit the logo + optional partner tag without bleed. */}
+        <div className="mt-8 mb-8 mx-auto flex flex-col items-center gap-3 px-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/logo_primary_dark.jpg"
@@ -139,7 +136,7 @@ const SideBar = () => {
           />
           {user?.role === "CLUB" && (
             <span
-              className="text-[10px] tracking-[0.4em] px-2.5 py-0.5 rounded-full"
+              className="text-[10px] tracking-[0.4em] px-3 py-1 rounded-full"
               style={{
                 background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
                 color: "#000000",
@@ -150,7 +147,7 @@ const SideBar = () => {
               PARTNER
             </span>
           )}
-        </SidebarGroupLabel>
+        </div>
 
         <SidebarGroupContent>
           <SidebarMenu className="px-3 space-y-1">
@@ -181,7 +178,6 @@ const SideBar = () => {
             })}
           </SidebarMenu>
         </SidebarGroupContent>
-        <SidebarGroup />
       </SidebarContent>
 
       <SidebarFooter className="bg-[#000000] border-t border-[#2A2A2A] p-4">
