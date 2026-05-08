@@ -1,7 +1,11 @@
-import Availability from "@/components/modules/Club/Availability";
 import UserInfo from "@/components/modules/Settings/UserInfo";
 import React from "react";
 
+// The legacy Availability picker (ClubAvailableDays/Times) used to live
+// here from the original Fiverr build's registration flow. It has been
+// fully superseded by the Weekly Programming editor on /club/venue, so
+// it's no longer rendered. The legacy backend tables can be cleaned up
+// later — removing the UI removes the user-facing confusion now.
 const page = () => {
   return (
     <div>
@@ -12,7 +16,6 @@ const page = () => {
         Settings
       </h1>
       <UserInfo />
-      <Availability />
     </div>
   );
 };
