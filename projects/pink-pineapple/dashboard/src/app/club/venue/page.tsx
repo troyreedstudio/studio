@@ -291,6 +291,38 @@ const PartnerVenuePage = () => {
         )}
       </div>
 
+      {/* Edit-mode banner — every section below is live editable. Without
+          this framing partners weren't sure if they could change things or
+          if they were just looking at a profile readout. */}
+      <div
+        className="rounded-xl border p-4 sm:p-5 flex items-start gap-3"
+        style={{
+          background: "rgba(196,112,126,0.08)",
+          borderColor: "rgba(196,112,126,0.3)",
+        }}
+      >
+        <div
+          className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
+          style={{
+            background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
+          }}
+        >
+          <span style={{ fontSize: 16 }}>✏️</span>
+        </div>
+        <div className="flex-1">
+          <p
+            className="text-sm font-semibold text-[#FFFFFF]"
+            style={inter}
+          >
+            Edit your profile below
+          </p>
+          <p className="text-xs text-[#B0B0B0] mt-1" style={inter}>
+            Every field below — description, photos, hours, contact, booking — is editable any time.
+            Make your changes and tap <span className="text-[#E8A0B0] font-semibold">Save changes</span> at the bottom of the page.
+          </p>
+        </div>
+      </div>
+
       {/* Publish state — visual hero card with toggle */}
       <div
         className="rounded-xl p-6 relative overflow-hidden"

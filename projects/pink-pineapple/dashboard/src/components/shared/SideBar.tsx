@@ -87,11 +87,10 @@ const club = [
     url: "/club/events",
     icon: CalendarRange,
   },
-  {
-    title: "Bookings",
-    url: "/club/bookings",
-    icon: CalendarCheck2,
-  },
+  // Bookings tab hidden for now — most venues use external booking systems
+  // (Booketing, Mtix, etc.) so this page would always show empty for them,
+  // and the data they actually care about (booking-click attribution) is
+  // already in /analytics. Restore when native PP bookings are real.
   {
     title: "Attribution",
     url: "/analytics",
