@@ -10,8 +10,8 @@ import {
   useChangePasswordMutation,
   useGetMeQuery,
 } from "@/redux/features/auth/authApi";
-import { useAppDispatch } from "@/redux/hooks";
-import { logout } from "@/redux/features/auth/authSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { logout, selectCurrentUser } from "@/redux/features/auth/authSlice";
 import Spinner from "@/components/common/Spinner";
 import { useRouter } from "next/navigation";
 import EditProfileModal from "./EditProfileModal";
@@ -21,6 +21,8 @@ const UserInfo = () => {
   const [changePass] = useChangePasswordMutation();
   const dispatch = useAppDispatch();
   const { data, isLoading } = useGetMeQuery(undefined);
+  const authUser = useAppSelector(selectCurrentUser);
+  const isPartner = authUser?.role === "CLUB";
 
   if (isLoading) {
     return <Spinner />;
@@ -73,21 +75,19 @@ const UserInfo = () => {
         <div className="grid grid-cols-2 gap-5">
           <div className="space-y-1">
             <h3 className="text-xs text-[#B0B0B0] uppercase tracking-widest"
-              style={{ fontFamily: 'Poppins, sans-serif' }}>Name</h3>
+              style={{ fontFamily: 'Poppins, sans-serif' }}>
+              {isPartner ? "Venue Name" : "Name"}
+            </h3>
             <p className="text-sm text-[#FFFFFF]"
               style={{ fontFamily: 'Poppins, sans-serif' }}>{userData?.fullName}</p>
           </div>
           <div className="space-y-1">
             <h3 className="text-xs text-[#B0B0B0] uppercase tracking-widest"
-              style={{ fontFamily: 'Poppins, sans-serif' }}>Mobile</h3>
+              style={{ fontFamily: 'Poppins, sans-serif' }}>
+              {isPartner ? "Account Phone" : "Mobile"}
+            </h3>
             <p className="text-sm text-[#FFFFFF]"
               style={{ fontFamily: 'Poppins, sans-serif' }}>{userData?.phoneNumber}</p>
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-xs text-[#B0B0B0] uppercase tracking-widest"
-              style={{ fontFamily: 'Poppins, sans-serif' }}>Address</h3>
-            <p className="text-sm text-[#FFFFFF]"
-              style={{ fontFamily: 'Poppins, sans-serif' }}>{userData?.fullAddress || "—"}</p>
           </div>
           <div className="space-y-1">
             <h3 className="text-xs text-[#B0B0B0] uppercase tracking-widest"
@@ -95,7 +95,22 @@ const UserInfo = () => {
             <p className="text-sm text-[#FFFFFF]"
               style={{ fontFamily: 'Poppins, sans-serif' }}>{userData?.email}</p>
           </div>
+          {isPartner && (
+            <div className="space-y-1">
+              <h3 className="text-xs text-[#B0B0B0] uppercase tracking-widest"
+                style={{ fontFamily: 'Poppins, sans-serif' }}>Tax ID</h3>
+              <p className="text-sm text-[#FFFFFF]"
+                style={{ fontFamily: 'Poppins, sans-serif' }}>{userData?.taxId || "—"}</p>
+            </div>
+          )}
         </div>
+        {isPartner && (
+          <p className="text-[11px] text-[#6B6B6B] pt-2 border-t border-[#1A1A1A]"
+            style={{ fontFamily: 'Poppins, sans-serif' }}>
+            To edit your venue's description, photos, hours, Instagram or booking link,
+            visit <span className="text-[#E8A0B0]">My Venue Profile</span>.
+          </p>
+        )}
       </div>
 
       {/* Change Password card */}

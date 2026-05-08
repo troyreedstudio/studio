@@ -17,21 +17,21 @@ import { FieldValues } from "react-hook-form";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useUpdateProfileMutation } from "@/redux/features/auth/authApi";
+import { useAppSelector } from "@/redux/hooks";
+import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 
-const formatDateForInput = (dob: any): string => {
-  if (!dob) return "";
-  try {
-    const d = new Date(dob);
-    if (isNaN(d.getTime())) return "";
-    return d.toISOString().slice(0, 10);
-  } catch {
-    return "";
-  }
-};
-
+// Edit Profile modal — account holder details only. Venue partners
+// manage their venue's PUBLIC fields (description, photos, hours,
+// Instagram, address, etc.) on /club/venue. This modal is strictly for
+// account-level info: photo, name (= venue name for partners), phone,
+// and Tax ID (CLUB role only). Consumer-app-shaped fields like DOB,
+// gender, country, city, bio, profile privacy were removed — they were
+// holdover from when this dashboard was used by end-user accounts.
 const EditProfileModal = ({ userData }: { userData: any }) => {
   const [open, setOpen] = useState(false);
   const [updateUser] = useUpdateProfileMutation();
+  const authUser = useAppSelector(selectCurrentUser);
+  const isPartner = authUser?.role === "CLUB";
 
   const handleSubmit = async (data: FieldValues) => {
     const toastId = toast.loading("Updating...");
@@ -41,15 +41,11 @@ const EditProfileModal = ({ userData }: { userData: any }) => {
     const payload: Record<string, unknown> = {
       fullName: data?.fullName,
       phoneNumber: data?.phoneNumber,
-      fullAddress: data?.fullAddress,
-      bio: data?.bio,
-      instagram: data?.instagram,
-      country: data?.country,
-      city: data?.city,
-      gender: data?.gender,
-      profilePrivacy: data?.profilePrivacy,
     };
-    if (data?.dob) payload.dob = data.dob;
+    // Tax ID only relevant for venue partners.
+    if (isPartner && data?.taxId !== undefined) {
+      payload.taxId = data.taxId;
+    }
 
     Object.keys(payload).forEach((k) => {
       if (payload[k] === undefined || payload[k] === "") delete payload[k];
@@ -65,6 +61,9 @@ const EditProfileModal = ({ userData }: { userData: any }) => {
     }
   };
 
+  const nameLabel = isPartner ? "Venue Name" : "Full Name";
+  const namePlaceholder = isPartner ? "e.g. Savaya Bali" : "Full name";
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger className="text-[#C4707E] hover:text-[#E8A0B0] transition-colors">
@@ -77,23 +76,26 @@ const EditProfileModal = ({ userData }: { userData: any }) => {
             className="text-xl font-semibold text-[#FFFFFF] mb-2"
             style={{ fontFamily: "Outfit, sans-serif" }}
           >
-            Edit Profile
+            {isPartner ? "Edit Account Details" : "Edit Profile"}
           </DialogTitle>
           <DialogDescription asChild>
             <div>
+              {isPartner && (
+                <p
+                  className="text-[11px] text-[#B0B0B0] mb-4"
+                  style={{ fontFamily: "Poppins, sans-serif" }}
+                >
+                  Description, photos, hours, Instagram, and booking lives on your{" "}
+                  <span className="text-[#E8A0B0]">My Venue Profile</span>. This
+                  is just your account info.
+                </p>
+              )}
               <MyFormWrapper
                 onSubmit={handleSubmit}
                 defaultValues={{
                   fullName: userData?.fullName,
                   phoneNumber: userData?.phoneNumber,
-                  fullAddress: userData?.fullAddress,
-                  bio: userData?.bio,
-                  instagram: userData?.instagram,
-                  country: userData?.country,
-                  city: userData?.city,
-                  gender: userData?.gender,
-                  profilePrivacy: userData?.profilePrivacy,
-                  dob: formatDateForInput(userData?.dob),
+                  taxId: userData?.taxId,
                 }}
               >
                 <p
@@ -126,57 +128,22 @@ const EditProfileModal = ({ userData }: { userData: any }) => {
 
                 <MyFormInput
                   name="fullName"
-                  label="Full Name"
-                  placeholder="Full name"
+                  label={nameLabel}
+                  placeholder={namePlaceholder}
                 />
                 <MyFormInput
                   name="phoneNumber"
-                  label="Phone Number"
-                  placeholder="Phone number"
+                  label={isPartner ? "Account Phone" : "Phone Number"}
+                  placeholder="+62 ..."
                 />
-                <MyFormInput
-                  name="dob"
-                  label="Date of Birth"
-                  type="date"
-                  placeholder="YYYY-MM-DD"
-                  required={false}
-                />
-                <MyFormInput
-                  name="gender"
-                  label="Gender"
-                  placeholder="Male / Female / Non-binary / Prefer not to say"
-                  required={false}
-                />
-                <MyFormInput
-                  name="instagram"
-                  label="Instagram Handle"
-                  placeholder="@yourhandle"
-                  required={false}
-                />
-                <MyFormInput
-                  name="country"
-                  label="Country"
-                  placeholder="Country"
-                  required={false}
-                />
-                <MyFormInput
-                  name="city"
-                  label="City"
-                  placeholder="City"
-                  required={false}
-                />
-                <MyFormInput
-                  name="fullAddress"
-                  label="Address"
-                  placeholder="Address"
-                  required={false}
-                />
-                <MyFormInput
-                  name="bio"
-                  label="Bio"
-                  placeholder="A short bio"
-                  required={false}
-                />
+                {isPartner && (
+                  <MyFormInput
+                    name="taxId"
+                    label="Tax ID (optional)"
+                    placeholder="NPWP or registration number"
+                    required={false}
+                  />
+                )}
                 <MyBtn name="Save Changes" width="w-full" />
               </MyFormWrapper>
             </div>
