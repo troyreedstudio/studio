@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { toast } from "sonner";
 import { useGetMeQuery } from "@/redux/features/auth/authApi";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -162,14 +163,34 @@ const Navbar = () => {
           exposes a contact channel. Hidden on smallest mobile to save
           horizontal room next to the hamburger. */}
       <div className="flex items-center gap-4">
-        <a
-          href="mailto:[email protected]?subject=Venue%20Partner%20Support"
-          className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#B0B0B0] hover:text-[#E8A0B0] transition-colors"
+        <button
+          type="button"
+          onClick={async () => {
+            const email = "[email protected]";
+            // Try to copy to clipboard so they have the address even if their
+            // mail client doesn't open. Then attempt the mailto. Either way
+            // they get the email visible in a toast.
+            try {
+              await navigator.clipboard.writeText(email);
+            } catch {
+              // Older browsers / permission denied — fall through, mailto will
+              // still try to open and the toast will display the address.
+            }
+            toast.success(`Email us at ${email}`, {
+              description: "Address copied to your clipboard.",
+              duration: 6000,
+            });
+            // Best-effort mailto. If no mail client is configured the browser
+            // silently does nothing, but the toast above already gave them the
+            // address.
+            window.location.href = `mailto:${email}?subject=Venue%20Partner%20Support`;
+          }}
+          className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#B0B0B0] hover:text-[#E8A0B0] transition-colors cursor-pointer"
           style={{ fontFamily: 'Inter, sans-serif' }}
         >
           <HelpCircle size={14} />
           Need help?
-        </a>
+        </button>
         <div className="text-right">
           <p className="text-sm font-medium text-[#FFFFFF]" style={{ fontFamily: 'Inter, sans-serif' }}>
             {userData?.fullName || "Partner"}
