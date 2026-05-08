@@ -178,7 +178,7 @@ const PartnerVenuePage = () => {
           className="md:text-3xl text-2xl font-semibold text-[#FFFFFF]"
           style={{ ...outfit, letterSpacing: "0.02em" }}
         >
-          My Venue Page
+          My Venue Profile
         </h1>
         <div className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-10 text-center">
           <Sparkles size={32} className="mx-auto text-[#C4707E] mb-4" />
@@ -252,7 +252,7 @@ const PartnerVenuePage = () => {
             className="md:text-3xl text-2xl font-semibold text-[#FFFFFF]"
             style={{ ...outfit, letterSpacing: "0.02em" }}
           >
-            My Venue Page
+            My Venue Profile
           </h1>
           <p className="text-[#B0B0B0] text-sm mt-1" style={inter}>
             Update your description, photos, hours, and booking link.

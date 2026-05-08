@@ -80,7 +80,7 @@ const club = [
     icon: Home,
   },
   {
-    title: "My Venue Page",
+    title: "My Venue Profile",
     url: "/club/venue",
     icon: Building,
   },

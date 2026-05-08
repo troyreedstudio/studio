@@ -2,16 +2,55 @@
 "use client";
 import { useMyEventsQuery } from "@/redux/features/events/events.spi";
 import { useAllBookingsQuery } from "@/redux/features/events/events.spi";
+import { useGetOwnedVenuesQuery } from "@/redux/features/venues/venuesApi";
 import ManageEvents from "@/components/modules/ManageEvents/ManageEvents";
 import VenueStatsPanel from "@/components/modules/VenueStats/VenueStatsPanel";
 import Link from "next/link";
 import { useMemo } from "react";
-import { CalendarPlus, CalendarRange, CalendarCheck2, Clock, TrendingUp, Users } from "lucide-react";
+import {
+  CalendarPlus,
+  CalendarRange,
+  CalendarCheck2,
+  Clock,
+  TrendingUp,
+  Users,
+  Building,
+  ArrowRight,
+} from "lucide-react";
 
 const poppins = { fontFamily: "Poppins, sans-serif" };
 const garamond = { fontFamily: "Outfit, sans-serif" };
 
 const ClubHomePage = () => {
+  // Fetch the partner's venue so we can adapt the dashboard to their state.
+  // A freshly-approved partner with isActive=false should see "complete your
+  // profile" first; a live venue partner sees event-creation tools first.
+  const { data: ownedVenuesData } = useGetOwnedVenuesQuery(undefined);
+  const ownedVenue: any = ownedVenuesData?.data?.[0] ?? null;
+  const isVenueLive = !!ownedVenue?.isActive;
+
+  // Profile completion checklist mirrors /club/venue's publish gate.
+  const profileChecklist = useMemo(() => {
+    if (!ownedVenue) {
+      return { done: 0, total: 3, items: [] as { ok: boolean; label: string }[] };
+    }
+    const hasDescription = (ownedVenue.description || "").trim().length >= 20;
+    const hasPhotos = Array.isArray(ownedVenue.photos) && ownedVenue.photos.length > 0;
+    const hasBooking =
+      !!ownedVenue.bookingProvider &&
+      (ownedVenue.bookingProvider === "NONE" ||
+        !!ownedVenue.bookingUrl ||
+        !!ownedVenue.bookingPhone ||
+        !!ownedVenue.bookingWhatsapp ||
+        !!ownedVenue.bookingInstagram);
+    const items = [
+      { ok: hasDescription, label: "Add a short description" },
+      { ok: hasPhotos, label: "Add at least one photo" },
+      { ok: hasBooking, label: "Pick a booking method" },
+    ];
+    return { done: items.filter((i) => i.ok).length, total: items.length, items };
+  }, [ownedVenue]);
+
   const { data: allEventsData } = useMyEventsQuery([
     { name: "limit", value: 100 },
     { name: "page", value: "1" },
@@ -60,21 +99,25 @@ const ClubHomePage = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      {/* Header — primary CTA adapts to venue state. A draft venue's first
+          job is to complete the profile (photos, hours, booking) and go live.
+          A live venue's first job is to create events on their venue. */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1
             className="md:text-4xl text-3xl font-semibold text-[#FFFFFF]"
             style={{ ...garamond, letterSpacing: "0.02em" }}
           >
-            Your Venue Dashboard
+            {isVenueLive ? "Your Venue Dashboard" : "Welcome to Pink Pineapple"}
           </h1>
           <p className="text-[#B0B0B0] text-sm mt-2" style={poppins}>
-            Manage your events, track performance, and grow your bookings.
+            {isVenueLive
+              ? "Manage your events, track performance, and grow your bookings."
+              : "Let's get your venue profile set up so guests can find and book you."}
           </p>
         </div>
         <Link
-          href="/club/event"
+          href={isVenueLive ? "/club/event" : "/club/venue"}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-[#000000] tracking-wide transition-all duration-200 hover:opacity-90 self-start sm:self-auto"
           style={{
             background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
@@ -82,10 +125,90 @@ const ClubHomePage = () => {
             ...poppins,
           }}
         >
-          <CalendarPlus size={16} />
-          Create Event
+          {isVenueLive ? (
+            <>
+              <CalendarPlus size={16} />
+              Create Event
+            </>
+          ) : (
+            <>
+              <Building size={16} />
+              Complete Venue Profile
+            </>
+          )}
         </Link>
       </div>
+
+      {/* Onboarding banner — only shown until the venue is published. Walks
+          the partner through the three things they need to do before going
+          live. Mirrors the publish gate in /club/venue. */}
+      {ownedVenue && !isVenueLive && (
+        <Link
+          href="/club/venue"
+          className="block rounded-xl p-6 sm:p-7 transition-all duration-200 hover:border-[#E8A0B0]/60"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(139,64,96,0.18), rgba(232,160,176,0.08))",
+            border: "1px solid rgba(232,160,176,0.4)",
+            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.3)",
+          }}
+        >
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1 min-w-[240px]">
+              <p
+                className="text-xs uppercase tracking-widest text-[#E8A0B0]"
+                style={poppins}
+              >
+                Step {profileChecklist.done + 1} of {profileChecklist.total + 1} — set up your profile
+              </p>
+              <h2
+                className="text-xl sm:text-2xl text-[#FFFFFF] mt-2"
+                style={{ ...garamond, fontWeight: 600 }}
+              >
+                Complete your venue profile to go live
+              </h2>
+              <p className="text-[#B0B0B0] text-sm mt-2 max-w-xl" style={poppins}>
+                Add photos, a short description, and how guests should book.
+                This is your venue's identity on Pink Pineapple — events come
+                later, after your profile is live.
+              </p>
+              <ul className="mt-4 space-y-1.5">
+                {profileChecklist.items.map((item, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-2 text-sm"
+                    style={poppins}
+                  >
+                    <span
+                      className={`inline-flex w-4 h-4 rounded-full items-center justify-center text-[10px] font-bold ${
+                        item.ok
+                          ? "bg-emerald-400 text-[#000000]"
+                          : "bg-[#2A2A2A] text-[#6B6B6B]"
+                      }`}
+                    >
+                      {item.ok ? "✓" : ""}
+                    </span>
+                    <span style={{ color: item.ok ? "#FFFFFF" : "#B0B0B0" }}>
+                      {item.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-[#000000] tracking-wide self-center sm:self-start"
+              style={{
+                background:
+                  "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
+                ...poppins,
+              }}
+            >
+              Continue setup
+              <ArrowRight size={14} />
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
