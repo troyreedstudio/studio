@@ -116,27 +116,23 @@ const ClubHomePage = () => {
               : "Let's get your venue profile set up so guests can find and book you."}
           </p>
         </div>
-        <Link
-          href={isVenueLive ? "/club/event" : "/club/venue"}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-[#000000] tracking-wide transition-all duration-200 hover:opacity-90 self-start sm:self-auto"
-          style={{
-            background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
-            boxShadow: "0 4px 16px rgba(139, 64, 96, 0.25)",
-            ...poppins,
-          }}
-        >
-          {isVenueLive ? (
-            <>
-              <CalendarPlus size={16} />
-              Create Event
-            </>
-          ) : (
-            <>
-              <Building size={16} />
-              Complete Venue Profile
-            </>
-          )}
-        </Link>
+        {/* Top-right CTA — only shown once the venue is live, since for a
+            draft venue the onboarding banner below is the primary action and
+            having two big buttons pointing to the same place is redundant. */}
+        {isVenueLive && (
+          <Link
+            href="/club/event"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-[#000000] tracking-wide transition-all duration-200 hover:opacity-90 self-start sm:self-auto"
+            style={{
+              background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
+              boxShadow: "0 4px 16px rgba(139, 64, 96, 0.25)",
+              ...poppins,
+            }}
+          >
+            <CalendarPlus size={16} />
+            Create Event
+          </Link>
+        )}
       </div>
 
       {/* Onboarding banner — only shown until the venue is published. Walks

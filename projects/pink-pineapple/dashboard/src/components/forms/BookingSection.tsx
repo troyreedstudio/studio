@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import PhoneInput from "./PhoneInput";
 
 const inter = { fontFamily: "Inter, sans-serif" };
 
@@ -180,13 +181,9 @@ const BookingSection = ({ value, onChange }: Props) => {
           >
             Booking Phone Number
           </label>
-          <input
-            type="tel"
+          <PhoneInput
             value={value.phone}
-            onChange={(e) => set("phone", e.target.value)}
-            placeholder="+62 812 3456 7890"
-            className={inputClass}
-            style={inter}
+            onChange={(v) => set("phone", v)}
           />
           <p className="text-[10px] text-[#6B6B6B] mt-1.5" style={inter}>
             Tapping &ldquo;Book&rdquo; in the app will open the phone dialer with this number.
@@ -202,13 +199,9 @@ const BookingSection = ({ value, onChange }: Props) => {
           >
             WhatsApp Number
           </label>
-          <input
-            type="tel"
+          <PhoneInput
             value={value.whatsapp}
-            onChange={(e) => set("whatsapp", e.target.value)}
-            placeholder="+62 812 3456 7890"
-            className={inputClass}
-            style={inter}
+            onChange={(v) => set("whatsapp", v)}
           />
           <p className="text-[10px] text-[#6B6B6B] mt-1.5" style={inter}>
             Opens a WhatsApp chat to this number when the user taps &ldquo;Book&rdquo;.

@@ -9,15 +9,16 @@ const inputClass =
 
 // Country codes most likely for Bali venues — Indonesia first, then the
 // expat-heavy senders. Keep the list short on purpose; "Other" lets the
-// user type any code.
+// user type any code. Labels stay short so the dropdown doesn't crowd
+// out the number-entry field on mobile.
 const COMMON_CODES: { code: string; flag: string; label: string }[] = [
   { code: "+62", flag: "🇮🇩", label: "Indonesia" },
   { code: "+65", flag: "🇸🇬", label: "Singapore" },
   { code: "+60", flag: "🇲🇾", label: "Malaysia" },
   { code: "+66", flag: "🇹🇭", label: "Thailand" },
   { code: "+61", flag: "🇦🇺", label: "Australia" },
-  { code: "+44", flag: "🇬🇧", label: "United Kingdom" },
-  { code: "+1", flag: "🇺🇸", label: "USA / Canada" },
+  { code: "+44", flag: "🇬🇧", label: "UK" },
+  { code: "+1", flag: "🇺🇸", label: "US / CA" },
   { code: "+33", flag: "🇫🇷", label: "France" },
   { code: "+49", flag: "🇩🇪", label: "Germany" },
   { code: "+81", flag: "🇯🇵", label: "Japan" },
@@ -69,26 +70,32 @@ const PhoneInput = ({ value, onChange }: Props) => {
               update(v, number);
             }
           }}
-          className={inputClass + " w-32 sm:w-44"}
+          // Compact width on mobile — keep the bulk of the row for the
+          // number-entry input so guests tapping the dropdown don't
+          // accidentally hit the typing area and vice-versa.
+          className={inputClass + " w-[110px] sm:w-32 shrink-0"}
           style={inter}
+          aria-label="Country code"
         >
           {COMMON_CODES.map((c) => (
             <option key={c.code} value={c.code}>
-              {c.flag} {c.code} {c.label}
+              {c.flag} {c.code}
             </option>
           ))}
           <option value="OTHER">Other…</option>
         </select>
         <input
           type="tel"
-          inputMode="tel"
+          inputMode="numeric"
+          autoComplete="tel-national"
           value={number}
           onChange={(e) =>
             update(code, e.target.value.replace(/[^\d\s\-()]/g, ""))
           }
           placeholder="812 3456 7890"
-          className={inputClass + " flex-1"}
+          className={inputClass + " flex-1 min-w-0"}
           style={inter}
+          aria-label="Phone number"
         />
       </div>
       {!knownCode && (
