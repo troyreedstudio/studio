@@ -22,6 +22,12 @@ model User {
   bio                String               @default("")
   phoneNumber        String
   typeOfVenue        String               @default("")
+  // Venue partner application fields — collected at registration so admin
+  // has enough data to approve the listing in one click. Stored as strings
+  // (not enum) because the User model is shared with regular USER accounts;
+  // they're parsed into VenueArea/VenueCategory in provisionApprovedVenuePartner.
+  proposedArea       String               @default("")
+  proposedCategory   String               @default("")
   taxId              String               @default("")
   businessLicense    String ?              @default("")
   profileImage       String               @default("")

@@ -35,7 +35,7 @@ const DetailsModal = ({ id, status }: { id: string; status: "CLUB" | "USER" }) =
             className="text-lg font-semibold text-[#FFFFFF]"
             style={{ fontFamily: 'Outfit, sans-serif' }}
           >
-            {status === "USER" ? "User Profile" : "Club Profile"}
+            {status === "USER" ? "User Profile" : "Venue Profile"}
           </DialogTitle>
         </DialogHeader>
 

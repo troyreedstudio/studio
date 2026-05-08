@@ -61,11 +61,6 @@ const admin = [
     icon: Users,
   },
   {
-    title: "Messages",
-    url: "/club/messages",
-    icon: MessageCircle,
-  },
-  {
     title: "Settings",
     url: "/settings",
     icon: Settings,
@@ -74,8 +69,13 @@ const admin = [
 
 const club = [
   {
-    title: "My Venue",
+    title: "Dashboard",
     url: "/club",
+    icon: Home,
+  },
+  {
+    title: "My Venue Page",
+    url: "/club/venue",
     icon: Building,
   },
   {
@@ -92,11 +92,6 @@ const club = [
     title: "Attribution",
     url: "/analytics",
     icon: TrendingUp,
-  },
-  {
-    title: "Messages",
-    url: "/club/messages",
-    icon: MessageCircle,
   },
   {
     title: "Settings",
@@ -124,8 +119,10 @@ const SideBar = () => {
       <SidebarContent className="bg-[#000000]">
         <SidebarGroup />
 
-        {/* Brand header */}
-        <SidebarGroupLabel className="mb-10 mt-8 mx-auto flex flex-col items-center gap-1">
+        {/* Brand header — adds a small "PARTNER" tag for venue partners so a
+            venue logging in immediately knows they're in their own portal,
+            not the admin tool. Same logo + same brand chrome for consistency. */}
+        <SidebarGroupLabel className="mb-10 mt-8 mx-auto flex flex-col items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/logo_primary_dark.jpg"
@@ -134,6 +131,19 @@ const SideBar = () => {
             height={60}
             style={{ objectFit: 'contain' }}
           />
+          {user?.role === "CLUB" && (
+            <span
+              className="text-[10px] tracking-[0.4em] px-2.5 py-0.5 rounded-full"
+              style={{
+                background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
+                color: "#000000",
+                fontFamily: "Inter, sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              PARTNER
+            </span>
+          )}
         </SidebarGroupLabel>
 
         <SidebarGroupContent>

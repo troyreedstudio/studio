@@ -1,6 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+// PARKED — do not delete. Hidden from sidebars 2026-05-08 as part of removing
+// the legacy user-to-user social chat. Kept on disk for future revival as a
+// venue↔support channel (likely AI-bot first-line triage with human
+// escalation). Will need refactor before reactivation: stale local-dev
+// WebSocket URL, user-to-user wiring, shared Chat/Room models with the
+// dormant consumer chat. UI shell (list + thread + composer) is the part
+// worth keeping; data layer should get its own SupportThread/SupportMessage
+// models so support and any future direct-message feature don't tangle.
+
 import { CircleUser, Send } from "lucide-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useAppSelector } from "@/redux/hooks";

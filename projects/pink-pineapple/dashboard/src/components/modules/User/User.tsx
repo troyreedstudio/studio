@@ -65,7 +65,7 @@ const User = () => {
 
   const tabs: { label: string; value: "CLUB" | "USER" }[] = [
     { label: "Users", value: "USER" },
-    { label: "Clubs", value: "CLUB" },
+    { label: "Venues", value: "CLUB" },
   ];
 
   return (
@@ -104,7 +104,7 @@ const User = () => {
           </svg>
           <input
             type="text"
-            placeholder={`Search ${status === "USER" ? "users" : "clubs"}...`}
+            placeholder={`Search ${status === "USER" ? "users" : "venues"}...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 pr-4 py-2.5 rounded-xl border border-[#2A2A2A] bg-[#000000] text-[#FFFFFF] text-sm placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#C4707E]/50 transition-colors w-full sm:w-64"
@@ -177,8 +177,8 @@ const User = () => {
             </div>
             <p className="text-[#B0B0B0] text-sm" style={poppins}>
               {search
-                ? `No ${status === "USER" ? "users" : "clubs"} matching "${search}"`
-                : `No ${status === "USER" ? "users" : "clubs"} found.`}
+                ? `No ${status === "USER" ? "users" : "venues"} matching "${search}"`
+                : `No ${status === "USER" ? "users" : "venues"} found.`}
             </p>
           </div>
         </div>

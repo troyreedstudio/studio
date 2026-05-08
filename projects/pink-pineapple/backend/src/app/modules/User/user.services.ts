@@ -1,4 +1,4 @@
-import { Prisma, User, UserRole, UserStatus } from "@prisma/client";
+import { Prisma, User, UserRole, UserStatus, VenueArea, VenueCategory } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 import crypto from "crypto";
 import { Request } from "express";
@@ -10,10 +10,87 @@ import { paginationHelper } from "../../../helpers/paginationHelper";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { generateOtpEmail } from "../../../shared/emaiHTMLtext";
 import emailSender from "../../../shared/emailSender";
+import notify from "../../../shared/notifyService";
 import prisma from "../../../shared/prisma";
 import { userSearchAbleFields } from "./user.costant";
 import { IUser, IUserFilterRequest } from "./user.interface";
 import { object } from "zod";
+
+/// Map a venue partner's free-text typeOfVenue (collected at registration)
+/// to a VenueCategory enum value. Falls back to NIGHTLIFE if no match —
+/// admin will correct it during listing finalisation.
+const mapVenueTypeToCategory = (typeOfVenue?: string | null): VenueCategory => {
+  if (!typeOfVenue) return VenueCategory.NIGHTLIFE;
+  const t = typeOfVenue.toLowerCase();
+  if (t.includes("beach")) return VenueCategory.BEACH_CLUB;
+  if (t.includes("restaurant") || t.includes("dining") || t.includes("food")) return VenueCategory.RESTAURANT;
+  if (t.includes("gym") || t.includes("wellness") || t.includes("fitness") || t.includes("yoga")) return VenueCategory.WELLNESS;
+  if (t.includes("event")) return VenueCategory.EVENTS;
+  return VenueCategory.NIGHTLIFE;
+};
+
+/// Idempotently provision a placeholder Venue record for a freshly-approved
+/// CLUB user. The Venue is created with isActive:false so it doesn't appear
+/// to consumers until an admin (or eventually the venue partner themselves)
+/// finishes filling in photos, hours, booking URL, etc. and flips it on.
+///
+/// Idempotent: if the owner already has a venue, only the welcome email
+/// goes out — no duplicate Venue is created.
+const provisionApprovedVenuePartner = async (user: User): Promise<void> => {
+  const existing = await prisma.venue.findFirst({ where: { ownerId: user.id } });
+  if (!existing) {
+    const baseSlug = (user.fullName || "venue")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+      .slice(0, 40) || "venue";
+    // Append owner-id suffix to guarantee slug uniqueness for placeholder.
+    // Admin will rename to a clean slug when finalising the listing.
+    const slug = `${baseSlug}-pending-${user.id.slice(-6)}`;
+
+    // Honour the venue partner's application choices (collected at
+    // registration) when they're valid enum values. Fall back to safe
+    // defaults if missing or junk.
+    const proposedArea = (user as any).proposedArea as string | undefined;
+    const proposedCategory = (user as any).proposedCategory as string | undefined;
+
+    const isValidArea = (v: string | undefined): v is VenueArea =>
+      !!v && (Object.values(VenueArea) as string[]).includes(v);
+    const isValidCategory = (v: string | undefined): v is VenueCategory =>
+      !!v && (Object.values(VenueCategory) as string[]).includes(v);
+
+    const finalArea: VenueArea = isValidArea(proposedArea)
+      ? (proposedArea as VenueArea)
+      : VenueArea.CANGGU;
+    const finalCategory: VenueCategory = isValidCategory(proposedCategory)
+      ? (proposedCategory as VenueCategory)
+      : mapVenueTypeToCategory(user.typeOfVenue);
+
+    // Seed the venue's gallery + hero with the partner's profileImage if
+    // they uploaded one at registration — gives them a head start.
+    const heroSeed = user.profileImage || "";
+    const photoSeed = heroSeed ? [heroSeed] : [];
+
+    await prisma.venue.create({
+      data: {
+        name: user.fullName || "Untitled Venue",
+        slug,
+        description: user.bio || "",
+        area: finalArea,
+        category: finalCategory,
+        address: user.fullAddress || "",
+        phone: user.phoneNumber || "",
+        instagram: user.instagram || "",
+        photos: photoSeed,
+        heroImage: heroSeed,
+        isActive: false, // Hidden from consumers until admin or partner finalises.
+        ownerId: user.id,
+      },
+    });
+  }
+
+  await notify.sendVenueApproved(user.email, user.fullName);
+};
 
 // Create a new user in the database.
 const createUserIntoDb = async (payload: User) => {
@@ -360,6 +437,15 @@ const updateUserIntoDb = async (payload: IUser, id: string) => {
   if (!userInfo)
     throw new ApiError(httpStatus.NOT_FOUND, "User not found with id: " + id);
 
+  // Detect a CLUB venue-partner being newly activated. Triggers two things
+  // post-update: auto-provision a placeholder Venue record, and send the
+  // branded "your venue is approved" email. Both are non-fatal — the admin's
+  // approve action shouldn't fail just because email delivery hiccups.
+  const isClubApproval =
+    userInfo.role === UserRole.CLUB &&
+    userInfo.status !== UserStatus.ACTIVE &&
+    (payload as any).status === UserStatus.ACTIVE;
+
   const result = await prisma.user.update({
     where: {
       id: userInfo.id,
@@ -382,6 +468,15 @@ const updateUserIntoDb = async (payload: IUser, id: string) => {
       httpStatus.INTERNAL_SERVER_ERROR,
       "Failed to update user profile"
     );
+
+  if (isClubApproval) {
+    try {
+      await provisionApprovedVenuePartner(userInfo);
+    } catch (err) {
+      // Log but don't fail the approval — admin can re-trigger later if needed.
+      console.error("Venue partner provisioning failed (non-fatal):", err);
+    }
+  }
 
   return result;
 };

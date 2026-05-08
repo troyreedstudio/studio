@@ -8,7 +8,7 @@ const page = () => {
           className="md:text-3xl text-2xl font-semibold text-[#FFFFFF]"
           style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.02em' }}
         >
-          Users &amp; Clubs
+          Users &amp; Venues
         </h1>
         <p
           className="text-[#B0B0B0] text-sm mt-1"

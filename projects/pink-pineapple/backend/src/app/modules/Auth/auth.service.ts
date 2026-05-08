@@ -281,11 +281,22 @@ const verifyRegisterOtp = async (payload: { email: string; otp: number }) => {
     },
   });
 
-  // Send welcome email — non-fatal, user is in regardless. CLUB users
-  // (venue admins) get welcomed when their account is approved, not here.
+  // Send welcome / application emails — all non-fatal. Branching by role:
+  //   USER → branded welcome email (you're in, here's the app)
+  //   CLUB → application-received email + admin alert email. Welcome email
+  //          for CLUB fires later, when admin approves them in /approvals.
+  const notify = (await import("../../../shared/notifyService")).default;
   if (user.role !== UserRole.CLUB) {
-    const notify = (await import("../../../shared/notifyService")).default;
     await notify.sendWelcome(user.email, user.fullName);
+  } else {
+    await notify.sendApplicationReceived(user.email, user.fullName);
+    await notify.sendAdminNewApplication(
+      user.fullName,
+      user.email,
+      user.proposedArea || "",
+      user.proposedCategory || user.typeOfVenue || "",
+      user.phoneNumber || ""
+    );
   }
 
   const accessToken = jwtHelpers.generateToken(
