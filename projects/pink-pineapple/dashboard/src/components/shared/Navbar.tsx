@@ -69,20 +69,17 @@ const Navbar = () => {
     router.push("/login");
   };
 
-  // Get page title from path
-  const currentPage = navLinks.find(l => l.url === pathName)?.title || "Dashboard";
-
   return (
     <div
       className="flex items-center justify-between mt-6 mb-8 bg-[#000000] border border-[#2A2A2A] md:px-6 px-4 py-4 rounded-xl"
     >
-      {/* Page title */}
-      <h2
-        className="md:inline-block hidden text-2xl font-bold text-[#FFFFFF]"
-        style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.05em' }}
-      >
-        {currentPage}
-      </h2>
+      {/* Page title removed — each page renders its own h1 with proper
+          styling, supporting copy, and inline action buttons. The duplicate
+          here was just visual noise on desktop. The navbar now keeps only
+          the mobile hamburger trigger and the user avatar. On desktop the
+          left side is intentionally empty so the avatar reads as the
+          primary anchor. */}
+      <div className="hidden md:block flex-1" />
 
       {/* Mobile menu */}
       <div className="md:hidden">
