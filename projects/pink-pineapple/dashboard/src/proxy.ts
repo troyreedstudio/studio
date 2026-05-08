@@ -38,9 +38,14 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-// "Matching Paths"
+// "Matching Paths" — exclude auth pages, system routes (_next, api), AND
+// any path containing a file extension (.jpg, .png, .svg, .ico, .css, etc.)
+// so static assets in /public/images/ and /public/placeholders/ aren't
+// gated by auth and redirected to /login. This is why the Pink Pineapple
+// logo wasn't rendering before — the middleware was intercepting requests
+// to /images/logo_primary_dark.jpg and redirecting unauth'd visitors.
 export const config = {
   matcher: [
-    "/((?!login|forgot-password|register|verify-otp|reset-password|not-authorized|_next|api).*)",
+    "/((?!login|forgot-password|register|verify-otp|reset-password|not-authorized|_next|api|.*\\.).*)",
   ],
 };
