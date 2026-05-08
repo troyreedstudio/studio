@@ -30,6 +30,12 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
   late final VenueRatingService _ratingService;
   late final VenueVibeService _vibeService;
 
+  // Swipeable hero gallery — partner profiles store up to 4 photos per
+  // venue. We show all of them as a horizontal PageView with dot indicators
+  // so guests get the full visual story instead of just heroImage.
+  final PageController _heroPageController = PageController();
+  int _heroPageIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +56,12 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
         _venueController.trackVenueTap(venue.slug);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _heroPageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -180,13 +192,19 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     );
   }
 
-  // ── Hero Image ────────────────────────────────────────────────────────────
+  // ── Hero Image / swipeable gallery ────────────────────────────────────────
 
   Widget _buildHero(VenueModel venue) {
     final heroHeight = MediaQuery.of(context).size.height * 0.4;
-    final imageUrl = venue.heroImage.isNotEmpty
-        ? venue.heroImage
-        : (venue.photos.isNotEmpty ? venue.photos.first : '');
+
+    // Build the ordered list of photos to display: heroImage first if set,
+    // then any photos[] not equal to the hero (de-duped). Falls back to
+    // photos[0] if heroImage is empty. Empty list → placeholder.
+    final List<String> gallery = [];
+    if (venue.heroImage.isNotEmpty) gallery.add(venue.heroImage);
+    for (final p in venue.photos) {
+      if (p.isNotEmpty && !gallery.contains(p)) gallery.add(p);
+    }
 
     return SizedBox(
       height: heroHeight,
@@ -194,26 +212,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (imageUrl.isNotEmpty)
-            CachedNetworkImage(
-              imageUrl: imageUrl,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                color: AppColors.surfaceElevated,
-                child: Center(child: loading()),
-              ),
-              errorWidget: (context, url, error) => Container(
-                color: AppColors.surfaceElevated,
-                child: Center(
-                  child: Icon(
-                    Icons.broken_image_outlined,
-                    color: AppColors.textMuted,
-                    size: 48.sp,
-                  ),
-                ),
-              ),
-            )
-          else
+          if (gallery.isEmpty)
             Container(
               color: AppColors.surfaceElevated,
               child: Center(
@@ -222,6 +221,56 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                   size: 48.sp,
                   color: AppColors.textMuted,
                 ),
+              ),
+            )
+          else
+            PageView.builder(
+              controller: _heroPageController,
+              itemCount: gallery.length,
+              onPageChanged: (i) => setState(() => _heroPageIndex = i),
+              itemBuilder: (context, i) => CachedNetworkImage(
+                imageUrl: gallery[i],
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: AppColors.surfaceElevated,
+                  child: Center(child: loading()),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: AppColors.surfaceElevated,
+                  child: Center(
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      color: AppColors.textMuted,
+                      size: 48.sp,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          // Dot indicators — only show when there's more than one photo so
+          // a single-photo venue doesn't get a lonely dot.
+          if (gallery.length > 1)
+            Positioned(
+              bottom: 16.h,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(gallery.length, (i) {
+                  final active = i == _heroPageIndex;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: EdgeInsets.symmetric(horizontal: 3.w),
+                    width: active ? 18.w : 6.w,
+                    height: 6.h,
+                    decoration: BoxDecoration(
+                      color: active
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  );
+                }),
               ),
             ),
           // Gradient overlay fading to black at bottom

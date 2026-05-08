@@ -1170,9 +1170,11 @@ class _CategorySection extends StatelessWidget {
 
   // Curated order per category — venues not in the list appear after in default order
   static const _curatedOrder = <String, List<String>>{
-    'NIGHTLIFE': ['savaya', 'desa-kitsune', 'shady-pig', 'mesa', 'miss-fish'],
-    'BEACH_CLUB': ['finns-beach-club', 'el-kabron', 'atlas-beach-club', 'desa-kitsune', 'potato-head-seminyak', 'ku-de-ta'],
-    'RESTAURANT': ['gimme-shelter', 'da-maria', 'yuki', 'muda-suka'],
+    // Gimme Shelter moved here — it's a nightlife venue, not a restaurant.
+    'NIGHTLIFE': ['savaya', 'desa-kitsune', 'shady-pig', 'mesa', 'miss-fish', 'gimme-shelter'],
+    'BEACH_CLUB': ['finns-beach-club', 'el-kabron', 'atlas-beach-club', 'potato-head-seminyak', 'ku-de-ta'],
+    // Bella + Kong added; Gimme Shelter removed (moved to NIGHTLIFE).
+    'RESTAURANT': ['bella', 'kong-canggu', 'da-maria', 'yuki', 'muda-suka'],
     'WELLNESS': ['nirvana-fitness', 'obsidian', 'power-and-revive', 'body-factory', 'bamboo-fitness'],
   };
 
