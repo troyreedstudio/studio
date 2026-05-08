@@ -130,7 +130,7 @@ const ClubHomePage = () => {
             }}
           >
             <CalendarPlus size={16} />
-            Create Event
+            Create Special Event
           </Link>
         )}
       </div>
@@ -283,11 +283,18 @@ const ClubHomePage = () => {
       {/* Venue performance — PP ratings, Google ratings, favourites, vibes */}
       <VenueStatsPanel />
 
-      {/* Events Management */}
+      {/* Events Management — only "special events" (one-off named shows).
+          Regular weekly programming lives on the venue profile, not here. */}
       <div>
-        <h2 className="text-xl font-semibold text-[#FFFFFF] mb-4" style={garamond}>
-          Your Events
-        </h2>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-[#FFFFFF]" style={garamond}>
+            Your Special Events
+          </h2>
+          <p className="text-[#B0B0B0] text-sm mt-1 max-w-2xl" style={poppins}>
+            One-off shows with named talent — headline DJs, festivals, ticketed
+            nights. For your regular weekly programming, edit your venue profile.
+          </p>
+        </div>
         <ManageEvents />
       </div>
     </div>

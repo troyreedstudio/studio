@@ -89,20 +89,9 @@ const ManageEvents = () => {
         ))}
       </div>
 
-      {/* Create Event button */}
-      <div className="flex justify-end w-full">
-        <Link
-          href="/club/event"
-          className="inline-block px-5 py-2.5 rounded-xl text-sm font-semibold text-[#000000] tracking-wide transition-all duration-200 hover:opacity-90"
-          style={{
-            background: 'linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)',
-            boxShadow: '0 4px 16px rgba(139, 64, 96, 0.25)',
-            fontFamily: 'Poppins, sans-serif',
-          }}
-        >
-          + Create Event
-        </Link>
-      </div>
+      {/* Create Event button removed — was duplicating the primary CTA in
+          the dashboard header / events page header. One CTA at the top of
+          the page is enough. */}
 
       {/* Table */}
       <div className="rounded-xl border border-[#2A2A2A] overflow-hidden">

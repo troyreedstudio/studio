@@ -83,7 +83,7 @@ const club = [
     icon: Building,
   },
   {
-    title: "Events",
+    title: "Special Events",
     url: "/club/events",
     icon: CalendarRange,
   },

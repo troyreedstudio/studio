@@ -13,10 +13,12 @@ const ClubEventsPage = () => {
           className="md:text-4xl text-3xl font-semibold text-[#FFFFFF]"
           style={{ ...garamond, letterSpacing: "0.02em" }}
         >
-          Your Events
+          Special Events
         </h1>
-        <p className="text-[#B0B0B0] text-sm mt-2" style={poppins}>
-          Manage and track all your venue events
+        <p className="text-[#B0B0B0] text-sm mt-2 max-w-2xl" style={poppins}>
+          One-off shows with named talent — headline DJs, festivals, ticketed
+          nights. For your regular weekly programming (e.g. Hip Hop Wednesday,
+          DJ all weekend), edit your venue profile instead.
         </p>
       </div>
 

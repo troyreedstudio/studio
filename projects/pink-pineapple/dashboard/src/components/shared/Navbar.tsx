@@ -38,7 +38,7 @@ const adminLinks = [
 const clubLinks = [
   { title: "Dashboard", url: "/club", icon: Home },
   { title: "My Venue Profile", url: "/club/venue", icon: Building },
-  { title: "Events", url: "/club/events", icon: CalendarRange },
+  { title: "Special Events", url: "/club/events", icon: CalendarRange },
   // Bookings tab hidden for now — see SideBar.tsx for rationale.
   { title: "Attribution", url: "/analytics", icon: TrendingUp },
   { title: "Settings", url: "/club/settings", icon: Settings },
