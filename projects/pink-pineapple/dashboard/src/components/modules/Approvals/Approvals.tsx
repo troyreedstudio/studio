@@ -48,7 +48,7 @@ const Approvals = () => {
 
   const tabs: { label: string; value: "CLUB" | "Booking" }[] = [
     { label: "Booking", value: "Booking" },
-    { label: "Clubs", value: "CLUB" },
+    { label: "Venues", value: "CLUB" },
   ];
 
   return (
@@ -140,7 +140,7 @@ const Approvals = () => {
                       </svg>
                     </div>
                     <p className="text-[#B0B0B0] text-sm" style={poppins}>
-                      No club applications to review.
+                      No venue applications to review.
                     </p>
                     <p className="text-[#6B6B6B] text-xs" style={poppins}>
                       New venue partner requests will appear here.
