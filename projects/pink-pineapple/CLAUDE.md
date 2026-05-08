@@ -265,7 +265,7 @@ Same flow on `/var/www/troyreed1725-dashboard/`, end with `npx pm2 restart front
 - [ ] Proper designed app icon (currently logo resized to square)
 - [ ] Real venue photography (Sascha in Bali) — replace stock/placeholders
 - [ ] Stripe payments integration (checkout sessions + webhooks)
-- [ ] Firebase project for push notifications
+- [ ] **Firebase project for push notifications** — DEFERRED to post-launch. Zero infrastructure exists today (no Flutter `firebase_core`/`firebase_messaging`, no `GoogleService-Info.plist`/`google-services.json`, no `firebase-admin` on backend, no service account JSON, no `FIREBASE_*` env vars, `fcmToken` payload literally empty string at login). Setup needs: Firebase project + iOS app + Android app + APNs key + service account JSON (Troy steps, ~30 min) then code wiring (Rocky steps, ~1 day). Defer until v1.3 when there's content velocity to justify (booking confirms via Stripe, weekly venue digests, etc.).
 - [ ] Remove or gate legacy social features (newsfeed, posts, followers, likes, comments)
 - [ ] Basic monitoring — Sentry for backend, uptime check on `api.pinkpineapple.app`
 - [ ] Stabilise `frontend` PM2 process (43+ restarts — root cause not diagnosed)
