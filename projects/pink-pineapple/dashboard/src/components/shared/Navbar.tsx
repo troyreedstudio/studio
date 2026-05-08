@@ -2,14 +2,47 @@
 import Image from "next/image";
 import { useGetMeQuery } from "@/redux/features/auth/authApi";
 import { useState } from "react";
-import { useAppDispatch } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { usePathname, useRouter } from "next/navigation";
-import { logout } from "@/redux/features/auth/authSlice";
+import { logout, selectCurrentUser } from "@/redux/features/auth/authSlice";
 import { removeCookie } from "@/utils/cookies";
-import { LogOut, Settings, CalendarRange, Users, CalendarCheck2, MessageCircle, MapPin } from "lucide-react";
+import {
+  LogOut,
+  Settings,
+  CalendarRange,
+  Users,
+  CalendarCheck2,
+  MapPin,
+  Home,
+  Building,
+  TrendingUp,
+  Shield,
+} from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { HiMenuAlt1 } from "react-icons/hi";
 import Link from "next/link";
+
+// Mobile-side nav arrays — kept in sync with SideBar.tsx. If you change one,
+// change the other. (Future cleanup: extract into a shared nav config.)
+const adminLinks = [
+  { title: "Overview", url: "/", icon: Home },
+  { title: "Venues", url: "/venues", icon: MapPin },
+  { title: "Events", url: "/event", icon: CalendarRange },
+  { title: "Bookings", url: "/bookings", icon: CalendarCheck2 },
+  { title: "Approvals", url: "/approvals", icon: Shield },
+  { title: "Attribution", url: "/analytics", icon: TrendingUp },
+  { title: "Users", url: "/user", icon: Users },
+  { title: "Settings", url: "/settings", icon: Settings },
+];
+
+const clubLinks = [
+  { title: "Dashboard", url: "/club", icon: Home },
+  { title: "My Venue Profile", url: "/club/venue", icon: Building },
+  { title: "Events", url: "/club/events", icon: CalendarRange },
+  { title: "Bookings", url: "/club/bookings", icon: CalendarCheck2 },
+  { title: "Attribution", url: "/analytics", icon: TrendingUp },
+  { title: "Settings", url: "/club/settings", icon: Settings },
+];
 
 const Navbar = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -18,20 +51,17 @@ const Navbar = () => {
   const pathName = usePathname();
   const { data } = useGetMeQuery(undefined);
   const userData = data?.data?.userProfile;
+  const authUser = useAppSelector(selectCurrentUser);
 
   const handleNavLinkClick = () => {
     setIsSheetOpen(false);
   };
 
-  const navLinks = [
-    { title: "Overview", url: "/", icon: CalendarRange },
-    { title: "Venues", url: "/venues", icon: MapPin },
-    { title: "Events", url: "/event", icon: CalendarRange },
-    { title: "Bookings", url: "/bookings", icon: CalendarCheck2 },
-    { title: "Users", url: "/user", icon: Users },
-    { title: "Messages", url: "/club/messages", icon: MessageCircle },
-    { title: "Settings", url: "/settings", icon: Settings },
-  ];
+  // Mirror SideBar.tsx role gating — admins see admin nav, partners see
+  // partner nav. Default to partner nav if role is missing/unknown so a
+  // venue partner never accidentally lands on admin links they can't access.
+  const navLinks = authUser?.role === "ADMIN" ? adminLinks : clubLinks;
+  const isPartner = authUser?.role === "CLUB";
 
   const handleLogout = () => {
     dispatch(logout());
@@ -61,17 +91,32 @@ const Navbar = () => {
             <HiMenuAlt1 className="text-2xl cursor-pointer text-[#C4707E]" />
           </SheetTrigger>
           <SheetContent side="left" className="max-w-80 bg-[#000000] border-r border-[#2A2A2A]">
-            {/* Mobile brand */}
-            <div className="mt-6 mb-8 text-center">
+            {/* Mobile brand — adds a "PARTNER" tag for venue partners so
+                they immediately know which side of the dashboard they're on,
+                matching the desktop SideBar's PARTNER pill. */}
+            <div className="mt-6 mb-8 text-center flex flex-col items-center gap-2">
               <span
                 className="text-lg font-bold text-[#FFFFFF] tracking-widest"
                 style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 PINK PINEAPPLE
               </span>
-              <p className="text-[#E8A0B0] tracking-[0.5em] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <p className="text-[#E8A0B0] tracking-[0.5em] text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>
                 BALI
               </p>
+              {isPartner && (
+                <span
+                  className="text-[10px] tracking-[0.4em] px-2.5 py-0.5 rounded-full"
+                  style={{
+                    background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
+                    color: "#000000",
+                    fontFamily: "Inter, sans-serif",
+                    fontWeight: 600,
+                  }}
+                >
+                  PARTNER
+                </span>
+              )}
             </div>
             <nav>
               <ul className="space-y-1 flex flex-col">
