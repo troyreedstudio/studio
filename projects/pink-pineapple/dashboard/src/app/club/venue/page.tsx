@@ -47,6 +47,88 @@ const outfit = { fontFamily: "Outfit, sans-serif" };
 const inputClass =
   "w-full bg-[#000000] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#C4707E] transition-colors";
 
+// ── Weekly Programming types/helpers ────────────────────────────────────
+// Distinct from Opening Hours. Hours = when you're open. Programming = what
+// you do that night (Hip Hop Wednesday, Open Decks Saturday, etc.). Stored
+// on Venue.weeklySchedule as { mon: { startTime, endTime, genre, description }, ... }
+// — matches the shape the Flutter app's _applyCuratedSchedule reads.
+type ProgrammingDay = {
+  active: boolean;
+  startTime: string;
+  endTime: string;
+  genre: string;
+  description: string;
+};
+
+type ProgrammingValue = Record<
+  "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun",
+  ProgrammingDay
+>;
+
+const PROGRAMMING_DAYS: { key: keyof ProgrammingValue; label: string }[] = [
+  { key: "mon", label: "Monday" },
+  { key: "tue", label: "Tuesday" },
+  { key: "wed", label: "Wednesday" },
+  { key: "thu", label: "Thursday" },
+  { key: "fri", label: "Friday" },
+  { key: "sat", label: "Saturday" },
+  { key: "sun", label: "Sunday" },
+];
+
+const blankProgrammingDay = (): ProgrammingDay => ({
+  active: false,
+  startTime: "",
+  endTime: "",
+  genre: "",
+  description: "",
+});
+
+const blankProgramming = (): ProgrammingValue => ({
+  mon: blankProgrammingDay(),
+  tue: blankProgrammingDay(),
+  wed: blankProgrammingDay(),
+  thu: blankProgrammingDay(),
+  fri: blankProgrammingDay(),
+  sat: blankProgrammingDay(),
+  sun: blankProgrammingDay(),
+});
+
+const parseProgramming = (raw: any): ProgrammingValue => {
+  const result = blankProgramming();
+  if (!raw || typeof raw !== "object") return result;
+  for (const { key } of PROGRAMMING_DAYS) {
+    const v = raw[key];
+    if (v && typeof v === "object") {
+      result[key] = {
+        active: true,
+        startTime: typeof v.startTime === "string" ? v.startTime : "",
+        endTime: typeof v.endTime === "string" ? v.endTime : "",
+        genre: typeof v.genre === "string" ? v.genre : "",
+        description: typeof v.description === "string" ? v.description : "",
+      };
+    }
+  }
+  return result;
+};
+
+const serializeProgramming = (
+  v: ProgrammingValue
+): Record<string, any> | null => {
+  const out: Record<string, any> = {};
+  for (const { key } of PROGRAMMING_DAYS) {
+    const d = v[key];
+    if (!d.active) continue;
+    if (!d.genre.trim()) continue; // genre is required; drop empty days
+    out[key] = {
+      startTime: d.startTime || "",
+      endTime: d.endTime || "",
+      genre: d.genre.trim(),
+      description: d.description.trim(),
+    };
+  }
+  return Object.keys(out).length > 0 ? out : null;
+};
+
 const PartnerVenuePage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -70,6 +152,9 @@ const PartnerVenuePage = () => {
   const [openingHours, setOpeningHours] = useState<OpeningHoursValue>(
     blankOpeningHours()
   );
+  const [programming, setProgramming] = useState<ProgrammingValue>(
+    blankProgramming()
+  );
   const [booking, setBooking] = useState<BookingValue>(blankBooking());
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
   const [heroImage, setHeroImage] = useState<string>("");
@@ -83,6 +168,7 @@ const PartnerVenuePage = () => {
     setInstagram(venue.instagram || "");
     setWebsite(venue.website || "");
     setOpeningHours(parseOpeningHours(venue.openingHours));
+    setProgramming(parseProgramming(venue.weeklySchedule));
     setBooking({
       provider: (venue.bookingProvider || "") as BookingProvider,
       url: venue.bookingUrl || "",
@@ -133,6 +219,7 @@ const PartnerVenuePage = () => {
         instagram,
         website,
         openingHours: serializeOpeningHours(openingHours),
+        weeklySchedule: serializeProgramming(programming),
         bookingUrl: booking.url || "",
         bookingProvider: booking.provider || undefined,
         bookingPhone: booking.phone || undefined,
@@ -762,6 +849,155 @@ const PartnerVenuePage = () => {
           Set hours for each day of the week.
         </p>
         <OpeningHoursPicker value={openingHours} onChange={setOpeningHours} />
+      </section>
+
+      {/* Weekly Programming — what kind of night each day of the week is.
+          Distinct from Opening Hours: hours = when you're open, programming
+          = what theme/genre/format that night. Powers the consumer app's
+          "This Week" curated feed. Optional — venues without a structured
+          weekly programme can leave all days blank. */}
+      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-4">
+        <div>
+          <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
+            Weekly programming
+          </p>
+          <p className="text-[11px] text-[#6B6B6B] mt-1 max-w-xl" style={inter}>
+            What kind of night each day is — e.g. <span className="text-[#E8A0B0]">Hip Hop Wednesday</span>,
+            <span className="text-[#E8A0B0]"> Open Decks Saturday</span>,
+            <span className="text-[#E8A0B0]"> Live Jazz Sunday</span>. Toggle on
+            the days you have regular programming. For one-off shows with named
+            talent (headline DJs, festivals), use Special Events instead.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {PROGRAMMING_DAYS.map(({ key, label }) => {
+            const day = programming[key];
+            const setDay = (next: Partial<ProgrammingDay>) =>
+              setProgramming({ ...programming, [key]: { ...day, ...next } });
+
+            return (
+              <div
+                key={key}
+                className="rounded-xl border bg-[#0A0A0A] overflow-hidden transition-colors"
+                style={{
+                  borderColor: day.active ? "rgba(196,112,126,0.4)" : "#2A2A2A",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setDay({ active: !day.active })}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
+                >
+                  <span className="flex items-center gap-3">
+                    <span
+                      className="text-sm font-medium w-24"
+                      style={{
+                        ...inter,
+                        color: day.active ? "#FFFFFF" : "#B0B0B0",
+                      }}
+                    >
+                      {label}
+                    </span>
+                    {day.active && day.genre ? (
+                      <span className="text-sm text-[#E8A0B0]" style={inter}>
+                        {day.genre}
+                      </span>
+                    ) : !day.active ? (
+                      <span className="text-xs text-[#6B6B6B]" style={inter}>
+                        No regular programming
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#6B6B6B] italic" style={inter}>
+                        Add details below
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className={`flex-shrink-0 w-9 h-5 rounded-full p-0.5 transition-colors ${
+                      day.active ? "bg-[#C4707E]" : "bg-[#2A2A2A]"
+                    }`}
+                  >
+                    <span
+                      className={`block w-4 h-4 rounded-full bg-white transition-transform ${
+                        day.active ? "translate-x-4" : ""
+                      }`}
+                    />
+                  </span>
+                </button>
+
+                {day.active && (
+                  <div className="px-4 pb-4 pt-1 space-y-3 border-t border-[#1A1A1A]">
+                    <div>
+                      <label
+                        className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                        style={inter}
+                      >
+                        Night name / genre <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={day.genre}
+                        onChange={(e) => setDay({ genre: e.target.value })}
+                        placeholder="e.g. Hip Hop Night"
+                        className={inputClass}
+                        style={inter}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label
+                          className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                          style={inter}
+                        >
+                          Start
+                        </label>
+                        <input
+                          type="time"
+                          value={day.startTime}
+                          onChange={(e) => setDay({ startTime: e.target.value })}
+                          className={inputClass}
+                          style={inter}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                          style={inter}
+                        >
+                          End
+                        </label>
+                        <input
+                          type="time"
+                          value={day.endTime}
+                          onChange={(e) => setDay({ endTime: e.target.value })}
+                          className={inputClass}
+                          style={inter}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                        style={inter}
+                      >
+                        Description (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={day.description}
+                        onChange={(e) => setDay({ description: e.target.value })}
+                        placeholder="e.g. Resident DJs spinning hip hop, R&B, and trap"
+                        className={inputClass}
+                        style={inter}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       {/* Booking */}
