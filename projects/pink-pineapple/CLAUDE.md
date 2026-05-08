@@ -96,7 +96,7 @@ feature/
   venue/            venue_controller (curated schedule + tap tracker), venue_detail_screen, venue_booking_webview
   bookings/         V2 timeline itinerary, tonight highlight, 7-day window
   profile_tab/      Edit profile with photo upload, logout → login, country picker
-  favorites/        Saved venues (Wishlist UI not built yet)
+  favorites/        Saved venues — Wishlist UI built (favorite_venues_screen.dart) + heart toggle on venue cards
   chat_tab/         Real-time messaging (WebSocket)
   free_user/ newsfeed/ follow_followers/ saved_posts/ hidden_posts/ — legacy social, being removed
 ```
@@ -257,7 +257,7 @@ Same flow on `/var/www/troyreed1725-dashboard/`, end with `npx pm2 restart front
 
 ### Medium
 - [ ] **Android keystore recovery** — required for any Play Store deploy from this machine. Keystore + passwords (`keyAlias`, `keyPassword`, `storeFile`, `storePassword`) likely on Fiverr dev's machine / Troy's 1Password / lost
-- [ ] "My Wishlist" in Profile tab — backend endpoint exists, UI not built
+- [x] "My Wishlist" in Profile tab — Wishlist UI built (favorite_venues_screen.dart), heart toggle on venue cards + detail, optimistic updates with rollback. Profile tab → My Wishlist navigates correctly.
 - [ ] App Store / Google Play submission QA pass for 1.2.0+8
 - [ ] Deploy latest dashboard changes to Hostinger (`bookingUrl` field, commit `be576ad`)
 
