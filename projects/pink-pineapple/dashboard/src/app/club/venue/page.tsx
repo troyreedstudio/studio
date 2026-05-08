@@ -40,6 +40,7 @@ import {
   Sparkles,
   Image as ImageIcon,
   Eye,
+  ChevronDown,
 } from "lucide-react";
 
 const inter = { fontFamily: "Inter, sans-serif" };
@@ -165,6 +166,11 @@ const PartnerVenuePage = () => {
   // a phone-frame mock of how their listing renders in the consumer app.
   // Lives in a modal rather than inline so it doesn't dominate the editor.
   const [previewOpen, setPreviewOpen] = useState(false);
+  // Collapsible heavy sections. Default state is set in the venue-load
+  // effect: open if data exists (returning partner expects to see it),
+  // collapsed if empty (clean draft setup).
+  const [hoursOpen, setHoursOpen] = useState(false);
+  const [programmingOpen, setProgrammingOpen] = useState(false);
 
   useEffect(() => {
     if (!venue) return;
@@ -189,6 +195,18 @@ const PartnerVenuePage = () => {
     setHeroImage(venue.heroImage || "");
     setNewPhotos([]);
     setNewPreviews([]);
+    // Smart-open the heavy collapsible sections when there's already data
+    // to show. Empty venue → both collapsed for a clean canvas.
+    setHoursOpen(
+      !!venue.openingHours &&
+        typeof venue.openingHours === "object" &&
+        Object.keys(venue.openingHours).length > 0
+    );
+    setProgrammingOpen(
+      !!venue.weeklySchedule &&
+        typeof venue.weeklySchedule === "object" &&
+        Object.keys(venue.weeklySchedule).length > 0
+    );
   }, [venue?.id]);
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -357,6 +375,29 @@ const PartnerVenuePage = () => {
     if (!day.start || !day.end) return "";
     return `Open today · ${formatHourLabel(day.start)} – ${formatHourLabel(day.end)}`;
   }, [openingHours]);
+
+  // Summary chips for collapsed sections — shown in the header so partner
+  // can scan state without expanding.
+  const hoursSummary = useMemo(() => {
+    const labels = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" } as const;
+    const allDays = Object.keys(labels) as (keyof typeof labels)[];
+    const closedDays = allDays.filter((d) => openingHours[d]?.closed);
+    const openCount = 7 - closedDays.length;
+    if (openCount === 0) return "Marked closed every day — tap to set";
+    if (openCount === 7) return "Open 7 days a week";
+    return `Open ${openCount} day${openCount === 1 ? "" : "s"} · Closed ${closedDays
+      .map((d) => labels[d])
+      .join(", ")}`;
+  }, [openingHours]);
+
+  const programmingSummary = useMemo(() => {
+    const active = PROGRAMMING_DAYS.filter(
+      ({ key }) => programming[key].active && programming[key].genre.trim()
+    );
+    if (active.length === 0) return "No regular programming yet — tap to add";
+    if (active.length === 1) return "1 night programmed";
+    return `${active.length} nights programmed`;
+  }, [programming]);
 
   const previewBookingCta = useMemo<string | null>(() => {
     switch (booking.provider) {
@@ -702,28 +743,67 @@ const PartnerVenuePage = () => {
         </p>
       </section>
 
-      {/* Opening hours */}
-      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-3">
-        <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
-          Opening hours
-        </p>
-        <p className="text-[11px] text-[#6B6B6B]" style={inter}>
-          Set hours for each day of the week.
-        </p>
-        <OpeningHoursPicker value={openingHours} onChange={setOpeningHours} />
+      {/* Opening hours — collapsible. Header always visible with summary
+          chip; tap to expand and edit. Default open if hours already set. */}
+      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setHoursOpen(!hoursOpen)}
+          className="w-full flex items-center justify-between gap-3 p-6 text-left hover:bg-[#0A0A0A] transition-colors"
+        >
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
+              Opening hours
+            </p>
+            <p className="text-[11px] text-[#6B6B6B] mt-1 truncate" style={inter}>
+              {hoursSummary}
+            </p>
+          </div>
+          <ChevronDown
+            size={18}
+            className="text-[#6B6B6B] transition-transform flex-shrink-0"
+            style={{ transform: hoursOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
+        </button>
+        {hoursOpen && (
+          <div className="px-6 pb-6 space-y-3 border-t border-[#1A1A1A] pt-4">
+            <p className="text-[11px] text-[#6B6B6B]" style={inter}>
+              Set hours for each day of the week.
+            </p>
+            <OpeningHoursPicker value={openingHours} onChange={setOpeningHours} />
+          </div>
+        )}
       </section>
 
       {/* Weekly Programming — what kind of night each day of the week is.
           Distinct from Opening Hours: hours = when you're open, programming
           = what theme/genre/format that night. Powers the consumer app's
-          "This Week" curated feed. Optional — venues without a structured
-          weekly programme can leave all days blank. */}
-      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-4">
+          "This Week" curated feed. Collapsible — header always visible
+          with a summary chip; tap to expand the 7-day editor grid. */}
+      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setProgrammingOpen(!programmingOpen)}
+          className="w-full flex items-center justify-between gap-3 p-6 text-left hover:bg-[#0A0A0A] transition-colors"
+        >
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
+              Weekly programming
+            </p>
+            <p className="text-[11px] text-[#6B6B6B] mt-1 truncate" style={inter}>
+              {programmingSummary}
+            </p>
+          </div>
+          <ChevronDown
+            size={18}
+            className="text-[#6B6B6B] transition-transform flex-shrink-0"
+            style={{ transform: programmingOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
+        </button>
+        {programmingOpen && (
+          <div className="px-6 pb-6 space-y-4 border-t border-[#1A1A1A] pt-4">
         <div>
-          <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
-            Weekly programming
-          </p>
-          <p className="text-[11px] text-[#6B6B6B] mt-1 max-w-xl" style={inter}>
+          <p className="text-[11px] text-[#6B6B6B] max-w-xl" style={inter}>
             What kind of night each day is — e.g. <span className="text-[#E8A0B0]">Hip Hop Wednesday</span>,
             <span className="text-[#E8A0B0]"> Open Decks Saturday</span>,
             <span className="text-[#E8A0B0]"> Live Jazz Sunday</span>. Toggle on
@@ -860,6 +940,8 @@ const PartnerVenuePage = () => {
             );
           })}
         </div>
+          </div>
+        )}
       </section>
 
       {/* Contact */}
