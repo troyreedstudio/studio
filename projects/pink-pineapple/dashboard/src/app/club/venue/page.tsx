@@ -744,26 +744,42 @@ const PartnerVenuePage = () => {
       </section>
 
       {/* Opening hours — collapsible. Header always visible with summary
-          chip; tap to expand and edit. Default open if hours already set. */}
-      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] overflow-hidden">
+          chip; tap to expand and edit. Default open if hours already set.
+          Visually distinct from always-open sections (rose-gold accent) so
+          partners notice these are click-to-expand. */}
+      <section
+        className="rounded-xl border bg-[#000000] overflow-hidden transition-colors"
+        style={{
+          borderColor: hoursOpen ? "#2A2A2A" : "rgba(196,112,126,0.4)",
+          background: hoursOpen
+            ? "#000000"
+            : "linear-gradient(135deg, rgba(139,64,96,0.06), rgba(232,160,176,0.03))",
+        }}
+      >
         <button
           type="button"
           onClick={() => setHoursOpen(!hoursOpen)}
           className="w-full flex items-center justify-between gap-3 p-6 text-left hover:bg-[#0A0A0A] transition-colors"
         >
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
+            <p className="text-xs text-[#E8A0B0] uppercase tracking-wider" style={inter}>
               Opening hours
             </p>
-            <p className="text-[11px] text-[#6B6B6B] mt-1 truncate" style={inter}>
+            <p className="text-[11px] text-[#B0B0B0] mt-1 truncate" style={inter}>
               {hoursSummary}
             </p>
           </div>
-          <ChevronDown
-            size={18}
-            className="text-[#6B6B6B] transition-transform flex-shrink-0"
-            style={{ transform: hoursOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
+          <span
+            className="flex items-center gap-1.5 flex-shrink-0 text-[10px] uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            {hoursOpen ? "Hide" : "Edit"}
+            <ChevronDown
+              size={16}
+              className="text-[#E8A0B0] transition-transform"
+              style={{ transform: hoursOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+            />
+          </span>
         </button>
         {hoursOpen && (
           <div className="px-6 pb-6 space-y-3 border-t border-[#1A1A1A] pt-4">
@@ -779,26 +795,42 @@ const PartnerVenuePage = () => {
           Distinct from Opening Hours: hours = when you're open, programming
           = what theme/genre/format that night. Powers the consumer app's
           "This Week" curated feed. Collapsible — header always visible
-          with a summary chip; tap to expand the 7-day editor grid. */}
-      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] overflow-hidden">
+          with a summary chip; tap to expand the 7-day editor grid.
+          Rose-gold accent matches the Hours card so partners recognise
+          these as the click-to-expand pair. */}
+      <section
+        className="rounded-xl border bg-[#000000] overflow-hidden transition-colors"
+        style={{
+          borderColor: programmingOpen ? "#2A2A2A" : "rgba(196,112,126,0.4)",
+          background: programmingOpen
+            ? "#000000"
+            : "linear-gradient(135deg, rgba(139,64,96,0.06), rgba(232,160,176,0.03))",
+        }}
+      >
         <button
           type="button"
           onClick={() => setProgrammingOpen(!programmingOpen)}
           className="w-full flex items-center justify-between gap-3 p-6 text-left hover:bg-[#0A0A0A] transition-colors"
         >
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
+            <p className="text-xs text-[#E8A0B0] uppercase tracking-wider" style={inter}>
               Weekly programming
             </p>
-            <p className="text-[11px] text-[#6B6B6B] mt-1 truncate" style={inter}>
+            <p className="text-[11px] text-[#B0B0B0] mt-1 truncate" style={inter}>
               {programmingSummary}
             </p>
           </div>
-          <ChevronDown
-            size={18}
-            className="text-[#6B6B6B] transition-transform flex-shrink-0"
-            style={{ transform: programmingOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
+          <span
+            className="flex items-center gap-1.5 flex-shrink-0 text-[10px] uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            {programmingOpen ? "Hide" : "Edit"}
+            <ChevronDown
+              size={16}
+              className="text-[#E8A0B0] transition-transform"
+              style={{ transform: programmingOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+            />
+          </span>
         </button>
         {programmingOpen && (
           <div className="px-6 pb-6 space-y-4 border-t border-[#1A1A1A] pt-4">
