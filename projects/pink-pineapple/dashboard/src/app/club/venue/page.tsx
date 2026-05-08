@@ -160,8 +160,24 @@ const PartnerVenuePage = () => {
         body = payload;
       }
 
-      await updateVenue({ id: venue.id, data: body }).unwrap();
-      toast.success("Your venue page has been updated.", { id: toastId });
+      const result: any = await updateVenue({ id: venue.id, data: body }).unwrap();
+      toast.success("Your venue profile has been updated.", { id: toastId });
+
+      // Sync local state from the server's response. Without this, freshly
+      // uploaded photos (which the server appended to the gallery) wouldn't
+      // appear in the UI until a hard refresh — they looked "deleted" because
+      // the local existingPhotos array was still the pre-save snapshot.
+      const updated = result?.data;
+      if (updated) {
+        setExistingPhotos(Array.isArray(updated.photos) ? updated.photos : []);
+        // Auto-promote the first photo to hero if no hero is set yet — gives
+        // the partner a sensible default without an extra step.
+        const newHero = updated.heroImage || (updated.photos?.[0] ?? "");
+        setHeroImage(newHero);
+      }
+
+      // Revoke and clear blob preview URLs for the just-uploaded files.
+      newPreviews.forEach((url) => URL.revokeObjectURL(url));
       setNewPhotos([]);
       setNewPreviews([]);
     } catch (err: any) {
