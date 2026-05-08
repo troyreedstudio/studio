@@ -8,7 +8,7 @@
 // change name, area, category, tags, slug, or active flags (those affect
 // listing placement and stay admin-controlled).
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   useGetOwnedVenuesQuery,
   useUpdateVenueMutation,
@@ -237,6 +237,58 @@ const PartnerVenuePage = () => {
     { ok: hasBooking, label: "A booking method (provider + contact)" },
   ];
 
+  // ── Live preview helpers ──────────────────────────────────────────
+  // The preview reads from the editing state (description, openingHours,
+  // booking, etc.) so it updates in real time as the partner types or
+  // uploads. Hero falls back through saved photos and any pending uploads
+  // so a brand-new venue still renders something visual.
+  const previewHero = heroImage || existingPhotos[0] || newPreviews[0] || "";
+
+  const formatHourLabel = (t: string): string => {
+    if (!t) return "";
+    const [h, m] = t.split(":");
+    const hh = parseInt(h, 10);
+    if (isNaN(hh)) return t;
+    if (hh === 0 || hh === 24) return m === "00" ? "midnight" : `12:${m}am`;
+    if (hh === 12) return m === "00" ? "noon" : `12:${m}pm`;
+    const period = hh >= 12 ? "pm" : "am";
+    const displayHh = hh > 12 ? hh - 12 : hh;
+    return m && m !== "00" ? `${displayHh}:${m}${period}` : `${displayHh}${period}`;
+  };
+
+  const todayHoursLabel = useMemo(() => {
+    const dayKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+    const today = dayKeys[new Date().getDay()];
+    const day = openingHours[today];
+    if (!day) return "";
+    if (day.closed) return "Closed today";
+    if (!day.start || !day.end) return "";
+    return `Open today · ${formatHourLabel(day.start)} – ${formatHourLabel(day.end)}`;
+  }, [openingHours]);
+
+  const previewBookingCta = useMemo<string | null>(() => {
+    switch (booking.provider) {
+      case "BOOKETING":
+      case "MTIX":
+      case "CROWDSTACK":
+      case "OPENTABLE":
+      case "RESY":
+      case "RESDIARY":
+      case "TOAST":
+      case "SEVENROOMS":
+      case "CUSTOM_WEB":
+        return "Book Now";
+      case "PHONE":
+        return "Call to Book";
+      case "WHATSAPP":
+        return "Book via WhatsApp";
+      case "INSTAGRAM_DM":
+        return "DM to Book";
+      default:
+        return null;
+    }
+  }, [booking.provider]);
+
   const togglePublished = async () => {
     if (!venue) return;
     const nextActive = !venue.isActive;
@@ -424,6 +476,119 @@ const PartnerVenuePage = () => {
           Need to change one of these? Reply to your welcome email and we'll update it.
         </p>
       </div>
+
+      {/* Consumer-app preview — what guests see in the Pink Pineapple app.
+          Mirrors the venue detail card visual language: dark hero with
+          gradient overlay, Outfit bold-italic venue name, "CATEGORY · AREA"
+          pill in rose-gold, rose-gold gradient Book CTA. Reads from live
+          editing state so it updates in real time as the partner edits. */}
+      <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-4">
+        <div>
+          <p className="text-xs text-[#B0B0B0] uppercase tracking-wider" style={inter}>
+            Live preview
+          </p>
+          <p className="text-[11px] text-[#6B6B6B] mt-1" style={inter}>
+            How your listing looks to guests in the Pink Pineapple app. Updates as you edit.
+          </p>
+        </div>
+
+        <div className="mx-auto max-w-[320px] rounded-[28px] border-[6px] border-[#1A1A1A] bg-[#000000] overflow-hidden"
+          style={{ boxShadow: "0 12px 48px rgba(0, 0, 0, 0.6)" }}
+        >
+          {/* Hero with gradient overlay */}
+          <div className="relative aspect-[4/5] bg-[#1A1A1A]">
+            {previewHero ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewHero}
+                alt={venue.name}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-[#6B6B6B] text-xs" style={inter}>
+                Hero photo will appear here
+              </div>
+            )}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%)",
+              }}
+            />
+
+            {/* Bottom content overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+              <p
+                className="text-[10px] tracking-[0.25em] text-[#E8A0B0] uppercase"
+                style={inter}
+              >
+                {(venue.category || "").replace(/_/g, " ")}
+                {venue.area ? ` · ${venue.area}` : ""}
+              </p>
+              <h3
+                className="text-[26px] leading-tight text-white"
+                style={{
+                  fontFamily: "Outfit, sans-serif",
+                  fontWeight: 700,
+                  fontStyle: "italic",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {venue.name}
+              </h3>
+              {description && (
+                <p
+                  className="text-[11px] text-white/80"
+                  style={{
+                    ...inter,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {description}
+                </p>
+              )}
+              {todayHoursLabel && (
+                <p className="text-[10px] text-white/70" style={inter}>
+                  {todayHoursLabel}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Book CTA — rose-gold gradient, full-width, matches the app */}
+          {previewBookingCta && (
+            <div className="p-3 border-t border-[#1A1A1A]">
+              <div
+                className="w-full py-3 rounded-xl text-sm font-semibold text-[#000000] text-center"
+                style={{
+                  background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
+                  ...inter,
+                }}
+              >
+                {previewBookingCta}
+              </div>
+            </div>
+          )}
+          {!previewBookingCta && booking.provider === "NONE" && (
+            <div className="p-3 border-t border-[#1A1A1A]">
+              <p
+                className="text-center text-[11px] text-[#6B6B6B] italic py-2"
+                style={inter}
+              >
+                Walk-in only — no Book button
+              </p>
+            </div>
+          )}
+        </div>
+
+        <p className="text-[10px] text-[#6B6B6B] text-center" style={inter}>
+          Approximation — the actual app may render some details slightly differently.
+        </p>
+      </section>
 
       {/* Description */}
       <section className="rounded-xl border border-[#2A2A2A] bg-[#000000] p-6 space-y-3">
