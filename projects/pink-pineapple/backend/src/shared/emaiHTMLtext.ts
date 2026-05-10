@@ -1,14 +1,13 @@
 //OTP HTML TXT
 const generateOtpEmail = (otp: number) => {
     return `
+      <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">Your verification code is inside. Expires in 10 minutes.</div>
       <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #FFFFFF; padding: 40px 20px; background-color: #000000;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="font-size: 44px; font-weight: 900; letter-spacing: 5px; color: #E8A0B0; margin: 0; line-height: 1; font-family: 'Helvetica Neue', Arial, sans-serif;">PINK</h1>
+            <p style="font-size: 13px; letter-spacing: 8px; color: #FFFFFF; margin: 10px 0 0 0; font-weight: 700; font-family: 'Helvetica Neue', Arial, sans-serif;">PINEAPPLE</p>
+        </div>
         <div style="max-width: 500px; margin: 0 auto; background-color: #1A1A1A; padding: 40px 30px; border-radius: 16px; border: 1px solid #2A2A2A;">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="font-size: 28px; font-weight: 900; letter-spacing: 3px; margin: 0;">
-                    <span style="background: linear-gradient(135deg, #8B4060, #E8A0B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PINK</span>
-                </h1>
-                <p style="font-size: 11px; letter-spacing: 6px; color: #B0B0B0; margin: 4px 0 0 0; font-weight: 300;">PINEAPPLE</p>
-            </div>
             <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 30px auto;"></div>
             <h2 style="font-size: 22px; text-align: center; margin-bottom: 16px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.5px;">
                 Verify Your Account
@@ -37,28 +36,35 @@ const generateOtpEmail = (otp: number) => {
 
 //New User Registration HTML Template
 const newAccEmail = (email: string, password: string) => {
+  const dashboardUrl = "https://dashboard.pinkpineapple.app/login";
   return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #FFFFFF; padding: 40px 20px; background-color: #000000;">
+      <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://dashboard.pinkpineapple.app/images/logo_primary_dark.jpg" alt="Pink Pineapple" width="240" style="display: block; max-width: 100%; height: auto; margin: 0 auto; border: 0;" />
+      </div>
       <div style="max-width: 500px; margin: 0 auto; background-color: #1A1A1A; padding: 40px 30px; border-radius: 16px; border: 1px solid #2A2A2A;">
-          <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="font-size: 28px; font-weight: 900; letter-spacing: 3px; margin: 0;">
-                  <span style="background: linear-gradient(135deg, #8B4060, #E8A0B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PINK</span>
-              </h1>
-              <p style="font-size: 11px; letter-spacing: 6px; color: #B0B0B0; margin: 4px 0 0 0; font-weight: 300;">PINEAPPLE</p>
-          </div>
           <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 30px auto;"></div>
           <h2 style="font-size: 22px; text-align: center; margin-bottom: 16px; color: #FFFFFF; font-weight: 600;">
               Welcome to Pink Pineapple
           </h2>
           <p style="font-size: 15px; color: #B0B0B0; line-height: 1.6; text-align: center; margin-bottom: 24px;">
-              Your account has been created. Here are your login details:
+              An admin account has been created for you. Use the details below to sign in to the Pink Pineapple dashboard.
           </p>
           <div style="background-color: #000000; border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #2A2A2A;">
               <p style="font-size: 14px; color: #B0B0B0; margin: 0 0 8px 0;"><strong style="color: #FFFFFF;">Email:</strong> ${email}</p>
-              <p style="font-size: 14px; color: #B0B0B0; margin: 0;"><strong style="color: #FFFFFF;">Password:</strong> ${password}</p>
+              <p style="font-size: 14px; color: #B0B0B0; margin: 0;"><strong style="color: #FFFFFF;">Temporary password:</strong> ${password}</p>
           </div>
+          <div style="text-align: center; margin-bottom: 24px;">
+              <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 36px; background: linear-gradient(135deg, #8B4060, #C4707E, #E8A0B0); color: #000000; text-decoration: none; border-radius: 12px; font-weight: 700; letter-spacing: 1.5px; font-size: 14px;">
+                  GO TO DASHBOARD
+              </a>
+          </div>
+          <p style="font-size: 13px; color: #B0B0B0; line-height: 1.7; text-align: center; margin-bottom: 12px;">
+              Or paste this into your browser:<br/>
+              <a href="${dashboardUrl}" style="color: #E8A0B0; text-decoration: none; word-break: break-all;">${dashboardUrl}</a>
+          </p>
           <p style="font-size: 13px; color: #6B6B6B; text-align: center; margin-bottom: 30px;">
-              Please change your password after your first login. If you didn't create this account, contact us immediately.
+              Please change your password after your first login. If you didn't expect this email, contact us at info@pinkpineapple.app.
           </p>
           <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 20px auto;"></div>
           <p style="font-size: 11px; color: #6B6B6B; text-align: center; letter-spacing: 0.5px;">
@@ -75,13 +81,10 @@ const welcomeEmail = (name: string) => {
   const appStoreUrl = "https://apps.apple.com/app/id6758339469";
   return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #FFFFFF; padding: 40px 20px; background-color: #000000;">
+      <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://dashboard.pinkpineapple.app/images/logo_primary_dark.jpg" alt="Pink Pineapple" width="240" style="display: block; max-width: 100%; height: auto; margin: 0 auto; border: 0;" />
+      </div>
       <div style="max-width: 500px; margin: 0 auto; background-color: #1A1A1A; padding: 40px 30px; border-radius: 16px; border: 1px solid #2A2A2A;">
-          <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="font-size: 28px; font-weight: 900; letter-spacing: 3px; margin: 0;">
-                  <span style="background: linear-gradient(135deg, #8B4060, #E8A0B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PINK</span>
-              </h1>
-              <p style="font-size: 11px; letter-spacing: 6px; color: #B0B0B0; margin: 4px 0 0 0; font-weight: 300;">PINEAPPLE</p>
-          </div>
           <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 30px auto;"></div>
           <h2 style="font-size: 22px; text-align: center; margin-bottom: 16px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.5px;">
               Welcome, ${firstName}.
@@ -113,13 +116,10 @@ const venueApprovedEmail = (name: string) => {
   const dashboardUrl = "https://dashboard.pinkpineapple.app";
   return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #FFFFFF; padding: 40px 20px; background-color: #000000;">
+      <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://dashboard.pinkpineapple.app/images/logo_primary_dark.jpg" alt="Pink Pineapple" width="240" style="display: block; max-width: 100%; height: auto; margin: 0 auto; border: 0;" />
+      </div>
       <div style="max-width: 500px; margin: 0 auto; background-color: #1A1A1A; padding: 40px 30px; border-radius: 16px; border: 1px solid #2A2A2A;">
-          <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="font-size: 28px; font-weight: 900; letter-spacing: 3px; margin: 0;">
-                  <span style="background: linear-gradient(135deg, #8B4060, #E8A0B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PINK</span>
-              </h1>
-              <p style="font-size: 11px; letter-spacing: 6px; color: #B0B0B0; margin: 4px 0 0 0; font-weight: 300;">PINEAPPLE</p>
-          </div>
           <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 30px auto;"></div>
           <h2 style="font-size: 22px; text-align: center; margin-bottom: 16px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.5px;">
               You're in, ${firstName}.
@@ -162,13 +162,10 @@ const applicationReceivedEmail = (name: string) => {
   const firstName = (name || "").split(" ")[0] || "there";
   return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #FFFFFF; padding: 40px 20px; background-color: #000000;">
+      <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://dashboard.pinkpineapple.app/images/logo_primary_dark.jpg" alt="Pink Pineapple" width="240" style="display: block; max-width: 100%; height: auto; margin: 0 auto; border: 0;" />
+      </div>
       <div style="max-width: 500px; margin: 0 auto; background-color: #1A1A1A; padding: 40px 30px; border-radius: 16px; border: 1px solid #2A2A2A;">
-          <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="font-size: 28px; font-weight: 900; letter-spacing: 3px; margin: 0;">
-                  <span style="background: linear-gradient(135deg, #8B4060, #E8A0B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PINK</span>
-              </h1>
-              <p style="font-size: 11px; letter-spacing: 6px; color: #B0B0B0; margin: 4px 0 0 0; font-weight: 300;">PINEAPPLE</p>
-          </div>
           <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 30px auto;"></div>
           <h2 style="font-size: 22px; text-align: center; margin-bottom: 16px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.5px;">
               Thanks, ${firstName}.
@@ -214,10 +211,8 @@ const adminNewVenueApplicationEmail = (
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #FFFFFF; padding: 40px 20px; background-color: #000000;">
       <div style="max-width: 500px; margin: 0 auto; background-color: #1A1A1A; padding: 40px 30px; border-radius: 16px; border: 1px solid #2A2A2A;">
           <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="font-size: 28px; font-weight: 900; letter-spacing: 3px; margin: 0;">
-                  <span style="background: linear-gradient(135deg, #8B4060, #E8A0B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PINK</span>
-              </h1>
-              <p style="font-size: 11px; letter-spacing: 6px; color: #B0B0B0; margin: 4px 0 0 0; font-weight: 300;">PINEAPPLE · ADMIN</p>
+              <img src="https://dashboard.pinkpineapple.app/images/logo_primary_dark.jpg" alt="Pink Pineapple" width="200" style="display: block; max-width: 100%; height: auto; margin: 0 auto; border: 0;" />
+              <p style="font-size: 11px; letter-spacing: 6px; color: #C4707E; margin: 8px 0 0 0; font-weight: 700; font-family: 'Helvetica Neue', Arial, sans-serif;">ADMIN ALERT</p>
           </div>
           <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 30px auto;"></div>
           <h2 style="font-size: 20px; text-align: center; margin-bottom: 16px; color: #FFFFFF; font-weight: 600;">

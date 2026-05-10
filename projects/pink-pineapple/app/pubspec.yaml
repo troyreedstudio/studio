@@ -3,13 +3,14 @@ description: "A new Flutter project."
 
 
 
-version: 1.2.0+9
+version: 1.2.0+10
 # build 4: 1.2.0+4, 7 March 2026
 # build 5: 1.2.0+5, 16 April 2026 — venue search, Instagram/WhatsApp, Google Places
 # build 6: 1.2.0+6, 17 April 2026 — booking WebView, ratings, curated schedule, Day Zero, gyms
 # build 7: 1.2.0+7, 17 April 2026 — Plan My Night, Live Vibe Check, full sales demo build
 # build 8: 1.2.0+8, 21 April 2026 — curated restaurants, profile fixes, Up late, 70 venues, vibe renames
 # build 9: 1.2.0+9, 3 May 2026 — PP ratings + vibe system, refer-a-friend, distance ranking, favorites bug fix, dual rating display, interim app icon
+# build 10: 1.2.0+10, 10 May 2026 — hero photo carousel, cross-category filter, Plan My Night auto-save, wishlist UI, Google Places search tap-out + attribution, branded OTP/admin emails via own Brevo, info@pinkpineapple.app sender, 75 venues with rebuilt Google Places photos
 
 environment:
   sdk: ^3.9.0

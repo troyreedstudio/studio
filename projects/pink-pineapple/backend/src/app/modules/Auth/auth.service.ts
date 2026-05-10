@@ -159,7 +159,7 @@ const forgotPassword = async (payload: { email: string }) => {
   const html = generateOtpEmail(otp);
 
   // Send the OTP email to the user
-  await emailSender(userData.email, html, "Forgot Password OTP");
+  await emailSender(userData.email, html, "Reset your Pink Pineapple password");
 
   // Update the user's OTP and expiration in the database
   await prisma.user.update({
@@ -193,7 +193,7 @@ const resendOtp = async (email: string) => {
   const html = generateOtpEmail(otp);
 
   // Send the OTP to user's email
-  await emailSender(user.email, html, "Resend OTP");
+  await emailSender(user.email, html, "Your new Pink Pineapple verification code");
 
   // Update the user's profile with the new OTP and expiration
   const updatedUser = await prisma.user.update({

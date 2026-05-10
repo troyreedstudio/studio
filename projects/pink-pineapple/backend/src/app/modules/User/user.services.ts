@@ -158,7 +158,7 @@ const createUserIntoDb = async (payload: User) => {
         },
       });
       const html = generateOtpEmail(otp);
-      await emailSender(payload.email, html, "OTP Verification");
+      await emailSender(payload.email, html, "Verify your Pink Pineapple account");
 
       return {
         message:
@@ -210,7 +210,7 @@ const createUserIntoDb = async (payload: User) => {
   }
 
   const html = generateOtpEmail(otp);
-  await emailSender(payload.email, html, "OTP Verification");
+  await emailSender(payload.email, html, "Verify your Pink Pineapple account");
 
   return {
     message: "An OTP has been sent to your email. Please verify your account.",
