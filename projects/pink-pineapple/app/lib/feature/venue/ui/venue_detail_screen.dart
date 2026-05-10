@@ -570,8 +570,30 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Obx(() {
-        final vibe = _vibeService.getVibe(venue.slug);
-        final isRecent = _vibeService.isRecent(venue.slug);
+        // Prefer the server-side aggregate (crowd-sourced from all users) so
+        // the venue page reflects what's actually happening at the venue right
+        // now, regardless of whether THIS user has submitted a vibe locally.
+        // Falls back to the local cache if no server data.
+        final localVibe = _vibeService.getVibe(venue.slug);
+        final localIsRecent = _vibeService.isRecent(venue.slug);
+        final serverVibe = venue.recentVibe;
+
+        Map<String, dynamic>? vibe;
+        bool isRecent = false;
+        if (serverVibe != null) {
+          vibe = serverVibe;
+          isRecent = true; // backend already filters to last 4h
+        } else if (localVibe != null && localIsRecent) {
+          vibe = localVibe;
+          isRecent = true;
+        }
+
+        // No vibe data — hide the section entirely. Vibes accumulate from
+        // users at the venue submitting via My Bookings; until any have come
+        // in, this section stays out of the way.
+        if (vibe == null || !isRecent) {
+          return const SizedBox.shrink();
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,39 +648,9 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
               SizedBox(height: 14.h),
             ],
 
-            // Update vibe button
-            GestureDetector(
-              onTap: () => _showVibeSheet(venue),
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.accentRoseGold.withOpacity(0.3),
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.wifi_tethering, color: AppColors.textPrimary, size: 16.sp),
-                    SizedBox(width: 8.w),
-                    Text(
-                      vibe != null && isRecent
-                          ? 'Update vibe'
-                          : 'Are you here? Tell us the vibe',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12.sp,
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // Vibe submission moved to My Bookings flow — only users who've
+            // booked the venue can submit a vibe (proves they're actually
+            // there, prevents fake reports).
           ],
         );
       }),
