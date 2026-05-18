@@ -52,11 +52,14 @@ const mergeUploadedFiles = async (req: any, venueId?: string) => {
     req.body.photos = [...existing, ...newUrls];
   }
 
-  // Floor plan images go to DigitalOcean Spaces (not Cloudinary) per Troy's
-  // call — same DO bucket the rest of our infra already uses. Single image
-  // per venue; uploading a new one overwrites the floorPlanUrl reference.
+  // Floor plan images go to Cloudinary — same pipeline as heroImage and
+  // photos. We briefly tried DigitalOcean Spaces but discovered the env
+  // bucket name was inherited from the Fiverr handover and never pointed
+  // at a real bucket on Troy's account. Cloudinary is the proven path.
+  // Future infrastructure cleanup: optionally migrate everything to DO
+  // Spaces if cost becomes a factor, but not in v1.
   if (files.floorPlan && files.floorPlan[0]) {
-    const result = await fileUploader.uploadToDigitalOcean(files.floorPlan[0]);
+    const result = await fileUploader.uploadToCloudinary(files.floorPlan[0]);
     req.body.floorPlanUrl = result.Location;
   }
 };
