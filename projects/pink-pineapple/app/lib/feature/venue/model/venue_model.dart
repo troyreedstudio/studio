@@ -33,6 +33,13 @@ class VenueModel {
   final Map<String, dynamic>? bookingDailyUrls;
   final bool isFavorite;
   final List<String> tags;
+  // Cuisine + music-genre tags drive the Plan My Night filter sheet
+  // (v1.3+). Both are arrays so a venue can span multiple values
+  // (e.g. Asian Fusion + Sushi, or House + Techno across different
+  // nights). Enum string values mirror VenueCuisine / VenueMusicGenre
+  // in the backend Prisma schema.
+  final List<String> cuisines;
+  final List<String> musicGenres;
   final Map<String, dynamic>? weeklySchedule;
   // Pink Pineapple aggregate rating (computed server-side from VenueRating)
   final double? ppRating;
@@ -80,6 +87,8 @@ class VenueModel {
     this.bookingDailyUrls,
     this.isFavorite = false,
     this.tags = const [],
+    this.cuisines = const [],
+    this.musicGenres = const [],
     this.ppRating,
     this.ppRatingCount,
     this.googleRating,
@@ -131,6 +140,14 @@ class VenueModel {
           : null,
       isFavorite: json['isFavorite'] as bool? ?? false,
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      cuisines: (json['cuisines'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      musicGenres: (json['musicGenres'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
       ppRating: (json['ppRating'] as num?)?.toDouble(),
       ppRatingCount: (json['ppRatingCount'] as num?)?.toInt(),
       googleRating: (json['googleRating'] as num?)?.toDouble(),
@@ -174,6 +191,8 @@ class VenueModel {
       'floorPlanUrl': floorPlanUrl,
       'isFavorite': isFavorite,
       'tags': tags,
+      'cuisines': cuisines,
+      'musicGenres': musicGenres,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };

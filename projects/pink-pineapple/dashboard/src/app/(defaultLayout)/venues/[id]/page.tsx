@@ -77,6 +77,42 @@ const tagOptions = [
   "gym",
 ];
 
+// Enum-driven multiselect options. Mirrors VenueCuisine + VenueMusicGenre
+// in backend/prisma/schema.prisma. Labels are display-friendly; values
+// are the canonical enum strings that get sent to the API.
+const cuisineOptions: { value: string; label: string }[] = [
+  { value: "ITALIAN", label: "Italian" },
+  { value: "JAPANESE", label: "Japanese" },
+  { value: "INDONESIAN", label: "Indonesian" },
+  { value: "ASIAN_FUSION", label: "Asian Fusion" },
+  { value: "MEDITERRANEAN", label: "Mediterranean" },
+  { value: "MEXICAN", label: "Mexican" },
+  { value: "MIDDLE_EASTERN", label: "Middle Eastern" },
+  { value: "FRENCH", label: "French" },
+  { value: "STEAKHOUSE", label: "Steakhouse" },
+  { value: "SEAFOOD", label: "Seafood" },
+  { value: "VEGAN", label: "Vegan" },
+  { value: "PIZZA", label: "Pizza" },
+  { value: "SUSHI", label: "Sushi" },
+  { value: "INTERNATIONAL", label: "International" },
+  { value: "CAFE_BRUNCH", label: "Café / Brunch" },
+];
+
+const musicGenreOptions: { value: string; label: string }[] = [
+  { value: "EDM", label: "EDM" },
+  { value: "HOUSE", label: "House" },
+  { value: "DEEP_HOUSE", label: "Deep House" },
+  { value: "TECHNO", label: "Techno" },
+  { value: "AFRO_HOUSE", label: "Afro House" },
+  { value: "HIP_HOP", label: "Hip-Hop" },
+  { value: "R_AND_B", label: "R&B" },
+  { value: "POP", label: "Pop" },
+  { value: "COMMERCIAL", label: "Commercial" },
+  { value: "REGGAETON", label: "Reggaeton" },
+  { value: "LATIN", label: "Latin" },
+  { value: "LIVE_BAND", label: "Live Band" },
+];
+
 const daysOfWeek = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 type DayKey = (typeof daysOfWeek)[number];
 const dayLabels: Record<DayKey, string> = {
@@ -154,6 +190,8 @@ const VenueDetailPage = () => {
   });
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState("");
+  const [cuisines, setCuisines] = useState<string[]>([]);
+  const [musicGenres, setMusicGenres] = useState<string[]>([]);
   const [schedule, setSchedule] = useState<Record<DayKey, ScheduleEntry>>({
     mon: {},
     tue: {},
@@ -205,6 +243,10 @@ const VenueDetailPage = () => {
               : "",
       });
       setTags(Array.isArray(venue.tags) ? venue.tags : []);
+      setCuisines(Array.isArray(venue.cuisines) ? venue.cuisines : []);
+      setMusicGenres(
+        Array.isArray(venue.musicGenres) ? venue.musicGenres : []
+      );
       setExistingPhotos(Array.isArray(venue.photos) ? venue.photos : []);
       setHeroImage(venue.heroImage || "");
 
@@ -350,6 +392,8 @@ const VenueDetailPage = () => {
         priceRange: Number(form.priceRange) || 2,
         openingHours: serializeOpeningHours(openingHours),
         tags,
+        cuisines,
+        musicGenres,
         weeklySchedule: Object.keys(cleanSchedule).length > 0 ? cleanSchedule : null,
         // Send the (possibly trimmed) existing-photo array — backend will
         // append any newly-uploaded files after these. Lets users delete
@@ -613,6 +657,88 @@ const VenueDetailPage = () => {
                         + {opt}
                       </button>
                     ))}
+                </div>
+              </div>
+
+              {/* Cuisine multiselect — powers Plan My Night cuisine filter */}
+              <div>
+                <label
+                  className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                  style={inter}
+                >
+                  Cuisine
+                </label>
+                <p className="text-[#6B6B6B] text-xs mb-3" style={inter}>
+                  Pick all cuisines this venue serves. Used by the
+                  &ldquo;Plan My Night&rdquo; filter to match diners to the
+                  right restaurant. Leave empty for venues without food.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {cuisineOptions.map((opt) => {
+                    const selected = cuisines.includes(opt.value);
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() =>
+                          setCuisines(
+                            selected
+                              ? cuisines.filter((x) => x !== opt.value)
+                              : [...cuisines, opt.value]
+                          )
+                        }
+                        className={`px-3 py-1.5 rounded-full text-xs transition-all ${
+                          selected
+                            ? "bg-[#E8A0B0]/15 text-[#E8A0B0] border border-[#E8A0B0]/50"
+                            : "text-[#6B6B6B] border border-[#2A2A2A] hover:text-[#E8A0B0] hover:border-[#E8A0B0]/40"
+                        }`}
+                        style={inter}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Music genre multiselect — powers Plan My Night genre filter */}
+              <div>
+                <label
+                  className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                  style={inter}
+                >
+                  Music Genre
+                </label>
+                <p className="text-[#6B6B6B] text-xs mb-3" style={inter}>
+                  Pick all genres this venue regularly plays. Used by the
+                  &ldquo;Plan My Night&rdquo; filter to match the right vibe.
+                  Most relevant for nightclubs and beach clubs.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {musicGenreOptions.map((opt) => {
+                    const selected = musicGenres.includes(opt.value);
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() =>
+                          setMusicGenres(
+                            selected
+                              ? musicGenres.filter((x) => x !== opt.value)
+                              : [...musicGenres, opt.value]
+                          )
+                        }
+                        className={`px-3 py-1.5 rounded-full text-xs transition-all ${
+                          selected
+                            ? "bg-[#E8A0B0]/15 text-[#E8A0B0] border border-[#E8A0B0]/50"
+                            : "text-[#6B6B6B] border border-[#2A2A2A] hover:text-[#E8A0B0] hover:border-[#E8A0B0]/40"
+                        }`}
+                        style={inter}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

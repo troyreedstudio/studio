@@ -405,6 +405,12 @@ model Venue {
   area            VenueArea
   category        VenueCategory
   tags            String[]       @default([])
+  // Cuisine + music-genre tags drive the Plan My Night filter sheet
+  // (v1.3+). Both are arrays — a single venue can span multiple
+  // cuisines (Asian Fusion / Sushi) or play multiple genres across
+  // its weekly schedule (House on Fridays, Techno on Saturdays).
+  cuisines        VenueCuisine[]
+  musicGenres     VenueMusicGenre[]
   address         String         @default("")
   latitude        Float?
   longitude       Float?
@@ -611,6 +617,42 @@ enum VipBookingStatus {
 enum VipDepositChoice {
   FIFTY_PERCENT
   FULL
+}
+
+// Cuisine + music-genre enums for the Plan My Night filter sheet.
+// Both applied to Venue as arrays so a single venue can span multiple
+// values. Add new entries as the venue catalogue grows.
+enum VenueCuisine {
+  ITALIAN
+  JAPANESE
+  INDONESIAN
+  ASIAN_FUSION
+  MEDITERRANEAN
+  MEXICAN
+  MIDDLE_EASTERN
+  FRENCH
+  STEAKHOUSE
+  SEAFOOD
+  VEGAN
+  PIZZA
+  SUSHI
+  INTERNATIONAL
+  CAFE_BRUNCH
+}
+
+enum VenueMusicGenre {
+  EDM
+  HOUSE
+  DEEP_HOUSE
+  TECHNO
+  AFRO_HOUSE
+  HIP_HOP
+  R_AND_B
+  POP
+  COMMERCIAL
+  REGGAETON
+  LATIN
+  LIVE_BAND
 }
 
 enum BookingType {

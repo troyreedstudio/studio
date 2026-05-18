@@ -51,6 +51,41 @@ const priceRanges = [
   { value: 4, label: "$$$$" },
 ];
 
+// Mirrors VenueCuisine in backend/prisma/schema.prisma.
+const cuisineOptions: { value: string; label: string }[] = [
+  { value: "ITALIAN", label: "Italian" },
+  { value: "JAPANESE", label: "Japanese" },
+  { value: "INDONESIAN", label: "Indonesian" },
+  { value: "ASIAN_FUSION", label: "Asian Fusion" },
+  { value: "MEDITERRANEAN", label: "Mediterranean" },
+  { value: "MEXICAN", label: "Mexican" },
+  { value: "MIDDLE_EASTERN", label: "Middle Eastern" },
+  { value: "FRENCH", label: "French" },
+  { value: "STEAKHOUSE", label: "Steakhouse" },
+  { value: "SEAFOOD", label: "Seafood" },
+  { value: "VEGAN", label: "Vegan" },
+  { value: "PIZZA", label: "Pizza" },
+  { value: "SUSHI", label: "Sushi" },
+  { value: "INTERNATIONAL", label: "International" },
+  { value: "CAFE_BRUNCH", label: "Café / Brunch" },
+];
+
+// Mirrors VenueMusicGenre in backend/prisma/schema.prisma.
+const musicGenreOptions: { value: string; label: string }[] = [
+  { value: "EDM", label: "EDM" },
+  { value: "HOUSE", label: "House" },
+  { value: "DEEP_HOUSE", label: "Deep House" },
+  { value: "TECHNO", label: "Techno" },
+  { value: "AFRO_HOUSE", label: "Afro House" },
+  { value: "HIP_HOP", label: "Hip-Hop" },
+  { value: "R_AND_B", label: "R&B" },
+  { value: "POP", label: "Pop" },
+  { value: "COMMERCIAL", label: "Commercial" },
+  { value: "REGGAETON", label: "Reggaeton" },
+  { value: "LATIN", label: "Latin" },
+  { value: "LIVE_BAND", label: "Live Band" },
+];
+
 const inputClass =
   "w-full bg-[#000000] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#C4707E] transition-colors";
 
@@ -78,6 +113,8 @@ const NewVenuePage = () => {
     blankOpeningHours()
   );
   const [booking, setBooking] = useState<BookingValue>(blankBooking());
+  const [cuisines, setCuisines] = useState<string[]>([]);
+  const [musicGenres, setMusicGenres] = useState<string[]>([]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -154,6 +191,8 @@ const NewVenuePage = () => {
         dataPayload.bookingDailyUrls = booking.dailyUrls;
       }
       if (form.floorPlanUrl) dataPayload.floorPlanUrl = form.floorPlanUrl;
+      if (cuisines.length > 0) dataPayload.cuisines = cuisines;
+      if (musicGenres.length > 0) dataPayload.musicGenres = musicGenres;
 
       formData.append("data", JSON.stringify(dataPayload));
       photos.forEach((photo) => {
@@ -405,6 +444,90 @@ const NewVenuePage = () => {
             className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#E8A0B0] transition-colors"
             style={inter}
           />
+        </div>
+
+        <div className="border-t border-[#2A2A2A]" />
+
+        {/* Cuisine multiselect */}
+        <div className="space-y-3">
+          <h2
+            className="text-sm uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            Cuisine
+          </h2>
+          <p className="text-[11px] text-[#6B6B6B] -mt-1" style={inter}>
+            Pick all cuisines this venue serves. Used by the &ldquo;Plan My
+            Night&rdquo; filter. Leave empty for venues without food.
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {cuisineOptions.map((opt) => {
+              const selected = cuisines.includes(opt.value);
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() =>
+                    setCuisines(
+                      selected
+                        ? cuisines.filter((x) => x !== opt.value)
+                        : [...cuisines, opt.value]
+                    )
+                  }
+                  className={`px-3 py-1.5 rounded-full text-xs transition-all ${
+                    selected
+                      ? "bg-[#E8A0B0]/15 text-[#E8A0B0] border border-[#E8A0B0]/50"
+                      : "text-[#6B6B6B] border border-[#2A2A2A] hover:text-[#E8A0B0] hover:border-[#E8A0B0]/40"
+                  }`}
+                  style={inter}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="border-t border-[#2A2A2A]" />
+
+        {/* Music genre multiselect */}
+        <div className="space-y-3">
+          <h2
+            className="text-sm uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            Music Genre
+          </h2>
+          <p className="text-[11px] text-[#6B6B6B] -mt-1" style={inter}>
+            Pick all genres this venue regularly plays. Most relevant for
+            nightclubs and beach clubs.
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {musicGenreOptions.map((opt) => {
+              const selected = musicGenres.includes(opt.value);
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() =>
+                    setMusicGenres(
+                      selected
+                        ? musicGenres.filter((x) => x !== opt.value)
+                        : [...musicGenres, opt.value]
+                    )
+                  }
+                  className={`px-3 py-1.5 rounded-full text-xs transition-all ${
+                    selected
+                      ? "bg-[#E8A0B0]/15 text-[#E8A0B0] border border-[#E8A0B0]/50"
+                      : "text-[#6B6B6B] border border-[#2A2A2A] hover:text-[#E8A0B0] hover:border-[#E8A0B0]/40"
+                  }`}
+                  style={inter}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="border-t border-[#2A2A2A]" />
