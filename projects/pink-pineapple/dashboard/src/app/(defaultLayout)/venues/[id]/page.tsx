@@ -83,6 +83,7 @@ const tagOptions = [
 const cuisineOptions: { value: string; label: string }[] = [
   { value: "ITALIAN", label: "Italian" },
   { value: "JAPANESE", label: "Japanese" },
+  { value: "INDIAN", label: "Indian" },
   { value: "INDONESIAN", label: "Indonesian" },
   { value: "ASIAN_FUSION", label: "Asian Fusion" },
   { value: "MEDITERRANEAN", label: "Mediterranean" },
