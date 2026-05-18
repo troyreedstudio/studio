@@ -2,6 +2,10 @@ class Urls {
   static const String baseUrl = 'https://api.pinkpineapple.app/api/v1';
   static const String wsUrl = 'wss://api.pinkpineapple.app';
 
+  // VIP table requests — sent before the WhatsApp deep link fires so we
+  // have a tracked record for revenue-attribution to the venue.
+  static const String vipBookings = '$baseUrl/vip-bookings';
+
   static const String login = '$baseUrl/auth/login';
   static const String register = '$baseUrl/users/register';
   static const String forgetPassword = '$baseUrl/auth/forgot-password';

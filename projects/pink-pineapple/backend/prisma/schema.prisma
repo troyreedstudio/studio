@@ -66,6 +66,7 @@ model User {
   venueVibes         VenueVibe[]
   venueBookingClicks VenueBookingClick[] @relation("UserBookingClicks")
   externalPlaceClicks ExternalPlaceClick[] @relation("UserExternalPlaceClicks")
+  vipBookingRequests VipBookingRequest[]
 
   blocker   BlockUser[] @relation("blocker")
   blocked   BlockUser[] @relation("blocked")
@@ -427,6 +428,12 @@ model Venue {
   bookingExternalVenueId  String           @default("")     // for native API later
   bookingApiKeyEncrypted  String           @default("")     // for native API later (encrypted)
   // ──────────────────────────────────────────────────────────────────
+  // VIP table booking: URL of an image showing the venue's table /
+  // seating layout. Surfaced to users when they tap "Book VIP Table"
+  // so they can pick a specific area (e.g. "Daybed D31", "Cabana C5").
+  // The actual booking request is relayed via WhatsApp to the Pink
+  // Pineapple business account; this field just powers the visual.
+  floorPlanUrl    String         @default("")
   isActive        Boolean        @default(true)
   isFeatured      Boolean        @default(false)
   rating            Float          @default(0)
@@ -439,6 +446,7 @@ model Venue {
   ratings           VenueRating[]
   vibes             VenueVibe[]
   bookingClicks     VenueBookingClick[]
+  vipBookingRequests VipBookingRequest[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
@@ -538,6 +546,71 @@ model VenueVibe {
 
   @@index([venueId, createdAt])
   @@map("venue_vibes")
+}
+
+// VIP table booking requests. The actual fulfilment happens via WhatsApp
+// (Rowan relays to the venue and back), but we record the request here so
+// Pink Pineapple has a provable trail of bookings it drove. Updated by
+// admin/promoters in the dashboard as the request progresses through
+// PENDING → SENT_TO_VENUE → CONFIRMED → PAID.
+model VipBookingRequest {
+  id              String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String              @db.ObjectId
+  user            User                @relation(fields: [userId], references: [id])
+  venueId         String              @db.ObjectId
+  venue           Venue               @relation(fields: [venueId], references: [id])
+
+  // Snapshot of profile info captured at request time (in case user
+  // changes their profile later — we want the original ask preserved)
+  firstName       String
+  lastName        String
+  phone           String
+  email           String
+  instagram       String              @default("")
+
+  // User input fields from the bottom-sheet form
+  eventDate       DateTime
+  arrivalTime     String              // "23:00" 24h format
+  partySize       Int
+  requestedArea   String              // free text — references venue floor plan
+  minimumPrice    String              // free text with currency e.g. "USD 2,000"
+  depositChoice   VipDepositChoice    @default(FIFTY_PERCENT)
+
+  // Workflow state — Rowan updates manually via dashboard as the booking
+  // progresses. paymentUrl is the venue-issued payment link he forwards
+  // after the venue confirms availability.
+  status          VipBookingStatus    @default(PENDING)
+  paymentUrl      String              @default("")
+  internalNotes   String              @default("")
+  sentToVenueAt   DateTime?
+  confirmedAt     DateTime?
+  paidAt          DateTime?
+  cancelledAt     DateTime?
+
+  // Set when the Flutter app successfully opens the WhatsApp deep link
+  // (helps debug "did the user actually send the message").
+  whatsappOpenedAt DateTime?
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([venueId, createdAt])
+  @@index([status])
+  @@map("vip_booking_requests")
+}
+
+enum VipBookingStatus {
+  PENDING
+  SENT_TO_VENUE
+  CONFIRMED
+  PAID
+  CANCELLED
+}
+
+enum VipDepositChoice {
+  FIFTY_PERCENT
+  FULL
 }
 
 enum BookingType {

@@ -42,6 +42,10 @@ class VenueModel {
   final int? googleRatingCount;
   // Recent vibe check (averaged over last 4 hours), null if none
   final Map<String, dynamic>? recentVibe;
+  // URL of the venue's table-layout image, shown in the VIP table booking
+  // flow so users can pick a specific area (e.g. "Daybed D31"). Empty
+  // when the venue doesn't have one — the "View Floor Plan" button hides.
+  final String floorPlanUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -81,6 +85,7 @@ class VenueModel {
     this.googleRating,
     this.googleRatingCount,
     this.recentVibe,
+    this.floorPlanUrl = '',
     required this.createdAt,
     required this.updatedAt,
   });
@@ -133,6 +138,7 @@ class VenueModel {
       recentVibe: json['recentVibe'] is Map<String, dynamic>
           ? json['recentVibe'] as Map<String, dynamic>
           : null,
+      floorPlanUrl: json['floorPlanUrl']?.toString() ?? '',
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
           DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
@@ -165,6 +171,7 @@ class VenueModel {
       'rating': rating,
       'ownerId': ownerId,
       'bookingUrl': bookingUrl,
+      'floorPlanUrl': floorPlanUrl,
       'isFavorite': isFavorite,
       'tags': tags,
       'createdAt': createdAt.toIso8601String(),

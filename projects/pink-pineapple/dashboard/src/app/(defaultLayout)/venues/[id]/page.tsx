@@ -148,6 +148,7 @@ const VenueDetailPage = () => {
     website: "",
     instagram: "",
     bookingUrl: "",
+    floorPlanUrl: "",
     priceRange: 2,
     openingHours: "",
   });
@@ -194,6 +195,7 @@ const VenueDetailPage = () => {
         website: venue.website || "",
         instagram: venue.instagram || "",
         bookingUrl: venue.bookingUrl || "",
+        floorPlanUrl: venue.floorPlanUrl || "",
         priceRange: venue.priceRange || 2,
         openingHours:
           typeof venue.openingHours === "string"
@@ -332,6 +334,7 @@ const VenueDetailPage = () => {
         website: form.website,
         instagram: form.instagram,
         bookingUrl: booking.url || form.bookingUrl,
+        floorPlanUrl: form.floorPlanUrl,
         // New booking fields — provider determines which contact field matters.
         bookingProvider: booking.provider || undefined,
         bookingPhone: booking.phone || undefined,
@@ -700,6 +703,32 @@ const VenueDetailPage = () => {
                   Booking
                 </label>
                 <BookingSection value={booking} onChange={setBooking} />
+              </div>
+
+              <div>
+                <label
+                  className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+                  style={inter}
+                >
+                  Floor Plan Image URL
+                </label>
+                <input
+                  type="url"
+                  name="floorPlanUrl"
+                  value={form.floorPlanUrl}
+                  onChange={handleChange}
+                  placeholder="https://cdn.example.com/floor-plans/savaya.jpg"
+                  className={inputClass}
+                  style={inter}
+                />
+                <p
+                  className="mt-1 text-[11px] text-[#6B6B6B] leading-snug"
+                  style={inter}
+                >
+                  Optional. Shown to users on the &quot;Book VIP Table&quot;
+                  flow so they can pick a specific area (e.g.
+                  &quot;Daybed D31&quot;). Recommend ~1500px wide JPG.
+                </p>
               </div>
 
               <div>

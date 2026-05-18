@@ -69,6 +69,7 @@ const NewVenuePage = () => {
     editorial: "",
     website: "",
     instagram: "",
+    floorPlanUrl: "",
     priceRange: 2,
   });
   const [address, setAddress] = useState<StructuredAddress>(blankAddress());
@@ -152,6 +153,7 @@ const NewVenuePage = () => {
       if (booking.dailyUrls && Object.keys(booking.dailyUrls).length > 0) {
         dataPayload.bookingDailyUrls = booking.dailyUrls;
       }
+      if (form.floorPlanUrl) dataPayload.floorPlanUrl = form.floorPlanUrl;
 
       formData.append("data", JSON.stringify(dataPayload));
       photos.forEach((photo) => {
@@ -375,6 +377,34 @@ const NewVenuePage = () => {
             show owners how much traffic Pink Pineapple drives.
           </p>
           <BookingSection value={booking} onChange={setBooking} />
+        </div>
+
+        <div className="border-t border-[#2A2A2A]" />
+
+        {/* Floor plan */}
+        <div className="space-y-3">
+          <h2
+            className="text-sm uppercase tracking-wider text-[#E8A0B0]"
+            style={inter}
+          >
+            Floor Plan Image
+          </h2>
+          <p className="text-[11px] text-[#6B6B6B] -mt-1" style={inter}>
+            Optional. Shown to users on the &ldquo;Book VIP Table&rdquo; flow
+            so they can pick a specific area (e.g. &ldquo;Daybed D31&rdquo;).
+            Paste a hosted image URL — recommend ~1500px wide JPG.
+          </p>
+          <input
+            type="url"
+            name="floorPlanUrl"
+            value={form.floorPlanUrl}
+            onChange={(e) =>
+              setForm({ ...form, floorPlanUrl: e.target.value })
+            }
+            placeholder="https://cdn.example.com/floor-plans/savaya.jpg"
+            className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#E8A0B0] transition-colors"
+            style={inter}
+          />
         </div>
 
         <div className="border-t border-[#2A2A2A]" />

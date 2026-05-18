@@ -14,6 +14,7 @@ import 'package:pineapple/core/services/venue_booking_service.dart';
 import 'package:pineapple/core/services/venue_rating_service.dart';
 import 'package:pineapple/core/services/venue_vibe_service.dart';
 import 'package:pineapple/feature/venue/ui/venue_booking_webview.dart';
+import 'package:pineapple/feature/venue/ui/vip_booking_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class VenueDetailScreen extends StatefulWidget {
@@ -1124,42 +1125,140 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
 
   Widget _buildActionButtons(VenueModel venue) {
     final isGym = venue.category == 'WELLNESS' || venue.category == 'GYM';
+    final isNightlifeOrDining = venue.category == 'NIGHT_CLUB' ||
+        venue.category == 'BEACH_CLUB' ||
+        venue.category == 'RESTAURANT';
     // Hide the booking buttons entirely for venues marked NONE — they
     // accept walk-ins only and showing a button you can't take action
     // on is worse UX than no button at all.
     if (venue.bookingProvider == 'NONE') {
       return const SizedBox.shrink();
     }
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: Column(
-        children: [
-          PpPrimaryButton(
-            label: _bookingCtaLabel(venue),
-            icon: _bookingCtaIcon(venue),
-            onTap: () async {
-              if (!await AuthGuard.requireAuth()) return;
-              _openBooking(venue);
-            },
-          ),
-          // VIP reservation only makes sense for nightlife/clubs/beach clubs
-          // that have an online booking provider. Gyms and contact-only
-          // venues (phone/whatsapp/instagram) shouldn't show it.
-          if (!isGym &&
-              venue.bookingProvider != 'PHONE' &&
-              venue.bookingProvider != 'WHATSAPP' &&
-              venue.bookingProvider != 'INSTAGRAM_DM') ...[
-            SizedBox(height: 14.h),
-            PpSecondaryButton(
-              label: 'VIP RESERVATION',
-              icon: Icons.star_outline,
-              onTap: () async {
-                if (!await AuthGuard.requireAuth()) return;
-                _openBooking(venue);
-              },
+
+    // Nightclubs, beach clubs and restaurants get the 3-button row:
+    // Guest List | Buy Tickets | Book VIP Table.
+    //   - Guest List + Buy Tickets both open the venue's bookingUrl (the
+    //     destination handles the rest — guests pick whichever section).
+    //   - Book VIP Table opens the in-app bottom-sheet form, which then
+    //     deep-links to WhatsApp routed to Pink Pineapple's business
+    //     number for Rowan to handle manually.
+    if (isNightlifeOrDining) {
+      final hasBookingUrl = venue.bookingUrl.isNotEmpty ||
+          (venue.bookingDailyUrls != null &&
+              venue.bookingDailyUrls!.isNotEmpty);
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        child: Row(
+          children: [
+            if (hasBookingUrl) ...[
+              Expanded(
+                child: _ctaButton(
+                  label: 'Guest List',
+                  icon: Icons.group_outlined,
+                  primary: false,
+                  onTap: () async {
+                    if (!await AuthGuard.requireAuth()) return;
+                    _openBooking(venue);
+                  },
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: _ctaButton(
+                  label: 'Buy Tickets',
+                  icon: Icons.confirmation_number_outlined,
+                  primary: false,
+                  onTap: () async {
+                    if (!await AuthGuard.requireAuth()) return;
+                    _openBooking(venue);
+                  },
+                ),
+              ),
+              SizedBox(width: 8.w),
+            ],
+            Expanded(
+              child: _ctaButton(
+                label: 'Book VIP Table',
+                icon: Icons.workspace_premium_outlined,
+                primary: true,
+                onTap: () async {
+                  if (!await AuthGuard.requireAuth()) return;
+                  showVipBookingSheet(context: context, venue: venue);
+                },
+              ),
             ),
           ],
-        ],
+        ),
+      );
+    }
+
+    // Other categories (gyms, etc.) keep the existing single-button flow.
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      child: PpPrimaryButton(
+        label: _bookingCtaLabel(venue),
+        icon: _bookingCtaIcon(venue),
+        onTap: () async {
+          if (!await AuthGuard.requireAuth()) return;
+          _openBooking(venue);
+        },
+      ),
+    );
+  }
+
+  /// Compact CTA used in the 3-button row on nightclubs / beach clubs /
+  /// restaurants. Lives here (not in pp_button.dart) because the row is
+  /// the only place that needs the small-fit treatment.
+  Widget _ctaButton({
+    required String label,
+    required IconData icon,
+    required bool primary,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52.h,
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        decoration: BoxDecoration(
+          gradient: primary ? AppColors.gradientPrimary : null,
+          color: primary ? null : AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: primary
+              ? null
+              : Border.all(
+                  color: AppColors.accentRoseGold.withOpacity(0.35),
+                  width: 0.8,
+                ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 16.sp,
+                color: primary
+                    ? AppColors.backgroundDark
+                    : AppColors.accentRoseGold,
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                  color: primary
+                      ? AppColors.backgroundDark
+                      : AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

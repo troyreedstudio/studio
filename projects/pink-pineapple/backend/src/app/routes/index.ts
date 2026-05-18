@@ -20,6 +20,7 @@ import { VenueFavoriteRoutes } from "../modules/VenueFavorite/VenueFavorite.rout
 import { PaymentRoutes } from "../modules/Payment/Payment.routes";
 import { GooglePlacesRoutes } from "../modules/GooglePlaces/GooglePlaces.routes";
 import { HealthRoutes } from "../modules/Health/Health.routes";
+import { VipBookingRoutes } from "../modules/VipBooking/VipBooking.routes";
 
 const router = express.Router();
 
@@ -110,6 +111,10 @@ const moduleRoutes = [
   {
     path: "/places",
     route: GooglePlacesRoutes,
+  },
+  {
+    path: "/vip-bookings",
+    route: VipBookingRoutes,
   },
 ];
 

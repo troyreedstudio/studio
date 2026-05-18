@@ -20,6 +20,7 @@ import {
   Building,
   TrendingUp,
   Shield,
+  Crown,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -48,6 +49,11 @@ const admin = [
     title: "Bookings",
     url: "/bookings",
     icon: CalendarCheck2,
+  },
+  {
+    title: "VIP Bookings",
+    url: "/vip-bookings",
+    icon: Crown,
   },
   {
     title: "Approvals",
