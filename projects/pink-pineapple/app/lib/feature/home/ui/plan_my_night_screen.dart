@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pineapple/core/const/app_colors.dart';
 import 'package:pineapple/feature/home/services/plan_my_night_storage.dart';
 import 'package:pineapple/feature/home/services/night_plan_service.dart';
+import 'package:pineapple/feature/home/ui/plan_filter_sheet.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
 import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
@@ -34,6 +35,14 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
   // Null until _generateItinerary runs and the POST succeeds. We hold
   // onto it so we can later PATCH the plan when a stop is booked.
   String? _serverPlanId;
+
+  // Active filter selections from the Refine bottom sheet. Empty lists
+  // mean "no constraint on that dimension". Applied during itinerary
+  // regeneration to narrow the venue candidate pool.
+  PlanFilterResult _filters = const PlanFilterResult(
+    cuisines: [],
+    musicGenres: [],
+  );
 
   static const _areas = ['Canggu', 'Seminyak', 'Uluwatu', 'Surprise me'];
   static const _vibes = [
@@ -117,7 +126,21 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
       _vibe = '';
       _groupSize = 2;
       _itinerary = [];
+      _filters = const PlanFilterResult(cuisines: [], musicGenres: []);
     });
+  }
+
+  /// Open the Refine bottom sheet. Applies the user's picks immediately
+  /// by regenerating the itinerary on dismiss. No-op if user dismisses
+  /// without tapping Apply.
+  Future<void> _openFilterSheet() async {
+    final result = await showPlanFilterSheet(
+      context: context,
+      initial: _filters,
+    );
+    if (result == null) return;
+    setState(() => _filters = result);
+    _generateItinerary();
   }
 
   void _selectArea(String area) {
@@ -155,12 +178,25 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
         ? allVenues
         : allVenues.where((v) => v.area.toUpperCase() == areaFilter).toList();
 
+    // Apply the Refine sheet's cuisine + genre filters. Each filter is
+    // an OR across the user's picks but only constrains the category it
+    // naturally applies to (cuisine → RESTAURANT, genre → NIGHTLIFE).
+    // Beach clubs ignore both filters because the data there is weakly
+    // informative (most tagged INTERNATIONAL / HOUSE) and users picked
+    // them because they want a beach club regardless of menu/music.
+    bool matchesCuisine(VenueModel v) =>
+        _filters.cuisines.isEmpty ||
+        v.cuisines.any((c) => _filters.cuisines.contains(c));
+    bool matchesGenre(VenueModel v) =>
+        _filters.musicGenres.isEmpty ||
+        v.musicGenres.any((g) => _filters.musicGenres.contains(g));
+
     // Categorize — area-filtered for dinner/nightlife
     final restaurants = areaVenues
-        .where((v) => v.category == 'RESTAURANT')
+        .where((v) => v.category == 'RESTAURANT' && matchesCuisine(v))
         .toList()..shuffle();
     final nightlife = areaVenues
-        .where((v) => v.category == 'NIGHTLIFE')
+        .where((v) => v.category == 'NIGHTLIFE' && matchesGenre(v))
         .toList()..shuffle();
 
     // Beach clubs — respect area filter, use curated order per area
@@ -700,7 +736,7 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
 
           SizedBox(height: 28.h),
 
-          // Shuffle + Start over actions
+          // Shuffle + Refine + Start over actions
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -716,7 +752,30 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
                   ),
                 ),
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 4.w),
+              TextButton.icon(
+                onPressed: _openFilterSheet,
+                icon: Icon(
+                  Icons.tune,
+                  color: _filters.hasAny
+                      ? AppColors.accentRoseGold
+                      : AppColors.textMuted,
+                  size: 18.sp,
+                ),
+                label: Text(
+                  _filters.hasAny
+                      ? 'Refine · ${_filters.cuisines.length + _filters.musicGenres.length}'
+                      : 'Refine',
+                  style: GoogleFonts.poppins(
+                    color: _filters.hasAny
+                        ? AppColors.accentRoseGold
+                        : AppColors.textMuted,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              SizedBox(width: 4.w),
               TextButton.icon(
                 onPressed: _startOver,
                 icon: Icon(Icons.refresh, color: AppColors.textMuted, size: 18.sp),
