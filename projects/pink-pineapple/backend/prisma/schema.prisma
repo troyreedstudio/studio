@@ -67,6 +67,7 @@ model User {
   venueBookingClicks VenueBookingClick[] @relation("UserBookingClicks")
   externalPlaceClicks ExternalPlaceClick[] @relation("UserExternalPlaceClicks")
   vipBookingRequests VipBookingRequest[]
+  nightPlans         NightPlan[]
 
   blocker   BlockUser[] @relation("blocker")
   blocked   BlockUser[] @relation("blocked")
@@ -552,6 +553,60 @@ model VenueVibe {
 
   @@index([venueId, createdAt])
   @@map("venue_vibes")
+}
+
+// Saved Plan My Night itineraries. Each plan is the output of the user
+// picking a vibe (and optionally tweaking the filter sheet) — a sequence
+// of venue stops with times. Stored as a backend entity (not just local
+// SharedPreferences) so we can:
+//   - Persist across app reinstall / device switch
+//   - Show "Tonight's plan" pinned at the top of My Bookings
+//   - Track per-stop booked state as users actually commit to venues
+//   - Lay the foundation for plan-sharing in v1.4
+//
+// Stops is a JSON array of { venueId, role, startTime, endTime, booked, bookedAt }.
+// Storing as JSON (vs a relation table) trades query power for write
+// simplicity — plans are small, write-heavy on creation, mostly
+// read-by-id after that.
+model NightPlan {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String          @db.ObjectId
+  user        User            @relation(fields: [userId], references: [id])
+
+  // The vibe label the user picked (e.g. "Dinner & dancing"). Stored as
+  // a free string so we can iterate the vibe list without schema changes.
+  vibe        String
+
+  // The night the plan is for. Used to auto-archive past plans and to
+  // surface only "tonight's plan" in the My Bookings banner.
+  eventDate   DateTime
+
+  // Workflow state. Most plans stay ACTIVE until eventDate passes, then
+  // a background job (or lazy check on read) flips to COMPLETED.
+  status      NightPlanStatus @default(ACTIVE)
+
+  // Ordered list of stops. Each entry shape:
+  //   { venueId: ObjectId, role: "dinner" | "drinks" | "dance" | etc.,
+  //     startTime: "20:00", endTime: "22:00",
+  //     booked: bool, bookedAt: ISO date | null,
+  //     walkingMinutesFromPrev: number | null }
+  stops       Json
+
+  // Optional short share code (e.g. "PP-SUNSET-7K2N") for v1.4 link sharing.
+  shareCode   String          @default("")
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([userId, eventDate])
+  @@index([userId, status])
+  @@map("night_plans")
+}
+
+enum NightPlanStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }
 
 // VIP table booking requests. The actual fulfilment happens via WhatsApp

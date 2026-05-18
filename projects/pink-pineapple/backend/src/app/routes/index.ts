@@ -21,6 +21,7 @@ import { PaymentRoutes } from "../modules/Payment/Payment.routes";
 import { GooglePlacesRoutes } from "../modules/GooglePlaces/GooglePlaces.routes";
 import { HealthRoutes } from "../modules/Health/Health.routes";
 import { VipBookingRoutes } from "../modules/VipBooking/VipBooking.routes";
+import { NightPlanRoutes } from "../modules/NightPlan/NightPlan.routes";
 
 const router = express.Router();
 
@@ -115,6 +116,10 @@ const moduleRoutes = [
   {
     path: "/vip-bookings",
     route: VipBookingRoutes,
+  },
+  {
+    path: "/night-plans",
+    route: NightPlanRoutes,
   },
 ];
 
