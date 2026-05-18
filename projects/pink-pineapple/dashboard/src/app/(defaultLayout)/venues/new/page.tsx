@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Link from "next/link";
-import { Upload, X } from "lucide-react";
+import { Upload, X, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useCreateVenueMutation } from "@/redux/features/venues/venuesApi";
@@ -90,6 +90,68 @@ const musicGenreOptions: { value: string; label: string }[] = [
 const inputClass =
   "w-full bg-[#000000] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#C4707E] transition-colors";
 
+// Weekly programming — what kind of night each day is. Mirrors the
+// admin venue edit page and club portal so the data shape stays
+// consistent. Distinct from Opening Hours (when you're open vs what
+// you do that night).
+const daysOfWeek = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+type DayKey = (typeof daysOfWeek)[number];
+const dayLabels: Record<DayKey, string> = {
+  mon: "Monday",
+  tue: "Tuesday",
+  wed: "Wednesday",
+  thu: "Thursday",
+  fri: "Friday",
+  sat: "Saturday",
+  sun: "Sunday",
+};
+
+type ProgrammingDay = {
+  active: boolean;
+  startTime: string;
+  endTime: string;
+  genre: string;
+  description: string;
+};
+
+type ProgrammingValue = Record<DayKey, ProgrammingDay>;
+
+const blankProgrammingDay = (): ProgrammingDay => ({
+  active: false,
+  startTime: "",
+  endTime: "",
+  genre: "",
+  description: "",
+});
+
+const blankProgramming = (): ProgrammingValue => ({
+  mon: blankProgrammingDay(),
+  tue: blankProgrammingDay(),
+  wed: blankProgrammingDay(),
+  thu: blankProgrammingDay(),
+  fri: blankProgrammingDay(),
+  sat: blankProgrammingDay(),
+  sun: blankProgrammingDay(),
+});
+
+const serializeProgramming = (
+  v: ProgrammingValue
+): Record<string, any> | null => {
+  const out: Record<string, any> = {};
+  for (const day of daysOfWeek) {
+    const d = v[day];
+    if (!d.active) continue;
+    if (!d.genre.trim()) continue;
+    out[day] = {
+      startTime: d.startTime || "",
+      endTime: d.endTime || "",
+      genre: d.genre.trim(),
+      description: d.description.trim(),
+    };
+  }
+  return Object.keys(out).length > 0 ? out : null;
+};
+
 const NewVenuePage = () => {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -117,9 +179,55 @@ const NewVenuePage = () => {
   const [cuisines, setCuisines] = useState<string[]>([]);
   const [musicGenres, setMusicGenres] = useState<string[]>([]);
   // Floor plan upload — pushed as a "floorPlan" multipart field on submit,
-  // backend uploads to DO Spaces and writes the URL to venue.floorPlanUrl.
+  // backend uploads to Cloudinary and writes the URL to venue.floorPlanUrl.
   const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
   const [floorPlanPreview, setFloorPlanPreview] = useState<string>("");
+  // Weekly programming + collapsible-section open state. Both heavy
+  // sections start collapsed — admin opens what they need. Mirrors the
+  // club portal pattern so the editor and creator feel like one form.
+  const [programming, setProgramming] = useState<ProgrammingValue>(
+    blankProgramming()
+  );
+  const [programmingOpen, setProgrammingOpen] = useState(false);
+  const [hoursOpen, setHoursOpen] = useState(false);
+
+  const updateProgrammingDay = (
+    day: DayKey,
+    patch: Partial<ProgrammingDay>
+  ) => {
+    setProgramming({
+      ...programming,
+      [day]: { ...programming[day], ...patch },
+    });
+  };
+
+  const programmingSummary = useMemo(() => {
+    const active = daysOfWeek.filter(
+      (d) => programming[d].active && programming[d].genre.trim()
+    );
+    if (active.length === 0) return "No regular programming yet — tap to add";
+    if (active.length === 1) return "1 night programmed";
+    return `${active.length} nights programmed`;
+  }, [programming]);
+
+  const hoursSummary = useMemo(() => {
+    const labels: Record<DayKey, string> = {
+      mon: "Mon",
+      tue: "Tue",
+      wed: "Wed",
+      thu: "Thu",
+      fri: "Fri",
+      sat: "Sat",
+      sun: "Sun",
+    };
+    const closedDays = daysOfWeek.filter((d) => openingHours[d]?.closed);
+    const openCount = 7 - closedDays.length;
+    if (openCount === 0) return "Marked closed every day — tap to set";
+    if (openCount === 7) return "Open 7 days a week";
+    return `Open ${openCount} day${openCount === 1 ? "" : "s"} · Closed ${closedDays
+      .map((d) => labels[d])
+      .join(", ")}`;
+  }, [openingHours]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -198,6 +306,10 @@ const NewVenuePage = () => {
       if (form.floorPlanUrl) dataPayload.floorPlanUrl = form.floorPlanUrl;
       if (cuisines.length > 0) dataPayload.cuisines = cuisines;
       if (musicGenres.length > 0) dataPayload.musicGenres = musicGenres;
+      const serializedProgramming = serializeProgramming(programming);
+      if (serializedProgramming) {
+        dataPayload.weeklySchedule = serializedProgramming;
+      }
 
       formData.append("data", JSON.stringify(dataPayload));
       photos.forEach((photo) => {
@@ -575,23 +687,285 @@ const NewVenuePage = () => {
 
         <div className="border-t border-[#2A2A2A]" />
 
-        {/* Opening hours */}
-        <div className="space-y-3">
-          <h2
-            className="text-sm uppercase tracking-wider text-[#E8A0B0]"
-            style={inter}
+        {/* Opening hours — collapsible. Mirrors club portal + admin edit
+            page so the form feels like a single product. */}
+        <section
+          className="rounded-xl border bg-[#000000] overflow-hidden transition-colors"
+          style={{
+            borderColor: hoursOpen ? "#2A2A2A" : "rgba(196,112,126,0.4)",
+            background: hoursOpen
+              ? "#000000"
+              : "linear-gradient(135deg, rgba(139,64,96,0.06), rgba(232,160,176,0.03))",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setHoursOpen(!hoursOpen)}
+            className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-[#0A0A0A] transition-colors"
           >
-            Opening Hours
-          </h2>
-          <p className="text-[11px] text-[#6B6B6B] -mt-1" style={inter}>
-            Pick the days you want to apply hours to, then tap a preset. You
-            can fine-tune any individual day below.
-          </p>
-          <OpeningHoursPicker
-            value={openingHours}
-            onChange={setOpeningHours}
-          />
-        </div>
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-xs text-[#E8A0B0] uppercase tracking-wider"
+                style={inter}
+              >
+                Opening hours
+              </p>
+              <p
+                className="text-[11px] text-[#B0B0B0] mt-1 truncate"
+                style={inter}
+              >
+                {hoursSummary}
+              </p>
+            </div>
+            <span
+              className="flex items-center gap-1.5 flex-shrink-0 text-[10px] uppercase tracking-wider text-[#E8A0B0]"
+              style={inter}
+            >
+              {hoursOpen ? "Hide" : "Edit"}
+              <ChevronDown
+                size={16}
+                className="text-[#E8A0B0] transition-transform"
+                style={{
+                  transform: hoursOpen ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
+            </span>
+          </button>
+          {hoursOpen && (
+            <div className="px-4 pb-4 space-y-3 border-t border-[#1A1A1A] pt-4">
+              <p className="text-[11px] text-[#6B6B6B]" style={inter}>
+                Pick the days you want to apply hours to, then tap a preset.
+                You can fine-tune any individual day below.
+              </p>
+              <OpeningHoursPicker
+                value={openingHours}
+                onChange={setOpeningHours}
+              />
+            </div>
+          )}
+        </section>
+
+        <div className="border-t border-[#2A2A2A]" />
+
+        {/* Weekly programming — collapsible. Same pattern as Opening hours
+            above. Each day has its own active toggle that reveals the
+            genre / start / end / description inputs when flipped on. */}
+        <section
+          className="rounded-xl border bg-[#000000] overflow-hidden transition-colors"
+          style={{
+            borderColor: programmingOpen
+              ? "#2A2A2A"
+              : "rgba(196,112,126,0.4)",
+            background: programmingOpen
+              ? "#000000"
+              : "linear-gradient(135deg, rgba(139,64,96,0.06), rgba(232,160,176,0.03))",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setProgrammingOpen(!programmingOpen)}
+            className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-[#0A0A0A] transition-colors"
+          >
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-xs text-[#E8A0B0] uppercase tracking-wider"
+                style={inter}
+              >
+                Weekly programming
+              </p>
+              <p
+                className="text-[11px] text-[#B0B0B0] mt-1 truncate"
+                style={inter}
+              >
+                {programmingSummary}
+              </p>
+            </div>
+            <span
+              className="flex items-center gap-1.5 flex-shrink-0 text-[10px] uppercase tracking-wider text-[#E8A0B0]"
+              style={inter}
+            >
+              {programmingOpen ? "Hide" : "Edit"}
+              <ChevronDown
+                size={16}
+                className="text-[#E8A0B0] transition-transform"
+                style={{
+                  transform: programmingOpen
+                    ? "rotate(180deg)"
+                    : "rotate(0deg)",
+                }}
+              />
+            </span>
+          </button>
+          {programmingOpen && (
+            <div className="px-4 pb-4 space-y-3 border-t border-[#1A1A1A] pt-4">
+              <p
+                className="text-[11px] text-[#6B6B6B] max-w-xl"
+                style={inter}
+              >
+                What kind of night each day is — e.g.{" "}
+                <span className="text-[#E8A0B0]">Hip Hop Wednesday</span>,
+                <span className="text-[#E8A0B0]"> Open Decks Saturday</span>.
+                Toggle on the days with regular programming. Powers the
+                consumer app&apos;s &ldquo;This Week&rdquo; carousel.
+              </p>
+              <div className="space-y-2">
+                {daysOfWeek.map((day) => {
+                  const d = programming[day];
+                  return (
+                    <div
+                      key={day}
+                      className="rounded-xl border bg-[#0A0A0A] overflow-hidden transition-colors"
+                      style={{
+                        borderColor: d.active
+                          ? "rgba(196,112,126,0.4)"
+                          : "#2A2A2A",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateProgrammingDay(day, { active: !d.active })
+                        }
+                        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
+                      >
+                        <span className="flex items-center gap-3">
+                          <span
+                            className="text-sm font-medium w-24"
+                            style={{
+                              ...inter,
+                              color: d.active ? "#FFFFFF" : "#B0B0B0",
+                            }}
+                          >
+                            {dayLabels[day]}
+                          </span>
+                          {d.active && d.genre ? (
+                            <span
+                              className="text-sm text-[#E8A0B0]"
+                              style={inter}
+                            >
+                              {d.genre}
+                            </span>
+                          ) : !d.active ? (
+                            <span
+                              className="text-xs text-[#6B6B6B]"
+                              style={inter}
+                            >
+                              No regular programming
+                            </span>
+                          ) : (
+                            <span
+                              className="text-xs text-[#6B6B6B] italic"
+                              style={inter}
+                            >
+                              Add details below
+                            </span>
+                          )}
+                        </span>
+                        <span
+                          className={`flex-shrink-0 w-9 h-5 rounded-full p-0.5 transition-colors ${
+                            d.active ? "bg-[#C4707E]" : "bg-[#2A2A2A]"
+                          }`}
+                        >
+                          <span
+                            className={`block w-4 h-4 rounded-full bg-white transition-transform ${
+                              d.active ? "translate-x-4" : ""
+                            }`}
+                          />
+                        </span>
+                      </button>
+
+                      {d.active && (
+                        <div className="px-4 pb-4 pt-1 space-y-3 border-t border-[#1A1A1A]">
+                          <div>
+                            <label
+                              className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                              style={inter}
+                            >
+                              Night name / genre{" "}
+                              <span className="text-red-400">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={d.genre}
+                              onChange={(e) =>
+                                updateProgrammingDay(day, {
+                                  genre: e.target.value,
+                                })
+                              }
+                              placeholder="e.g. Hip Hop Night"
+                              className={inputClass}
+                              style={inter}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label
+                                className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                                style={inter}
+                              >
+                                Start
+                              </label>
+                              <input
+                                type="time"
+                                value={d.startTime}
+                                onChange={(e) =>
+                                  updateProgrammingDay(day, {
+                                    startTime: e.target.value,
+                                  })
+                                }
+                                className={inputClass}
+                                style={inter}
+                              />
+                            </div>
+                            <div>
+                              <label
+                                className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                                style={inter}
+                              >
+                                End
+                              </label>
+                              <input
+                                type="time"
+                                value={d.endTime}
+                                onChange={(e) =>
+                                  updateProgrammingDay(day, {
+                                    endTime: e.target.value,
+                                  })
+                                }
+                                className={inputClass}
+                                style={inter}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label
+                              className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                              style={inter}
+                            >
+                              Description (optional)
+                            </label>
+                            <input
+                              type="text"
+                              value={d.description}
+                              onChange={(e) =>
+                                updateProgrammingDay(day, {
+                                  description: e.target.value,
+                                })
+                              }
+                              placeholder="e.g. Resident DJs spinning hip hop, R&amp;B, and trap"
+                              className={inputClass}
+                              style={inter}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </section>
 
         <div className="border-t border-[#2A2A2A]" />
 

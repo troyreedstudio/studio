@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   useGetVenueQuery,
@@ -47,6 +47,7 @@ import {
   Heart,
   Activity,
   Plus,
+  ChevronDown,
 } from "lucide-react";
 
 const inter = { fontFamily: "Inter, sans-serif" };
@@ -126,11 +127,68 @@ const dayLabels: Record<DayKey, string> = {
   sun: "Sunday",
 };
 
-type ScheduleEntry = {
-  startTime?: string;
-  endTime?: string;
-  genre?: string;
-  description?: string;
+type ProgrammingDay = {
+  active: boolean;
+  startTime: string;
+  endTime: string;
+  genre: string;
+  description: string;
+};
+
+type ProgrammingValue = Record<DayKey, ProgrammingDay>;
+
+const blankProgrammingDay = (): ProgrammingDay => ({
+  active: false,
+  startTime: "",
+  endTime: "",
+  genre: "",
+  description: "",
+});
+
+const blankProgramming = (): ProgrammingValue => ({
+  mon: blankProgrammingDay(),
+  tue: blankProgrammingDay(),
+  wed: blankProgrammingDay(),
+  thu: blankProgrammingDay(),
+  fri: blankProgrammingDay(),
+  sat: blankProgrammingDay(),
+  sun: blankProgrammingDay(),
+});
+
+const parseProgramming = (raw: any): ProgrammingValue => {
+  const result = blankProgramming();
+  if (!raw || typeof raw !== "object") return result;
+  for (const day of daysOfWeek) {
+    const v = raw[day];
+    if (v && typeof v === "object") {
+      result[day] = {
+        active: true,
+        startTime: typeof v.startTime === "string" ? v.startTime : "",
+        endTime: typeof v.endTime === "string" ? v.endTime : "",
+        genre: typeof v.genre === "string" ? v.genre : "",
+        description: typeof v.description === "string" ? v.description : "",
+      };
+    }
+  }
+  return result;
+};
+
+const serializeProgramming = (
+  v: ProgrammingValue
+): Record<string, any> | null => {
+  const out: Record<string, any> = {};
+  for (const day of daysOfWeek) {
+    const d = v[day];
+    if (!d.active) continue;
+    if (!d.genre.trim()) continue;
+    out[day] = {
+      startTime: d.startTime || "",
+      endTime: d.endTime || "",
+      genre: d.genre.trim(),
+      description: d.description.trim(),
+    };
+  }
+  return Object.keys(out).length > 0 ? out : null;
 };
 
 const inputClass =
@@ -193,15 +251,11 @@ const VenueDetailPage = () => {
   const [tagDraft, setTagDraft] = useState("");
   const [cuisines, setCuisines] = useState<string[]>([]);
   const [musicGenres, setMusicGenres] = useState<string[]>([]);
-  const [schedule, setSchedule] = useState<Record<DayKey, ScheduleEntry>>({
-    mon: {},
-    tue: {},
-    wed: {},
-    thu: {},
-    fri: {},
-    sat: {},
-    sun: {},
-  });
+  const [programming, setProgramming] = useState<ProgrammingValue>(
+    blankProgramming()
+  );
+  const [programmingOpen, setProgrammingOpen] = useState(false);
+  const [hoursOpen, setHoursOpen] = useState(false);
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
   // Pending floor plan upload — switches the save flow to multipart and
@@ -282,29 +336,20 @@ const VenueDetailPage = () => {
             ? (venue.bookingDailyUrls as Record<string, string>)
             : null,
       });
-      const fresh: Record<DayKey, ScheduleEntry> = {
-        mon: {},
-        tue: {},
-        wed: {},
-        thu: {},
-        fri: {},
-        sat: {},
-        sun: {},
-      };
-      const ws = venue.weeklySchedule;
-      if (ws && typeof ws === "object") {
-        for (const day of daysOfWeek) {
-          if (ws[day] && typeof ws[day] === "object") {
-            fresh[day] = {
-              startTime: ws[day].startTime || "",
-              endTime: ws[day].endTime || "",
-              genre: ws[day].genre || "",
-              description: ws[day].description || "",
-            };
-          }
-        }
-      }
-      setSchedule(fresh);
+      const parsedProgramming = parseProgramming(venue.weeklySchedule);
+      setProgramming(parsedProgramming);
+
+      // Smart-open the heavy collapsible sections when there's already data.
+      setHoursOpen(
+        !!venue.openingHours &&
+          typeof venue.openingHours === "object" &&
+          Object.keys(venue.openingHours).length > 0
+      );
+      setProgrammingOpen(
+        !!venue.weeklySchedule &&
+          typeof venue.weeklySchedule === "object" &&
+          Object.keys(venue.weeklySchedule).length > 0
+      );
     }
   }, [venue]);
 
@@ -316,20 +361,45 @@ const VenueDetailPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const updateSchedule = (
+  const updateProgrammingDay = (
     day: DayKey,
-    key: keyof ScheduleEntry,
-    value: string
+    patch: Partial<ProgrammingDay>
   ) => {
-    setSchedule({
-      ...schedule,
-      [day]: { ...schedule[day], [key]: value },
+    setProgramming({
+      ...programming,
+      [day]: { ...programming[day], ...patch },
     });
   };
 
-  const clearScheduleDay = (day: DayKey) => {
-    setSchedule({ ...schedule, [day]: {} });
-  };
+  // Summary chip shown in the collapsed Weekly Programming header so admins
+  // can scan state without expanding the 7-day editor.
+  const programmingSummary = useMemo(() => {
+    const active = daysOfWeek.filter(
+      (d) => programming[d].active && programming[d].genre.trim()
+    );
+    if (active.length === 0) return "No regular programming yet — tap to add";
+    if (active.length === 1) return "1 night programmed";
+    return `${active.length} nights programmed`;
+  }, [programming]);
+
+  const hoursSummary = useMemo(() => {
+    const labels: Record<DayKey, string> = {
+      mon: "Mon",
+      tue: "Tue",
+      wed: "Wed",
+      thu: "Thu",
+      fri: "Fri",
+      sat: "Sat",
+      sun: "Sun",
+    };
+    const closedDays = daysOfWeek.filter((d) => openingHours[d]?.closed);
+    const openCount = 7 - closedDays.length;
+    if (openCount === 0) return "Marked closed every day — tap to set";
+    if (openCount === 7) return "Open 7 days a week";
+    return `Open ${openCount} day${openCount === 1 ? "" : "s"} · Closed ${closedDays
+      .map((d) => labels[d])
+      .join(", ")}`;
+  }, [openingHours]);
 
   const addTag = (raw: string) => {
     const t = raw.trim().toLowerCase().replace(/\s+/g, "_");
@@ -358,13 +428,8 @@ const VenueDetailPage = () => {
   const handleSave = async () => {
     const toastId = toast.loading("Updating venue...");
     try {
-      // Build clean weeklySchedule, dropping empty days
-      const cleanSchedule: Record<string, ScheduleEntry> = {};
-      for (const day of daysOfWeek) {
-        const entry = schedule[day];
-        const hasContent = entry.startTime || entry.endTime || entry.genre || entry.description;
-        if (hasContent) cleanSchedule[day] = entry;
-      }
+      // Build clean weeklySchedule, dropping inactive days and any with no genre.
+      const cleanSchedule = serializeProgramming(programming);
 
       // Address: prefer the structured form's serialized string when the
       // user actually picked or edited it; fall back to the legacy text input.
@@ -400,7 +465,7 @@ const VenueDetailPage = () => {
         tags,
         cuisines,
         musicGenres,
-        weeklySchedule: Object.keys(cleanSchedule).length > 0 ? cleanSchedule : null,
+        weeklySchedule: cleanSchedule,
         // Send the (possibly trimmed) existing-photo array — backend will
         // append any newly-uploaded files after these. Lets users delete
         // existing photos by removing them from this array.
@@ -905,112 +970,291 @@ const VenueDetailPage = () => {
                 />
               </div>
 
-              <div>
-                <label
-                  className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
-                  style={inter}
+              {/* Opening hours — collapsible. Header always visible with
+                  summary chip; tap to expand and edit. Matches Weekly
+                  Programming pattern below so admins recognise the pair. */}
+              <section
+                className="rounded-xl border bg-[#000000] overflow-hidden transition-colors"
+                style={{
+                  borderColor: hoursOpen
+                    ? "#2A2A2A"
+                    : "rgba(196,112,126,0.4)",
+                  background: hoursOpen
+                    ? "#000000"
+                    : "linear-gradient(135deg, rgba(139,64,96,0.06), rgba(232,160,176,0.03))",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setHoursOpen(!hoursOpen)}
+                  className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-[#0A0A0A] transition-colors"
                 >
-                  Opening Hours
-                </label>
-                <OpeningHoursPicker
-                  value={openingHours}
-                  onChange={setOpeningHours}
-                />
-              </div>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="text-xs text-[#E8A0B0] uppercase tracking-wider"
+                      style={inter}
+                    >
+                      Opening hours
+                    </p>
+                    <p
+                      className="text-[11px] text-[#B0B0B0] mt-1 truncate"
+                      style={inter}
+                    >
+                      {hoursSummary}
+                    </p>
+                  </div>
+                  <span
+                    className="flex items-center gap-1.5 flex-shrink-0 text-[10px] uppercase tracking-wider text-[#E8A0B0]"
+                    style={inter}
+                  >
+                    {hoursOpen ? "Hide" : "Edit"}
+                    <ChevronDown
+                      size={16}
+                      className="text-[#E8A0B0] transition-transform"
+                      style={{
+                        transform: hoursOpen
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                      }}
+                    />
+                  </span>
+                </button>
+                {hoursOpen && (
+                  <div className="px-4 pb-4 space-y-3 border-t border-[#1A1A1A] pt-4">
+                    <p
+                      className="text-[11px] text-[#6B6B6B]"
+                      style={inter}
+                    >
+                      Set hours for each day of the week.
+                    </p>
+                    <OpeningHoursPicker
+                      value={openingHours}
+                      onChange={setOpeningHours}
+                    />
+                  </div>
+                )}
+              </section>
 
-              {/* Weekly Schedule Editor */}
-              <div>
-                <label
-                  className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
-                  style={inter}
+              {/* Weekly Programming — collapsible, mirrors club portal pattern.
+                  Header always visible with summary chip; tap to expand the
+                  7-day editor. Each day has its own active toggle and inline
+                  inputs that only render when the day is active. */}
+              <section
+                className="rounded-xl border bg-[#000000] overflow-hidden transition-colors"
+                style={{
+                  borderColor: programmingOpen
+                    ? "#2A2A2A"
+                    : "rgba(196,112,126,0.4)",
+                  background: programmingOpen
+                    ? "#000000"
+                    : "linear-gradient(135deg, rgba(139,64,96,0.06), rgba(232,160,176,0.03))",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setProgrammingOpen(!programmingOpen)}
+                  className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-[#0A0A0A] transition-colors"
                 >
-                  Weekly Schedule
-                </label>
-                <p className="text-[#6B6B6B] text-xs mb-3" style={inter}>
-                  Per-day curated content. Leave a day blank to skip it. Used by the &quot;This Week&quot; carousel in the app.
-                </p>
-                <div className="space-y-2">
-                  {daysOfWeek.map((day) => {
-                    const entry = schedule[day];
-                    const hasContent =
-                      entry.startTime ||
-                      entry.endTime ||
-                      entry.genre ||
-                      entry.description;
-                    return (
-                      <div
-                        key={day}
-                        className="rounded-xl border border-[#2A2A2A] bg-[#0A0A0A] p-3"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span
-                            className="text-xs font-semibold text-[#E8A0B0] uppercase tracking-wider"
-                            style={inter}
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="text-xs text-[#E8A0B0] uppercase tracking-wider"
+                      style={inter}
+                    >
+                      Weekly programming
+                    </p>
+                    <p
+                      className="text-[11px] text-[#B0B0B0] mt-1 truncate"
+                      style={inter}
+                    >
+                      {programmingSummary}
+                    </p>
+                  </div>
+                  <span
+                    className="flex items-center gap-1.5 flex-shrink-0 text-[10px] uppercase tracking-wider text-[#E8A0B0]"
+                    style={inter}
+                  >
+                    {programmingOpen ? "Hide" : "Edit"}
+                    <ChevronDown
+                      size={16}
+                      className="text-[#E8A0B0] transition-transform"
+                      style={{
+                        transform: programmingOpen
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                      }}
+                    />
+                  </span>
+                </button>
+                {programmingOpen && (
+                  <div className="px-4 pb-4 space-y-3 border-t border-[#1A1A1A] pt-4">
+                    <p
+                      className="text-[11px] text-[#6B6B6B] max-w-xl"
+                      style={inter}
+                    >
+                      What kind of night each day is — e.g.{" "}
+                      <span className="text-[#E8A0B0]">Hip Hop Wednesday</span>,
+                      <span className="text-[#E8A0B0]"> Open Decks Saturday</span>.
+                      Toggle on the days with regular programming. Powers the
+                      consumer app&apos;s &ldquo;This Week&rdquo; carousel.
+                    </p>
+                    <div className="space-y-2">
+                      {daysOfWeek.map((day) => {
+                        const d = programming[day];
+                        return (
+                          <div
+                            key={day}
+                            className="rounded-xl border bg-[#0A0A0A] overflow-hidden transition-colors"
+                            style={{
+                              borderColor: d.active
+                                ? "rgba(196,112,126,0.4)"
+                                : "#2A2A2A",
+                            }}
                           >
-                            {dayLabels[day]}
-                          </span>
-                          {hasContent && (
                             <button
                               type="button"
-                              onClick={() => clearScheduleDay(day)}
-                              className="text-[10px] text-[#6B6B6B] hover:text-red-400"
-                              style={inter}
+                              onClick={() =>
+                                updateProgrammingDay(day, { active: !d.active })
+                              }
+                              className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
                             >
-                              Clear day
+                              <span className="flex items-center gap-3">
+                                <span
+                                  className="text-sm font-medium w-24"
+                                  style={{
+                                    ...inter,
+                                    color: d.active ? "#FFFFFF" : "#B0B0B0",
+                                  }}
+                                >
+                                  {dayLabels[day]}
+                                </span>
+                                {d.active && d.genre ? (
+                                  <span
+                                    className="text-sm text-[#E8A0B0]"
+                                    style={inter}
+                                  >
+                                    {d.genre}
+                                  </span>
+                                ) : !d.active ? (
+                                  <span
+                                    className="text-xs text-[#6B6B6B]"
+                                    style={inter}
+                                  >
+                                    No regular programming
+                                  </span>
+                                ) : (
+                                  <span
+                                    className="text-xs text-[#6B6B6B] italic"
+                                    style={inter}
+                                  >
+                                    Add details below
+                                  </span>
+                                )}
+                              </span>
+                              <span
+                                className={`flex-shrink-0 w-9 h-5 rounded-full p-0.5 transition-colors ${
+                                  d.active ? "bg-[#C4707E]" : "bg-[#2A2A2A]"
+                                }`}
+                              >
+                                <span
+                                  className={`block w-4 h-4 rounded-full bg-white transition-transform ${
+                                    d.active ? "translate-x-4" : ""
+                                  }`}
+                                />
+                              </span>
                             </button>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          <input
-                            type="text"
-                            placeholder="Start (e.g. 22:00)"
-                            value={entry.startTime || ""}
-                            onChange={(e) =>
-                              updateSchedule(day, "startTime", e.target.value)
-                            }
-                            className={inputClass + " py-2 text-xs"}
-                            style={inter}
-                          />
-                          <input
-                            type="text"
-                            placeholder="End (e.g. 03:00)"
-                            value={entry.endTime || ""}
-                            onChange={(e) =>
-                              updateSchedule(day, "endTime", e.target.value)
-                            }
-                            className={inputClass + " py-2 text-xs"}
-                            style={inter}
-                          />
-                          <input
-                            type="text"
-                            placeholder="Genre"
-                            value={entry.genre || ""}
-                            onChange={(e) =>
-                              updateSchedule(day, "genre", e.target.value)
-                            }
-                            className={inputClass + " py-2 text-xs"}
-                            style={inter}
-                          />
-                          <input
-                            type="text"
-                            placeholder="Description"
-                            value={entry.description || ""}
-                            onChange={(e) =>
-                              updateSchedule(
-                                day,
-                                "description",
-                                e.target.value
-                              )
-                            }
-                            className={inputClass + " py-2 text-xs"}
-                            style={inter}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+
+                            {d.active && (
+                              <div className="px-4 pb-4 pt-1 space-y-3 border-t border-[#1A1A1A]">
+                                <div>
+                                  <label
+                                    className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                                    style={inter}
+                                  >
+                                    Night name / genre{" "}
+                                    <span className="text-red-400">*</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={d.genre}
+                                    onChange={(e) =>
+                                      updateProgrammingDay(day, {
+                                        genre: e.target.value,
+                                      })
+                                    }
+                                    placeholder="e.g. Hip Hop Night"
+                                    className={inputClass}
+                                    style={inter}
+                                  />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label
+                                      className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                                      style={inter}
+                                    >
+                                      Start
+                                    </label>
+                                    <input
+                                      type="time"
+                                      value={d.startTime}
+                                      onChange={(e) =>
+                                        updateProgrammingDay(day, {
+                                          startTime: e.target.value,
+                                        })
+                                      }
+                                      className={inputClass}
+                                      style={inter}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label
+                                      className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                                      style={inter}
+                                    >
+                                      End
+                                    </label>
+                                    <input
+                                      type="time"
+                                      value={d.endTime}
+                                      onChange={(e) =>
+                                        updateProgrammingDay(day, {
+                                          endTime: e.target.value,
+                                        })
+                                      }
+                                      className={inputClass}
+                                      style={inter}
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label
+                                    className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block mb-1.5"
+                                    style={inter}
+                                  >
+                                    Description (optional)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={d.description}
+                                    onChange={(e) =>
+                                      updateProgrammingDay(day, {
+                                        description: e.target.value,
+                                      })
+                                    }
+                                    placeholder="e.g. Resident DJs spinning hip hop, R&amp;B, and trap"
+                                    className={inputClass}
+                                    style={inter}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </section>
 
               <div>
                 <label
