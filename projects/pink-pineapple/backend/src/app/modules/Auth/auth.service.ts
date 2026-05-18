@@ -142,12 +142,19 @@ const changePassword = async (
   return { message: "Password changed successfully" };
 };
 const forgotPassword = async (payload: { email: string }) => {
-  // Fetch user data or throw if not found
-  const userData = await prisma.user.findFirstOrThrow({
-    where: {
-      email: payload.email,
-    },
+  // Look up the user. Use findUnique + explicit ApiError so missing accounts
+  // return a friendly 404 instead of an unhandled Prisma error that the
+  // global handler renders as a generic 500 ("An unexpected error occurred").
+  const userData = await prisma.user.findUnique({
+    where: { email: payload.email },
   });
+
+  if (!userData) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      "No account found with that email. Please sign up first."
+    );
+  }
 
   // Generate a new OTP
   const otp = Number(crypto.randomInt(1000, 9999));

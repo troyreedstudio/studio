@@ -320,7 +320,11 @@ const getUsersFromDb = async (
 const updateProfile = async (req: Request) => {
 
 
-  const files = req.files as any;
+  // req.files is only set when the request is multipart with an actual file
+  // attached. JSON-only updates (PUT_V2 path in the Flutter app) hit this
+  // function with req.files === undefined — default to an empty object so
+  // optional file lookups don't blow up.
+  const files = (req.files as any) || {};
   const profileImage = files.profile;
   const licenseImage = files.license;
 
