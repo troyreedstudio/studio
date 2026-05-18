@@ -7,6 +7,10 @@ export type IVenueFilterRequest = {
 };
 
 export const venueFilterableFields = [
+  // "searchTerm" lives in this list (not just the typed interface) so the
+  // controller's pick() preserves it through to the service, where the
+  // OR-contains query against name + description + editorial runs.
+  "searchTerm",
   "area",
   "category",
   "isFeatured",
