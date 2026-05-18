@@ -15,17 +15,25 @@ import { toast } from "sonner";
 const inter = { fontFamily: "Inter, sans-serif" };
 const playfair = { fontFamily: "Outfit, sans-serif" };
 
-const AREAS = ["All", "Canggu", "Uluwatu", "Seminyak", "Ubud"] as const;
-const CATEGORIES = [
-  "All",
-  "Beach Club",
-  "Restaurant",
-  "Nightclub",
-  "Bar",
-  "Lounge",
-  "Wellness",
-  "Gym",
-] as const;
+// Display label + canonical enum value. The backend Venue model uses
+// the uppercase enums (VenueArea / VenueCategory in schema.prisma);
+// the dashboard was previously sending the display label, which the
+// API silently ignored — hence "filters not working".
+const AREAS: { label: string; value: string }[] = [
+  { label: "All Areas", value: "All" },
+  { label: "Canggu", value: "CANGGU" },
+  { label: "Uluwatu", value: "ULUWATU" },
+  { label: "Seminyak", value: "SEMINYAK" },
+  { label: "Ubud", value: "UBUD" },
+];
+const CATEGORIES: { label: string; value: string }[] = [
+  { label: "All Categories", value: "All" },
+  { label: "Beach Club", value: "BEACH_CLUB" },
+  { label: "Restaurant", value: "RESTAURANT" },
+  { label: "Nightlife", value: "NIGHTLIFE" },
+  { label: "Wellness", value: "WELLNESS" },
+  { label: "Events", value: "EVENTS" },
+];
 
 const statusBadge = (isActive: boolean) =>
   isActive
@@ -34,6 +42,11 @@ const statusBadge = (isActive: boolean) =>
 
 const VenuesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  // Two-tier search state: searchInput is what the user types into the box,
+  // search is what's actually sent to the API. Decoupling lets us wait for
+  // Enter (instead of firing a query on every keystroke + replacing the
+  // whole list with a Spinner, which created the "screen times out" feel).
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [area, setArea] = useState("All");
   const [category, setCategory] = useState("All");
@@ -48,7 +61,7 @@ const VenuesPage = () => {
     ...(search.trim() ? [{ name: "searchTerm", value: search.trim() }] : []),
   ];
 
-  const { data, isLoading, status: queryState } = useGetVenuesQuery(queryParams);
+  const { data, isLoading } = useGetVenuesQuery(queryParams);
 
   const venues = data?.data?.data ?? data?.data ?? [];
   const metaData = data?.data?.meta ?? data?.meta;
@@ -66,7 +79,11 @@ const VenuesPage = () => {
     }
   };
 
-  if (isLoading || queryState === "pending") {
+  // Only swap the entire page for a Spinner on the very first load. Once
+  // we have data, keep it on screen during refetches (filter changes,
+  // pagination clicks, Enter-triggered search) instead of flashing the
+  // spinner — that flicker was what made the page feel broken.
+  if (isLoading && !data) {
     return <Spinner />;
   }
 
@@ -110,8 +127,8 @@ const VenuesPage = () => {
           style={inter}
         >
           {AREAS.map((a) => (
-            <option key={a} value={a}>
-              {a === "All" ? "All Areas" : a}
+            <option key={a.value} value={a.value}>
+              {a.label}
             </option>
           ))}
         </select>
@@ -126,8 +143,8 @@ const VenuesPage = () => {
           style={inter}
         >
           {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c === "All" ? "All Categories" : c}
+            <option key={c.value} value={c.value}>
+              {c.label}
             </option>
           ))}
         </select>
@@ -147,11 +164,18 @@ const VenuesPage = () => {
           </svg>
           <input
             type="text"
-            placeholder="Search venues..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
+            placeholder="Search venues (press Enter)..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setSearch(searchInput.trim());
+                setCurrentPage(1);
+              } else if (e.key === "Escape") {
+                setSearchInput("");
+                setSearch("");
+                setCurrentPage(1);
+              }
             }}
             className="pl-10 pr-4 py-2.5 rounded-xl border border-[#2A2A2A] bg-[#000000] text-[#FFFFFF] text-sm placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#C4707E]/50 transition-colors w-full sm:w-64"
             style={inter}
