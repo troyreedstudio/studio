@@ -382,6 +382,27 @@ const updateProfile = async (req: Request) => {
   // Ensure parseData is at least an object to prevent property access errors
   parseData = parseData || {};
 
+  // Defensive validation: if the request explicitly includes onboarding-
+  // essential profile fields, they cannot be empty/whitespace strings.
+  // Prevents the Flutter app (or a buggy client) from silently clearing a
+  // user's profile data. Fields not present in the payload are skipped, so
+  // partial Edit Profile updates still work.
+  const requireNonEmpty = (field: string, label: string) => {
+    if (
+      parseData[field] !== undefined &&
+      (typeof parseData[field] !== "string" ||
+        parseData[field].trim() === "")
+    ) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        `${label} cannot be empty`
+      );
+    }
+  };
+  requireNonEmpty("fullName", "Display name");
+  requireNonEmpty("country", "Country");
+  requireNonEmpty("city", "City");
+
   // Prepare normalized DOB (iOS/ISO-safe) if provided
   const dobToSave = normalizeDob(parseData.dob);
   const result = await prisma.user.update({

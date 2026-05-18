@@ -489,19 +489,30 @@ class SignUpProfileSetUp extends StatelessWidget {
   // ─────────────────────────────────────────────────────────
 
   void _handleContinuePressed() {
-    if (nameController.text.trim().isEmpty) {
-      AppSnackbar.showWarning("Please enter your name");
-      return;
-    }
-
     String? imagePathName = imagePicker.selectedImage.value?.path;
 
+    // Profile photo required during initial signup. In edit-mode the user
+    // may already have a server-side photo URL set and not be re-picking.
     if (!controller.isTokenAvailable.value && imagePathName == null) {
       AppSnackbar.showWarning("Please add a profile photo");
       return;
     }
 
-    log("message ${nameController.text} == $imagePathName");
+    if (nameController.text.trim().isEmpty) {
+      AppSnackbar.showWarning("Please enter your display name");
+      return;
+    }
+
+    if (controller.selectedCountry.value == null ||
+        controller.selectedCountry.value!.trim().isEmpty) {
+      AppSnackbar.showWarning("Please select your country");
+      return;
+    }
+
+    if (controller.cityController.text.trim().isEmpty) {
+      AppSnackbar.showWarning("Please enter your city");
+      return;
+    }
 
     controller.setUpProfile(
       nameController.text.trim(),
