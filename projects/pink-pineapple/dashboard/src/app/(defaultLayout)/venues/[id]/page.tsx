@@ -204,6 +204,11 @@ const VenueDetailPage = () => {
   });
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
+  // Pending floor plan upload — switches the save flow to multipart and
+  // pushes the file as a "floorPlan" field. Backend uploads to DO Spaces
+  // and writes the resulting URL to venue.floorPlanUrl.
+  const [newFloorPlan, setNewFloorPlan] = useState<File | null>(null);
+  const [newFloorPlanPreview, setNewFloorPlanPreview] = useState<string>("");
   // Existing gallery photos in their current order (with deletions applied).
   // Initialized from venue.photos when the venue loads. Sent back as the
   // canonical photos array on save — the backend appends any newly-uploaded
@@ -408,13 +413,15 @@ const VenueDetailPage = () => {
         if (payload[k] === undefined) delete payload[k];
       });
 
-      // If the user added new photos, ship as multipart/form-data with
-      // a `data` JSON field. Otherwise send plain JSON.
+      // If the user added new photos OR a new floor plan, ship as
+      // multipart/form-data with a `data` JSON field. Otherwise send
+      // plain JSON.
       let body: FormData | typeof payload;
-      if (newPhotos.length > 0) {
+      if (newPhotos.length > 0 || newFloorPlan) {
         const fd = new FormData();
         fd.append("data", JSON.stringify(payload));
         newPhotos.forEach((p) => fd.append("photos", p));
+        if (newFloorPlan) fd.append("floorPlan", newFloorPlan);
         body = fd;
       } else {
         body = payload;
@@ -425,6 +432,8 @@ const VenueDetailPage = () => {
       setEditing(false);
       setNewPhotos([]);
       setNewPreviews([]);
+      setNewFloorPlan(null);
+      setNewFloorPlanPreview("");
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to update venue", {
         id: toastId,
@@ -837,25 +846,63 @@ const VenueDetailPage = () => {
                   className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
                   style={inter}
                 >
-                  Floor Plan Image URL
+                  Floor Plan Image
                 </label>
+                <p
+                  className="text-[11px] text-[#6B6B6B] leading-snug mb-2"
+                  style={inter}
+                >
+                  Shown to users on the &quot;Book VIP Table&quot; flow so
+                  they can pick a specific area (e.g. &quot;Daybed D31&quot;).
+                  Upload directly — gets pushed to DigitalOcean Spaces.
+                  Recommend ~1500px wide JPG.
+                </p>
+
+                {/* Current floor plan preview (pending upload OR already saved) */}
+                {(newFloorPlanPreview || form.floorPlanUrl) && (
+                  <div className="mb-3 relative inline-block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={newFloorPlanPreview || form.floorPlanUrl}
+                      alt="Floor plan"
+                      className="max-h-48 rounded-lg border border-[#2A2A2A]"
+                    />
+                    {newFloorPlanPreview && (
+                      <span
+                        className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] bg-[#E8A0B0]/20 text-[#E8A0B0] uppercase tracking-wider"
+                        style={inter}
+                      >
+                        Pending upload
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* File picker */}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setNewFloorPlan(file);
+                    setNewFloorPlanPreview(URL.createObjectURL(file));
+                  }}
+                  className="block text-xs text-[#B0B0B0] file:mr-3 file:px-3 file:py-1.5 file:rounded file:border file:border-[#2A2A2A] file:bg-[#0A0A0A] file:text-[#E8A0B0] file:cursor-pointer hover:file:border-[#E8A0B0]"
+                  style={inter}
+                />
+
+                {/* Fallback URL field — paste a hosted URL if you'd rather
+                    not upload a file. Either path produces a floorPlanUrl. */}
                 <input
                   type="url"
                   name="floorPlanUrl"
                   value={form.floorPlanUrl}
                   onChange={handleChange}
-                  placeholder="https://cdn.example.com/floor-plans/savaya.jpg"
-                  className={inputClass}
+                  placeholder="Or paste a URL: https://..."
+                  className={inputClass + " mt-2"}
                   style={inter}
                 />
-                <p
-                  className="mt-1 text-[11px] text-[#6B6B6B] leading-snug"
-                  style={inter}
-                >
-                  Optional. Shown to users on the &quot;Book VIP Table&quot;
-                  flow so they can pick a specific area (e.g.
-                  &quot;Daybed D31&quot;). Recommend ~1500px wide JPG.
-                </p>
               </div>
 
               <div>

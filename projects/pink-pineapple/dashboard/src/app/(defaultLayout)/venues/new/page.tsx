@@ -116,6 +116,10 @@ const NewVenuePage = () => {
   const [booking, setBooking] = useState<BookingValue>(blankBooking());
   const [cuisines, setCuisines] = useState<string[]>([]);
   const [musicGenres, setMusicGenres] = useState<string[]>([]);
+  // Floor plan upload — pushed as a "floorPlan" multipart field on submit,
+  // backend uploads to DO Spaces and writes the URL to venue.floorPlanUrl.
+  const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
+  const [floorPlanPreview, setFloorPlanPreview] = useState<string>("");
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -199,6 +203,9 @@ const NewVenuePage = () => {
       photos.forEach((photo) => {
         formData.append("photos", photo);
       });
+      if (floorPlanFile) {
+        formData.append("floorPlan", floorPlanFile);
+      }
 
       await createVenue(formData).unwrap();
       toast.success("Venue created successfully!", { id: toastId });
@@ -432,8 +439,43 @@ const NewVenuePage = () => {
           <p className="text-[11px] text-[#6B6B6B] -mt-1" style={inter}>
             Optional. Shown to users on the &ldquo;Book VIP Table&rdquo; flow
             so they can pick a specific area (e.g. &ldquo;Daybed D31&rdquo;).
-            Paste a hosted image URL — recommend ~1500px wide JPG.
+            Upload directly — gets pushed to DigitalOcean Spaces. Recommend
+            ~1500px wide JPG.
           </p>
+
+          {/* Preview of selected file */}
+          {floorPlanPreview && (
+            <div className="relative inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={floorPlanPreview}
+                alt="Floor plan preview"
+                className="max-h-48 rounded-lg border border-[#2A2A2A]"
+              />
+              <span
+                className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] bg-[#E8A0B0]/20 text-[#E8A0B0] uppercase tracking-wider"
+                style={inter}
+              >
+                Will upload on save
+              </span>
+            </div>
+          )}
+
+          {/* File picker */}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setFloorPlanFile(file);
+              setFloorPlanPreview(URL.createObjectURL(file));
+            }}
+            className="block text-xs text-[#B0B0B0] file:mr-3 file:px-3 file:py-1.5 file:rounded file:border file:border-[#2A2A2A] file:bg-[#0A0A0A] file:text-[#E8A0B0] file:cursor-pointer hover:file:border-[#E8A0B0]"
+            style={inter}
+          />
+
+          {/* Fallback URL field */}
           <input
             type="url"
             name="floorPlanUrl"
@@ -441,7 +483,7 @@ const NewVenuePage = () => {
             onChange={(e) =>
               setForm({ ...form, floorPlanUrl: e.target.value })
             }
-            placeholder="https://cdn.example.com/floor-plans/savaya.jpg"
+            placeholder="Or paste a URL: https://..."
             className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#E8A0B0] transition-colors"
             style={inter}
           />

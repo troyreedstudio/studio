@@ -16,7 +16,11 @@ import prisma from "../../../shared/prisma";
 // doesn't echo the existing array back in the payload.
 const mergeUploadedFiles = async (req: any, venueId?: string) => {
   const files = req.files as
-    | { heroImage?: Express.Multer.File[]; photos?: Express.Multer.File[] }
+    | {
+        heroImage?: Express.Multer.File[];
+        photos?: Express.Multer.File[];
+        floorPlan?: Express.Multer.File[];
+      }
     | undefined;
   if (!files) return;
 
@@ -46,6 +50,14 @@ const mergeUploadedFiles = async (req: any, venueId?: string) => {
       existing = venue?.photos ?? [];
     }
     req.body.photos = [...existing, ...newUrls];
+  }
+
+  // Floor plan images go to DigitalOcean Spaces (not Cloudinary) per Troy's
+  // call — same DO bucket the rest of our infra already uses. Single image
+  // per venue; uploading a new one overwrites the floorPlanUrl reference.
+  if (files.floorPlan && files.floorPlan[0]) {
+    const result = await fileUploader.uploadToDigitalOcean(files.floorPlan[0]);
+    req.body.floorPlanUrl = result.Location;
   }
 };
 
