@@ -527,7 +527,7 @@ class _HomeSearchInput extends StatelessWidget {
           style: GoogleFonts.poppins(fontSize: 13.sp, color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: 'Search venues, clubs, restaurants...',
-            hintStyle: GoogleFonts.poppins(fontSize: 13.sp, color: AppColors.textMuted),
+            hintStyle: GoogleFonts.poppins(fontSize: 13.sp, color: AppColors.textSecondary),
             prefixIcon: Icon(Icons.search, size: 18.sp, color: AppColors.textMuted),
             suffixIcon: ValueListenableBuilder<TextEditingValue>(
               valueListenable: c.textController,

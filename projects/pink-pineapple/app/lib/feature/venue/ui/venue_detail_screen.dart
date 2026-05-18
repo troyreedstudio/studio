@@ -105,8 +105,13 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                   SizedBox(height: 14.h),
                   _buildRating(venue),
                   SizedBox(height: 22.h),
-                  _buildVibeCheck(venue),
-                  SizedBox(height: 22.h),
+                  // Live Vibe section removed from venue page (2026-05-18).
+                  // Testers found "Crowd / Music / Energy" confusing and the
+                  // section showed inconsistently (only venues with seeded
+                  // vibe data displayed it). Vibe will return in a future
+                  // release driven by aggregated ratings — not crowd-sourced
+                  // submissions — and will surface in a different spot.
+                  // _buildVibeCheck and _vibeRow kept below for that rebuild.
                   _buildDescription(venue),
                   SizedBox(height: 28.h),
                   _buildBestNights(venue),
