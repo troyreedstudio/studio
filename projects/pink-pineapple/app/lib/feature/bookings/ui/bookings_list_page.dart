@@ -9,6 +9,10 @@ import 'package:pineapple/core/network_caller/endpoints.dart';
 import 'package:pineapple/core/network_caller/network_config.dart';
 import 'package:pineapple/core/services/venue_rating_service.dart';
 import 'package:pineapple/core/services/venue_vibe_service.dart';
+import 'package:pineapple/feature/home/services/night_plan_service.dart';
+import 'package:pineapple/feature/venue/controller/venue_controller.dart';
+import 'package:pineapple/feature/venue/model/venue_model.dart';
+import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
 import '../../../core/global_widgets/app_loading.dart';
 import '../../home_bottom_nav/controller/home_nav_controller.dart';
 import '../controller/bookings_controller.dart';
@@ -168,6 +172,10 @@ class _ItineraryListState extends State<_ItineraryList> {
     return ListView(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
       children: [
+        // Plan My Night — pinned "Tonight's plan" banner for today's saved
+        // itinerary. Hides itself entirely when no plan exists for today.
+        const _TonightPlanBanner(),
+
         // Share-the-vibe — venues user is at right now (or just left)
         const _TonightVibeSection(),
 
@@ -1388,4 +1396,193 @@ String _guestLabel(BookingsListModel booking) {
   }
 
   return parts.isEmpty ? (type ?? 'Booking') : parts.join(' \u00B7 ');
+}
+
+// ---------------------------------------------------------------------------
+// Tonight's plan banner — pinned at the top of My Bookings when the user
+// has an ACTIVE NightPlan whose eventDate is today.
+// ---------------------------------------------------------------------------
+
+class _TonightPlanBanner extends StatefulWidget {
+  const _TonightPlanBanner();
+
+  @override
+  State<_TonightPlanBanner> createState() => _TonightPlanBannerState();
+}
+
+class _TonightPlanBannerState extends State<_TonightPlanBanner> {
+  Map<String, dynamic>? _plan;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final plan = await NightPlanService.findTonightPlan();
+    if (!mounted) return;
+    setState(() {
+      _plan = plan;
+      _loading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading || _plan == null) return const SizedBox.shrink();
+    final stopsRaw = _plan!['stops'] as List<dynamic>? ?? const [];
+    if (stopsRaw.isEmpty) return const SizedBox.shrink();
+
+    final venueCtrl = Get.find<VenueController>();
+    final venues = venueCtrl.venues.toList();
+    final stops = stopsRaw
+        .whereType<Map>()
+        .map((s) => Map<String, dynamic>.from(s))
+        .toList();
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 20.h),
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.accentRoseGold.withOpacity(0.14),
+              AppColors.surface,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.accentRoseGold.withOpacity(0.35),
+            width: 0.8,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.nightlife_outlined,
+                    size: 14.sp, color: AppColors.accentRoseGold),
+                SizedBox(width: 6.w),
+                Text(
+                  "TONIGHT'S PLAN",
+                  style: GoogleFonts.poppins(
+                    fontSize: 10.sp,
+                    color: AppColors.accentRoseGold,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              _plan!['vibe']?.toString() ?? 'Your plan',
+              style: GoogleFonts.outfit(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w800,
+                fontStyle: FontStyle.italic,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 14.h),
+            for (var i = 0; i < stops.length; i++)
+              _TonightPlanStopRow(
+                stop: stops[i],
+                venue: _findVenue(venues, stops[i]['venueId']?.toString()),
+                isLast: i == stops.length - 1,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  VenueModel? _findVenue(List<VenueModel> venues, String? id) {
+    if (id == null || id.isEmpty) return null;
+    for (final v in venues) {
+      if (v.id == id) return v;
+    }
+    return null;
+  }
+}
+
+class _TonightPlanStopRow extends StatelessWidget {
+  final Map<String, dynamic> stop;
+  final VenueModel? venue;
+  final bool isLast;
+
+  const _TonightPlanStopRow({
+    required this.stop,
+    required this.venue,
+    required this.isLast,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final time = stop['startTime']?.toString() ?? '';
+    final role = stop['role']?.toString() ?? '';
+    final booked = stop['booked'] == true;
+    final venueName = venue?.name ?? '(venue unavailable)';
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 10.h),
+      child: GestureDetector(
+        onTap: venue == null
+            ? null
+            : () => Get.to(() => VenueDetailScreen(venueId: venue!.id)),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 56.w,
+              child: Text(
+                time,
+                style: GoogleFonts.poppins(
+                  fontSize: 11.sp,
+                  color: AppColors.accentRoseGold,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    venueName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (role.isNotEmpty)
+                    Text(
+                      role,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (booked)
+              Icon(Icons.check_circle,
+                  size: 16.sp, color: AppColors.successColor)
+            else
+              Icon(Icons.chevron_right,
+                  size: 16.sp, color: AppColors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
 }

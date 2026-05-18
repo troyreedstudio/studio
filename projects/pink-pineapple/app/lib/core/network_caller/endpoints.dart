@@ -6,6 +6,11 @@ class Urls {
   // have a tracked record for revenue-attribution to the venue.
   static const String vipBookings = '$baseUrl/vip-bookings';
 
+  // Saved Plan My Night itineraries. Plans persist server-side so they
+  // survive reinstall / device switch and power the "Tonight's plan"
+  // pinned banner on the My Bookings tab.
+  static const String nightPlans = '$baseUrl/night-plans';
+
   static const String login = '$baseUrl/auth/login';
   static const String register = '$baseUrl/users/register';
   static const String forgetPassword = '$baseUrl/auth/forgot-password';

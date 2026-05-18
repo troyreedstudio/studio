@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pineapple/core/const/app_colors.dart';
 import 'package:pineapple/feature/home/services/plan_my_night_storage.dart';
+import 'package:pineapple/feature/home/services/night_plan_service.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
 import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
@@ -28,6 +29,11 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
 
   // Results
   List<_ItineraryStop> _itinerary = [];
+
+  // Server-side NightPlan id once a plan is persisted to the backend.
+  // Null until _generateItinerary runs and the POST succeeds. We hold
+  // onto it so we can later PATCH the plan when a stop is booked.
+  String? _serverPlanId;
 
   static const _areas = ['Canggu', 'Seminyak', 'Uluwatu', 'Surprise me'];
   static const _vibes = [
@@ -292,6 +298,61 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
       _step = 3;
     });
     _persist();
+    _syncToBackend();
+  }
+
+  /// Fire-and-forget POST to /night-plans so the plan persists across
+  /// device switch / reinstall. Failures are silent — local cache is
+  /// the source of truth on this device; the backend record is purely
+  /// for cross-device sync, the My Bookings banner, and analytics.
+  Future<void> _syncToBackend() async {
+    if (_itinerary.isEmpty) return;
+    final stops = <Map<String, dynamic>>[];
+    for (var i = 0; i < _itinerary.length; i++) {
+      final s = _itinerary[i];
+      // endTime defaults to the next stop's start, or +2h for the last stop.
+      final next = i + 1 < _itinerary.length ? _itinerary[i + 1].time : null;
+      stops.add({
+        'venueId': s.venue.id,
+        'role': s.label,
+        'startTime': s.time,
+        'endTime': next ?? _shiftTime(s.time, 120),
+        'booked': false,
+        'walkingMinutesFromPrev': s.distanceKmFromPrev != null
+            ? _estimateTripMinutes(s.distanceKmFromPrev!)
+            : null,
+      });
+    }
+    final id = await NightPlanService.createPlan(
+      vibe: _vibe,
+      eventDate: DateTime.now(),
+      stops: stops,
+    );
+    if (id != null && mounted) {
+      setState(() => _serverPlanId = id);
+    }
+  }
+
+  /// "8:00 PM" + 120 minutes → "10:00 PM". Defensive — if the input
+  /// can't be parsed (free-text labels), returns the original.
+  String _shiftTime(String hhmm, int minutes) {
+    final match = RegExp(r'(\d{1,2}):(\d{2})\s*(AM|PM)?', caseSensitive: false)
+        .firstMatch(hhmm.trim());
+    if (match == null) return hhmm;
+    var hour = int.parse(match.group(1)!);
+    final minute = int.parse(match.group(2)!);
+    final ampm = match.group(3)?.toUpperCase();
+    if (ampm == 'PM' && hour != 12) hour += 12;
+    if (ampm == 'AM' && hour == 12) hour = 0;
+    var total = hour * 60 + minute + minutes;
+    final h24 = (total ~/ 60) % 24;
+    final m = total % 60;
+    final isPM = h24 >= 12;
+    var h12 = h24 % 12;
+    if (h12 == 0) h12 = 12;
+    return ampm != null
+        ? '$h12:${m.toString().padLeft(2, '0')} ${isPM ? 'PM' : 'AM'}'
+        : '${h24.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
   }
 
   @override
