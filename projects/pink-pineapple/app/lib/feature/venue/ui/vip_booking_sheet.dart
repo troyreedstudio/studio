@@ -15,11 +15,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Pink Pineapple's WhatsApp Business number. Used to construct the
 /// `wa.me/PHONE` deep link when a user submits a VIP table request.
-///
-/// TODO(rocky): set this once Troy has registered the Pink Pineapple
-/// business account at business.whatsapp.com. International format
-/// without the leading '+' (e.g. '62812...').
-const String kPpWhatsappNumber = '0000000000';
+/// International format without the leading '+'.
+const String kPpWhatsappNumber = '6281227848325';
 
 /// Shows the VIP table booking bottom sheet. Auto-fills the customer's
 /// profile data, collects event-specific details, POSTs to the backend
