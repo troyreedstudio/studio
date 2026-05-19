@@ -1130,7 +1130,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
 
   Widget _buildActionButtons(VenueModel venue) {
     final isGym = venue.category == 'WELLNESS' || venue.category == 'GYM';
-    final isNightlifeOrDining = venue.category == 'NIGHT_CLUB' ||
+    final isNightlifeOrDining = venue.category == 'NIGHTLIFE' ||
         venue.category == 'BEACH_CLUB' ||
         venue.category == 'RESTAURANT';
     // Hide the booking buttons entirely for venues marked NONE — they
