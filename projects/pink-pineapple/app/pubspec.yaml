@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 
 
-version: 1.3.0+12
+version: 1.3.0+13
 # build 4: 1.2.0+4, 7 March 2026
 # build 5: 1.2.0+5, 16 April 2026 — venue search, Instagram/WhatsApp, Google Places
 # build 6: 1.2.0+6, 17 April 2026 — booking WebView, ratings, curated schedule, Day Zero, gyms
@@ -13,6 +13,7 @@ version: 1.3.0+12
 # build 10: 1.2.0+10, 10 May 2026 — hero photo carousel, cross-category filter, Plan My Night auto-save, wishlist UI, Google Places search tap-out + attribution, branded OTP/admin emails via own Brevo, info@pinkpineapple.app sender, 75 venues with rebuilt Google Places photos
 # build 11: 1.3.0+11, 19 May 2026 — VIP table booking (3-button CTA + WhatsApp deep-link to Pink Pineapple Business + attribution), Plan My Night v1.3 (cuisine + genre filters, Refine button, tonight banner on bookings), floor plan viewer, vibe check removed from venue detail, profile/onboarding/forgot-password fixes, cuisines + music genres on venue model
 # build 12: 1.3.0+12, 19 May 2026 — hotfix: 3-button CTA on venue detail was gated on the wrong category string ('NIGHT_CLUB' instead of 'NIGHTLIFE') so nightclubs fell back to the legacy single 'Book a Table' button instead of showing Guest List | Buy Tickets | Book VIP Table
+# build 13: 1.3.0+13, 23 May 2026 — Plan My Night completion (peakDays-driven generator, save-conflict dialog Replace/Keep both/Cancel, explicit Save CTA), Bookings tab (Tonight banner, Rate Where You Went + Share The Vibe consistent pink-outline cards with tap-to-modal rating, auto-refresh on tab focus), venue detail booking CTAs by category, VIP sheet WhatsApp Business number + IDR-only spend dropdown, landscape floor plan, Welcome (not Welcome Back), backend nightlifeTier/peakDays/closesAtHour curation, dashboard timing fields on new + edit + club portal
 
 environment:
   sdk: ^3.9.0
