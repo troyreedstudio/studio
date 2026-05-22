@@ -53,6 +53,17 @@ class VenueModel {
   // flow so users can pick a specific area (e.g. "Daybed D31"). Empty
   // when the venue doesn't have one — the "View Floor Plan" button hides.
   final String floorPlanUrl;
+  // Plan My Night / This Week powering data. Source of truth lives in
+  // the DB; edited via the dashboard's "Nightlife timing" section.
+  // nightlifeTier — null means "not nightlife"; otherwise one of
+  // 'WARMUP' / 'PEAK' / 'LATE_NIGHT'.
+  // peakDays — ints 1..7 (Mon..Sun) for days this venue is at its
+  // best. Empty = no day-specific priority.
+  // closesAtHour — 24h hour with overflow (e.g. 26=2am, 28=4am). Null
+  // means treat as default 2am close.
+  final String? nightlifeTier;
+  final List<int> peakDays;
+  final int? closesAtHour;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -95,6 +106,9 @@ class VenueModel {
     this.googleRatingCount,
     this.recentVibe,
     this.floorPlanUrl = '',
+    this.nightlifeTier,
+    this.peakDays = const [],
+    this.closesAtHour,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -156,6 +170,12 @@ class VenueModel {
           ? json['recentVibe'] as Map<String, dynamic>
           : null,
       floorPlanUrl: json['floorPlanUrl']?.toString() ?? '',
+      nightlifeTier: json['nightlifeTier']?.toString(),
+      peakDays: (json['peakDays'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const [],
+      closesAtHour: (json['closesAtHour'] as num?)?.toInt(),
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
           DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
@@ -193,6 +213,9 @@ class VenueModel {
       'tags': tags,
       'cuisines': cuisines,
       'musicGenres': musicGenres,
+      'nightlifeTier': nightlifeTier,
+      'peakDays': peakDays,
+      'closesAtHour': closesAtHour,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };

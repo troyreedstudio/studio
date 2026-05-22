@@ -8,6 +8,7 @@ const VenueCategoryEnum = z.enum([
   "WELLNESS",
   "EVENTS",
 ]);
+const NightlifeTierEnum = z.enum(["WARMUP", "PEAK", "LATE_NIGHT"]);
 const BookingProviderEnum = z.enum([
   "BOOKETING",
   "MTIX",
@@ -52,6 +53,12 @@ const createSchema = z.object({
   tags: z.array(z.string()).optional(),
   heroImage: z.string().optional(),
   photos: z.array(z.string()).optional(),
+  cuisines: z.array(z.string()).optional(),
+  musicGenres: z.array(z.string()).optional(),
+  floorPlanUrl: z.string().optional(),
+  nightlifeTier: NightlifeTierEnum.optional().nullable(),
+  peakDays: z.array(z.number().int().min(1).max(7)).optional(),
+  closesAtHour: z.number().int().min(0).max(48).optional().nullable(),
 });
 
 const updateSchema = z.object({
@@ -83,6 +90,12 @@ const updateSchema = z.object({
   isFeatured: z.boolean().optional(),
   googleRating: z.number().optional(),
   googleRatingCount: z.number().int().optional(),
+  cuisines: z.array(z.string()).optional(),
+  musicGenres: z.array(z.string()).optional(),
+  floorPlanUrl: z.string().optional(),
+  nightlifeTier: NightlifeTierEnum.optional().nullable(),
+  peakDays: z.array(z.number().int().min(1).max(7)).optional(),
+  closesAtHour: z.number().int().min(0).max(48).optional().nullable(),
 });
 
 export const VenueValidation = {

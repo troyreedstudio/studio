@@ -51,7 +51,18 @@ class _VipBookingSheetState extends State<_VipBookingSheet> {
   final _instagram = TextEditingController();
   final _partySize = TextEditingController();
   final _area = TextEditingController();
-  final _minPrice = TextEditingController();
+  // Minimum spend / budget range — IDR buckets covering the realistic
+  // span of Bali nightclub VIP table minimums. Sent verbatim to Rowan
+  // in the WhatsApp message + stored on the VIP booking record.
+  static const _spendRanges = <String>[
+    'Under Rp 5M',
+    'Rp 5M – Rp 10M',
+    'Rp 10M – Rp 20M',
+    'Rp 20M – Rp 50M',
+    'Rp 50M – Rp 100M',
+    'Rp 100M+',
+  ];
+  String? _minPrice;
   DateTime? _eventDate;
   TimeOfDay? _arrivalTime;
   String _deposit = 'FIFTY_PERCENT'; // FIFTY_PERCENT | FULL
@@ -88,7 +99,6 @@ class _VipBookingSheetState extends State<_VipBookingSheet> {
     _instagram.dispose();
     _partySize.dispose();
     _area.dispose();
-    _minPrice.dispose();
     super.dispose();
   }
 
@@ -147,6 +157,9 @@ class _VipBookingSheetState extends State<_VipBookingSheet> {
     if (_lastName.text.trim().isEmpty) return 'Please enter your last name';
     if (_phone.text.trim().isEmpty) return 'Please enter your phone number';
     if (_email.text.trim().isEmpty) return 'Please enter your email';
+    if (_instagram.text.trim().isEmpty) {
+      return 'Please enter your Instagram handle';
+    }
     if (_eventDate == null) return 'Please pick a date';
     if (_arrivalTime == null) return 'Please pick an arrival time';
     final partyN = int.tryParse(_partySize.text.trim());
@@ -154,8 +167,8 @@ class _VipBookingSheetState extends State<_VipBookingSheet> {
       return 'Please enter how many people are coming';
     }
     if (_area.text.trim().isEmpty) return 'Please describe the area you want';
-    if (_minPrice.text.trim().isEmpty) {
-      return 'Please enter your minimum spend';
+    if (_minPrice == null || _minPrice!.isEmpty) {
+      return 'Please pick your minimum spend';
     }
     return '';
   }
@@ -179,7 +192,7 @@ class _VipBookingSheetState extends State<_VipBookingSheet> {
       'Arrival Time: $timeStr',
       'Amount of ppl: ${_partySize.text.trim()}',
       'Requested VIP Area: ${_area.text.trim()}',
-      'Minimum Price: ${_minPrice.text.trim()}',
+      'Minimum Spend: ${_minPrice ?? ''}',
       'Pay In Full or 50% deposit: $depositLabel',
       '',
       'Reference: $reference',
@@ -218,7 +231,7 @@ class _VipBookingSheetState extends State<_VipBookingSheet> {
         'arrivalTime': _formatTime(_arrivalTime!),
         'partySize': int.parse(_partySize.text.trim()),
         'requestedArea': _area.text.trim(),
-        'minimumPrice': _minPrice.text.trim(),
+        'minimumPrice': _minPrice ?? '',
         'depositChoice': _deposit,
       };
       final response = await NetworkConfigV1().ApiRequestHandler(
@@ -384,7 +397,7 @@ class _VipBookingSheetState extends State<_VipBookingSheet> {
                     ),
                     SizedBox(height: 14.h),
                     _input(
-                      label: 'Instagram (optional)',
+                      label: 'Instagram',
                       controller: _instagram,
                     ),
                     SizedBox(height: 20.h),
@@ -451,11 +464,9 @@ class _VipBookingSheetState extends State<_VipBookingSheet> {
                           : 'e.g. "Pool area" or "Near the dance floor"',
                     ),
                     SizedBox(height: 14.h),
-                    _input(
-                      label: 'Minimum spend (your budget)',
-                      controller: _minPrice,
-                      hint: 'e.g. "USD 2,000" or "IDR 30,000,000"',
-                    ),
+                    _fieldLabel('Minimum spend (your budget)'),
+                    SizedBox(height: 6.h),
+                    _spendDropdown(),
                     SizedBox(height: 18.h),
                     _fieldLabel('Pay in full or 50% deposit?'),
                     SizedBox(height: 6.h),
@@ -603,6 +614,119 @@ class _VipBookingSheetState extends State<_VipBookingSheet> {
           ),
         ),
       );
+
+  // Tap-to-open bottom-sheet picker for the IDR spend range. Matches
+  // the visual treatment of `_picker` for date / time so the form feels
+  // consistent. Selected value is stored in `_minPrice`.
+  Widget _spendDropdown() {
+    final selected = _minPrice;
+    final isPlaceholder = selected == null || selected.isEmpty;
+    return GestureDetector(
+      onTap: () async {
+        final picked = await showModalBottomSheet<String>(
+          context: context,
+          backgroundColor: AppColors.surfaceElevated,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (ctx) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 10.h),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 18.w,
+                        vertical: 10.h,
+                      ),
+                      child: Text(
+                        'Minimum spend (IDR)',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    ..._spendRanges.map((range) {
+                      final isSelected = range == selected;
+                      return InkWell(
+                        onTap: () => Navigator.of(ctx).pop(range),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 18.w,
+                            vertical: 14.h,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  range,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14.sp,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                    color: isSelected
+                                        ? AppColors.accentRoseGold
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              if (isSelected)
+                                Icon(
+                                  Icons.check,
+                                  size: 16.sp,
+                                  color: AppColors.accentRoseGold,
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+        if (picked != null) {
+          setState(() => _minPrice = picked);
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.borderSubtle),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                isPlaceholder ? 'Pick a range in IDR' : selected,
+                style: GoogleFonts.poppins(
+                  color: isPlaceholder
+                      ? AppColors.textMuted
+                      : AppColors.textPrimary,
+                  fontSize: 13.sp,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.expand_more,
+              size: 18.sp,
+              color: AppColors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _picker({
     required String label,

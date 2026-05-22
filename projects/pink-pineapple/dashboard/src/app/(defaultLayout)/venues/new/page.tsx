@@ -87,6 +87,29 @@ const musicGenreOptions: { value: string; label: string }[] = [
   { value: "LIVE_BAND", label: "Live Band" },
 ];
 
+// Plan My Night / This Week powering data — nightlife tier + popping
+// days + closing hour. Mirror of the admin edit page + club portal
+// so the same field set exists wherever a venue can be created or
+// edited. Single source of truth shared with the Flutter app.
+const nightlifeTierOptions: { value: string; label: string }[] = [
+  { value: "", label: "Not nightlife" },
+  { value: "WARMUP", label: "Warmup (9–11pm)" },
+  { value: "PEAK", label: "Peak (10pm–2am)" },
+  { value: "LATE_NIGHT", label: "Late night (12am–4am)" },
+];
+
+// Days are stored on the venue as ints (Mon=1..Sun=7) to match
+// JavaScript's DateTime weekday convention (and Dart's DateTime.weekday).
+const peakDayOptions: { value: number; label: string }[] = [
+  { value: 1, label: "Mon" },
+  { value: 2, label: "Tue" },
+  { value: 3, label: "Wed" },
+  { value: 4, label: "Thu" },
+  { value: 5, label: "Fri" },
+  { value: 6, label: "Sat" },
+  { value: 7, label: "Sun" },
+];
+
 const inputClass =
   "w-full bg-[#000000] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#C4707E] transition-colors";
 
@@ -178,6 +201,10 @@ const NewVenuePage = () => {
   const [booking, setBooking] = useState<BookingValue>(blankBooking());
   const [cuisines, setCuisines] = useState<string[]>([]);
   const [musicGenres, setMusicGenres] = useState<string[]>([]);
+  // Plan My Night / This Week powering data — empty tier = not nightlife.
+  const [nightlifeTier, setNightlifeTier] = useState<string>("");
+  const [peakDays, setPeakDays] = useState<number[]>([]);
+  const [closesAtHour, setClosesAtHour] = useState<string>("");
   // Floor plan upload — pushed as a "floorPlan" multipart field on submit,
   // backend uploads to Cloudinary and writes the URL to venue.floorPlanUrl.
   const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
@@ -306,6 +333,13 @@ const NewVenuePage = () => {
       if (form.floorPlanUrl) dataPayload.floorPlanUrl = form.floorPlanUrl;
       if (cuisines.length > 0) dataPayload.cuisines = cuisines;
       if (musicGenres.length > 0) dataPayload.musicGenres = musicGenres;
+      // Plan My Night / This Week timing — only send when non-default.
+      // Empty tier means "not nightlife"; only persist if explicitly set.
+      if (nightlifeTier) dataPayload.nightlifeTier = nightlifeTier;
+      if (peakDays.length > 0) dataPayload.peakDays = peakDays;
+      if (closesAtHour.trim() !== "") {
+        dataPayload.closesAtHour = Number(closesAtHour);
+      }
       const serializedProgramming = serializeProgramming(programming);
       if (serializedProgramming) {
         dataPayload.weeklySchedule = serializedProgramming;
@@ -682,6 +716,117 @@ const NewVenuePage = () => {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        <div className="border-t border-[#2A2A2A]" />
+
+        {/* Plan My Night / This Week timing — the single source of
+            truth that drives both the home-screen "This Week"
+            carousel and the Plan My Night itinerary generator.
+            Curate venue-by-venue here. */}
+        <div className="rounded-xl border border-[#2A2A2A] bg-[#0A0A0A] p-5 space-y-5">
+          <div>
+            <p
+              className="text-xs text-[#E8A0B0] uppercase tracking-wider mb-1"
+              style={inter}
+            >
+              Nightlife timing
+            </p>
+            <p className="text-[11px] text-[#6B6B6B]" style={inter}>
+              Powers Plan My Night + the &ldquo;This Week&rdquo; home
+              carousel. Tier picks which slot the venue fills; popping
+              days promote it to first pick on those nights; closing
+              hour keeps early-close venues out of late slots. Leave
+              tier as &ldquo;Not nightlife&rdquo; for restaurants /
+              gyms / wellness.
+            </p>
+          </div>
+
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
+              Tier
+            </label>
+            <select
+              value={nightlifeTier}
+              onChange={(e) => setNightlifeTier(e.target.value)}
+              className={inputClass}
+              style={inter}
+            >
+              {nightlifeTierOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
+              Popping nights
+            </label>
+            <p className="text-[11px] text-[#6B6B6B] mb-2" style={inter}>
+              The nights this venue is at its absolute best (e.g. Desa
+              Kitsuné Tue + Fri, Da Maria Wed). Leave empty if the
+              venue&apos;s vibe doesn&apos;t depend on the day of the
+              week.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {peakDayOptions.map((opt) => {
+                const selected = peakDays.includes(opt.value);
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() =>
+                      setPeakDays(
+                        selected
+                          ? peakDays.filter((d) => d !== opt.value)
+                          : [...peakDays, opt.value].sort()
+                      )
+                    }
+                    className={`px-3 py-1.5 rounded-full text-xs transition-all ${
+                      selected
+                        ? "bg-[#E8A0B0]/15 text-[#E8A0B0] border border-[#E8A0B0]/50"
+                        : "text-[#6B6B6B] border border-[#2A2A2A] hover:text-[#E8A0B0] hover:border-[#E8A0B0]/40"
+                    }`}
+                    style={inter}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
+              Closes at (24-hour, e.g. 26 = 2am)
+            </label>
+            <p className="text-[11px] text-[#6B6B6B] mb-2" style={inter}>
+              Use overflow notation past midnight: 24 = midnight, 25 =
+              1am, 26 = 2am, 28 = 4am. Leave empty to default to 2am
+              close.
+            </p>
+            <input
+              type="number"
+              min={0}
+              max={48}
+              value={closesAtHour}
+              onChange={(e) => setClosesAtHour(e.target.value)}
+              placeholder="26"
+              className={inputClass}
+              style={inter}
+            />
           </div>
         </div>
 

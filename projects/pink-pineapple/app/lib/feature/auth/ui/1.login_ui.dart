@@ -80,7 +80,7 @@ class LoginPage extends StatelessWidget {
                   SizedBox(height: 28.h),
                   // Heading
                   Text(
-                    'Welcome Back',
+                    'Welcome',
                     style: GoogleFonts.outfit(
                       fontSize: 32.sp,
                       fontWeight: FontWeight.w800,

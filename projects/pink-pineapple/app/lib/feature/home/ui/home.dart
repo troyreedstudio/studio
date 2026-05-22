@@ -1586,7 +1586,9 @@ class _DayCard extends StatelessWidget {
                 : ListView.separated(
                     physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.zero,
-                    itemCount: venues.length > 3 ? 3 : venues.length,
+                    // Cap each day at 5 venues — This Week is a
+                    // curated highlight reel, not a directory.
+                    itemCount: venues.length > 5 ? 5 : venues.length,
                     separatorBuilder: (_, __) => SizedBox(height: 8.h),
                     itemBuilder: (context, i) {
                       final venue = venues[i];
@@ -1657,12 +1659,14 @@ class _DayCard extends StatelessWidget {
                     },
                   ),
           ),
-          // "more" indicator
-          if (venues.length > 3)
+          // "+N more" indicator — appears when the day's curated list
+          // has more than 5 entries. Visual cue only; the prominent
+          // list above is the curated top 5.
+          if (venues.length > 5)
             Padding(
               padding: EdgeInsets.only(top: 4.h),
               child: Text(
-                '+${venues.length - 3} more',
+                '+${venues.length - 5} more',
                 style: GoogleFonts.poppins(
                   fontSize: 11.sp,
                   fontWeight: FontWeight.w500,

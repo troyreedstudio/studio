@@ -106,6 +106,8 @@ const getListFromDb = async (
       area: true,
       category: true,
       tags: true,
+      cuisines: true,
+      musicGenres: true,
       address: true,
       heroImage: true,
       bookingUrl: true,
@@ -123,6 +125,14 @@ const getListFromDb = async (
       isFeatured: true,
       latitude: true,
       longitude: true,
+      // Plan My Night reads these to pick the right venue for each slot.
+      nightlifeTier: true,
+      peakDays: true,
+      closesAtHour: true,
+      // This Week carousel reads venue.weeklySchedule[day] for the
+      // per-day genre / startTime / endTime overlay on each card.
+      // Without this the cards just say "Open".
+      weeklySchedule: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -297,6 +307,9 @@ const getByIdFromDb = async (id: string, userId?: string) => {
       photos: true,
       heroImage: true,
       floorPlanUrl: true,
+      nightlifeTier: true,
+      peakDays: true,
+      closesAtHour: true,
       bookingUrl: true,
       bookingProvider: true,
       bookingPhone: true,
@@ -696,50 +709,118 @@ const submitVibe = async (
 /// "How was last night?" prompts.
 const getRatableBookings = async (userId: string) => {
   const now = new Date();
-  const bookings = await prisma.booking.findMany({
-    where: {
-      userId,
-      status: "ACCEPTED",
-      event: { endDate: { lt: now }, venueId: { not: null } },
-    },
+
+  // v1.3: Things to Rate is driven SOLELY by Plan My Night stops —
+  // the venues the user actually went to on their saved itinerary.
+  // The old Booking-record source (Fiverr-era test data: Jade,
+  // Da Maria, Shady Pig) was leaking in and confusing users. Drop
+  // it. Booking-based rating can come back when there's a real
+  // Booking flow on the venue detail page that creates Booking
+  // records (post-v1.3).
+  const bookings: any[] = [];
+
+  // Source: the user's MOST RECENT saved Plan My Night plan only.
+  // Earlier drafts from the same evening (user shuffled + saved a
+  // few times before settling) shouldn't all surface as "where you
+  // went" — only the venues from the latest committed plan should.
+  // Mirrors what the Tonight's Plan banner shows.
+  const nightPlans = await prisma.nightPlan.findMany({
+    where: { userId },
     select: {
       id: true,
-      createdAt: true,
-      event: {
-        select: {
-          id: true,
-          eventName: true,
-          startDate: true,
-          endDate: true,
-          venue: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              area: true,
-              category: true,
-              heroImage: true,
-            },
-          },
-        },
-      },
+      eventDate: true,
+      stops: true, // JSON: [{venueId, role, startTime, endTime, ...}]
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { eventDate: "desc" },
+    take: 1, // Latest saved plan only
   });
 
-  // Filter out venues the user has already rated.
-  const venueIds = bookings
+  // Extract every (venueId, role, startTime, eventDate) from past plans.
+  type PlanStop = {
+    planId: string;
+    eventDate: Date;
+    venueId: string;
+    role: string;
+    startTime: string;
+  };
+  const planStops: PlanStop[] = [];
+  for (const plan of nightPlans) {
+    const stops = (plan.stops as any[]) || [];
+    for (const s of stops) {
+      if (s && typeof s === "object" && s.venueId) {
+        planStops.push({
+          planId: plan.id,
+          eventDate: plan.eventDate,
+          venueId: String(s.venueId),
+          role: String(s.role ?? ""),
+          startTime: String(s.startTime ?? ""),
+        });
+      }
+    }
+  }
+
+  // Collect every candidate venue id (across both sources) and filter
+  // out venues the user has already rated.
+  const venueIdsFromBookings = bookings
     .map((b) => b.event.venue?.id)
     .filter((id): id is string => !!id);
-  if (venueIds.length === 0) return [];
+  const venueIdsFromPlans = planStops.map((s) => s.venueId);
+  const allVenueIds = [
+    ...new Set([...venueIdsFromBookings, ...venueIdsFromPlans]),
+  ];
+  if (allVenueIds.length === 0) return [];
+
   const existingRatings = await prisma.venueRating.findMany({
-    where: { userId, venueId: { in: venueIds } },
+    where: { userId, venueId: { in: allVenueIds } },
     select: { venueId: true },
   });
   const ratedSet = new Set(existingRatings.map((r) => r.venueId));
-  return bookings.filter(
-    (b) => b.event.venue && !ratedSet.has(b.event.venue.id)
-  );
+
+  // Hydrate plan-stop venues into the same shape as the booking-based
+  // results so the Flutter card can render them identically.
+  const planVenues = await prisma.venue.findMany({
+    where: { id: { in: venueIdsFromPlans.filter((v) => !ratedSet.has(v)) } },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      area: true,
+      category: true,
+      heroImage: true,
+    },
+  });
+  const venueById = new Map(planVenues.map((v) => [v.id, v]));
+
+  // De-dupe — if the same venue appears in both a booking AND a plan
+  // stop, the booking wins (it has a real ACCEPTED status badge).
+  const seenVenueIds = new Set<string>();
+  const out: any[] = [];
+  for (const b of bookings) {
+    const v = b.event.venue;
+    if (v && !ratedSet.has(v.id) && !seenVenueIds.has(v.id)) {
+      out.push(b);
+      seenVenueIds.add(v.id);
+    }
+  }
+  for (const s of planStops) {
+    if (seenVenueIds.has(s.venueId)) continue;
+    if (ratedSet.has(s.venueId)) continue;
+    const v = venueById.get(s.venueId);
+    if (!v) continue;
+    out.push({
+      id: `plan:${s.planId}:${s.venueId}`,
+      createdAt: s.eventDate,
+      event: {
+        id: null,
+        eventName: s.role || v.name,
+        startDate: s.eventDate,
+        endDate: s.eventDate,
+        venue: v,
+      },
+    });
+    seenVenueIds.add(s.venueId);
+  }
+  return out;
 };
 
 /// List the user's bookings where the event is happening now or ended within
@@ -797,41 +878,85 @@ const getFavoriteVenues = async (userId: string) => {
 
 const getTonightVibeBookings = async (userId: string) => {
   const now = new Date();
-  const cutoff = new Date(now.getTime() - VIBE_PROMPT_WINDOW_HOURS * 60 * 60 * 1000);
-  const bookings = await prisma.booking.findMany({
-    where: {
-      userId,
-      status: "ACCEPTED",
-      event: {
-        startDate: { lte: now },
-        endDate: { gte: cutoff },
-        venueId: { not: null },
-      },
-    },
-    select: {
-      id: true,
-      event: {
+  // v1.3: vibe-check is driven SOLELY by Plan My Night stops — the
+  // venues the user is at on their saved itinerary tonight. The
+  // legacy Booking-records source was leaking old test data and
+  // confusing users. Drop it (same approach as getRatableBookings).
+  const bookings: any[] = [];
+
+  // Also pull from saved Plan My Night plans whose eventDate is
+  // within the vibe-prompt window (today or just-ended). The active
+  // plan's stops surface here so the user can vibe-check the venues
+  // they're at (Kong, Old Man's, Desa) instead of only legacy
+  // Bookings.
+  const cutoffStart = new Date(now);
+  cutoffStart.setHours(0, 0, 0, 0);
+  // Latest saved plan only — mirror what the Tonight's Plan banner
+  // shows. Older drafts from earlier shuffles shouldn't leak through.
+  const nightPlans = await prisma.nightPlan.findMany({
+    where: { userId },
+    select: { id: true, eventDate: true, stops: true },
+    orderBy: { eventDate: "desc" },
+    take: 1,
+  });
+  type PlanStopOut = {
+    planId: string;
+    eventDate: Date;
+    venueId: string;
+    role: string;
+    startTime: string;
+  };
+  const planStops: PlanStopOut[] = [];
+  for (const plan of nightPlans) {
+    const stops = (plan.stops as any[]) || [];
+    for (const s of stops) {
+      if (s && typeof s === "object" && s.venueId) {
+        planStops.push({
+          planId: plan.id,
+          eventDate: plan.eventDate,
+          venueId: String(s.venueId),
+          role: String(s.role ?? ""),
+          startTime: String(s.startTime ?? ""),
+        });
+      }
+    }
+  }
+  const planVenueIds = [...new Set(planStops.map((s) => s.venueId))];
+  const seen = new Set<string>(
+    bookings.map((b) => b.event?.venue?.id).filter((id): id is string => !!id)
+  );
+  const planVenues = planVenueIds.length === 0
+    ? []
+    : await prisma.venue.findMany({
+        where: { id: { in: planVenueIds.filter((id) => !seen.has(id)) } },
         select: {
           id: true,
-          eventName: true,
-          startDate: true,
-          endDate: true,
-          venue: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              area: true,
-              category: true,
-              heroImage: true,
-            },
-          },
+          name: true,
+          slug: true,
+          area: true,
+          category: true,
+          heroImage: true,
         },
+      });
+  const planVenueById = new Map(planVenues.map((v) => [v.id, v]));
+  const out: any[] = [...bookings];
+  for (const s of planStops) {
+    if (seen.has(s.venueId)) continue;
+    const v = planVenueById.get(s.venueId);
+    if (!v) continue;
+    out.push({
+      id: `plan:${s.planId}:${s.venueId}`,
+      event: {
+        id: null,
+        eventName: s.role || v.name,
+        startDate: s.eventDate,
+        endDate: s.eventDate,
+        venue: v,
       },
-    },
-    orderBy: { event: { startDate: "desc" } },
-  });
-  return bookings;
+    });
+    seen.add(s.venueId);
+  }
+  return out;
 };
 
 /// Venues owned by this user — used by dashboard CLUB section to surface

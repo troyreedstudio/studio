@@ -20,6 +20,11 @@ interface CreatePlanPayload {
   vibe: string;
   eventDate: string;
   stops: PlanStop[];
+  // When true, any ACTIVE plans the same user already has for the same
+  // calendar day get flipped to CANCELLED before the new plan is
+  // created. When false (default), the new plan is added alongside
+  // any existing ones — both stay ACTIVE.
+  replaceExisting?: boolean;
 }
 
 const requireUser = (req: Request & { user?: any }) => {
@@ -66,6 +71,25 @@ const create = async (req: Request & { user?: any }) => {
         ? s.walkingMinutesFromPrev
         : null,
   }));
+
+  // "Last save wins" mode — flip any prior ACTIVE plans for the same
+  // calendar day to CANCELLED so the new one is unambiguously
+  // tonight's plan. Done in one updateMany before insert so there's
+  // no transient window with two ACTIVE plans for the same day.
+  if (payload.replaceExisting) {
+    const dayStart = new Date(eventDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+    await prisma.nightPlan.updateMany({
+      where: {
+        userId,
+        status: NightPlanStatus.ACTIVE,
+        eventDate: { gte: dayStart, lt: dayEnd },
+      },
+      data: { status: NightPlanStatus.CANCELLED },
+    });
+  }
 
   return prisma.nightPlan.create({
     data: {

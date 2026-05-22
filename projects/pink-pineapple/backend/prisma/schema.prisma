@@ -381,6 +381,20 @@ enum VenueCategory {
   EVENTS
 }
 
+// Nightlife timing tier — when a venue is at its best during the
+// night. Powers Plan My Night's slot assignment so a late-night-only
+// venue (Mesa, Miss Fish) doesn't get picked for the 10pm warm-up
+// and an early-evening flagship (Savaya, El Kabron) doesn't get
+// picked for a 2am after-hours slot.
+//
+// Venues that aren't nightlife at all (gyms, pure restaurants without
+// a DJ scene) should leave nightlifeTier null.
+enum NightlifeTier {
+  WARMUP        // 9-11pm — dinner-spillover, sunset cocktail, pre-club
+  PEAK          // 10pm-2am — main clubs
+  LATE_NIGHT    // 12am-4am — after-hours only
+}
+
 enum BookingProvider {
   BOOKETING        // Indonesian — possibly API-able
   MTIX             // Indonesian event ticketing — has API docs
@@ -441,6 +455,17 @@ model Venue {
   // The actual booking request is relayed via WhatsApp to the Pink
   // Pineapple business account; this field just powers the visual.
   floorPlanUrl    String         @default("")
+  // ── Plan My Night timing (v1.3+) ─────────────────────────────────
+  // Drives the itinerary generator's slot assignment. Null tier means
+  // "not a nightlife venue" — venue won't appear in any nightlife pool.
+  // peakDays: weekday ints (Mon=1..Sun=7) when this venue is at its
+  // best — those nights get first-pick priority in their tier.
+  // closesAtHour: 24-hour with overflow for next-day (e.g. 26 = 2am,
+  // 28 = 4am). Used to keep e.g. Savaya (closes 1am) out of the 2am
+  // after-hours slot. Default null = treat as 2am close (26).
+  nightlifeTier   NightlifeTier?
+  peakDays        Int[]          @default([])
+  closesAtHour    Int?
   isActive        Boolean        @default(true)
   isFeatured      Boolean        @default(false)
   rating            Float          @default(0)

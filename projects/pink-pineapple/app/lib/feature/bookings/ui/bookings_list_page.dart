@@ -18,8 +18,45 @@ import '../../home_bottom_nav/controller/home_nav_controller.dart';
 import '../controller/bookings_controller.dart';
 import '../model/bookings_model.dart';
 
-class BookingsListPage extends StatelessWidget {
+class BookingsListPage extends StatefulWidget {
   const BookingsListPage({super.key});
+
+  @override
+  State<BookingsListPage> createState() => _BookingsListPageState();
+}
+
+class _BookingsListPageState extends State<BookingsListPage> {
+  // Bumped every time the bookings tab gains focus from the bottom
+  // nav. Used as a ValueKey on the inner sections so their initState
+  // fires again and refetches Tonight's Plan, Rate Where You Went,
+  // and Share The Vibe. Without this the sections would keep stale
+  // data from the first time the user tapped into the tab.
+  int _refreshNonce = 0;
+  Worker? _navListener;
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      final nav = Get.find<HomeNavController>();
+      _navListener = ever<int>(nav.currentIndex, (idx) {
+        // 1 = bookings tab. Bump the nonce so the dynamic sections
+        // remount and refetch.
+        if (idx == 1 && mounted) {
+          setState(() => _refreshNonce++);
+        }
+      });
+    } catch (_) {
+      // Page can be pushed directly (outside the bottom-nav shell) —
+      // refresh-on-focus is a no-op in that case.
+    }
+  }
+
+  @override
+  void dispose() {
+    _navListener?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,8 +96,14 @@ class BookingsListPage extends StatelessWidget {
                 child: RefreshIndicator(
                   color: AppColors.gradientMid,
                   backgroundColor: AppColors.surface,
-                  onRefresh: () async => controller.refreshData(),
-                  child: _ItineraryList(bookings: allBookings),
+                  onRefresh: () async {
+                    controller.refreshData();
+                    if (mounted) setState(() => _refreshNonce++);
+                  },
+                  child: _ItineraryList(
+                    bookings: allBookings,
+                    refreshNonce: _refreshNonce,
+                  ),
                 ),
               ),
             ],
@@ -73,27 +116,70 @@ class BookingsListPage extends StatelessWidget {
   Widget _buildHeader() {
     return Padding(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
-      child: Column(
+      // Three-column header: leading back button, centred title block,
+      // trailing spacer of the same width so the title stays optically
+      // centred. Tapping the back arrow switches the bottom nav back
+      // to the Home tab.
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            'MY BOOKINGS',
-            style: GoogleFonts.outfit(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w800,
-              fontStyle: FontStyle.italic,
-              color: AppColors.textPrimary,
-              letterSpacing: 3,
+          GestureDetector(
+            onTap: () {
+              try {
+                Get.find<HomeNavController>().changeIndex(0);
+              } catch (_) {
+                if (Get.key.currentState?.canPop() ?? false) {
+                  Get.back();
+                }
+              }
+            },
+            child: Container(
+              width: 36.w,
+              height: 36.w,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.surface,
+                border: Border.all(
+                  color: AppColors.borderSubtle,
+                  width: 0.5,
+                ),
+              ),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 14.sp,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
-          SizedBox(height: 4.h),
-          Text(
-            'Your Bali itinerary',
-            style: GoogleFonts.poppins(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  'MY BOOKINGS',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w800,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.textPrimary,
+                    letterSpacing: 3,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  'Your Bali itinerary',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
+          // Invisible spacer matching the back button's width so the
+          // title remains optically centred between the two edges.
+          SizedBox(width: 36.w),
         ],
       ),
     );
@@ -106,7 +192,14 @@ class BookingsListPage extends StatelessWidget {
 
 class _ItineraryList extends StatefulWidget {
   final List<BookingsListModel> bookings;
-  const _ItineraryList({required this.bookings});
+  // Bumped from the parent whenever the bookings tab gains focus or
+  // the user pulls to refresh. Passed as ValueKey to the three
+  // dynamic sections so they remount and refetch.
+  final int refreshNonce;
+  const _ItineraryList({
+    required this.bookings,
+    required this.refreshNonce,
+  });
 
   @override
   State<_ItineraryList> createState() => _ItineraryListState();
@@ -153,11 +246,25 @@ class _ItineraryListState extends State<_ItineraryList> {
       });
     }
 
-    // Build the 7-day window (today + next 6 days)
-    final dayKeys = List.generate(7, (i) => today.add(Duration(days: i)));
-
     // Tonight booking (today, accepted or pending)
     final tonightBookings = upcomingByDate[today] ?? [];
+
+    // Flat list of bookings for any future date (not today). Rare in
+    // v1.3 — only populated when a user pre-books a table via an
+    // external booking platform with a future date. Shown under a
+    // single "Upcoming" section instead of a per-day grid so we don't
+    // imply multi-day Plan My Night support.
+    final futureBookings = <BookingsListModel>[];
+    for (final entry in upcomingByDate.entries) {
+      if (entry.key.isAfter(today)) {
+        futureBookings.addAll(entry.value);
+      }
+    }
+    futureBookings.sort((a, b) {
+      final da = a.event?.startDate ?? a.createdAt ?? DateTime(2099);
+      final db = b.event?.startDate ?? b.createdAt ?? DateTime(2099);
+      return da.compareTo(db);
+    });
 
     // Group past by date descending
     final pastByDate = <DateTime, List<BookingsListModel>>{};
@@ -174,13 +281,15 @@ class _ItineraryListState extends State<_ItineraryList> {
       children: [
         // Plan My Night — pinned "Tonight's plan" banner for today's saved
         // itinerary. Hides itself entirely when no plan exists for today.
-        const _TonightPlanBanner(),
+        // ValueKey forces a remount + refetch when the parent bumps
+        // refreshNonce (tab-focus or pull-to-refresh).
+        _TonightPlanBanner(key: ValueKey('plan-${widget.refreshNonce}')),
 
         // Share-the-vibe — venues user is at right now (or just left)
-        const _TonightVibeSection(),
+        _TonightVibeSection(key: ValueKey('vibe-${widget.refreshNonce}')),
 
         // Things to rate — venues from past bookings that user hasn't rated
-        const _ThingsToRateSection(),
+        _ThingsToRateSection(key: ValueKey('rate-${widget.refreshNonce}')),
 
         // Tonight highlight
         if (tonightBookings.isNotEmpty) ...[
@@ -188,48 +297,35 @@ class _ItineraryListState extends State<_ItineraryList> {
           SizedBox(height: 24.h),
         ],
 
-        // Upcoming 7-day window
-        for (final day in dayKeys) ...[
-          _DateHeader(date: day, today: today),
+        // Upcoming bookings — flat list (no per-day grid). Hidden
+        // entirely if the user has no future-dated bookings, which is
+        // the common case in v1.3 since Plan My Night is tonight-only.
+        if (futureBookings.isNotEmpty) ...[
           SizedBox(height: 8.h),
-          if (upcomingByDate.containsKey(day)) ...[
-            for (final b in upcomingByDate[day]!)
-              Padding(
-                padding: EdgeInsets.only(bottom: 12.h),
-                child: _BookingCard(booking: b),
+          Padding(
+            padding: EdgeInsets.only(bottom: 12.h),
+            child: Text(
+              'UPCOMING',
+              style: GoogleFonts.poppins(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+                letterSpacing: 1.2,
               ),
-          ] else ...[
-            _EmptyDayPrompt(),
-            SizedBox(height: 4.h),
-          ],
-          SizedBox(height: 16.h),
+            ),
+          ),
+          for (final b in futureBookings)
+            Padding(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: _BookingCard(booking: b),
+            ),
         ],
 
-        // Past section
-        if (pastDates.isNotEmpty) ...[
-          SizedBox(height: 8.h),
-          _PastSectionHeader(
-            expanded: _pastExpanded,
-            count: past.length,
-            onTap: () => setState(() => _pastExpanded = !_pastExpanded),
-          ),
-          if (_pastExpanded) ...[
-            SizedBox(height: 12.h),
-            for (final day in pastDates) ...[
-              _DateHeader(date: day, today: today, isPast: true),
-              SizedBox(height: 8.h),
-              for (final b in pastByDate[day]!)
-                Padding(
-                  padding: EdgeInsets.only(bottom: 12.h),
-                  child: Opacity(
-                    opacity: 0.6,
-                    child: _BookingCard(booking: b, showRatePrompt: true),
-                  ),
-                ),
-              SizedBox(height: 12.h),
-            ],
-          ],
-        ],
+        // Past bookings section hidden in v1.3 — the Booking records
+        // feeding it are Fiverr-era test data, not real activity.
+        // "Things to Rate" already surfaces past Plan My Night stops
+        // for the rating flow. Re-enable Past once we have a real
+        // booking-creation flow that writes new Booking records.
       ],
     );
   }
@@ -458,6 +554,112 @@ class _BookingCard extends StatelessWidget {
         booking.status?.toUpperCase() == 'ACCEPTED' ||
         booking.status?.toUpperCase() == 'CONFIRMED';
 
+    final card = _buildInnerCard(time, venueName, bookingType, isAccepted);
+    // Whole card is tappable when this is a rate-prompt card. Tapping
+    // opens a pineapple rating sheet for the venue.
+    if (showRatePrompt) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _openRatingSheet(context),
+        child: card,
+      );
+    }
+    return card;
+  }
+
+  void _openRatingSheet(BuildContext context) {
+    final venueId = booking.event?.venueId;
+    final venueSlug = booking.event?.venueSlug;
+    final venueDisplayName = booking.event?.venueName ??
+        booking.event?.eventName ??
+        'this venue';
+    if (venueSlug == null || venueSlug.isEmpty) {
+      Get.snackbar(
+        'Coming Soon',
+        'Rating this booking isn\'t wired up yet.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.surface,
+        colorText: AppColors.textPrimary,
+      );
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surfaceElevated,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 28.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'How was $venueDisplayName?',
+                  style: GoogleFonts.outfit(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w800,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  'Tap a pineapple to rate',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                SizedBox(height: 18.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(5, (i) {
+                    final score = i + 1;
+                    return GestureDetector(
+                      onTap: () async {
+                        Navigator.of(ctx).pop();
+                        try {
+                          final svc = Get.find<VenueRatingService>();
+                          await svc.rateVenue(
+                            venueSlug,
+                            score.toDouble(),
+                            venueId: venueId,
+                          );
+                        } catch (_) {}
+                        Get.snackbar(
+                          'Thanks for rating!',
+                          '$venueDisplayName · $score / 5',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: AppColors.surface,
+                          colorText: AppColors.textPrimary,
+                          duration: const Duration(seconds: 2),
+                        );
+                      },
+                      child: Text(
+                        '🍍',
+                        style: TextStyle(fontSize: 36.sp),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInnerCard(
+    String time,
+    String venueName,
+    String bookingType,
+    bool isAccepted,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -839,7 +1041,7 @@ class _RatableItem {
 }
 
 class _ThingsToRateSection extends StatefulWidget {
-  const _ThingsToRateSection();
+  const _ThingsToRateSection({super.key});
 
   @override
   State<_ThingsToRateSection> createState() => _ThingsToRateSectionState();
@@ -911,7 +1113,7 @@ class _ThingsToRateSectionState extends State<_ThingsToRateSection> {
             ),
             SizedBox(height: 4.h),
             Text(
-              'Help fellow Bali locals find the good stuff',
+              'How was the night?',
               style: GoogleFonts.poppins(
                 fontSize: 12.sp,
                 color: AppColors.textSecondary,
@@ -933,108 +1135,197 @@ class _ThingsToRateSectionState extends State<_ThingsToRateSection> {
   }
 }
 
-class _RatableVenueCard extends StatefulWidget {
+class _RatableVenueCard extends StatelessWidget {
   final _RatableItem item;
   final VoidCallback onRated;
 
   const _RatableVenueCard({required this.item, required this.onRated});
 
-  @override
-  State<_RatableVenueCard> createState() => _RatableVenueCardState();
-}
+  Future<void> _openRatingSheet(BuildContext context) async {
+    final selectedScore = 0.obs;
 
-class _RatableVenueCardState extends State<_RatableVenueCard> {
-  int _hoverScore = 0;
-  bool _submitting = false;
-
-  Future<void> _submit(int score) async {
-    if (_submitting) return;
-    setState(() => _submitting = true);
-    final ratingService = Get.put(VenueRatingService(), permanent: true);
-    await ratingService.rateVenue(
-      widget.item.venueSlug,
-      score.toDouble(),
-      venueId: widget.item.venueId,
+    await Get.bottomSheet(
+      Container(
+        decoration: BoxDecoration(
+          color: AppColors.backgroundCard,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 24.h),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: EdgeInsets.only(bottom: 16.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.textMuted,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Text(
+                'How was ${item.venueName}?',
+                style: GoogleFonts.outfit(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w800,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                '5 pineapples = a Pink Pineapple pick',
+                style: GoogleFonts.poppins(
+                  fontSize: 12.sp,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: 24.h),
+              Obx(() => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(5, (i) {
+                  final score = i + 1;
+                  final isFilled = score <= selectedScore.value;
+                  return GestureDetector(
+                    onTap: () => selectedScore.value = score,
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 120),
+                      scale: isFilled ? 1.1 : 1.0,
+                      child: Image.asset(
+                        'assets/images/pinaple.png',
+                        width: 42.sp,
+                        height: 42.sp,
+                        color: isFilled
+                            ? const Color(0xFFE8A0B0)
+                            : Colors.white.withValues(alpha: 0.2),
+                      ),
+                    ),
+                  );
+                }),
+              )),
+              SizedBox(height: 24.h),
+              Obx(() {
+                final canSubmit = selectedScore.value > 0;
+                return GestureDetector(
+                  onTap: !canSubmit
+                      ? null
+                      : () async {
+                          final score = selectedScore.value;
+                          Get.back();
+                          final svc = Get.put(VenueRatingService(),
+                              permanent: true);
+                          await svc.rateVenue(
+                            item.venueSlug,
+                            score.toDouble(),
+                            venueId: item.venueId,
+                          );
+                          Get.snackbar(
+                            'Thanks!',
+                            '${item.venueName} · $score / 5',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: AppColors.surface,
+                            colorText: AppColors.textPrimary,
+                            duration: const Duration(seconds: 2),
+                          );
+                          onRated();
+                        },
+                  child: Opacity(
+                    opacity: canSubmit ? 1.0 : 0.4,
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF8B4060),
+                            Color(0xFFC4707E),
+                            Color(0xFFE8A0B0),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'SUBMIT RATING',
+                          style: GoogleFonts.outfit(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w800,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
     );
-    Get.snackbar(
-      'Thanks!',
-      'You rated ${widget.item.venueName} $score star${score > 1 ? 's' : ''}',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.surface,
-      colorText: AppColors.textPrimary,
-      duration: const Duration(seconds: 2),
-    );
-    widget.onRated();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: AppColors.borderSubtle, width: 0.5),
-      ),
-      padding: EdgeInsets.all(14.w),
-      child: Row(
-        children: [
-          // Pineapple accent icon
-          Container(
-            width: 42.w,
-            height: 42.w,
-            decoration: BoxDecoration(
-              color: AppColors.accentRoseGold.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            padding: EdgeInsets.all(8.w),
-            child: Image.asset(
-              'assets/images/pinaple.png',
-              color: AppColors.accentRoseGold,
-            ),
+    return GestureDetector(
+      onTap: () => _openRatingSheet(context),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(
+            color: const Color(0xFFE8A0B0).withValues(alpha: 0.5),
+            width: 1.0,
           ),
-          SizedBox(width: 12.w),
-          // Venue info + stars
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.item.venueName,
-                  style: GoogleFonts.outfit(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w800,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.textPrimary,
+        ),
+        padding: EdgeInsets.all(14.w),
+        child: Row(
+          children: [
+            Text('🍍', style: TextStyle(fontSize: 22.sp)),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.venueName,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w800,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4.h),
-                Row(
-                  children: List.generate(5, (i) {
-                    final starValue = i + 1;
-                    final isFilled = starValue <= _hoverScore;
-                    return GestureDetector(
-                      onTapDown: (_) => setState(() => _hoverScore = starValue),
-                      onTap: () => _submit(starValue),
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 8.w),
-                        child: Image.asset(
-                          'assets/images/pinaple.png',
-                          width: 28.sp,
-                          height: 28.sp,
-                          color: isFilled
-                              ? const Color(0xFFE8A0B0)
-                              : const Color(0xFFE8A0B0).withValues(alpha: 0.25),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ],
+                  SizedBox(height: 2.h),
+                  Text(
+                    'Tap to rate',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Icon(
+              Icons.chevron_right,
+              color: const Color(0xFFE8A0B0),
+              size: 22.sp,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1045,7 +1336,7 @@ class _RatableVenueCardState extends State<_RatableVenueCard> {
 // ---------------------------------------------------------------------------
 
 class _TonightVibeSection extends StatefulWidget {
-  const _TonightVibeSection();
+  const _TonightVibeSection({super.key});
 
   @override
   State<_TonightVibeSection> createState() => _TonightVibeSectionState();
@@ -1404,7 +1695,7 @@ String _guestLabel(BookingsListModel booking) {
 // ---------------------------------------------------------------------------
 
 class _TonightPlanBanner extends StatefulWidget {
-  const _TonightPlanBanner();
+  const _TonightPlanBanner({super.key});
 
   @override
   State<_TonightPlanBanner> createState() => _TonightPlanBannerState();

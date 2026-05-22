@@ -94,6 +94,11 @@ class VenueController extends GetxController {
           _logger.d(
             'Parsed ${parsed.length} venues out of ${venuesData.length}',
           );
+          // Re-curate now that venues are loaded — fetchWhatsOn may have
+          // already fired _applyCuratedSchedule before venues landed,
+          // which is a no-op when venues is empty. Trigger it here so
+          // the carousel populates whichever fetch completes last.
+          _applyCuratedSchedule();
         }
       }
     } catch (e, st) {
@@ -150,15 +155,16 @@ class VenueController extends GetxController {
             }
           }
           weeklySchedule.assignAll(schedule);
-          // Curation is an "All Bali" overlay — it filters the global feed
-          // down to Troy's hand-picked Mon-Sun lineup (mostly Canggu +
-          // Seminyak). When the user has explicitly selected an area, we
-          // skip curation and show whatever the API returned for that area.
-          // Without this guard, picking Uluwatu wiped the schedule because
-          // none of the curated slugs are Uluwatu venues.
-          if (area == null || area.isEmpty) {
-            _applyCuratedSchedule();
-          }
+          // Curation now ALWAYS runs — _applyCuratedSchedule reads
+          // venue.peakDays from the local `venues` collection and
+          // includes every popping venue (Canggu / Seminyak /
+          // Uluwatu alike). The per-area filter the user picked in
+          // the home pills is applied downstream by the home UI on
+          // each day's list. Skipping curation when an area was set
+          // (old behaviour) meant Canggu / Seminyak filters fell
+          // back to the API's old isSpecial-based filter and missed
+          // most venues.
+          _applyCuratedSchedule();
           return;
         }
       }
@@ -174,71 +180,95 @@ class VenueController extends GetxController {
     }
   }
 
-  /// Build a weekly schedule from venue [openingHours] as a fallback when the
-  /// whats-on endpoint is not available.
-  /// Curated weekly schedule — filters and orders venues per Troy's specification.
-  /// This runs after fetching from the API and overrides the order/visibility.
+  /// Build the "This Week" carousel per day from the venue model's
+  /// `peakDays` field — the single source of truth for "what's on
+  /// tonight at this venue" that's edited via the dashboard's
+  /// "Nightlife timing" section. Replaces a previously-hardcoded
+  /// per-day slug list that drifted out of sync with Plan My Night.
+  ///
+  /// A venue appears on a given day's carousel iff
+  /// venue.peakDays.contains(weekdayInt). Within each day, sort by
+  /// popularity score (descending) so user-validated favourites
+  /// float to the top.
   void _applyCuratedSchedule() {
-    // Event name overrides: "day:slug" -> event label shown in This Week cards
+    // Race-condition guard: this is called both from fetchWhatsOn AND
+    // from fetchVenues (since they run in parallel from onInit). If
+    // we're called before `venues` is populated, do nothing — we'll
+    // be called again once venues land. Don't wipe whatever the
+    // whats-on endpoint already put in `weeklySchedule`.
+    if (venues.isEmpty) return;
+
+    // Event name overrides: "day:slug" -> event label shown in This
+    // Week cards. Cosmetic only — adds a "Hip Hop Night" pill etc.
+    // Move into the DB later as venue.specialNights or similar.
     const eventLabels = <String, String>{
       'wed:da-maria': 'Hip Hop Night',
       'sun:da-maria': 'Hip Hop Night',
     };
 
-    const curated = <String, List<String>>{
-      // Canggu venues first, then Seminyak (Da Maria, Iron Fairies, ShiShi,
-      // La Favela run Mon-Sun). Confirmed all slugs exist in production DB
-      // 2026-05-04 (iron-fairies + shishi were added via dashboard, not seed).
-      'mon': ['bella', 'luigi', 'mesa', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'tue': ['desa-kitsune', 'mesa', 'miss-fish', 'shady-pig', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'wed': ['bella', 'mesa', 'shady-pig', 'miss-fish', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'thu': ['jade', 'shady-pig', 'miss-fish', 'mesa', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'fri': ['desa-kitsune', 'morabito', 'miss-fish', 'mesa', 'shady-pig', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'sat': ['sardine', 'savaya', 'mesa', 'miss-fish', 'shady-pig', 'il-salotto', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
-      'sun': ['savaya', 'il-salotto', 'single-fin', 'amavi', 'back-room', 'da-maria', 'iron-fairies', 'shishi', 'la-favela'],
+    // Map short day key → DateTime weekday int (Mon=1..Sun=7) used by
+    // the venue.peakDays field.
+    const dayToWeekday = <String, int>{
+      'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4,
+      'fri': 5, 'sat': 6, 'sun': 7,
     };
 
     final updated = <String, List<VenueModel>>{};
 
-    for (final entry in curated.entries) {
+    for (final entry in dayToWeekday.entries) {
       final day = entry.key;
-      final slugOrder = entry.value;
-      final dayVenues = weeklySchedule[day] ?? <VenueModel>[];
+      final weekday = entry.value;
 
-      // Build ordered list: find each slug in whats-on data first,
-      // then fall back to the full venues list (for venues not marked isSpecial)
-      final ordered = <VenueModel>[];
-      for (final slug in slugOrder) {
-        var match = dayVenues.firstWhereOrNull((v) => v.slug == slug)
-            ?? dayVenues.firstWhereOrNull((v) => v.name.toLowerCase().replaceAll(' ', '-') == slug);
-        // Fallback: check the full venues list if not in whats-on
-        match ??= venues.firstWhereOrNull((v) => v.slug == slug)
-            ?? venues.firstWhereOrNull((v) => v.name.toLowerCase().replaceAll(' ', '-') == slug);
-        if (match != null) {
-          // Apply event label override if one exists
-          final labelKey = '$day:${match.slug}';
-          if (eventLabels.containsKey(labelKey)) {
-            match = match.copyWith(
-              weeklySchedule: {
-                day: {'name': eventLabels[labelKey], 'isSpecial': true},
-              },
-            );
-          }
-          ordered.add(match);
+      // Filter venues whose peakDays include this weekday. For venues
+      // whose peakDays haven't been curated yet (empty list), fall
+      // back to sensible defaults per nightlife tier so the carousel
+      // isn't sparse before manual curation:
+      //   PEAK + LATE_NIGHT tiers → Thu, Fri, Sat
+      //   WARMUP tier              → Fri, Sat
+      // Once Troy/Sascha set peakDays in the dashboard, the override
+      // takes priority.
+      bool isPoppingToday(VenueModel v) {
+        if (v.peakDays.isNotEmpty) return v.peakDays.contains(weekday);
+        switch (v.nightlifeTier) {
+          case 'PEAK':
+          case 'LATE_NIGHT':
+            return weekday == 4 || weekday == 5 || weekday == 6; // Thu/Fri/Sat
+          case 'WARMUP':
+            return weekday == 5 || weekday == 6; // Fri/Sat
+          default:
+            return false;
         }
       }
+      final dayVenues = venues
+          .where(isPoppingToday)
+          .map((v) {
+            // Apply event-label overlay if any.
+            final labelKey = '$day:${v.slug}';
+            if (eventLabels.containsKey(labelKey)) {
+              return v.copyWith(
+                weeklySchedule: {
+                  day: {'name': eventLabels[labelKey], 'isSpecial': true},
+                },
+              );
+            }
+            return v;
+          })
+          .toList();
 
-      // Sort by popularity score (highest first).
-      // Curated order is the tiebreaker when scores are equal.
-      ordered.sort((a, b) {
+      // Sort by popularity score (descending). Ties preserve insertion
+      // order, which is the venues collection's natural order from the
+      // API.
+      dayVenues.sort((a, b) {
         final scoreA = tapTracker.getPopularityScore(a.slug, dayKey: day);
         final scoreB = tapTracker.getPopularityScore(b.slug, dayKey: day);
-        if (scoreA != scoreB) return scoreB.compareTo(scoreA);
-        // Same score — preserve curated order
-        return slugOrder.indexOf(a.slug).compareTo(slugOrder.indexOf(b.slug));
+        return scoreB.compareTo(scoreA);
       });
 
-      updated[day] = ordered;
+      // Cap at 7 — UI renders top 5 prominently with a "+N more"
+      // indicator below for the rest. Once Troy + Sascha finish
+      // curating peakDays via the dashboard, most days will have ≤5
+      // popping venues and the indicator naturally disappears.
+      updated[day] = dayVenues.take(7).toList();
     }
 
     weeklySchedule.assignAll(updated);

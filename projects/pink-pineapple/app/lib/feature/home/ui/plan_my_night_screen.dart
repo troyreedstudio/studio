@@ -7,10 +7,116 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pineapple/core/const/app_colors.dart';
 import 'package:pineapple/feature/home/services/plan_my_night_storage.dart';
 import 'package:pineapple/feature/home/services/night_plan_service.dart';
+import 'package:pineapple/feature/home_bottom_nav/controller/home_nav_controller.dart';
 import 'package:pineapple/feature/home/ui/plan_filter_sheet.dart';
 import 'package:pineapple/feature/venue/controller/venue_controller.dart';
 import 'package:pineapple/feature/venue/model/venue_model.dart';
 import 'package:pineapple/feature/venue/ui/venue_detail_screen.dart';
+
+/// Nightlife timing tier — when a venue is at its best during the night.
+/// Used by [_generateItinerary] to fill the right slot with the right
+/// venue (a 1am-onwards late-night spot like Mesa shouldn't be the
+/// 10pm warm-up; a 6pm-midnight beach club like Savaya shouldn't be
+/// the 2am after-hours pick).
+enum _NightTier { warmup, peak, lateNight }
+
+class _VenueTiming {
+  const _VenueTiming({
+    required this.tier,
+    this.peakDays = const [],
+    this.closesAtHour = 26, // default 2am next day (26 = 24 + 2)
+  });
+  final _NightTier tier;
+  // Day-of-week (DateTime.monday..sunday = 1..7) when this venue is at
+  // its most "popping". When the user's plan lands on one of these
+  // days, this venue gets first pick for its tier's slot regardless
+  // of shuffle order. Empty list = no day-specific popping.
+  final List<int> peakDays;
+  // Hour (24-h, with 24+ for next-day) when this venue typically
+  // closes / wraps up. Used to exclude e.g. Savaya (closes midnight)
+  // from a 2am after-hours slot. Defaults to 2am if unspecified.
+  final int closesAtHour;
+}
+
+/// Per-venue timing hints. Hardcoded for v1.3 — should migrate to the
+/// Prisma Venue model + dashboard editable in v1.4 so partners can
+/// update their own peak nights. Slugs match the DB venue.slug.
+const Map<String, _VenueTiming> _venueTiming = {
+  // PEAK — core 9pm/10pm to 2am clubs with day-specific popping nights.
+  'desa-kitsune': _VenueTiming(
+    tier: _NightTier.peak,
+    peakDays: [DateTime.tuesday, DateTime.friday],
+  ),
+  'jade-by-todd-english': _VenueTiming(
+    tier: _NightTier.peak,
+    peakDays: [DateTime.monday, DateTime.thursday],
+  ),
+  'bella': _VenueTiming(
+    tier: _NightTier.peak,
+    peakDays: [DateTime.monday, DateTime.wednesday],
+  ),
+  'da-maria': _VenueTiming(
+    tier: _NightTier.peak,
+    peakDays: [DateTime.wednesday],
+  ),
+  // Savaya is a flagship Uluwatu venue — day club AND night club Fri,
+  // Sat & Sun, 6pm–1am. Fills the 11pm PEAK slot AND a 12am main-event
+  // slot but wraps before 2am so it's excluded from after-hours.
+  'savaya': _VenueTiming(
+    tier: _NightTier.peak,
+    peakDays: [DateTime.friday, DateTime.saturday, DateTime.sunday],
+    closesAtHour: 25,
+  ),
+  // Other PEAK clubs (no day-specific popping — generic nightclub vibe).
+  'motel-mexicola': _VenueTiming(tier: _NightTier.peak),
+  'shishi': _VenueTiming(tier: _NightTier.peak),
+  'la-favela': _VenueTiming(tier: _NightTier.peak),
+  'iron-fairies': _VenueTiming(tier: _NightTier.peak),
+  'amavi': _VenueTiming(tier: _NightTier.peak),
+  'gimme-shelter': _VenueTiming(tier: _NightTier.peak),
+  'back-room': _VenueTiming(tier: _NightTier.peak),
+
+  // LATE_NIGHT — midnight–4am, any day.
+  'mesa': _VenueTiming(tier: _NightTier.lateNight),
+  'miss-fish': _VenueTiming(tier: _NightTier.lateNight),
+  'shady-pig': _VenueTiming(tier: _NightTier.lateNight),
+
+  // WARMUP — dinner-spillover, pre-club, sunset cocktail.
+  // Single Fin closes early (surf-bar, not a late spot) so we tag it
+  // closesAtHour 22 to keep it out of post-10pm slots.
+  'woo-bar': _VenueTiming(tier: _NightTier.warmup),
+  'old-mans': _VenueTiming(tier: _NightTier.warmup),
+  // Single Fin — sunset bar with casual dinner, drinks run till about
+  // midnight per Troy's correction. Mainly a sunset spot, not a late
+  // venue, so cap at midnight.
+  'single-fin': _VenueTiming(tier: _NightTier.warmup, closesAtHour: 24),
+  'rock-bar': _VenueTiming(tier: _NightTier.warmup, closesAtHour: 24),
+  'luigi': _VenueTiming(tier: _NightTier.warmup),
+  // El Kabron is a clifftop sunset spot in Uluwatu — early-evening
+  // drinks + dinner, closes around 11pm.
+  'el-kabron': _VenueTiming(tier: _NightTier.warmup, closesAtHour: 23),
+  // Il Salotto — Uluwatu drinks + dinner that turns into a club on
+  // Friday and Saturday. Runs 10pm to 4am on those nights, so it can
+  // fill any slot from pre-drinks all the way through after-hours.
+  'il-salotto': _VenueTiming(
+    tier: _NightTier.peak,
+    peakDays: [DateTime.friday, DateTime.saturday],
+    closesAtHour: 28, // 4am
+  ),
+};
+
+/// Venues that double as proper drinks-with-DJ spots — eligible for
+/// the "Pre-drinks" / "Drinks & vibes" / "Cocktails" slot alongside
+/// beach clubs. These are restaurants and bar-restaurants that have
+/// a real bar scene with a DJ in the evening (per Sascha's notes),
+/// not just sit-down places.
+const Set<String> _drinksVenueSlugs = {
+  'motel-mexicola',
+  'old-mans',
+  'single-fin', // sunset-only — closesAtHour 22 keeps it out of post-10pm slots
+  'el-kabron',
+  'il-salotto',
+};
 
 class PlanMyNightScreen extends StatefulWidget {
   const PlanMyNightScreen({super.key});
@@ -44,12 +150,11 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
     musicGenres: [],
   );
 
-  static const _areas = ['Canggu', 'Seminyak', 'Uluwatu', 'Surprise me'];
+  static const _areas = ['Canggu', 'Seminyak', 'Uluwatu'];
   static const _vibes = [
     {'label': 'Chill dinner & drinks', 'icon': Icons.restaurant_outlined, 'subtitle': '2 stops · relaxed'},
-    {'label': 'Dinner & dancing', 'icon': Icons.nightlife, 'subtitle': '4 stops · full night'},
+    {'label': 'Dinner & dancing', 'icon': Icons.nightlife, 'subtitle': '3 stops · dinner then clubs'},
     {'label': 'Up late', 'icon': Icons.dark_mode_outlined, 'subtitle': '3 stops · club hopping'},
-    {'label': 'Date night', 'icon': Icons.favorite_outline, 'subtitle': '2 stops · romantic'},
     {'label': 'Beach club day party', 'icon': Icons.beach_access_outlined, 'subtitle': '4 stops · all day into night'},
   ];
 
@@ -191,13 +296,110 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
         _filters.musicGenres.isEmpty ||
         v.musicGenres.any((g) => _filters.musicGenres.contains(g));
 
-    // Categorize — area-filtered for dinner/nightlife
+    // Categorize — area-filtered for dinner/nightlife.
+    //
+    // Restaurants for the dinner slot. Bella, Luigi, Jade, Miss Fish,
+    // Da Maria are RESTAURANT-category in the DB but have a `nightlife`
+    // tag — we treat them as nightlife venues when building the night
+    // pool below (so they can serve as main-event clubs on their
+    // popping nights), and we exclude them from the dinner pool so
+    // we don't accidentally pick Bella for dinner *and* main event on
+    // a Wednesday.
+    bool isAlsoNightlife(VenueModel v) => v.tags.contains('nightlife');
+
     final restaurants = areaVenues
-        .where((v) => v.category == 'RESTAURANT' && matchesCuisine(v))
-        .toList()..shuffle();
-    final nightlife = areaVenues
-        .where((v) => v.category == 'NIGHTLIFE' && matchesGenre(v))
-        .toList()..shuffle();
+        .where((v) =>
+            v.category == 'RESTAURANT' &&
+            !isAlsoNightlife(v) &&
+            matchesCuisine(v))
+        .toList()
+      ..shuffle();
+
+    // Nightlife pool = NIGHTLIFE category + RESTAURANT/BEACH_CLUB with
+    // a `nightlife` tag (Bella, Luigi, Jade, Miss Fish, Da Maria, Savaya).
+    // Then split by the _venueTiming map into warmup / peak / late-night
+    // buckets per slot. Popping-night venues (e.g. Bella on Wed) get
+    // first pick within their tier.
+    final nightlifeAll = areaVenues.where((v) {
+      if (v.category == 'NIGHTLIFE' || isAlsoNightlife(v)) {
+        return matchesGenre(v);
+      }
+      return false;
+    }).toList();
+
+    // Tier-pool builder. `slotStartHour24` is the slot's start hour in
+    // 24-h (e.g. 22 for 10pm, 24 for midnight, 26 for 2am). Used to
+    // exclude venues whose `closesAtHour` is earlier than the slot
+    // start so we don't pick Savaya for a 2am after-hours slot.
+    //
+    // Source of truth is venue.nightlifeTier / peakDays / closesAtHour
+    // from the API. A local fallback map (_venueTiming) is consulted
+    // when a venue hasn't been curated yet — Sascha + Troy update via
+    // the dashboard's "Nightlife timing" section.
+    String? venueTierString(VenueModel v) {
+      final apiTier = v.nightlifeTier;
+      if (apiTier != null && apiTier.isNotEmpty) return apiTier;
+      final local = _venueTiming[v.slug];
+      if (local == null) return null;
+      switch (local.tier) {
+        case _NightTier.warmup:
+          return 'WARMUP';
+        case _NightTier.peak:
+          return 'PEAK';
+        case _NightTier.lateNight:
+          return 'LATE_NIGHT';
+      }
+    }
+
+    List<int> venuePeakDays(VenueModel v) {
+      if (v.peakDays.isNotEmpty) return v.peakDays;
+      return _venueTiming[v.slug]?.peakDays ?? const [];
+    }
+
+    int venueClosesAtHour(VenueModel v) {
+      if (v.closesAtHour != null) return v.closesAtHour!;
+      return _venueTiming[v.slug]?.closesAtHour ?? 26; // default 2am
+    }
+
+    String tierLabel(_NightTier t) => switch (t) {
+          _NightTier.warmup => 'WARMUP',
+          _NightTier.peak => 'PEAK',
+          _NightTier.lateNight => 'LATE_NIGHT',
+        };
+
+    List<VenueModel> nightlifeTier(_NightTier tier, int slotStartHour24) {
+      final want = tierLabel(tier);
+      return nightlifeAll.where((v) {
+        final tierStr = venueTierString(v);
+        if (tierStr == null) {
+          // Unknown venue (not curated yet) — default to PEAK so it
+          // doesn't silently disappear from the itinerary.
+          return tier == _NightTier.peak;
+        }
+        if (tierStr != want) return false;
+        return venueClosesAtHour(v) > slotStartHour24;
+      }).toList();
+    }
+
+    int eventWeekday = DateTime.now().weekday; // Mon=1..Sun=7
+    List<VenueModel> sortByPopping(List<VenueModel> pool) {
+      final popping = <VenueModel>[];
+      final rest = <VenueModel>[];
+      for (final v in pool) {
+        if (venuePeakDays(v).contains(eventWeekday)) {
+          popping.add(v);
+        } else {
+          rest.add(v);
+        }
+      }
+      popping.shuffle();
+      rest.shuffle();
+      return [...popping, ...rest];
+    }
+
+    // Convenience for the legacy "nightlife" var used by some vibes that
+    // don't care about tiering (e.g. Date night doesn't use this).
+    final nightlife = nightlifeAll.toList()..shuffle();
 
     // Beach clubs — respect area filter, use curated order per area
     const beachClubOrder = <String, List<String>>{
@@ -228,7 +430,18 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
     }
     final beachClubs = beachClubSource;
 
-    final bars = [...restaurants, ...beachClubs]..shuffle();
+    // Bars pool for the drinks / pre-drinks / cocktails slot. Beach
+    // clubs plus the curated `_drinksVenueSlugs` set (Motel Mexicola,
+    // Old Man's, Single Fin, El Kabron) — bar-restaurants with a real
+    // DJ-driven drinks scene that fit "go for a drink" alongside the
+    // beach clubs. Generic restaurants are deliberately excluded so we
+    // don't get a dinner-restaurant + drinks-restaurant duplicate.
+    final extraDrinksVenues = areaVenues
+        .where((v) =>
+            _drinksVenueSlugs.contains(v.slug) &&
+            !beachClubs.any((b) => b.slug == v.slug))
+        .toList();
+    final bars = [...beachClubs, ...extraDrinksVenues]..shuffle();
 
     final stops = <_ItineraryStop>[];
     final usedSlugs = <String>{};
@@ -293,38 +506,57 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
         final b = pickClosest(r, bars);
         if (b != null) addStop('9:30 PM', 'Drinks & vibes', b, r);
       }
-    } else if (_vibe == 'Date night') {
-      if (restaurants.isNotEmpty) {
-        final r = restaurants.first;
-        addStop('7:00 PM', 'Dinner for two', r, null);
-        final b = pickClosest(r, bars);
-        if (b != null) addStop('9:30 PM', 'Cocktails', b, r);
-      }
     } else if (_vibe == 'Up late') {
-      if (nightlife.isNotEmpty) {
-        final v1 = nightlife.first;
-        addStop('10:00 PM', 'Warm up', v1, null);
-        final v2 = pickClosest(v1, nightlife);
-        if (v2 != null) {
-          addStop('12:00 AM', 'Main event', v2, v1);
-          final v3 = pickClosest(v2, nightlife);
-          if (v3 != null) addStop('2:00 AM', 'After hours', v3, v2);
+      // Tier-aware: WARMUP 10pm → PEAK midnight → LATE_NIGHT 2am.
+      // Popping-tonight venues float to the front within each tier.
+      final warmupPool = sortByPopping(nightlifeTier(_NightTier.warmup, 22));
+      final peakPool = sortByPopping(nightlifeTier(_NightTier.peak, 24));
+      final latePool = sortByPopping(nightlifeTier(_NightTier.lateNight, 26));
+      // Fall back gracefully if a tier is empty in this area.
+      final v1 = warmupPool.isNotEmpty
+          ? warmupPool.first
+          : (peakPool.isNotEmpty ? peakPool.first : null);
+      if (v1 != null) addStop('10:00 PM', 'Warm up', v1, null);
+      final v2 = pickClosest(v1, peakPool) ??
+          pickClosest(v1, sortByPopping(nightlifeAll));
+      if (v2 != null) addStop('12:00 AM', 'Main event', v2, v1);
+      final v3 = pickClosest(v2, latePool) ??
+          pickClosest(v2, sortByPopping(nightlifeAll));
+      if (v3 != null) addStop('2:00 AM', 'After hours', v3, v2);
+    } else {
+      // Dinner & dancing — simplified per Troy's UX feedback. Three
+      // stops: dinner restaurant → warm-up club → main-event club.
+      // No bars / pre-drinks (users on this vibe want to eat then
+      // dance, not bar-hop), no after-hours (that's the "Up late"
+      // vibe's job).
+      //
+      // We still pre-reserve the popping main-event venue BEFORE
+      // picking dinner so e.g. Bella (Wed Canggu EDM night) is locked
+      // as the main event, not dinner.
+      final warmupPool = sortByPopping(nightlifeTier(_NightTier.warmup, 21));
+      final peakPool = sortByPopping(nightlifeTier(_NightTier.peak, 23));
+      VenueModel? mainEvent;
+      if (peakPool.isNotEmpty) {
+        final firstPeak = peakPool.first;
+        if (venuePeakDays(firstPeak).contains(eventWeekday)) {
+          mainEvent = firstPeak;
+          usedSlugs.add(mainEvent.slug);
         }
       }
-    } else {
-      // Dinner & dancing — dinner → drinks → club → late night
+
       if (restaurants.isNotEmpty) {
         final r = restaurants.first;
         addStop('7:30 PM', 'Dinner', r, null);
-        final b = pickClosest(r, bars);
-        if (b != null) {
-          addStop('9:30 PM', 'Pre-drinks', b, r);
-          final n1 = pickClosest(b, nightlife);
-          if (n1 != null) {
-            addStop('11:00 PM', 'Main event', n1, b);
-            final n2 = pickClosest(n1, nightlife);
-            if (n2 != null) addStop('1:00 AM', 'Late night', n2, n1);
-          }
+        // Warm-up club: prefer WARMUP-tier venue closest to dinner,
+        // fall back to a PEAK venue if no WARMUP available in the
+        // selected area (Uluwatu can be light on WARMUP options).
+        final warmup = pickClosest(r, warmupPool) ?? pickClosest(r, peakPool);
+        if (warmup != null) {
+          addStop('10:00 PM', 'Warm-up club', warmup, r);
+          // Main event: reserved popping venue, or closest peak to
+          // warm-up if no popping reservation.
+          final n1 = mainEvent ?? pickClosest(warmup, peakPool);
+          if (n1 != null) addStop('12:00 AM', 'Main event', n1, warmup);
         }
       }
     }
@@ -332,16 +564,133 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
     setState(() {
       _itinerary = stops;
       _step = 3;
+      // Each fresh shuffle is a draft until the user explicitly hits
+      // "Save this plan". Resets any prior save state so the CTA
+      // re-prompts them to lock the new one in.
+      _serverPlanId = null;
     });
     _persist();
-    _syncToBackend();
   }
 
-  /// Fire-and-forget POST to /night-plans so the plan persists across
-  /// device switch / reinstall. Failures are silent — local cache is
-  /// the source of truth on this device; the backend record is purely
-  /// for cross-device sync, the My Bookings banner, and analytics.
-  Future<void> _syncToBackend() async {
+  /// Persist the current itinerary to the backend and surface
+  /// feedback to the user. If a plan is already saved for tonight,
+  /// asks the user whether to replace it or keep both before saving.
+  Future<void> _saveCurrentPlan() async {
+    if (_itinerary.isEmpty) return;
+
+    // Conflict check — if there's an existing ACTIVE plan for today
+    // the user has to choose: replace, keep both, or cancel the save.
+    final existing = await NightPlanService.findTonightPlan();
+    if (!mounted) return;
+
+    bool? replaceExisting; // null = cancel
+    if (existing != null) {
+      replaceExisting = await _showSaveConflictDialog(existing);
+      if (!mounted || replaceExisting == null) return;
+    } else {
+      replaceExisting = false;
+    }
+
+    await _syncToBackend(replaceExisting: replaceExisting);
+    if (!mounted) return;
+    if (_serverPlanId != null) {
+      Get.snackbar(
+        'Tonight is locked in',
+        'Your plan is saved in My Bookings.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.surface,
+        colorText: AppColors.textPrimary,
+        duration: const Duration(seconds: 2),
+      );
+    } else {
+      Get.snackbar(
+        'Save failed',
+        'Couldn\'t save just now — check your connection and try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.surface,
+        colorText: AppColors.textPrimary,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  /// Shown when the user taps "Save this plan" and an ACTIVE plan for
+  /// today already exists. Returns true for Replace, false for Keep
+  /// both, null for Cancel.
+  Future<bool?> _showSaveConflictDialog(Map<String, dynamic> existing) {
+    final existingVibe =
+        existing['vibe']?.toString() ?? 'a plan';
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceElevated,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            "You already have tonight's plan saved",
+            style: GoogleFonts.outfit(
+              fontSize: 17.sp,
+              fontWeight: FontWeight.w800,
+              fontStyle: FontStyle.italic,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          content: Text(
+            'Your current plan: "$existingVibe".\n\nReplace it with this new plan, or keep both?',
+            style: GoogleFonts.poppins(
+              fontSize: 13.sp,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          actionsPadding: EdgeInsets.fromLTRB(8.w, 0, 8.w, 12.h),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(null),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(
+                  fontSize: 13.sp,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(
+                'Keep both',
+                style: GoogleFonts.poppins(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(
+                'Replace',
+                style: GoogleFonts.poppins(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accentRoseGold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// POST to /night-plans. Returns the server-side plan id which the
+  /// UI uses to know the plan has been saved (button morphs to the
+  /// "Saved" state). Failures leave _serverPlanId null so the user
+  /// can retry by tapping Save again.
+  Future<void> _syncToBackend({bool replaceExisting = false}) async {
     if (_itinerary.isEmpty) return;
     final stops = <Map<String, dynamic>>[];
     for (var i = 0; i < _itinerary.length; i++) {
@@ -363,6 +712,7 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
       vibe: _vibe,
       eventDate: DateTime.now(),
       stops: stops,
+      replaceExisting: replaceExisting,
     );
     if (id != null && mounted) {
       setState(() => _serverPlanId = id);
@@ -736,7 +1086,82 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
 
           SizedBox(height: 28.h),
 
-          // Shuffle + Refine + Start over actions
+          // Save / Saved CTA — gives the user explicit control over
+          // when their plan is "locked in". Without this it auto-saves
+          // silently on every shuffle, which is invisible and feels
+          // uncommitted. After save, the button morphs to a tappable
+          // confirmation that jumps to My Bookings.
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: GestureDetector(
+              onTap: () async {
+                if (_serverPlanId != null) {
+                  // Already saved — jump to My Bookings tab.
+                  try {
+                    Get.find<HomeNavController>().changeIndex(1);
+                  } catch (_) {}
+                  return;
+                }
+                await _saveCurrentPlan();
+              },
+              child: Container(
+                width: double.infinity,
+                height: 48.h,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: _serverPlanId == null
+                      ? AppColors.gradientPrimary
+                      : null,
+                  color: _serverPlanId == null
+                      ? null
+                      : AppColors.accentRoseGold.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                  border: _serverPlanId == null
+                      ? null
+                      : Border.all(
+                          color: AppColors.accentRoseGold.withValues(alpha: 0.85),
+                          width: 1.2,
+                        ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _serverPlanId == null
+                          ? Icons.bookmark_add_outlined
+                          : Icons.check_circle_outline,
+                      size: 18.sp,
+                      color: _serverPlanId == null
+                          ? AppColors.backgroundDark
+                          : AppColors.accentRoseGold,
+                    ),
+                    SizedBox(width: 10.w),
+                    Text(
+                      _serverPlanId == null
+                          ? 'Save this plan'
+                          : 'Saved · View in My Bookings',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
+                        color: _serverPlanId == null
+                            ? AppColors.backgroundDark
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          SizedBox(height: 14.h),
+
+          // Shuffle + Start over actions. The Refine filter (cuisine +
+          // genre) is hidden in v1.3 — until more venues are on the
+          // platform with proper cuisine/genre tagging, refine returns
+          // poor results. Bring it back when venue profiles are richer.
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -752,30 +1177,7 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
                   ),
                 ),
               ),
-              SizedBox(width: 4.w),
-              TextButton.icon(
-                onPressed: _openFilterSheet,
-                icon: Icon(
-                  Icons.tune,
-                  color: _filters.hasAny
-                      ? AppColors.accentRoseGold
-                      : AppColors.textMuted,
-                  size: 18.sp,
-                ),
-                label: Text(
-                  _filters.hasAny
-                      ? 'Refine · ${_filters.cuisines.length + _filters.musicGenres.length}'
-                      : 'Refine',
-                  style: GoogleFonts.poppins(
-                    color: _filters.hasAny
-                        ? AppColors.accentRoseGold
-                        : AppColors.textMuted,
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              SizedBox(width: 4.w),
+              SizedBox(width: 8.w),
               TextButton.icon(
                 onPressed: _startOver,
                 icon: Icon(Icons.refresh, color: AppColors.textMuted, size: 18.sp),

@@ -20,12 +20,17 @@ class NightPlanService {
     required String vibe,
     required DateTime eventDate,
     required List<Map<String, dynamic>> stops,
+    // When true, any other ACTIVE plans for the same day get archived
+    // (set to CANCELLED) before this one is inserted. False keeps them
+    // alongside the new plan — used by the "Keep both" choice.
+    bool replaceExisting = false,
   }) async {
     try {
       final payload = {
         'vibe': vibe,
         'eventDate': eventDate.toIso8601String(),
         'stops': stops,
+        if (replaceExisting) 'replaceExisting': true,
       };
       final response = await _net.ApiRequestHandler(
         RequestMethod.POST,

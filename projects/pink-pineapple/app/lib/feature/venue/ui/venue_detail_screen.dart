@@ -878,15 +878,35 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       bool isOpen = false;
       bool isSpecial = false;
 
-      // Check weeklySchedule first (richer data)
+      // Check weeklySchedule first (richer data). The backend stores
+      // per-day entries as { startTime, endTime, genre, description } —
+      // these are written by serializeProgramming() in the dashboard
+      // and seed scripts.
       if (venue.weeklySchedule != null) {
         // Try short key (mon, tue, ...) and full key
         final shortKey = dayKeys[i].substring(0, 3);
         final wsDay = venue.weeklySchedule![shortKey] ??
             venue.weeklySchedule![dayKeys[i]];
         if (wsDay is Map<String, dynamic>) {
-          nightName = wsDay['name']?.toString();
-          timeLabel = wsDay['time']?.toString();
+          // Genre is the headline ("Hip Hop Wednesday", "Open Decks")
+          final genre = wsDay['genre']?.toString();
+          // Some older seeds also stored a free-text "description" that
+          // can be used as a fallback when no genre is set.
+          final description = wsDay['description']?.toString();
+          nightName = (genre != null && genre.isNotEmpty)
+              ? genre
+              : (description != null && description.isNotEmpty
+                  ? description
+                  : null);
+
+          final startTime = wsDay['startTime']?.toString();
+          final endTime = wsDay['endTime']?.toString();
+          if (startTime != null && startTime.isNotEmpty) {
+            timeLabel = (endTime != null && endTime.isNotEmpty)
+                ? '$startTime–$endTime'
+                : startTime;
+          }
+
           isOpen = true;
           isSpecial = nightName != null && nightName.isNotEmpty;
         }
@@ -1130,81 +1150,116 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
 
   Widget _buildActionButtons(VenueModel venue) {
     final isGym = venue.category == 'WELLNESS' || venue.category == 'GYM';
-    final isNightlifeOrDining = venue.category == 'NIGHTLIFE' ||
+    // Any NIGHTLIFE or BEACH_CLUB category venue gets the 3-button
+    // row (Guest List / Buy Tickets / Book VIP Table). Plus a small
+    // curated whitelist of RESTAURANT-category venues that also act
+    // as clubs (Jade has Mon/Thu club nights; El Kabron runs
+    // ticketed Saturday parties on the cliff).
+    const restaurantOverrides = <String>{
+      'jade-by-todd-english',
+      'el-kabron',
+    };
+    final isTicketedVenue = venue.category == 'NIGHTLIFE' ||
         venue.category == 'BEACH_CLUB' ||
-        venue.category == 'RESTAURANT';
-    // Hide the booking buttons entirely for venues marked NONE — they
-    // accept walk-ins only and showing a button you can't take action
-    // on is worse UX than no button at all.
-    if (venue.bookingProvider == 'NONE') {
+        restaurantOverrides.contains(venue.slug);
+    final isRestaurant =
+        venue.category == 'RESTAURANT' && !isTicketedVenue;
+
+    // Gyms / wellness venues marked NONE are walk-in only — hide CTA.
+    if (venue.bookingProvider == 'NONE' && isGym) {
       return const SizedBox.shrink();
     }
 
-    // Nightclubs, beach clubs and restaurants get the 3-button row:
-    // Guest List | Buy Tickets | Book VIP Table.
-    //   - Guest List + Buy Tickets both open the venue's bookingUrl (the
-    //     destination handles the rest — guests pick whichever section).
-    //   - Book VIP Table opens the in-app bottom-sheet form, which then
-    //     deep-links to WhatsApp routed to Pink Pineapple's business
-    //     number for Rowan to handle manually.
-    if (isNightlifeOrDining) {
+    if (isTicketedVenue) {
       final hasBookingUrl = venue.bookingUrl.isNotEmpty ||
           (venue.bookingDailyUrls != null &&
               venue.bookingDailyUrls!.isNotEmpty);
       return Padding(
         padding: EdgeInsets.symmetric(horizontal: 24.w),
-        child: Row(
-          children: [
-            if (hasBookingUrl) ...[
-              Expanded(
-                child: _ctaButton(
-                  label: 'Guest List',
-                  icon: Icons.group_outlined,
-                  primary: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 260.w),
+            child: Column(
+              children: [
+                if (hasBookingUrl) ...[
+                  _ctaButton(
+                    label: 'Guest List',
+                    icon: Icons.group_outlined,
+                    primary: false,
+                    onTap: () async {
+                      if (!await AuthGuard.requireAuth()) return;
+                      _openBooking(venue);
+                    },
+                  ),
+                  SizedBox(height: 8.h),
+                  _ctaButton(
+                    label: 'Buy Tickets',
+                    icon: Icons.confirmation_number_outlined,
+                    primary: false,
+                    onTap: () async {
+                      if (!await AuthGuard.requireAuth()) return;
+                      _openBooking(venue);
+                    },
+                  ),
+                  SizedBox(height: 8.h),
+                ],
+                _ctaButton(
+                  label: 'Book VIP Table',
+                  icon: Icons.workspace_premium_outlined,
+                  primary: true,
                   onTap: () async {
                     if (!await AuthGuard.requireAuth()) return;
-                    _openBooking(venue);
+                    showVipBookingSheet(context: context, venue: venue);
                   },
                 ),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: _ctaButton(
-                  label: 'Buy Tickets',
-                  icon: Icons.confirmation_number_outlined,
-                  primary: false,
-                  onTap: () async {
-                    if (!await AuthGuard.requireAuth()) return;
-                    _openBooking(venue);
-                  },
-                ),
-              ),
-              SizedBox(width: 8.w),
-            ],
-            Expanded(
-              child: _ctaButton(
-                label: 'Book VIP Table',
-                icon: Icons.workspace_premium_outlined,
-                primary: true,
-                onTap: () async {
-                  if (!await AuthGuard.requireAuth()) return;
-                  showVipBookingSheet(context: context, venue: venue);
-                },
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     }
 
-    // Other categories (gyms, etc.) keep the existing single-button flow.
+    // Restaurants — single "Book a Table" CTA that opens the venue's
+    // booking system / website via _openBooking. Applies whether the
+    // restaurant has nightlife tagging or not, per Troy's "keep it
+    // simple" call for v1.3.
+    if (isRestaurant) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        child: PpPrimaryButton(
+          label: 'BOOK A TABLE',
+          icon: Icons.table_bar_outlined,
+          onTap: () async {
+            if (!await AuthGuard.requireAuth()) return;
+            _openBooking(venue);
+          },
+        ),
+      );
+    }
+
+    // Non-curated nightlife / beach clubs / gyms / wellness — single
+    // "VISIT WEBSITE" CTA that opens venue.website directly. Per
+    // Troy's v1.3 call: keep it simple rather than surfacing
+    // provider-specific labels ("DM ON INSTAGRAM" etc.). Websites
+    // were backfilled from Google Places on 2026-05-22.
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: PpPrimaryButton(
-        label: _bookingCtaLabel(venue),
-        icon: _bookingCtaIcon(venue),
+        label: 'VISIT WEBSITE',
+        icon: Icons.public_outlined,
         onTap: () async {
           if (!await AuthGuard.requireAuth()) return;
+          if (venue.website.isNotEmpty) {
+            final uri = Uri.tryParse(venue.website);
+            if (uri != null) {
+              _venueController.trackVenueTap(venue.slug, isBooking: true);
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+              return;
+            }
+          }
+          // Fall back to the legacy booking dispatch if no website
+          // was backfilled — eventually shows "coming soon" snackbar
+          // for venues with neither website nor booking URL.
           _openBooking(venue);
         },
       ),
@@ -1220,49 +1275,42 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     required bool primary,
     required VoidCallback onTap,
   }) {
+    // All three stacked buttons render with the full rose-gold gradient
+    // fill — consistent visual weight, all read as primary CTAs. The
+    // `primary` flag now only nudges the font weight for VIP so it reads
+    // as the recommended choice without changing the overall look.
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        height: 52.h,
-        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        width: double.infinity,
+        height: 44.h,
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
         decoration: BoxDecoration(
-          gradient: primary ? AppColors.gradientPrimary : null,
-          color: primary ? null : AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: primary
-              ? null
-              : Border.all(
-                  color: AppColors.accentRoseGold.withOpacity(0.35),
-                  width: 0.8,
-                ),
+          gradient: AppColors.gradientPrimary,
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 16.sp,
-                color: primary
-                    ? AppColors.backgroundDark
-                    : AppColors.accentRoseGold,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 15.sp,
+              color: AppColors.backgroundDark,
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12.sp,
+                fontWeight: primary ? FontWeight.w700 : FontWeight.w600,
+                letterSpacing: 0.3,
+                color: AppColors.backgroundDark,
               ),
-              SizedBox(height: 2.h),
-              Text(
-                label,
-                style: GoogleFonts.poppins(
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                  color: primary
-                      ? AppColors.backgroundDark
-                      : AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -1303,7 +1351,9 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
             _buildInfoRow(
               FontAwesomeIcons.instagram,
               'Instagram',
-              '@${venue.instagram}',
+              // Normalise: handles may arrive with or without a leading
+              // '@'. Strip it before re-prefixing so we never render '@@'.
+              '@${venue.instagram.replaceFirst(RegExp(r'^@+'), '')}',
             ),
           ],
           // Price range

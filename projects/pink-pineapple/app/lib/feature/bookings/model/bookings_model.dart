@@ -126,6 +126,12 @@ class Event {
   final DateTime? endDate;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  // Optional nested venue — present on responses from /venues/ratable
+  // and /venues/tonight-vibe where we need to navigate to the venue
+  // detail or relay a rating. Null for older Booking-only payloads.
+  final String? venueId;
+  final String? venueSlug;
+  final String? venueName;
 
   Event({
     this.id,
@@ -134,6 +140,9 @@ class Event {
     this.endDate,
     this.createdAt,
     this.updatedAt,
+    this.venueId,
+    this.venueSlug,
+    this.venueName,
   });
 
   Event copyWith({
@@ -143,6 +152,9 @@ class Event {
     DateTime? endDate,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? venueId,
+    String? venueSlug,
+    String? venueName,
   }) =>
       Event(
         id: id ?? this.id,
@@ -151,16 +163,25 @@ class Event {
         endDate: endDate ?? this.endDate,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        venueId: venueId ?? this.venueId,
+        venueSlug: venueSlug ?? this.venueSlug,
+        venueName: venueName ?? this.venueName,
       );
 
-  factory Event.fromJson(Map<String, dynamic> json) => Event(
-    id: json["id"],
-    eventName: json["eventName"],
-    startDate: json["startDate"] == null ? null : DateTime.parse(json["startDate"]),
-    endDate: json["endDate"] == null ? null : DateTime.parse(json["endDate"]),
-    createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
-    updatedAt: json["updatedAt"] == null ? null : DateTime.parse(json["updatedAt"]),
-  );
+  factory Event.fromJson(Map<String, dynamic> json) {
+    final v = json["venue"];
+    return Event(
+      id: json["id"],
+      eventName: json["eventName"],
+      startDate: json["startDate"] == null ? null : DateTime.parse(json["startDate"]),
+      endDate: json["endDate"] == null ? null : DateTime.parse(json["endDate"]),
+      createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
+      updatedAt: json["updatedAt"] == null ? null : DateTime.parse(json["updatedAt"]),
+      venueId: v is Map ? v["id"]?.toString() : null,
+      venueSlug: v is Map ? v["slug"]?.toString() : null,
+      venueName: v is Map ? v["name"]?.toString() : null,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,
