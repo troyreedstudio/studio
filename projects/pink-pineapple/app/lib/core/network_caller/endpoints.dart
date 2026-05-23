@@ -24,6 +24,10 @@ class Urls {
   static const String getDeposite = '$baseUrl/deposit/user';
 
   static const String verifyOTP = '$baseUrl/auth/verify-otp';
+  // Sign-up specifically uses verify-register-otp on the backend —
+  // that's the one that flips user.status to ACTIVE, fires the welcome
+  // email, AND returns isCompleteProfile alongside accessToken.
+  static const String verifyRegisterOTP = '$baseUrl/auth/verify-register-otp';
   static const String signUp = '$baseUrl/users/register';
   static const String resetPassword = '$baseUrl/auth/reset-password';
   static const String changePassword = '$baseUrl/auth/change-password';

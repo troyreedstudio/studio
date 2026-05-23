@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import '../../../core/global_widgets/app_snackbar.dart';
+import '../../../core/local/local_data.dart';
 import '../../../core/network_caller/endpoints.dart';
 import '../../../core/network_caller/network_config.dart';
 import '../ui/1.login_ui.dart';
@@ -75,13 +76,34 @@ class OtpController extends GetxController {
       isLoading.value = true;
       final Map<String, dynamic> requestBody = {"email": email, 'otp': otp};
       log(requestBody.toString());
+      // Sign-up flow hits verify-register-otp (NOT verify-otp). The
+      // register endpoint flips user.status to ACTIVE, fires the
+      // welcome email, and returns isCompleteProfile in addition to
+      // accessToken. The plain verify-otp endpoint is for forgot-password.
       final response = await _networkConfig.ApiRequestHandler(
         RequestMethod.POST,
-        Urls.verifyOTP,
+        Urls.verifyRegisterOTP,
         json.encode(requestBody),
         is_auth: false,
       );
-      if (response != null && response['success'] == true) {
+      if (response == null) {
+        // Network layer already surfaced its own error toast.
+        return false;
+      }
+      if (response['success'] == true) {
+        // Persist the accessToken so the subsequent profile-upload
+        // multipart request can attach an Authorization header. Without
+        // this, /users/profile returns 401 and the user sees
+        // "Upload Failed" / "You are not authorized".
+        final data = response['data'];
+        final token = data is Map ? data['accessToken'] : null;
+        if (token is String && token.isNotEmpty) {
+          final localService = LocalService();
+          await localService.setValue<String>(PreferenceKey.token, token);
+          log('Sign-up OTP verified, token saved (len=${token.length})');
+        } else {
+          log('Sign-up OTP verified but no accessToken in response: $data');
+        }
         AppSnackbar.show(
           message: "Account created! Set up your profile.",
           isSuccess: true,
@@ -94,7 +116,11 @@ class OtpController extends GetxController {
         return false;
       }
     } catch (e) {
-      // AppSnackbar.show(message: "Verification failed: $e", isSuccess: false);
+      log('otpVerifyToLogin threw: $e');
+      AppSnackbar.show(
+        message: "Couldn't verify OTP. Check your connection and try again.",
+        isSuccess: false,
+      );
       return false;
     } finally {
       isLoading.value = false;

@@ -1,5 +1,6 @@
 // ignore_for_file: file_names, constant_identifier_names, non_constant_identifier_names, avoid_print
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -22,7 +23,11 @@ class NetworkConfigV1 {
     dataPathName = "data",
     filePathName = "image",
   }) async {
-    if (await InternetConnectionChecker().hasConnection) {
+    // Connection check intentionally bypassed (was silently swallowing
+    // requests on phones that block Cloudflare/Google DNS). If the
+    // network is truly down, the http call below will throw quickly
+    // and the catch block surfaces a real error message to the user.
+    if (true) {
       var header = <String, String>{"Content-type": "application/json"};
       if (is_auth == true) {
         var localService = LocalService();
@@ -51,11 +56,13 @@ class NetworkConfigV1 {
         }
       } else if (method.name == RequestMethod.POST.name) {
         try {
-          var req = await http.post(
-            Uri.parse(url),
-            headers: header,
-            body: json_body,
-          );
+          var req = await http
+              .post(
+                Uri.parse(url),
+                headers: header,
+                body: json_body,
+              )
+              .timeout(const Duration(seconds: 30));
 
           print(req.body);
           print(req.statusCode);
@@ -73,7 +80,16 @@ class NetworkConfigV1 {
             // throw Exception('Try aging after some time');
           }
         } catch (e) {
-          // ShowError(e);
+          log('POST error for $url: $e');
+          if (e is SocketException) {
+            ShowError(
+                'No internet connection. Check your network and try again.');
+          } else {
+            // TimeoutException, FormatException, anything else — surface
+            // the first line of the error so users see SOMETHING instead
+            // of a silent fail.
+            ShowError('Network error: ${e.toString().split('\n').first}');
+          }
         }
       } else if (method.name == RequestMethod.PATCH.name) {
         try {

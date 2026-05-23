@@ -88,11 +88,18 @@ class SignInController extends GetxController {
         json.encode(requestBody),
         is_auth: false,
       );
-      log("registerUser $response ${response['data']}");
+      log("registerUser response: $response");
+      // The network layer surfaces its own error toast already, so a
+      // null here means "we know we failed and told the user". Skip
+      // the rest of the success/failure parsing to avoid a NoSuchMethodError
+      // on response['data'].
+      if (response == null) {
+        return false;
+      }
       if (response['success'] == false) {
         AppSnackbar.show(message: response['message'], isSuccess: false);
       }
-      if (response != null && response['success'] == true) {
+      if (response['success'] == true) {
         AppSnackbar.show(message: "Registration Successful", isSuccess: true);
         Get.to(SignUpOTPVerification(), arguments: {'email': email});
 
@@ -103,7 +110,12 @@ class SignInController extends GetxController {
       }
     } catch (e) {
       isRegisterLoadingError.value = e.toString();
-      // AppSnackbar.show(message: "Failed To Registration", isSuccess: false);
+      log('registerUser threw: $e');
+      AppSnackbar.show(
+        message:
+            "Couldn't create account. Check your connection and try again.",
+        isSuccess: false,
+      );
       return false;
     } finally {
       isRegisterLoading.value = false;
