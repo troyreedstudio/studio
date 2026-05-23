@@ -9,6 +9,47 @@ const inter = { fontFamily: "Inter, sans-serif" };
 const inputClass =
   "bg-[#000000] border border-[#2A2A2A] rounded-lg px-3 py-2 text-xs text-[#FFFFFF] placeholder-[#6B6B6B] focus:outline-none focus:border-[#C4707E] transition-colors";
 
+// Custom dropdown of 30-minute time slots. Replaces the native
+// `<input type="time">` because Chrome's native picker:
+//   1. Renders "06:00 PM" wider than our 96px input → AM/PM clips
+//   2. Requires 6+ clicks to set a single time (slow when populating
+//      30+ venues in one sitting)
+// Two clicks (open dropdown → pick slot) and the AM/PM always fits.
+type TimeOption = { value: string; label: string };
+const TIME_SLOTS: TimeOption[] = (() => {
+  const out: TimeOption[] = [];
+  for (let h = 0; h < 24; h++) {
+    for (const m of [0, 30] as const) {
+      const value = `${h.toString().padStart(2, "0")}:${m
+        .toString()
+        .padStart(2, "0")}`;
+      const period = h < 12 ? "AM" : "PM";
+      const display12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      const label = `${display12}:${m.toString().padStart(2, "0")} ${period}`;
+      out.push({ value, label });
+    }
+  }
+  return out;
+})();
+
+/// Returns the standard 30-min slots, but if the current value isn't
+/// one of them (e.g. existing venue data has "11:45"), prepend the
+/// current value as a one-off option so the select renders correctly.
+/// Without this, a non-standard value would silently appear blank.
+const timeSlotsFor = (currentValue: string): TimeOption[] => {
+  if (!currentValue || TIME_SLOTS.some((s) => s.value === currentValue)) {
+    return TIME_SLOTS;
+  }
+  const [hStr, mStr] = currentValue.split(":");
+  const h = Number(hStr);
+  const m = Number(mStr);
+  if (Number.isNaN(h) || Number.isNaN(m)) return TIME_SLOTS;
+  const period = h < 12 ? "AM" : "PM";
+  const display12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  const label = `${display12}:${m.toString().padStart(2, "0")} ${period}`;
+  return [{ value: currentValue, label: `${label} (custom)` }, ...TIME_SLOTS];
+};
+
 const DAYS = [
   { key: "mon", label: "Monday" },
   { key: "tue", label: "Tuesday" },
@@ -284,25 +325,35 @@ const OpeningHoursPicker = ({ value, onChange }: Props) => {
                   </span>
                 ) : (
                   <>
-                    <input
-                      type="time"
+                    <select
                       value={v.start}
                       onChange={(e) =>
                         updateDay(d.key, { start: e.target.value })
                       }
-                      className={inputClass + " w-24"}
+                      className={inputClass + " w-28 appearance-none cursor-pointer"}
                       style={inter}
-                    />
+                    >
+                      {timeSlotsFor(v.start).map((slot) => (
+                        <option key={slot.value} value={slot.value}>
+                          {slot.label}
+                        </option>
+                      ))}
+                    </select>
                     <span className="text-[#6B6B6B] text-xs">to</span>
-                    <input
-                      type="time"
+                    <select
                       value={v.end}
                       onChange={(e) =>
                         updateDay(d.key, { end: e.target.value })
                       }
-                      className={inputClass + " w-24"}
+                      className={inputClass + " w-28 appearance-none cursor-pointer"}
                       style={inter}
-                    />
+                    >
+                      {timeSlotsFor(v.end).map((slot) => (
+                        <option key={slot.value} value={slot.value}>
+                          {slot.label}
+                        </option>
+                      ))}
+                    </select>
                   </>
                 )}
                 <div className="flex items-center gap-2 ml-auto">
