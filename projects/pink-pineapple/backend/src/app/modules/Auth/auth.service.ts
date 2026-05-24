@@ -15,16 +15,18 @@ const loginUser = async (payload: {
   password: string;
   fcmToken?: string;
 }) => {
+  // Normalize email to lowercase. Without this, iOS auto-capitalization
+  // can lock users out of an account they just created in a different
+  // case (or duplicate the account on the next sign-up attempt).
+  const email = (payload.email || "").trim().toLowerCase();
   const userData = await prisma.user.findUnique({
-    where: {
-      email: payload.email,
-    },
+    where: { email },
   });
 
   if (!userData?.email) {
     throw new ApiError(
       httpStatus.NOT_FOUND,
-      "User not found! with this email " + payload.email
+      "User not found! with this email " + email
     );
   }
   const isCorrectPassword: boolean = await bcrypt.compare(
@@ -145,8 +147,10 @@ const forgotPassword = async (payload: { email: string }) => {
   // Look up the user. Use findUnique + explicit ApiError so missing accounts
   // return a friendly 404 instead of an unhandled Prisma error that the
   // global handler renders as a generic 500 ("An unexpected error occurred").
+  // Email lowercased to handle iOS auto-capitalization mismatches.
+  const email = (payload.email || "").trim().toLowerCase();
   const userData = await prisma.user.findUnique({
-    where: { email: payload.email },
+    where: { email },
   });
 
   if (!userData) {
@@ -180,10 +184,11 @@ const forgotPassword = async (payload: { email: string }) => {
   return { message: "Reset password OTP sent to your email successfully" };
 };
 
-const resendOtp = async (email: string) => {
+const resendOtp = async (rawEmail: string) => {
+  const email = (rawEmail || "").trim().toLowerCase();
   // Check if the user exists
   const user = await prisma.user.findUnique({
-    where: { email: email },
+    where: { email },
   });
 
   if (!user) {
@@ -218,9 +223,10 @@ const verifyForgotPasswordOtp = async (payload: {
   email: string;
   otp: number;
 }) => {
+  const email = (payload.email || "").trim().toLowerCase();
   // Check if the user exists
   const user = await prisma.user.findUnique({
-    where: { email: payload.email },
+    where: { email },
   });
 
   if (!user) {
@@ -259,9 +265,10 @@ const verifyForgotPasswordOtp = async (payload: {
 };
 
 const verifyRegisterOtp = async (payload: { email: string; otp: number }) => {
+  const email = (payload.email || "").trim().toLowerCase();
   // Check if the user exists
   const user = await prisma.user.findUnique({
-    where: { email: payload.email },
+    where: { email },
   });
 
   if (!user) {
@@ -325,9 +332,10 @@ const verifyRegisterOtp = async (payload: { email: string; otp: number }) => {
 
 // reset password
 const resetPassword = async (payload: { password: string; email: string }) => {
+  const email = (payload.email || "").trim().toLowerCase();
   // Check if the user exists
   const user = await prisma.user.findUnique({
-    where: { email: payload.email },
+    where: { email },
   });
 
   if (!user) {
@@ -339,7 +347,7 @@ const resetPassword = async (payload: { password: string; email: string }) => {
 
   // Update the user's password in the database
   await prisma.user.update({
-    where: { email: payload.email },
+    where: { email },
     data: {
       password: hashedPassword, // Update with the hashed password
       otp: null, // Clear the OTP

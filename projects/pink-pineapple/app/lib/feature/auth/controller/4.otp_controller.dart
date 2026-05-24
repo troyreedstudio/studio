@@ -7,9 +7,9 @@ import '../../../core/global_widgets/app_snackbar.dart';
 import '../../../core/local/local_data.dart';
 import '../../../core/network_caller/endpoints.dart';
 import '../../../core/network_caller/network_config.dart';
+import '../../home_bottom_nav/ui/home_bottom_nav.dart';
 import '../ui/1.login_ui.dart';
 import '../ui/5.set_forget_password.dart';
-import '../ui/8.sign_up_profile_set_up.dart' show SignUpProfileSetUp;
 
 class OtpController extends GetxController {
   final RxBool isLoading = false.obs;
@@ -105,10 +105,13 @@ class OtpController extends GetxController {
           log('Sign-up OTP verified but no accessToken in response: $data');
         }
         AppSnackbar.show(
-          message: "Account created! Set up your profile.",
+          message: "Welcome to Pink Pineapple!",
           isSuccess: true,
         );
-        Get.off(() => SignUpProfileSetUp(), arguments: {'email': email});
+        // v1.3.0+15: sign-up is single-page now — all profile fields
+        // captured at register, so OTP success goes straight to the
+        // home tab (no step-3 profile setup screen anymore).
+        Get.offAll(() => HomeBottomNav());
         return true;
       } else {
         String errorMessage = response['message'] ?? 'OTP verification failed';

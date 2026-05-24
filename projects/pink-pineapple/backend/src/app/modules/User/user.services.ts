@@ -93,11 +93,26 @@ const provisionApprovedVenuePartner = async (user: User): Promise<void> => {
 };
 
 // Create a new user in the database.
-const createUserIntoDb = async (payload: User) => {
+const createUserIntoDb = async (payload: User & { firstName?: string; lastName?: string }) => {
+  // Normalize email to lowercase EVERYWHERE so iOS auto-capitalization
+  // doesn't create duplicate accounts (e.g. Alassam@gmail.com vs
+  // alassam@gmail.com). Single source of truth: store lowercased,
+  // look up lowercased, compare lowercased.
+  const email = (payload.email || "").trim().toLowerCase();
+  if (!email) {
+    throw new ApiError(400, "Email is required");
+  }
+
+  // Compose fullName from firstName + lastName if the new fields are
+  // provided. Falls back to the legacy fullName for older clients.
+  const firstName = (payload.firstName || "").trim();
+  const lastName = (payload.lastName || "").trim();
+  const fullName =
+    (firstName && lastName ? `${firstName} ${lastName}` : payload.fullName) ||
+    "";
+
   const existingUser = await prisma.user.findFirst({
-    where: {
-      email: payload.email,
-    },
+    where: { email },
   });
 
   const otp = Number(crypto.randomInt(1000, 9999));
@@ -107,7 +122,7 @@ const createUserIntoDb = async (payload: User) => {
     if (existingUser.status === UserStatus.ACTIVE) {
       throw new ApiError(
         400,
-        `User with email ${payload.email} is already active.`
+        `User with email ${email} is already active.`
       );
     }
 
@@ -126,25 +141,16 @@ const createUserIntoDb = async (payload: User) => {
         updatedData.password = hashedPassword;
       }
 
-      if (payload.fcmToken) {
-        updatedData.fcmToken = payload.fcmToken;
-      }
-
-      if (payload.role) {
-        updatedData.role = payload.role;
-      }
-
-      if (payload.instagram) {
-        updatedData.instagram = payload.instagram;
-      }
-
-      if (payload.gender) {
-        updatedData.gender = payload.gender;
-      }
-
-      if (payload.dob) {
-        updatedData.dob = new Date(payload.dob);
-      }
+      if (payload.fcmToken) updatedData.fcmToken = payload.fcmToken;
+      if (payload.role) updatedData.role = payload.role;
+      if (payload.instagram) updatedData.instagram = payload.instagram;
+      if (payload.gender) updatedData.gender = payload.gender;
+      if (payload.dob) updatedData.dob = new Date(payload.dob);
+      if (payload.country) updatedData.country = payload.country;
+      if (payload.phoneNumber) updatedData.phoneNumber = payload.phoneNumber;
+      if (fullName) updatedData.fullName = fullName;
+      if (firstName) updatedData.firstName = firstName;
+      if (lastName) updatedData.lastName = lastName;
 
       const result = await prisma.user.update({
         where: { id: existingUser.id },
@@ -152,13 +158,15 @@ const createUserIntoDb = async (payload: User) => {
         select: {
           id: true,
           fullName: true,
+          firstName: true,
+          lastName: true,
           email: true,
           phoneNumber: true,
           otp: true,
         },
       });
       const html = generateOtpEmail(otp);
-      await emailSender(payload.email, html, "Verify your Pink Pineapple account");
+      await emailSender(email, html, "Verify your Pink Pineapple account");
 
       return {
         message:
@@ -179,10 +187,15 @@ const createUserIntoDb = async (payload: User) => {
 
   const newUser = await prisma.user.create({
     data: {
-      fullName: payload.fullName,
+      fullName,
+      firstName,
+      lastName,
       username: payload.username,
-      email: payload.email,
-      fullAddress: payload.fullAddress,
+      email,
+      country: payload.country || "",
+      // fullAddress + city no longer collected at sign-up (v1.3.0+15).
+      // Existing rows keep their values; new rows get defaults.
+      fullAddress: payload.fullAddress || "",
       profilePrivacy: payload.profilePrivacy,
       bio: payload.bio,
       phoneNumber: payload.phoneNumber,
@@ -200,6 +213,8 @@ const createUserIntoDb = async (payload: User) => {
     select: {
       id: true,
       fullName: true,
+      firstName: true,
+      lastName: true,
       email: true,
       phoneNumber: true,
       otp: true,
@@ -210,7 +225,7 @@ const createUserIntoDb = async (payload: User) => {
   }
 
   const html = generateOtpEmail(otp);
-  await emailSender(payload.email, html, "Verify your Pink Pineapple account");
+  await emailSender(email, html, "Verify your Pink Pineapple account");
 
   return {
     message: "An OTP has been sent to your email. Please verify your account.",

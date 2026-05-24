@@ -10,6 +10,12 @@ datasource db {
 model User {
   id                 String               @id @default(auto()) @map("_id") @db.ObjectId
   fullName           String
+  // Split-name fields added in v1.3.0+15. Existing rows keep working
+  // from fullName alone; new sign-ups populate all three (fullName is
+  // composed as "firstName lastName" on register for backward compat
+  // with code that reads fullName).
+  firstName          String               @default("")
+  lastName           String               @default("")
   email              String               @unique
   username           String               @default("")
   dob                DateTime             @default(now())

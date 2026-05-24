@@ -51,17 +51,21 @@ class SignInController extends GetxController {
     return country['icon'] ?? '🌍';
   }
 
-  Future<bool> registerUser(
-    String name,
-    String email,
-    String phone,
-    String instagram,
-    String dob,
-    String gender,
-    String address,
-    String password,
-  ) async {
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+  Future<bool> registerUser({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String instagram,
+    required String dob,
+    required String gender,
+    required String country,
+    required String password,
+  }) async {
+    if (firstName.isEmpty ||
+        lastName.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty) {
       AppSnackbar.show(message: 'Please fill all fields', isSuccess: false);
       return false;
     }
@@ -70,11 +74,15 @@ class SignInController extends GetxController {
       isRegisterLoading.value = true;
       // Combine country code with phone number
       final fullPhoneNumber = '${selectedCountryCode.value}$phone';
+      // Email lowercased client-side to match backend's lowercase
+      // lookup. Belt-and-braces alongside the autocaps-off TextField.
       final Map<String, dynamic> requestBody = {
-        "fullName": name,
+        "firstName": firstName.trim(),
+        "lastName": lastName.trim(),
+        "fullName": "${firstName.trim()} ${lastName.trim()}",
         "phoneNumber": fullPhoneNumber,
-        "fullAddress": address.isEmpty ? "no address" : address,
-        "email": email,
+        "country": country,
+        "email": email.trim().toLowerCase(),
         "role": "USER",
         "password": password,
         "instagram": instagram,
@@ -101,7 +109,10 @@ class SignInController extends GetxController {
       }
       if (response['success'] == true) {
         AppSnackbar.show(message: "Registration Successful", isSuccess: true);
-        Get.to(SignUpOTPVerification(), arguments: {'email': email});
+        // Pass lowercased email to OTP screen so the verify lookup hits
+        // the same row the backend just stored under.
+        Get.to(SignUpOTPVerification(),
+            arguments: {'email': email.trim().toLowerCase()});
 
         return true;
       } else {
