@@ -7,6 +7,7 @@ import '../../../core/global_widgets/app_snackbar.dart';
 import '../../../core/local/local_data.dart';
 import '../../../core/network_caller/endpoints.dart';
 import '../../../core/network_caller/network_config.dart';
+import '../../../core/const/user_info/user_info_controller.dart';
 import '../../home_bottom_nav/ui/home_bottom_nav.dart';
 import '../ui/1.login_ui.dart';
 import '../ui/5.set_forget_password.dart';
@@ -111,6 +112,15 @@ class OtpController extends GetxController {
         // v1.3.0+15: sign-up is single-page now — all profile fields
         // captured at register, so OTP success goes straight to the
         // home tab (no step-3 profile setup screen anymore).
+        // v1.3.0+16: explicitly delete + re-create UserInfoController
+        // so its onInit fetchUserInfo() fires with the fresh token.
+        // Without this, the controller (if instantiated earlier in
+        // the session) keeps its old null userInfo and the profile
+        // tab is stuck on "Loading profile..." forever.
+        if (Get.isRegistered<UserInfoController>()) {
+          Get.delete<UserInfoController>();
+        }
+        Get.put(UserInfoController());
         Get.offAll(() => HomeBottomNav());
         return true;
       } else {

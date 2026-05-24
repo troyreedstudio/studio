@@ -426,7 +426,13 @@ const updateProfile = async (req: Request) => {
     },
     data: {
       fullName: parseData.fullName || existingUser.fullName,
-      email: parseData.email || existingUser.email,
+      firstName: parseData.firstName ?? existingUser.firstName,
+      lastName: parseData.lastName ?? existingUser.lastName,
+      // Email lowercased on write so case mismatches can't sneak in
+      // via the edit-profile path (same rule as createUserIntoDb).
+      email: parseData.email
+        ? String(parseData.email).trim().toLowerCase()
+        : existingUser.email,
       username: parseData.username || existingUser.username,
       dob: dobToSave || existingUser.dob,
       profilePrivacy: parseData.profilePrivacy || existingUser.profilePrivacy,

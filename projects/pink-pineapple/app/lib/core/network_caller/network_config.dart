@@ -41,18 +41,31 @@ class NetworkConfigV1 {
       }
       if (method.name == RequestMethod.GET.name) {
         try {
-          var req = await http.get(Uri.parse(url), headers: header);
+          var req = await http
+              .get(Uri.parse(url), headers: header)
+              .timeout(const Duration(seconds: 30));
           print(req.body);
           print(req.statusCode);
           if (req.statusCode == 200 || req.statusCode == 201) {
             return json.decode(req.body);
           } else {
+            // Self-heal stale token: if the auth middleware returns
+            // 401 (no/invalid token) or 404 (token decodes to a
+            // userId that's been deleted), wipe the local token so
+            // the next session prompts a clean re-login instead of
+            // staring at "Loading profile..." forever.
+            if (is_auth == true &&
+                (req.statusCode == 401 || req.statusCode == 404)) {
+              try {
+                await LocalService().clearUserData();
+              } catch (_) {}
+            }
             final data = json.decode(req.body); // decode to Map
             var errorMsg = data['message'] ?? 'Server Error';
             ShowError(errorMsg);
           }
         } catch (e) {
-          // ShowError(e);
+          log('GET error for $url: $e');
         }
       } else if (method.name == RequestMethod.POST.name) {
         try {

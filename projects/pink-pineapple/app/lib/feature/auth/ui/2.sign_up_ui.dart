@@ -328,20 +328,59 @@ class SignUpPage extends StatelessWidget {
                 ),
                 SizedBox(height: 16.h),
 
-                // 5. Country of origin
+                // 5. Country of origin — opens searchable picker
                 _label('Where are you arriving from?'),
-                Obx(() => _dropdownShell<String>(
-                      value: selectedCountry.value,
-                      hint: 'Select country',
-                      items: countries
-                          .map((c) => DropdownMenuItem<String>(
-                                value: c['name']!,
-                                child: Text(
-                                    "${c['icon'] ?? '🌍'}  ${c['name']!}"),
-                              ))
-                          .toList(),
-                      onChanged: (v) => selectedCountry.value = v,
-                    )),
+                Obx(() {
+                  final selectedName = selectedCountry.value;
+                  final selectedMeta = selectedName == null
+                      ? null
+                      : countries.firstWhere(
+                          (c) => c['name'] == selectedName,
+                          orElse: () => const {'name': '', 'icon': '🌍'},
+                        );
+                  return GestureDetector(
+                    onTap: () async {
+                      final result = await showCountryCodePicker(
+                        context: context,
+                      );
+                      if (result != null && result['name'] != null) {
+                        selectedCountry.value = result['name'];
+                      }
+                    },
+                    child: Container(
+                      height: 48.h,
+                      padding: EdgeInsets.symmetric(horizontal: 14.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.borderSubtle),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            (selectedMeta?['icon'] ?? '🌍')!,
+                            style: TextStyle(fontSize: 18.sp),
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text(
+                              selectedName ?? 'Select country',
+                              style: GoogleFonts.poppins(
+                                color: selectedName == null
+                                    ? AppColors.textMuted
+                                    : AppColors.textPrimary,
+                                fontSize: 13.sp,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Icon(Icons.keyboard_arrow_down_rounded,
+                              color: AppColors.textMuted, size: 18),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
                 SizedBox(height: 16.h),
 
                 // 6. Email — autocaps off, lowercase enforced via formatter

@@ -105,6 +105,14 @@ class LoginController extends GetxController {
 
         // Navigate first, then show snackbar shortly after so the snackbar
         // isn't removed by the route transition overlay change.
+        // IMPORTANT: delete-then-put forces UserInfoController.onInit to
+        // re-run, which triggers fetchUserInfo with the fresh token.
+        // Without this, a stale controller from a previous failed session
+        // keeps `userInfo.value = null` and the profile tab is stuck
+        // showing "Loading profile..." forever.
+        if (Get.isRegistered<UserInfoController>()) {
+          Get.delete<UserInfoController>();
+        }
         Get.put(UserInfoController());
         Get.to(() => HomeBottomNav());
 

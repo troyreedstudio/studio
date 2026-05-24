@@ -29,13 +29,28 @@ class ProfileEditController extends GetxController {
   final isLoading = false.obs;
 
   // -------- Text fields --------
+  // v1.3.0+16: aligned with sign-up's 9 fields. fullName is kept for
+  // back-compat with the rest of the app (header, snackbars) but is
+  // recomposed from firstName + lastName on save.
+  final firstName = TextEditingController();
+  final lastName = TextEditingController();
   final fullName = TextEditingController();
+  final email = TextEditingController();
+  final instagram = TextEditingController();
   final userName = TextEditingController();
   final fullAddress = TextEditingController();
   final bio = TextEditingController();
   final phoneNumber = TextEditingController();
 
   final selectedDOB = Rxn<DateTime>();
+  final Rx<String?> selectedGender = Rx<String?>(null);
+  final Rx<String?> selectedCountry = Rx<String?>(null);
+  static const genderOptions = [
+    'Male',
+    'Female',
+    'Non-binary',
+    'Prefer not to say',
+  ];
 
   // phone country code
   final RxString selectedCountryCode = '+44'.obs;
@@ -133,8 +148,25 @@ class ProfileEditController extends GetxController {
       return;
     }
 
-    // Load text fields
+    // Load text fields (v1.3.0+16: align with sign-up's 9 fields)
     fullName.text = (u.fullName ?? '').trim();
+    // Split fullName if firstName/lastName aren't set yet (existing users).
+    final fn = (u.firstName ?? '').trim();
+    final ln = (u.lastName ?? '').trim();
+    if (fn.isEmpty && ln.isEmpty && (u.fullName ?? '').isNotEmpty) {
+      final parts = (u.fullName ?? '').trim().split(RegExp(r'\s+'));
+      firstName.text = parts.isNotEmpty ? parts.first : '';
+      lastName.text = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+    } else {
+      firstName.text = fn;
+      lastName.text = ln;
+    }
+    email.text = (u.email ?? '').trim();
+    instagram.text = (u.instagram ?? '').trim();
+    selectedGender.value =
+        (u.gender ?? '').trim().isEmpty ? null : u.gender;
+    selectedCountry.value =
+        (u.country ?? '').trim().isEmpty ? null : u.country;
     userName.text = (u.username ?? '').trim();
     fullAddress.text = (u.fullAddress ?? '').trim();
     bio.text = (u.bio ?? '').trim();
@@ -179,11 +211,38 @@ class ProfileEditController extends GetxController {
 
     final payload = <String, dynamic>{};
 
-    // Always include these fields (backend may need them even if empty)
-    payload['fullName'] = fullName.text.trim();
-    payload['username'] = userName.text.trim();
-    payload['fullAddress'] = fullAddress.text.trim();
-    payload['bio'] = bio.text.trim();
+    // v1.3.0+16: send firstName + lastName, recompose fullName so
+    // back-compat code that reads fullName still works.
+    final fn = firstName.text.trim();
+    final ln = lastName.text.trim();
+    payload['firstName'] = fn;
+    payload['lastName'] = ln;
+    payload['fullName'] = fn.isEmpty && ln.isEmpty
+        ? fullName.text.trim()
+        : '$fn $ln'.trim();
+    payload['instagram'] = instagram.text.trim();
+    if (selectedGender.value != null && selectedGender.value!.isNotEmpty) {
+      payload['gender'] = selectedGender.value;
+    }
+    if (selectedCountry.value != null && selectedCountry.value!.isNotEmpty) {
+      payload['country'] = selectedCountry.value;
+    }
+    // Email rarely changes but we still surface it on the edit form.
+    // Lowercased to match backend's case-insensitive lookup.
+    if (email.text.trim().isNotEmpty) {
+      payload['email'] = email.text.trim().toLowerCase();
+    }
+    // Legacy fields kept for compat — only send if the user has values
+    // (avoids wiping the fullAddress column on first save from the new form).
+    if (userName.text.trim().isNotEmpty) {
+      payload['username'] = userName.text.trim();
+    }
+    if (fullAddress.text.trim().isNotEmpty) {
+      payload['fullAddress'] = fullAddress.text.trim();
+    }
+    if (bio.text.trim().isNotEmpty) {
+      payload['bio'] = bio.text.trim();
+    }
 
     // Date: always include if set
     if (selectedDOB.value != null) {

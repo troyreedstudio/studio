@@ -72,6 +72,9 @@ const getMyProfile = async (userId: string) => {
     select: {
       id: true,
       fullName: true,
+      firstName: true,
+      lastName: true,
+      gender: true,
       email: true,
       username: userRole?.role !== UserRole.CLUB ? true : false,
       dob: true,

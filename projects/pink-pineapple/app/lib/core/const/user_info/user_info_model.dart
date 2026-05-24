@@ -43,6 +43,12 @@ class UserInfoModel {
 class UserProfile {
   final String? id;
   final String? fullName;
+  // v1.3.0+15 added split-name fields. fullName stays for backward
+  // compatibility with all UI that already reads it.
+  final String? firstName;
+  final String? lastName;
+  final String? gender;
+  final String? country;
   final String? email;
   final String? username;
   final DateTime? dob;
@@ -60,6 +66,10 @@ class UserProfile {
   UserProfile({
     this.id,
     this.fullName,
+    this.firstName,
+    this.lastName,
+    this.gender,
+    this.country,
     this.email,
     this.username,
     this.dob,
@@ -113,6 +123,10 @@ class UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
     id: json["id"],
     fullName: json["fullName"],
+    firstName: json["firstName"],
+    lastName: json["lastName"],
+    gender: json["gender"],
+    country: json["country"],
     email: json["email"],
     username: json["username"],
     dob: json["dob"] == null ? null : DateTime.parse(json["dob"]),
@@ -131,6 +145,10 @@ class UserProfile {
   Map<String, dynamic> toJson() => {
     "id": id,
     "fullName": fullName,
+    "firstName": firstName,
+    "lastName": lastName,
+    "gender": gender,
+    "country": country,
     "email": email,
     "username": username,
     "dob": dob?.toIso8601String(),

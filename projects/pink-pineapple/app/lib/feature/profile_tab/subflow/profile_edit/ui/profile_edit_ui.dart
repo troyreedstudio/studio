@@ -156,17 +156,55 @@ class ProfileEditScreen extends StatelessWidget {
               ),
               SizedBox(height: 20.h),
 
-              // form fields
-              _label('Full Name*'),
-              _field(controller: c.fullName, hint: 'Enter Full Name'),
+              // form fields — aligned with sign-up's 9 fields (v1.3.0+16)
+              _label('First Name*'),
+              _field(controller: c.firstName, hint: 'First name'),
 
-              _label('User Name*'),
-              _field(controller: c.userName, hint: 'username', prefixText: '@'),
+              _label('Last Name*'),
+              _field(controller: c.lastName, hint: 'Last name'),
+
+              _label('Gender*'),
+              Obx(() {
+                return Container(
+                  height: 52.h,
+                  padding: EdgeInsets.symmetric(horizontal: 14.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.backgroundSurface,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: AppColors.borderSubtle),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: c.selectedGender.value,
+                      isExpanded: true,
+                      hint: Text(
+                        'Select gender',
+                        style: globalTextStyle(
+                          fontSize: 13.sp,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                      dropdownColor: AppColors.backgroundCard,
+                      style: globalTextStyle(
+                        fontSize: 13.sp,
+                        color: AppColors.textPrimary,
+                      ),
+                      icon: Icon(Icons.keyboard_arrow_down_rounded,
+                          color: AppColors.textMuted, size: 18),
+                      items: ProfileEditController.genderOptions
+                          .map((g) => DropdownMenuItem(
+                                value: g,
+                                child: Text(g),
+                              ))
+                          .toList(),
+                      onChanged: (v) => c.selectedGender.value = v,
+                    ),
+                  ),
+                );
+              }),
 
               _label('Date Of Birth*'),
               Obx(() {
-                // Note: creating a controller here is ok for display-only,
-                // but if you want best practice, store a dobController in GetX controller.
                 final dobCtrl = TextEditingController(text: c.dobText);
                 return _field(
                   controller: dobCtrl,
@@ -178,8 +216,8 @@ class ProfileEditScreen extends StatelessWidget {
                       context: context,
                       initialDate:
                           c.selectedDOB.value ?? DateTime(now.year - 10),
-                      firstDate: DateTime(1900), // oldest allowed birth year
-                      lastDate: now, // cannot select future date
+                      firstDate: DateTime(1900),
+                      lastDate: now,
                     );
 
                     if (picked != null) {
@@ -189,11 +227,56 @@ class ProfileEditScreen extends StatelessWidget {
                 );
               }),
 
-              _label('Address*'),
-              _field(controller: c.fullAddress, hint: 'location'),
+              _label('Where are you arriving from?*'),
+              Obx(() {
+                final name = c.selectedCountry.value;
+                return GestureDetector(
+                  onTap: () async {
+                    final result = await showCountryCodePicker(
+                      context: context,
+                    );
+                    if (result != null && result['name'] != null) {
+                      c.selectedCountry.value = result['name'];
+                    }
+                  },
+                  child: Container(
+                    height: 52.h,
+                    padding: EdgeInsets.symmetric(horizontal: 14.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundSurface,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.borderSubtle),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name ?? 'Select country',
+                            style: globalTextStyle(
+                              fontSize: 13.sp,
+                              color: name == null
+                                  ? AppColors.textMuted
+                                  : AppColors.textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(Icons.keyboard_arrow_down_rounded,
+                            color: AppColors.textMuted, size: 18),
+                      ],
+                    ),
+                  ),
+                );
+              }),
 
-              _label('Bio*'),
-              _field(controller: c.bio, hint: 'describe', maxLines: 3),
+              _label('Email*'),
+              _field(
+                controller: c.email,
+                hint: 'your@email.com',
+              ),
+
+              _label('Instagram*'),
+              _field(controller: c.instagram, hint: '@yourhandle'),
 
               _label('Phone*'),
               Row(
