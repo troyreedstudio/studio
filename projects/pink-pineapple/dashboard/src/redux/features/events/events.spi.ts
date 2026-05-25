@@ -77,6 +77,18 @@ export const eventsApi = baseApi.injectEndpoints({
       invalidatesTags: ["Event"],
     }),
 
+    // Hard delete — removes the event row entirely. Used for one-off
+    // mistakes / duplicates. For "this event has passed, take it off
+    // the home carousel" use updateEventStatus with REJECTED instead
+    // (less destructive, keeps the historical record).
+    deleteEvent: builder.mutation({
+      query: (id: string) => ({
+        url: `/events/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Event"],
+    }),
+
     allBookings: builder.query({
       query: (args) => {
         const params = new URLSearchParams();
@@ -110,6 +122,7 @@ export const {
   useAllEventsQuery,
   useCreateEventMutation,
   useUpdateEventMutation,
+  useDeleteEventMutation,
   useSingleEventQuery,
   useUpdateEventStatusMutation,
   useAllBookingsQuery,

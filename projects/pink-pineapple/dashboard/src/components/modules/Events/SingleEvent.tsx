@@ -219,10 +219,17 @@ const SingleEvent = () => {
           ))}
         </div>
 
-        {/* Action buttons */}
+        {/* Action buttons.
+            - Approve: flips status APPROVED → shows on home carousel.
+            - Take Down: flips status REJECTED → instantly hides from
+              home carousel (event row preserved so it's recoverable
+              by re-approving).
+            - Delete: hard-deletes the row. Use for duplicates or
+              mistakes only — there's no undo. */}
         <div className="flex gap-4 mt-8">
           <DeleteModal id={event?.id} message="Approve" action="APPROVED" type="event" btn="btn" />
-          <DeleteModal id={event?.id} message="Reject" action="REJECTED" type="event" btn="btn" />
+          <DeleteModal id={event?.id} message="Take Down" action="REJECTED" type="event" btn="btn" />
+          <DeleteModal id={event?.id} message="Delete" type="event-delete" btn="danger" />
         </div>
       </div>
     </div>

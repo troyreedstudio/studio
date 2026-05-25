@@ -8,6 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  useDeleteEventMutation,
   useUpdateBookingStatusMutation,
   useUpdateEventStatusMutation,
 } from "@/redux/features/events/events.spi";
@@ -20,8 +21,8 @@ import { toast } from "sonner";
 
 interface DeleteModalProps {
   id: string;
-  type: "event" | "approve" | "booking";
-  btn: "icon" | "btn" | "approve";
+  type: "event" | "approve" | "booking" | "event-delete";
+  btn: "icon" | "btn" | "approve" | "danger";
   message: string;
   action?: "APPROVED" | "REJECTED";
   bookAction?: "ACCEPTED" | "REJECTED";
@@ -39,6 +40,7 @@ const DeleteModal = ({
 }: DeleteModalProps) => {
   const [open, setOpen] = useState(false);
   const [updateStatus] = useUpdateEventStatusMutation();
+  const [deleteEvent] = useDeleteEventMutation();
   const [updateUserStatus] = useUpdateUserStatusMutation();
   const [updateBookingStatus] = useUpdateBookingStatusMutation();
   const router = useRouter();
@@ -50,6 +52,13 @@ const DeleteModal = ({
       if (type === "event") {
         res = await updateStatus({ id, data: { eventStatus: action } }).unwrap();
         if (res) router.push("/");
+      } else if (type === "event-delete") {
+        // Hard delete via DELETE /events/:id. Backend returns the
+        // deleted row, so wrap it in a data envelope for the success
+        // toast guard below.
+        const deleted = await deleteEvent(id).unwrap();
+        res = { data: deleted };
+        if (deleted) router.push("/");
       } else if (type === "approve") {
         const formData = new FormData();
         formData.append("data", JSON.stringify({ status: approveAction }));
@@ -88,6 +97,13 @@ const DeleteModal = ({
           }}
         >
           Approve
+        </DialogTrigger>
+      ) : btn === "danger" ? (
+        <DialogTrigger
+          className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold tracking-wide text-red-400 border border-red-500/40 hover:border-red-500 hover:bg-red-500/10 transition-all duration-200"
+          style={{ fontFamily: 'Poppins, sans-serif' }}
+        >
+          {message}
         </DialogTrigger>
       ) : (
         <DialogTrigger

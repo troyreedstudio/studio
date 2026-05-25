@@ -98,7 +98,10 @@ const ImageCropperModal = ({ file, aspectRatio, onClose }: Props) => {
               image={imageSrc}
               crop={crop}
               zoom={zoom}
+              minZoom={0.5}
+              maxZoom={3}
               aspect={aspectRatio}
+              restrictPosition={false}
               onCropChange={setCrop}
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}
@@ -113,7 +116,7 @@ const ImageCropperModal = ({ file, aspectRatio, onClose }: Props) => {
           <ZoomOut size={16} className="text-[#6B6B6B]" />
           <input
             type="range"
-            min="1"
+            min="0.5"
             max="3"
             step="0.01"
             value={zoom}
@@ -171,17 +174,14 @@ const cropImage = (
         reject(new Error("Canvas 2D context unavailable"));
         return;
       }
-      ctx.drawImage(
-        image,
-        pixels.x,
-        pixels.y,
-        pixels.width,
-        pixels.height,
-        0,
-        0,
-        pixels.width,
-        pixels.height
-      );
+      // Fill the canvas with the app's pure black first so zoomed-out
+      // crops (where the image is smaller than the 16:9 frame) get
+      // clean letterbox bars instead of garbled pixels. Then draw the
+      // source image at full natural size offset by the crop origin —
+      // anything outside the source stays black.
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, -pixels.x, -pixels.y);
       // JPEG re-encode at 92% quality keeps file size manageable while
       // staying visually lossless for photo content.
       canvas.toBlob(
