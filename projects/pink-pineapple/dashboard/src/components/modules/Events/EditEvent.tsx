@@ -13,6 +13,7 @@ import {
 } from "@/redux/features/events/events.spi";
 import { useGetVenuesQuery } from "@/redux/features/venues/venuesApi";
 import Spinner from "@/components/common/Spinner";
+import ImageCropperModal from "@/components/common/ImageCropperModal";
 
 const inter = { fontFamily: "Inter, sans-serif" };
 const outfit = { fontFamily: "Outfit, sans-serif" };
@@ -103,14 +104,22 @@ const EditEvent = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Crop queue — picked files awaiting their turn in the modal.
+  const [pendingCropFiles, setPendingCropFiles] = useState<File[]>([]);
+
   const handleNewImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    setNewImages([...newImages, ...files]);
-    setNewPreviews([
-      ...newPreviews,
-      ...files.map((f) => URL.createObjectURL(f)),
-    ]);
+    e.target.value = "";
+    setPendingCropFiles([...pendingCropFiles, ...files]);
+  };
+
+  const handleCropClose = (cropped: File | null) => {
+    if (cropped) {
+      setNewImages((prev) => [...prev, cropped]);
+      setNewPreviews((prev) => [...prev, URL.createObjectURL(cropped)]);
+    }
+    setPendingCropFiles((prev) => prev.slice(1));
   };
 
   const removeNewImage = (i: number) => {
@@ -492,6 +501,18 @@ const EditEvent = () => {
           </Link>
         </div>
       </div>
+
+      {/* Drag/zoom/crop modal — fires for each newly-picked image in
+          sequence so a multi-file pick still gives the admin per-image
+          framing control. 16:9 aspect matches the Featured Event card. */}
+      {pendingCropFiles.length > 0 && (
+        <ImageCropperModal
+          key={pendingCropFiles[0].name + pendingCropFiles.length}
+          file={pendingCropFiles[0]}
+          aspectRatio={16 / 9}
+          onClose={handleCropClose}
+        />
+      )}
     </div>
   );
 };

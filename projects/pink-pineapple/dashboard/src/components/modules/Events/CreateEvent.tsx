@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Upload, X, Info, ExternalLink } from "lucide-react";
 import { useCreateEventMutation } from "@/redux/features/events/events.spi";
 import { useGetVenuesQuery } from "@/redux/features/venues/venuesApi";
+import ImageCropperModal from "@/components/common/ImageCropperModal";
 
 const inter = { fontFamily: "Inter, sans-serif" };
 const outfit = { fontFamily: "Outfit, sans-serif" };
@@ -76,12 +77,26 @@ const CreateEvent = () => {
     if (errors[name]) setErrors({ ...errors, [name]: "" });
   };
 
+  // Cropper queue — files the user just picked but hasn't yet cropped.
+  // The modal opens for one file at a time; after the user crops + saves
+  // (or cancels) we shift the next file off the queue. This lets the
+  // admin pick 3 images at once and crop each in sequence.
+  const [pendingCropFiles, setPendingCropFiles] = useState<File[]>([]);
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    setEventImages([...eventImages, ...files]);
-    const previews = files.map((f) => URL.createObjectURL(f));
-    setEventPreviews([...eventPreviews, ...previews]);
+    // Reset the input so picking the same file again triggers onChange.
+    e.target.value = "";
+    setPendingCropFiles([...pendingCropFiles, ...files]);
+  };
+
+  const handleCropClose = (cropped: File | null) => {
+    if (cropped) {
+      setEventImages((prev) => [...prev, cropped]);
+      setEventPreviews((prev) => [...prev, URL.createObjectURL(cropped)]);
+    }
+    setPendingCropFiles((prev) => prev.slice(1));
   };
 
   const removeImage = (index: number) => {
@@ -534,6 +549,19 @@ const CreateEvent = () => {
           </Link>
         </div>
       </div>
+
+      {/* Image crop modal — opens for each freshly-picked file in
+          sequence. Aspect 16:9 matches the Featured Event card
+          (300×160). User can drag + zoom; result is a re-encoded
+          JPEG that fits the card frame exactly. */}
+      {pendingCropFiles.length > 0 && (
+        <ImageCropperModal
+          key={pendingCropFiles[0].name + pendingCropFiles.length}
+          file={pendingCropFiles[0]}
+          aspectRatio={16 / 9}
+          onClose={handleCropClose}
+        />
+      )}
     </div>
   );
 };
