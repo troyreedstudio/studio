@@ -137,9 +137,10 @@ class ProfileEditScreen extends StatelessWidget {
                     SizedBox(height: 10.h),
                     Text(
                       user.userInfo.value?.userProfile?.fullName ?? 'Anonymous',
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
+                      style: GoogleFonts.outfit(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w800,
+                        fontStyle: FontStyle.italic,
                         color: AppColors.textPrimary,
                       ),
                     ),
