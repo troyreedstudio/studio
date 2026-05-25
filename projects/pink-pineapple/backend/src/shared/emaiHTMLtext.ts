@@ -3,9 +3,8 @@ const generateOtpEmail = (otp: number) => {
     return `
       <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">Your verification code is inside. Expires in 10 minutes.</div>
       <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color: #FFFFFF; padding: 40px 20px; background-color: #000000;">
-        <div style="text-align: center; margin-bottom: 24px;">
-            <h1 style="font-size: 44px; font-weight: 900; letter-spacing: 5px; color: #E8A0B0; margin: 0; line-height: 1; font-family: 'Helvetica Neue', Arial, sans-serif;">PINK</h1>
-            <p style="font-size: 13px; letter-spacing: 8px; color: #FFFFFF; margin: 10px 0 0 0; font-weight: 700; font-family: 'Helvetica Neue', Arial, sans-serif;">PINEAPPLE</p>
+        <div style="text-align: center; margin-bottom: 28px;">
+            <img src="https://dashboard.pinkpineapple.app/images/logo_primary_dark.jpg" alt="Pink Pineapple" width="240" style="display: block; max-width: 100%; height: auto; margin: 0 auto; border: 0;" />
         </div>
         <div style="max-width: 500px; margin: 0 auto; background-color: #1A1A1A; padding: 40px 30px; border-radius: 16px; border: 1px solid #2A2A2A;">
             <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #8B4060, #E8A0B0, transparent); margin: 0 auto 30px auto;"></div>
