@@ -93,7 +93,10 @@ const CreateEvent = () => {
   const validate = () => {
     const next: Record<string, string> = {};
     if (!form.eventName.trim()) next.eventName = "Event name is required";
-    if (!form.venueId) next.venueId = "Pick the venue this event is at";
+    // venueId intentionally NOT required — featured events can be
+    // standalone (festivals, touring acts, pop-ups at non-curated
+    // locations). Backend Events.service.ts already only writes
+    // venueId when present, so omitting is safe.
     if (!form.startDate) next.startDate = "Start date required";
     if (!form.startTime) next.startTime = "Start time required";
     if (eventImages.length === 0) next.eventImages = "At least one image";
@@ -108,7 +111,8 @@ const CreateEvent = () => {
     try {
       const fd = new FormData();
       const eventData = {
-        venueId: form.venueId,
+        // Empty string → omit so backend stores null venue (standalone event).
+        ...(form.venueId ? { venueId: form.venueId } : {}),
         eventName: form.eventName,
         descriptions: form.descriptions,
         startDate: form.startDate,
@@ -144,11 +148,13 @@ const CreateEvent = () => {
             className="md:text-4xl text-3xl font-bold text-[#FFFFFF]"
             style={{ ...outfit, letterSpacing: "0.02em" }}
           >
-            Create Event
+            Create Featured Event
           </h1>
           <p className="text-[#B0B0B0] text-sm mt-2" style={inter}>
-            Add a new event tile. Tickets link out to the venue&apos;s booking
-            system — Pink Pineapple tracks every Buy click for attribution.
+            Add a one-off event, festival, or special night that appears in the
+            &ldquo;Featured Events&rdquo; section of the app. Distinct from a
+            venue&apos;s weekly programming (set inside each venue&apos;s edit
+            page).
           </p>
         </div>
         <Link
@@ -212,16 +218,21 @@ const CreateEvent = () => {
               className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
               style={inter}
             >
-              Venue <span className="text-red-400">*</span>
+              Venue
             </label>
+            <p className="text-[11px] text-[#6B6B6B] -mt-1 mb-2" style={inter}>
+              Optional. Leave blank for standalone events (festivals, touring
+              acts, pop-ups). Pick a venue when the event is hosted by one of
+              the curated Pink Pineapple venues.
+            </p>
             <select
               name="venueId"
               value={form.venueId}
               onChange={handleChange}
-              className={`${inputClass} ${errors.venueId ? "border-red-400" : ""}`}
+              className={inputClass}
               style={inter}
             >
-              <option value="">Select a venue…</option>
+              <option value="">None — standalone event</option>
               {venues.map((v: any) => (
                 <option key={v.id} value={v.id}>
                   {v.name}
@@ -229,11 +240,6 @@ const CreateEvent = () => {
                 </option>
               ))}
             </select>
-            {errors.venueId && (
-              <p className="text-red-400 text-xs mt-1" style={inter}>
-                {errors.venueId}
-              </p>
-            )}
           </div>
           <div>
             <label
