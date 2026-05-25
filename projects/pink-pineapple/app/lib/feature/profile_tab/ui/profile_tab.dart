@@ -9,6 +9,7 @@ import 'package:pineapple/core/local/local_data.dart';
 import 'package:pineapple/core/const/app_colors.dart';
 
 import '../../../core/const/user_info/user_info_model.dart';
+import '../subflow/profile_edit/ui/profile_edit_ui.dart';
 import '../../../core/global_widgets/app_network_image.dart';
 import '../controller/profile_tab_controller.dart';
 import '../subflow/profile/ui/user_profile.dart';
@@ -174,7 +175,11 @@ class ProfileTabPage extends StatelessWidget {
 
   Widget _buildProfileContent(UserInfoModel user) {
     return GestureDetector(
-      onTap: () => Get.to(() => UserProfilePage()),
+      // v1.3.0+18: tap the header card → straight to ProfileEditScreen.
+      // Previously this opened a separate UserProfilePage (now removed)
+      // which showed old fields like '@' and 'no address' that aren't
+      // even captured at sign-up. One profile area, one tap.
+      onTap: () => Get.to(() => ProfileEditScreen()),
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(

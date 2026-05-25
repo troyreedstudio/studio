@@ -20,13 +20,10 @@ class ProfileTabController extends GetxController {
           .obs;
   final local = LocalService();
 
-  // Menu items
+  // Menu items — v1.3.0+18: "Edit Profile" tile removed because it's
+  // redundant with the header card tap (which now goes straight to
+  // ProfileEditScreen). One profile area, one tap.
   final List<ProfileMenuItem> menuItems = [
-    ProfileMenuItem(
-      title: 'Edit Profile',
-      iconPath: 'assets/icons/help.png',
-      onTap: () => _onEditProfileTap(),
-    ),
     ProfileMenuItem(
       title: 'My Wishlist',
       iconPath: 'assets/icons/fav.png',

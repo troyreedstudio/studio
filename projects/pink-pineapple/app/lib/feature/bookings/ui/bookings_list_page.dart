@@ -80,15 +80,16 @@ class _BookingsListPageState extends State<BookingsListPage> {
             ...controller.pendingBookingList,
           ];
 
-          if (allBookings.isEmpty) {
-            return Column(
-              children: [
-                _buildHeader(),
-                const Expanded(child: _EmptyState()),
-              ],
-            );
-          }
-
+          // ALWAYS render _ItineraryList — never early-return to the
+          // empty state. The Tonight's Plan / Rate Where You Went /
+          // Share The Vibe sections are driven by NightPlans (NOT
+          // Booking records), so users who have saved a Plan My Night
+          // itinerary need to see those even when they haven't
+          // table-booked via Stripe (which is the only thing that
+          // populates the Booking model today). Each section
+          // self-hides via SizedBox.shrink when empty; if literally
+          // everything is empty the list scrolls to a fallback empty
+          // hint inside _ItineraryList.
           return Column(
             children: [
               _buildHeader(),
