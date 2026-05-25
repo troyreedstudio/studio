@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import Image from "next/image";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { useSingleEventQuery } from "@/redux/features/events/events.spi";
 import DeleteModal from "@/components/common/DeleteModal";
 import Spinner from "@/components/common/Spinner";
@@ -28,29 +30,42 @@ const SingleEvent = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       {/* Header */}
-      <div className="space-y-2">
-        <h1
-          className="text-3xl font-semibold text-[#FFFFFF]"
-          style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.03em' }}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2 flex-1 min-w-0">
+          <h1
+            className="text-3xl font-semibold text-[#FFFFFF]"
+            style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '0.03em' }}
+          >
+            {event.eventName}
+          </h1>
+          <p className="text-[#B0B0B0] text-sm leading-relaxed"
+            style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {event.descriptions}
+          </p>
+          <span
+            className={`inline-block text-xs px-3 py-1 rounded-full font-medium mt-1
+              ${event.eventStatus === "APPROVED"
+                ? "text-emerald-400 bg-emerald-400/10"
+                : event.eventStatus === "PENDING"
+                ? "text-yellow-400 bg-yellow-400/10"
+                : "text-red-400 bg-red-400/10"
+              }`}
+            style={{ fontFamily: 'Poppins, sans-serif' }}
+          >
+            {event.eventStatus}
+          </span>
+        </div>
+        <Link
+          href={`/event/${id}/edit`}
+          className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-[#000000] transition-all duration-200 hover:opacity-90"
+          style={{
+            fontFamily: "Poppins, sans-serif",
+            background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)",
+          }}
         >
-          {event.eventName}
-        </h1>
-        <p className="text-[#B0B0B0] text-sm leading-relaxed"
-          style={{ fontFamily: 'Poppins, sans-serif' }}>
-          {event.descriptions}
-        </p>
-        <span
-          className={`inline-block text-xs px-3 py-1 rounded-full font-medium mt-1
-            ${event.eventStatus === "APPROVED"
-              ? "text-emerald-400 bg-emerald-400/10"
-              : event.eventStatus === "PENDING"
-              ? "text-yellow-400 bg-yellow-400/10"
-              : "text-red-400 bg-red-400/10"
-            }`}
-          style={{ fontFamily: 'Poppins, sans-serif' }}
-        >
-          {event.eventStatus}
-        </span>
+          <Pencil size={14} />
+          Edit Event
+        </Link>
       </div>
 
       {/* Event Images */}

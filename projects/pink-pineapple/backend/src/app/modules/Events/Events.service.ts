@@ -676,6 +676,19 @@ const updateIntoDb = async (req: Request) => {
         parseData?.extraRequirements || isExists.extraRequirements,
       eventImages:
         combinedImages?.length > 0 ? combinedImages : isExists.eventImages,
+      // v1.3.0+22: edit flow added — venueId / bookingUrl / bookingProvider
+      // were previously read-only after create. Now editable. venueId is
+      // intentionally nullable so a standalone festival can be reassigned
+      // to a venue (or vice versa) without re-creating the whole event.
+      ...(parseData?.venueId !== undefined && {
+        venueId: parseData.venueId || null,
+      }),
+      ...(parseData?.bookingUrl !== undefined && {
+        bookingUrl: parseData.bookingUrl,
+      }),
+      ...(parseData?.bookingProvider !== undefined && {
+        bookingProvider: parseData.bookingProvider || null,
+      }),
     },
   });
   return update;

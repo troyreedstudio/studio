@@ -64,6 +64,19 @@ export const eventsApi = baseApi.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
+    // PUT /events/:id with multipart FormData (eventData JSON +
+    // optional new eventImages files). Used by the Edit Featured
+    // Event flow. Backend's updateIntoDb accepts partial updates —
+    // any field omitted from eventData JSON keeps its current value.
+    updateEvent: builder.mutation({
+      query: ({ id, formData }: { id: string; formData: FormData }) => ({
+        url: `/events/${id}`,
+        method: "PUT",
+        body: formData,
+      }),
+      invalidatesTags: ["Event"],
+    }),
+
     allBookings: builder.query({
       query: (args) => {
         const params = new URLSearchParams();
@@ -96,6 +109,7 @@ export const eventsApi = baseApi.injectEndpoints({
 export const {
   useAllEventsQuery,
   useCreateEventMutation,
+  useUpdateEventMutation,
   useSingleEventQuery,
   useUpdateEventStatusMutation,
   useAllBookingsQuery,
