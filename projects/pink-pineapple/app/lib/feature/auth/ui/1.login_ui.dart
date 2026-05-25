@@ -66,12 +66,15 @@ class LoginPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 40.h),
-                  // Logo
+                  // Logo — v1.3.0+21: testing the translucent rose-gold
+                  // logo on transparent background instead of the
+                  // JPG-on-black-box. Login screen is the test surface;
+                  // if it reads well here we roll out app-wide.
                   Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: Image.asset(
-                        ImagePath.splashLogo,
+                        ImagePath.transparentLogo,
                         width: double.infinity,
                         fit: BoxFit.contain,
                       ),

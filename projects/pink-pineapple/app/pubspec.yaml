@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 
 
-version: 1.3.0+20
+version: 1.3.0+21
 # build 4: 1.2.0+4, 7 March 2026
 # build 5: 1.2.0+5, 16 April 2026 — venue search, Instagram/WhatsApp, Google Places
 # build 6: 1.2.0+6, 17 April 2026 — booking WebView, ratings, curated schedule, Day Zero, gyms
@@ -21,6 +21,7 @@ version: 1.3.0+20
 # build 18: 1.3.0+18, 25 May 2026 — two fixes from Troy + Sascha testing 1.3.0+17. (a) Bookings tab "No bookings yet" empty state was firing for users without Booking records (i.e. anyone who hasn't table-booked via Stripe) — bypassing the entire Tonight's Plan banner / Rate Where You Went / Share The Vibe sections that are actually driven by NightPlan data. The gate has been there since initial commit but in v1.3.0+13 I built the new sections INSIDE the gate instead of moving them outside. Removed the early-return: _ItineraryList always renders now, each section self-hides if empty. Sascha's saved NightPlan now correctly appears as Tonight's Plan banner. (b) Profile consolidation: tapping the header card on Profile tab now goes straight to ProfileEditScreen instead of the legacy UserProfilePage (which showed obsolete fields like @ and "no address" that aren't even captured at sign-up). Removed the redundant "Edit Profile" menu tile — one profile area, one tap.
 # build 19: 1.3.0+19, 25 May 2026 — Profile Settings name typography fix. Per Troy's screenshot the name under the avatar circle was rendering in cormorantGaramond (serif) instead of the brand's Outfit bold italic. Aligned it to match the rest of the brand (same style used on the Profile tab header card + venue names everywhere). Also bumped size 16sp → 18sp for visual weight under the larger avatar circle.
 # build 20: 1.3.0+20, 25 May 2026 — Removed hardcoded Day Zero Bali filler tile from the Featured Events home carousel. The event had passed in April 2026 and there was no admin surface to remove or update it. _fillerEvents array deleted from home.dart. Featured Events now strictly reflects real backend events from the Events admin (newly renamed "Featured Events" in the dashboard nav with optional venue, page heading, Quick Action card, and stat label all updated for consistency). Empty section shows "No featured events yet" copy.
+# build 21: 1.3.0+21, 25 May 2026 — Translucent logo test on the login screen. Per repeated tester feedback that the JPG-on-black-box logo looks boxy, swapped the login screen's logo to the new transparent rose-gold gradient PNG (assets/images/app_logo_transparent.png). Login is the test surface only — if it reads well, roll out across the rest of the app + email templates + dashboard. All other surfaces (splash, header bars, profile tab, dashboard, emails) still use the original app_logo_dark.jpg until the test passes.
 
 environment:
   sdk: ^3.9.0

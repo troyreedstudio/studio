@@ -6,6 +6,10 @@ class ImagePath {
   static const String bg_2 = "assets/images/bg_2.png";
   static const String smallLogo = "assets/images/app_logo_dark.jpg";
   static const String splashLogo = "assets/images/app_logo_dark.jpg";
+  // v1.3.0+21: translucent rose-gold logo for testing on dark surfaces.
+  // Currently used only on the login screen — if testers like it,
+  // roll out across the app + dashboard.
+  static const String transparentLogo = "assets/images/app_logo_transparent.png";
   static const String bg_screen = "assets/images/bg_screen.png";
   static const String pineapple = "assets/images/app_logo_dark.jpg";
   static const String pineappleroom = "assets/images/app_logo_dark.jpg";
