@@ -8,6 +8,7 @@ import '../../../core/local/local_data.dart';
 import '../../../core/network_caller/endpoints.dart';
 import '../../../core/network_caller/network_config.dart';
 import '../../../core/services/websocket_service.dart';
+import '../../home/services/plan_my_night_storage.dart';
 import '../../home_bottom_nav/ui/home_bottom_nav.dart';
 
 class LoginController extends GetxController {
@@ -113,7 +114,16 @@ class LoginController extends GetxController {
         if (Get.isRegistered<UserInfoController>()) {
           Get.delete<UserInfoController>();
         }
-        Get.put(UserInfoController());
+        // permanent: true so the controller survives route changes —
+        // without this, navigations from profile-tab (Get.to to
+        // ProfileEditScreen / UserProfilePage) silently failed because
+        // those screens' field-init Get.find<UserInfoController>() threw
+        // after the controller was disposed with the previous route.
+        Get.put(UserInfoController(), permanent: true);
+        // Clear any leftover Plan My Night state from a previous user
+        // on the same device — prevents one user's plan from leaking
+        // into another's session.
+        await PlanMyNightStorage.clear();
         Get.to(() => HomeBottomNav());
 
         // Small delay ensures the new route's overlay is ready.

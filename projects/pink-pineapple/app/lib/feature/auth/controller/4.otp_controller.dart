@@ -8,6 +8,7 @@ import '../../../core/local/local_data.dart';
 import '../../../core/network_caller/endpoints.dart';
 import '../../../core/network_caller/network_config.dart';
 import '../../../core/const/user_info/user_info_controller.dart';
+import '../../home/services/plan_my_night_storage.dart';
 import '../../home_bottom_nav/ui/home_bottom_nav.dart';
 import '../ui/1.login_ui.dart';
 import '../ui/5.set_forget_password.dart';
@@ -120,7 +121,17 @@ class OtpController extends GetxController {
         if (Get.isRegistered<UserInfoController>()) {
           Get.delete<UserInfoController>();
         }
-        Get.put(UserInfoController());
+        // permanent: true → controller survives Get.offAll. Without
+        // this, the OTP route gets popped and takes UserInfoController
+        // with it, causing subsequent navigations from the profile tab
+        // (Edit Profile, avatar tap → UserProfilePage) to silently fail
+        // because their field-init Get.find<UserInfoController>() throws.
+        Get.put(UserInfoController(), permanent: true);
+        // Clear any leftover Plan My Night state from a previous user
+        // on this device (e.g. Sascha's plan still on the phone when
+        // Chase signs up). Without this, Chase's PMN opens at the
+        // group-size step with someone else's stale data.
+        await PlanMyNightStorage.clear();
         Get.offAll(() => HomeBottomNav());
         return true;
       } else {

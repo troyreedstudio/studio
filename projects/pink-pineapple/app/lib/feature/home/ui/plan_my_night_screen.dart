@@ -594,14 +594,13 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
     await _syncToBackend(replaceExisting: replaceExisting);
     if (!mounted) return;
     if (_serverPlanId != null) {
-      Get.snackbar(
-        'Tonight is locked in',
-        'Your plan is saved in My Bookings.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.surface,
-        colorText: AppColors.textPrimary,
-        duration: const Duration(seconds: 2),
-      );
+      // Confirmation modal with a clear deep-link to the Bookings tab.
+      // Previously this was a 2s snackbar with no action button, which
+      // testers reported missing — leaving them stuck on the Plan
+      // screen unsure if anything had happened. The modal is dismissable
+      // (tap outside or Stay here) but the primary CTA hops them to
+      // the Bookings tab where they can see Tonight's Plan banner.
+      await _showSavedSheet();
     } else {
       Get.snackbar(
         'Save failed',
@@ -612,6 +611,119 @@ class _PlanMyNightScreenState extends State<PlanMyNightScreen> {
         duration: const Duration(seconds: 3),
       );
     }
+  }
+
+  /// Post-save confirmation modal with "View in My Bookings" CTA.
+  Future<void> _showSavedSheet() async {
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.backgroundCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 24.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: EdgeInsets.only(bottom: 18.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.textMuted,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: AppColors.accentRoseGold,
+                  size: 48.sp,
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  "Tonight is locked in",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w800,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  "Your plan is saved. Pull it up any time from My Bookings.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13.sp,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    // Close Plan My Night screen, switch to Bookings tab.
+                    try {
+                      Get.find<HomeNavController>().changeIndex(1);
+                    } catch (_) {}
+                    if (Get.key.currentState?.canPop() ?? false) {
+                      Get.back();
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF8B4060),
+                          Color(0xFFC4707E),
+                          Color(0xFFE8A0B0),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "VIEW IN MY BOOKINGS",
+                        style: GoogleFonts.outfit(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w800,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(
+                    'Stay here',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13.sp,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   /// Shown when the user taps "Save this plan" and an ACTIVE plan for
