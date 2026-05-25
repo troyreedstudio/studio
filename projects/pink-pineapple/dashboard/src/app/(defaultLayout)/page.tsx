@@ -57,7 +57,7 @@ const CommonLayoutHomePage = () => {
 
   const stats = [
     { label: "Total Venues", value: activeClubs, icon: MapPin },
-    { label: "Active Events", value: totalEvents, icon: CalendarRange },
+    { label: "Active Featured Events", value: totalEvents, icon: CalendarRange },
     { label: "Total Bookings", value: totalBookings, icon: CalendarCheck2 },
     { label: "Pending Approvals", value: pendingCount, icon: Shield },
   ];
@@ -167,10 +167,10 @@ const CommonLayoutHomePage = () => {
             </div>
             <div>
               <p className="text-[#FFFFFF] font-medium text-sm" style={inter}>
-                Create New Event
+                Create Featured Event
               </p>
               <p className="text-[#B0B0B0] text-xs mt-0.5" style={inter}>
-                Set up a new event for your venues
+                One-off events, festivals, or special nights
               </p>
             </div>
           </Link>
@@ -198,7 +198,7 @@ const CommonLayoutHomePage = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-[#FFFFFF]" style={playfair}>
-              Pending Events
+              Pending Featured Events
             </h2>
             <Link
               href="/event"

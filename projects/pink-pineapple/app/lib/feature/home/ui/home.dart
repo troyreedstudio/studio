@@ -940,23 +940,10 @@ class _PlanMyNightCard extends StatelessWidget {
 class _FeaturedEventsSection extends StatelessWidget {
   const _FeaturedEventsSection();
 
-  // Filler tile shown AFTER any active backend events. Kept as an
-  // editorial example until we have enough real events to never need
-  // a placeholder. Backend events always rank before this so a live
-  // event (e.g. tonight at Savaya) outranks a past festival.
-  static final _fillerEvents = [
-    {
-      'title': 'Day Zero Bali',
-      'subtitle': 'Journey to the Centre of the Universe',
-      'venue': 'Savaya · GWK Cultural Park',
-      'dates': 'Apr 14–19, 2026',
-      'lineup':
-          'Bonobo · Damian Lazarus · Jamie Jones · Jan Blomqvist · Âme · John Summit',
-      'ticketUrl': 'https://megatix.co.id/events/day-zero-bali',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80',
-    },
-  ];
+  // Hardcoded _fillerEvents removed v1.3.0+20. Day Zero Bali had gone
+  // stale (event passed in April 2026) and there was no admin surface
+  // to remove or update it. Featured Events now strictly reflects real
+  // backend events; empty section shows "No featured events yet."
 
   String _formatDate(DateTime? d) {
     if (d == null) return '';
@@ -1036,14 +1023,12 @@ class _FeaturedEventsSection extends StatelessWidget {
               return bCreated.compareTo(aCreated);
             });
 
-          // Live, sorted backend events first; filler examples after so
-          // the section never looks empty. The filler is editorial
-          // padding — once we have 3+ real upcoming events it can be
-          // removed entirely (just delete _fillerEvents).
-          final cards = [
-            ...upcoming.map(_toCardData),
-            ..._fillerEvents,
-          ];
+          // Only real backend events. The hardcoded _fillerEvents
+          // padding (Day Zero Bali) was removed in v1.3.0+20 — it had
+          // gone stale (the event passed in April) and there was no
+          // dashboard surface to remove it. Section now self-hides
+          // via the cards.isEmpty branch below when nothing's on.
+          final cards = upcoming.map(_toCardData).toList();
 
           if (cards.isEmpty) {
             return SizedBox(

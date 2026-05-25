@@ -16,10 +16,11 @@ const EventPage = () => {
             className="md:text-4xl text-3xl font-semibold text-[#FFFFFF]"
             style={{ ...garamond, letterSpacing: "0.02em" }}
           >
-            Events
+            Featured Events
           </h1>
           <p className="text-[#B0B0B0] text-sm mt-2" style={poppins}>
-            Manage all venue events
+            One-off events, festivals, and special nights that appear in the
+            Featured Events section of the app
           </p>
         </div>
         <Link
@@ -28,7 +29,7 @@ const EventPage = () => {
           style={{ ...poppins, background: "linear-gradient(135deg, #8B4060 0%, #E8A0B0 100%)" }}
         >
           <Plus size={16} />
-          Add Event
+          Add Featured Event
         </Link>
       </div>
 

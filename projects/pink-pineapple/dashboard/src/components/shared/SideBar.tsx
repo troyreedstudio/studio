@@ -41,7 +41,12 @@ const admin = [
     icon: MapPin,
   },
   {
-    title: "Events",
+    // Renamed to "Featured Events" so the nav label matches what the
+    // section is called on the Flutter home screen ("Featured Events"
+    // carousel). These are one-off events / festivals — distinct from
+    // a venue's weekly programming which is set inside each venue's
+    // edit page.
+    title: "Featured Events",
     url: "/event",
     icon: CalendarRange,
   },
