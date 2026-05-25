@@ -22,6 +22,11 @@ class AllEventModel {
   // instead of falling back to the admin creator's fullName.
   // Null when the event is standalone (festival, touring act).
   final EventVenue? venue;
+  // v1.3.0+23: booking link-out fields. Event-level URL wins; if
+  // empty Flutter falls back to venue.bookingUrl. Used by the
+  // Featured Event card's tap handler.
+  final String? bookingUrl;
+  final String? bookingProvider;
   final List<EventTicket>? eventTickets;
   final List<EventTable>? eventTable;
   final bool? isFavorite;
@@ -46,6 +51,8 @@ class AllEventModel {
     this.updatedAt,
     this.user,
     this.venue,
+    this.bookingUrl,
+    this.bookingProvider,
     this.eventTickets,
     this.eventTable,
     this.isFavorite,
@@ -135,6 +142,8 @@ class AllEventModel {
     venue: json["venue"] == null
         ? null
         : EventVenue.fromJson(json["venue"] as Map<String, dynamic>),
+    bookingUrl: json["bookingUrl"]?.toString(),
+    bookingProvider: json["bookingProvider"]?.toString(),
     eventTickets: json["eventTickets"] == null
         ? []
         : List<EventTicket>.from(
@@ -445,14 +454,28 @@ class EventVenue {
   final String? name;
   final String? slug;
   final String? area;
+  // v1.3.0+23: venue-level booking fields included so the Featured
+  // Event card can fall back when the event has no event-specific
+  // bookingUrl. Same precedence the venue detail page already uses.
+  final String? bookingUrl;
+  final String? bookingProvider;
 
-  EventVenue({this.id, this.name, this.slug, this.area});
+  EventVenue({
+    this.id,
+    this.name,
+    this.slug,
+    this.area,
+    this.bookingUrl,
+    this.bookingProvider,
+  });
 
   factory EventVenue.fromJson(Map<String, dynamic> json) => EventVenue(
     id: json["id"]?.toString(),
     name: json["name"]?.toString(),
     slug: json["slug"]?.toString(),
     area: json["area"]?.toString(),
+    bookingUrl: json["bookingUrl"]?.toString(),
+    bookingProvider: json["bookingProvider"]?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -460,6 +483,8 @@ class EventVenue {
     "name": name,
     "slug": slug,
     "area": area,
+    "bookingUrl": bookingUrl,
+    "bookingProvider": bookingProvider,
   };
 }
 

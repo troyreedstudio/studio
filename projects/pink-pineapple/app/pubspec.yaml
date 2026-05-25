@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 
 
-version: 1.3.0+22
+version: 1.3.0+23
 # build 4: 1.2.0+4, 7 March 2026
 # build 5: 1.2.0+5, 16 April 2026 — venue search, Instagram/WhatsApp, Google Places
 # build 6: 1.2.0+6, 17 April 2026 — booking WebView, ratings, curated schedule, Day Zero, gyms
@@ -23,6 +23,7 @@ version: 1.3.0+22
 # build 20: 1.3.0+20, 25 May 2026 — Removed hardcoded Day Zero Bali filler tile from the Featured Events home carousel. The event had passed in April 2026 and there was no admin surface to remove or update it. _fillerEvents array deleted from home.dart. Featured Events now strictly reflects real backend events from the Events admin (newly renamed "Featured Events" in the dashboard nav with optional venue, page heading, Quick Action card, and stat label all updated for consistency). Empty section shows "No featured events yet" copy.
 # build 21: 1.3.0+21, 25 May 2026 — Translucent logo test on the login screen. Per repeated tester feedback that the JPG-on-black-box logo looks boxy, swapped the login screen's logo to the new transparent rose-gold gradient PNG (assets/images/app_logo_transparent.png). Login is the test surface only — if it reads well, roll out across the rest of the app + email templates + dashboard. All other surfaces (splash, header bars, profile tab, dashboard, emails) still use the original app_logo_dark.jpg until the test passes.
 # build 22: 1.3.0+22, 26 May 2026 — Featured Events card fixes from Troy's testing. (a) Card was showing the admin user's name (Troy Reed / Rowan itsjusreal) instead of the actual linked venue (Savaya) — backend Events list select now includes venue { id, name, slug, area }; AllEventModel parses venue via new EventVenue class; home _toCardData uses event.venue?.name with a fallback to empty string for standalone events. (b) Card had a huge gray dead zone below the image because the long description field was never rendered anywhere — card now shows venue · area, then time, then up to 3 lines of description with proper ellipsis. (c) Card height 220 → 280 and image height 110 → 160 so the gig poster reads properly and the description block has room.
+# build 23: 1.3.0+23, 26 May 2026 — Tappable Featured Event cards. Troy reported the new bookingUrl field on Featured Events wasn't doing anything — cards were inert. Backend Events list select now returns bookingUrl + bookingProvider (event-level) and the venue subselect adds bookingUrl / bookingProvider / bookingDailyUrls so we can fall back to the venue's ticket link when an event has none. AllEventModel + EventVenue parse the new fields. home.dart _toCardData computes ticketUrl = event.bookingUrl ?? venue.bookingUrl ?? '' and the existing _FeaturedEventCard.onTap opens VenueBookingWebView with it (no-op when both are empty). Same dashboard image cropper landed earlier in the day so editors can frame 16:9 hero art without pre-sizing.
 
 environment:
   sdk: ^3.9.0

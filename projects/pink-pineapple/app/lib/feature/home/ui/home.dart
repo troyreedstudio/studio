@@ -971,13 +971,21 @@ class _FeaturedEventsSection extends StatelessWidget {
     final dates = _formatDate(event.startDate);
     final time =
         '${event.startTime ?? ''}${(event.endTime != null && event.endTime!.isNotEmpty) ? ' – ${event.endTime}' : ''}';
+    // v1.3.0+23: tap-through to ticketing. Prefer the event's own
+    // bookingUrl (set on the Featured Event in the dashboard) and
+    // fall back to the linked venue's bookingUrl so taps still land
+    // somewhere useful when the editor forgot the per-event link.
+    final ticketUrl =
+        (event.bookingUrl != null && event.bookingUrl!.isNotEmpty)
+            ? event.bookingUrl!
+            : (event.venue?.bookingUrl ?? '');
     return {
       'title': event.eventName ?? 'Event',
       'description': event.descriptions ?? '',
       'venue': venueLine,
       'dates': dates,
       'time': time.trim(),
-      'ticketUrl': '',
+      'ticketUrl': ticketUrl,
       'imageUrl': imageUrl,
       'eventId': event.id ?? '',
     };

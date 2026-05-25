@@ -209,6 +209,10 @@ const getListFromDb = async (
       extraRequirements: true,
       eventImages: true,
       eventStatus: true,
+      // v1.3.0+23: surface booking link-out fields to the Flutter
+      // card so tapping a Featured Event opens the ticket URL.
+      bookingUrl: true,
+      bookingProvider: true,
       createdAt: true,
       updatedAt: true,
       user:{
@@ -229,6 +233,14 @@ const getListFromDb = async (
           name: true,
           slug: true,
           area: true,
+          // Booking fallback chain: if the event has no bookingUrl,
+          // Flutter falls back to the venue's bookingUrl. Same for
+          // provider. Both come back in the list response so the
+          // home Featured Event card can wire its tap without a
+          // second API call.
+          bookingUrl: true,
+          bookingProvider: true,
+          bookingDailyUrls: true,
         },
       },
       eventTickets: {
@@ -366,6 +378,10 @@ const myEvent = async (
       extraRequirements: true,
       eventImages: true,
       eventStatus: true,
+      // v1.3.0+23: surface booking link-out fields to the Flutter
+      // card so tapping a Featured Event opens the ticket URL.
+      bookingUrl: true,
+      bookingProvider: true,
       createdAt: true,
       updatedAt: true,
       user:{
@@ -386,6 +402,14 @@ const myEvent = async (
           name: true,
           slug: true,
           area: true,
+          // Booking fallback chain: if the event has no bookingUrl,
+          // Flutter falls back to the venue's bookingUrl. Same for
+          // provider. Both come back in the list response so the
+          // home Featured Event card can wire its tap without a
+          // second API call.
+          bookingUrl: true,
+          bookingProvider: true,
+          bookingDailyUrls: true,
         },
       },
       eventTickets: {
@@ -500,6 +524,10 @@ const tonightEvents = await prisma.events.findMany({
       extraRequirements: true,
       eventImages: true,
       eventStatus: true,
+      // v1.3.0+23: surface booking link-out fields to the Flutter
+      // card so tapping a Featured Event opens the ticket URL.
+      bookingUrl: true,
+      bookingProvider: true,
       createdAt: true,
       updatedAt: true,
       user:{
@@ -520,6 +548,14 @@ const tonightEvents = await prisma.events.findMany({
           name: true,
           slug: true,
           area: true,
+          // Booking fallback chain: if the event has no bookingUrl,
+          // Flutter falls back to the venue's bookingUrl. Same for
+          // provider. Both come back in the list response so the
+          // home Featured Event card can wire its tap without a
+          // second API call.
+          bookingUrl: true,
+          bookingProvider: true,
+          bookingDailyUrls: true,
         },
       },
       eventTickets: {
@@ -584,6 +620,10 @@ const getByIdFromDb = async (id: string, userId: string) => {
       extraRequirements: true,
       eventImages: true,
       eventStatus: true,
+      // v1.3.0+23: surface booking link-out fields to the Flutter
+      // card so tapping a Featured Event opens the ticket URL.
+      bookingUrl: true,
+      bookingProvider: true,
       createdAt: true,
       updatedAt: true,
       user:{
@@ -604,6 +644,14 @@ const getByIdFromDb = async (id: string, userId: string) => {
           name: true,
           slug: true,
           area: true,
+          // Booking fallback chain: if the event has no bookingUrl,
+          // Flutter falls back to the venue's bookingUrl. Same for
+          // provider. Both come back in the list response so the
+          // home Featured Event card can wire its tap without a
+          // second API call.
+          bookingUrl: true,
+          bookingProvider: true,
+          bookingDailyUrls: true,
         },
       },
       eventTickets: {
