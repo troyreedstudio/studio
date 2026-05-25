@@ -220,6 +220,17 @@ const getListFromDb = async (
           email:true,
         }
       },
+      // v1.3.0+22: include the actual venue so the Flutter card can
+      // render the venue name (e.g. "Savaya") instead of falling back
+      // to the admin user who created the event ("Troy Reed").
+      venue: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          area: true,
+        },
+      },
       eventTickets: {
         select: {
           id: true,
@@ -366,6 +377,17 @@ const myEvent = async (
           email:true,
         }
       },
+      // v1.3.0+22: include the actual venue so the Flutter card can
+      // render the venue name (e.g. "Savaya") instead of falling back
+      // to the admin user who created the event ("Troy Reed").
+      venue: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          area: true,
+        },
+      },
       eventTickets: {
         select: {
           id: true,
@@ -489,6 +511,17 @@ const tonightEvents = await prisma.events.findMany({
           email:true,
         }
       },
+      // v1.3.0+22: include the actual venue so the Flutter card can
+      // render the venue name (e.g. "Savaya") instead of falling back
+      // to the admin user who created the event ("Troy Reed").
+      venue: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          area: true,
+        },
+      },
       eventTickets: {
         select: {
           id: true,
@@ -561,6 +594,17 @@ const getByIdFromDb = async (id: string, userId: string) => {
           profileImage:true,
           email:true,
         }
+      },
+      // v1.3.0+22: include the actual venue so the Flutter card can
+      // render the venue name (e.g. "Savaya") instead of falling back
+      // to the admin user who created the event ("Troy Reed").
+      venue: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          area: true,
+        },
       },
       eventTickets: {
         select: {

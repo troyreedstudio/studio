@@ -17,6 +17,11 @@ class AllEventModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final User? user;
+  // v1.3.0+22: backend now joins the linked venue into the events
+  // response. Featured Events card uses this for the venue name
+  // instead of falling back to the admin creator's fullName.
+  // Null when the event is standalone (festival, touring act).
+  final EventVenue? venue;
   final List<EventTicket>? eventTickets;
   final List<EventTable>? eventTable;
   final bool? isFavorite;
@@ -40,6 +45,7 @@ class AllEventModel {
     this.createdAt,
     this.updatedAt,
     this.user,
+    this.venue,
     this.eventTickets,
     this.eventTable,
     this.isFavorite,
@@ -126,6 +132,9 @@ class AllEventModel {
     user: json["user"] == null
         ? null
         : User.fromJson(json["user"] as Map<String, dynamic>),
+    venue: json["venue"] == null
+        ? null
+        : EventVenue.fromJson(json["venue"] as Map<String, dynamic>),
     eventTickets: json["eventTickets"] == null
         ? []
         : List<EventTicket>.from(
@@ -425,6 +434,32 @@ class User {
     "fullAddress": fullAddress,
     "profileImage": profileImage,
     "email": email,
+  };
+}
+
+/// Slim venue payload joined into the Events response. Only the fields
+/// the Featured Events card needs (name + slug for tap-through later,
+/// area as a secondary line). Full Venue model is in the venue feature.
+class EventVenue {
+  final String? id;
+  final String? name;
+  final String? slug;
+  final String? area;
+
+  EventVenue({this.id, this.name, this.slug, this.area});
+
+  factory EventVenue.fromJson(Map<String, dynamic> json) => EventVenue(
+    id: json["id"]?.toString(),
+    name: json["name"]?.toString(),
+    slug: json["slug"]?.toString(),
+    area: json["area"]?.toString(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "name": name,
+    "slug": slug,
+    "area": area,
   };
 }
 

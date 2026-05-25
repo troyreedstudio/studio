@@ -959,16 +959,24 @@ class _FeaturedEventsSection extends StatelessWidget {
         (event.eventImages != null && event.eventImages!.isNotEmpty)
             ? event.eventImages!.first
             : '';
-    final venueName = event.user?.fullName ?? '';
+    // v1.3.0+22: prefer the linked venue's actual name (e.g. "Savaya")
+    // over the admin user who created the event (was showing "Troy
+    // Reed" / "Rowan itsjusreal" on the card). Falls back to empty
+    // string for standalone events (festivals, touring acts).
+    final venueName = event.venue?.name ?? '';
+    final venueArea = event.venue?.area ?? '';
+    final venueLine = [venueName, venueArea]
+        .where((s) => s.isNotEmpty)
+        .join(' · ');
     final dates = _formatDate(event.startDate);
     final time =
         '${event.startTime ?? ''}${(event.endTime != null && event.endTime!.isNotEmpty) ? ' – ${event.endTime}' : ''}';
     return {
       'title': event.eventName ?? 'Event',
-      'subtitle': event.descriptions ?? '',
-      'venue': venueName.isNotEmpty ? venueName : (dates.isNotEmpty ? dates : ''),
+      'description': event.descriptions ?? '',
+      'venue': venueLine,
       'dates': dates,
-      'lineup': time.trim(),
+      'time': time.trim(),
       'ticketUrl': '',
       'imageUrl': imageUrl,
       'eventId': event.id ?? '',
@@ -1046,7 +1054,11 @@ class _FeaturedEventsSection extends StatelessWidget {
           }
 
           return SizedBox(
-            height: 220.h,
+            // v1.3.0+22: bumped 220 → 280 to give image more vertical
+            // weight + room for a 2-line description below the venue
+            // line. Previously the lower half of each card was empty
+            // grey under the image.
+            height: 280.h,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -1104,7 +1116,9 @@ class _FeaturedEventCard extends StatelessWidget {
                 topRight: Radius.circular(16),
               ),
               child: SizedBox(
-                height: 110.h,
+                // Bumped 110 → 160 so the event poster reads properly
+                // (gig flyers / festival hero shots need vertical room).
+                height: 160.h,
                 width: double.infinity,
                 child: Stack(
                   fit: StackFit.expand,
@@ -1152,44 +1166,68 @@ class _FeaturedEventCard extends StatelessWidget {
                 ),
               ),
             ),
-            // Event details
-            Padding(
-              padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 10.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event['title'] ?? '',
-                    style: GoogleFonts.outfit(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w800,
-                      fontStyle: FontStyle.italic,
-                      color: AppColors.textPrimary,
+            // Event details — v1.3.0+22: shows venue · area on the
+            // rose-gold line, then time, then up to 2 lines of the
+            // event description so the lower half of the card has
+            // actual content instead of empty grey.
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(12.w, 10.h, 12.w, 12.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event['title'] ?? '',
+                      style: GoogleFonts.outfit(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w800,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    event['venue'] ?? '',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.sp,
-                      color: AppColors.accentRoseGold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    event['lineup'] ?? '',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11.sp,
-                      color: AppColors.textSecondary,
-                      height: 1.3,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    if ((event['venue'] ?? '').isNotEmpty) ...[
+                      SizedBox(height: 2.h),
+                      Text(
+                        event['venue'] ?? '',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12.sp,
+                          color: AppColors.accentRoseGold,
+                          letterSpacing: 0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    if ((event['time'] ?? '').isNotEmpty) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        event['time'] ?? '',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.sp,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                    if ((event['description'] ?? '').isNotEmpty) ...[
+                      SizedBox(height: 6.h),
+                      Expanded(
+                        child: Text(
+                          event['description'] ?? '',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.sp,
+                            color: AppColors.textMuted,
+                            height: 1.35,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ],
