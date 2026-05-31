@@ -1079,15 +1079,29 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       }
     }
 
+    // v1.3.1+24: extended the fallback chain to honour what's
+    // actually on the venue record. Order: INSTAGRAM_DM handle →
+    // instagram URL, then any website. Without this, restaurants
+    // like Il Salotto (has website, no booking system) and Miss
+    // Fish (Instagram-only bookings) showed a misleading "Coming
+    // Soon" snackbar even though there was a real destination to
+    // send the user to.
+    if (url.isEmpty &&
+        venue.bookingProvider == 'INSTAGRAM_DM' &&
+        venue.instagram.isNotEmpty) {
+      final handle = venue.instagram.replaceFirst('@', '').trim();
+      if (handle.isNotEmpty) url = 'https://instagram.com/$handle';
+    }
+    if (url.isEmpty && venue.website.isNotEmpty) {
+      url = venue.website;
+    }
+
     if (url.isEmpty) {
-      Get.snackbar(
-        'Booking Coming Soon',
-        '${venue.name} booking will be available shortly.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.surface,
-        colorText: AppColors.textPrimary,
-        duration: const Duration(seconds: 3),
-      );
+      // No destination at all. Silently no-op — better than a
+      // "Coming Soon" snackbar that reads as half-built. The button
+      // label upstream is already gated on having one of these
+      // fields, so this path should now be unreachable for the CTA
+      // buttons. Kept as a safety net.
       return;
     }
 
@@ -1219,16 +1233,46 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       );
     }
 
-    // Restaurants — single "Book a Table" CTA that opens the venue's
-    // booking system / website via _openBooking. Applies whether the
-    // restaurant has nightlife tagging or not, per Troy's "keep it
-    // simple" call for v1.3.
+    // Restaurants — single CTA whose label matches what tapping it
+    // actually does. v1.3.1+24: replaced the hardcoded "BOOK A TABLE"
+    // label with a fallback chain so users aren't promised a
+    // reservation flow then routed to Instagram or shown "Coming
+    // Soon" when the venue has a perfectly good website. Order:
+    //   1. real bookingUrl → "BOOK A TABLE"
+    //   2. INSTAGRAM_DM + handle → "DM ON INSTAGRAM"
+    //   3. website → "VISIT WEBSITE"
+    //   4. nothing → hide the button (better than "Coming Soon" copy
+    //      that just looks like the app is half-built).
     if (isRestaurant) {
+      final hasBooking = venue.bookingUrl.isNotEmpty;
+      final hasInstagramDm = venue.bookingProvider == 'INSTAGRAM_DM' &&
+          venue.instagram.isNotEmpty;
+      final hasWebsite = venue.website.isNotEmpty;
+
+      String? label;
+      IconData? icon;
+      if (hasBooking) {
+        label = 'BOOK A TABLE';
+        icon = Icons.table_bar_outlined;
+      } else if (hasInstagramDm) {
+        label = 'DM ON INSTAGRAM';
+        icon = Icons.alternate_email;
+      } else if (hasWebsite) {
+        label = 'VISIT WEBSITE';
+        icon = Icons.public_outlined;
+      }
+
+      if (label == null) {
+        // No surface to send the user to. Hide the button rather
+        // than promising and disappointing.
+        return const SizedBox.shrink();
+      }
+
       return Padding(
         padding: EdgeInsets.symmetric(horizontal: 24.w),
         child: PpPrimaryButton(
-          label: 'BOOK A TABLE',
-          icon: Icons.table_bar_outlined,
+          label: label,
+          icon: icon!,
           onTap: () async {
             if (!await AuthGuard.requireAuth()) return;
             _openBooking(venue);
