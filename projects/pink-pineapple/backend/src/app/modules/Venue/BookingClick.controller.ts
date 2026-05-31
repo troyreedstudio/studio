@@ -49,6 +49,10 @@ const recordClick = catchAsync(async (req: Request & { user?: any }, res: Respon
       bookingWhatsapp: true,
       bookingInstagram: true,
       bookingDailyUrls: true,
+      // v1.3.1+26: website is the preferred fallback over social
+      // contact channels. Pulled here so the resolver below can
+      // prefer it without a second query.
+      website: true,
     },
   });
 
@@ -62,7 +66,14 @@ const recordClick = catchAsync(async (req: Request & { user?: any }, res: Respon
   }
 
   // Pick the right URL/contact based on provider + day-of-week routing.
-  // Daily URLs (Mesa-style) take precedence when a matching dayKey is supplied.
+  // v1.3.1+26: website beats contact-channel fallbacks (phone/whatsapp/
+  // instagram_dm). Reason: bookingProvider was originally a Fiverr-seed
+  // value when most venues had no website. Google Places backfill on
+  // 2026-05-22 populated venue.website for most restaurants but the
+  // provider field was never reconciled. Sending users to a sleek
+  // website is always better than a social DM thread for "BOOK A
+  // TABLE" intent. Contact-only providers fall through only when
+  // there's truly no web destination.
   let destinationUrl = venue.bookingUrl || "";
   const provider = venue.bookingProvider || "CUSTOM_WEB";
 
@@ -71,14 +82,22 @@ const recordClick = catchAsync(async (req: Request & { user?: any }, res: Respon
     destinationUrl = dailyUrls[dayKey];
   }
 
-  if (provider === "PHONE" && venue.bookingPhone) {
-    destinationUrl = `tel:${venue.bookingPhone.replace(/\s+/g, "")}`;
-  } else if (provider === "WHATSAPP" && venue.bookingWhatsapp) {
-    const num = venue.bookingWhatsapp.replace(/\D/g, "");
-    destinationUrl = `https://wa.me/${num}`;
-  } else if (provider === "INSTAGRAM_DM" && venue.bookingInstagram) {
-    const handle = venue.bookingInstagram.replace(/^@/, "");
-    destinationUrl = `https://ig.me/m/${handle}`;
+  // Website wins when no explicit bookingUrl + no daily override.
+  if (!destinationUrl && venue.website) {
+    destinationUrl = venue.website;
+  }
+
+  // Contact-only fallbacks — last resort when nothing web-based exists.
+  if (!destinationUrl) {
+    if (provider === "PHONE" && venue.bookingPhone) {
+      destinationUrl = `tel:${venue.bookingPhone.replace(/\s+/g, "")}`;
+    } else if (provider === "WHATSAPP" && venue.bookingWhatsapp) {
+      const num = venue.bookingWhatsapp.replace(/\D/g, "");
+      destinationUrl = `https://wa.me/${num}`;
+    } else if (provider === "INSTAGRAM_DM" && venue.bookingInstagram) {
+      const handle = venue.bookingInstagram.replace(/^@/, "");
+      destinationUrl = `https://ig.me/m/${handle}`;
+    }
   }
 
   // Create the click row first so we have an id to embed in the URL.

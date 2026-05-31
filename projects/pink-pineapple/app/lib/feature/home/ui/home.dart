@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:pineapple/core/const/app_colors.dart';
 import 'package:pineapple/core/global_widgets/app_loading.dart';
+import 'package:pineapple/core/utils/time_formatter.dart';
 import 'package:pineapple/core/global_widgets/bg_screen_widget.dart';
 import 'package:pineapple/feature/home/controller/home_controller.dart';
 import 'package:pineapple/feature/home_bottom_nav/controller/home_nav_controller.dart';
@@ -970,8 +971,8 @@ class _FeaturedEventsSection extends StatelessWidget {
         .where((s) => s.isNotEmpty)
         .join(' · ');
     final dates = _formatDate(event.startDate);
-    final time =
-        '${event.startTime ?? ''}${(event.endTime != null && event.endTime!.isNotEmpty) ? ' – ${event.endTime}' : ''}';
+    // v1.3.1+26: render times as "9 PM – 1 AM" not "21:00 – 01:00".
+    final time = formatTimeRangeAmPm(event.startTime, event.endTime);
     // v1.3.0+23: tap-through to ticketing. Prefer the event's own
     // bookingUrl (set on the Featured Event in the dashboard) and
     // fall back to the linked venue's bookingUrl so taps still land
@@ -1883,12 +1884,12 @@ class _DayCard extends StatelessWidget {
     if (venue.weeklySchedule == null) return null;
     final dayData = venue.weeklySchedule![dayKey];
     if (dayData is Map<String, dynamic>) {
+      // v1.3.1+26: 24-hour to 12-hour AM/PM render so This Week
+      // cards show "6 PM - 1 AM" not "18:00-01:00".
       final startTime = dayData['startTime']?.toString();
       final endTime = dayData['endTime']?.toString();
-      if (startTime != null && endTime != null) {
-        return '$startTime\u2013$endTime';
-      }
-      return startTime;
+      if (startTime == null || startTime.isEmpty) return null;
+      return formatTimeRangeAmPm(startTime, endTime);
     }
     return null;
   }

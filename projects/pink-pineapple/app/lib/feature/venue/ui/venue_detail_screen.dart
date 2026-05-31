@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:pineapple/core/utils/time_formatter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -902,9 +903,9 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
           final startTime = wsDay['startTime']?.toString();
           final endTime = wsDay['endTime']?.toString();
           if (startTime != null && startTime.isNotEmpty) {
-            timeLabel = (endTime != null && endTime.isNotEmpty)
-                ? '$startTime–$endTime'
-                : startTime;
+            // v1.3.1+26: 24-hour → 12-hour AM/PM render so tourists
+            // can read "6 PM – 1 AM" instead of "18:00–01:00".
+            timeLabel = formatTimeRangeAmPm(startTime, endTime);
           }
 
           isOpen = true;
@@ -1079,21 +1080,19 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       }
     }
 
-    // v1.3.1+24: extended the fallback chain to honour what's
-    // actually on the venue record. Order: INSTAGRAM_DM handle →
-    // instagram URL, then any website. Without this, restaurants
-    // like Il Salotto (has website, no booking system) and Miss
-    // Fish (Instagram-only bookings) showed a misleading "Coming
-    // Soon" snackbar even though there was a real destination to
-    // send the user to.
+    // v1.3.1+26: extended the fallback chain to honour what's
+    // actually on the venue record. Website wins over Instagram —
+    // even when bookingProvider == INSTAGRAM_DM, we'd rather send
+    // the user to a real booking page than a social profile. Only
+    // fall through to Instagram when the venue has nothing else.
+    if (url.isEmpty && venue.website.isNotEmpty) {
+      url = venue.website;
+    }
     if (url.isEmpty &&
         venue.bookingProvider == 'INSTAGRAM_DM' &&
         venue.instagram.isNotEmpty) {
       final handle = venue.instagram.replaceFirst('@', '').trim();
       if (handle.isNotEmpty) url = 'https://instagram.com/$handle';
-    }
-    if (url.isEmpty && venue.website.isNotEmpty) {
-      url = venue.website;
     }
 
     if (url.isEmpty) {
@@ -1234,32 +1233,34 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     }
 
     // Restaurants — single CTA whose label matches what tapping it
-    // actually does. v1.3.1+24: replaced the hardcoded "BOOK A TABLE"
-    // label with a fallback chain so users aren't promised a
-    // reservation flow then routed to Instagram or shown "Coming
-    // Soon" when the venue has a perfectly good website. Order:
+    // actually does. v1.3.1+26: website is preferred over an
+    // INSTAGRAM_DM handle so the user lands on a sleek, professional
+    // booking page rather than a social profile (per Troy: "if it
+    // says BOOK A TABLE, it should go to a website, not Instagram").
+    // Order:
     //   1. real bookingUrl → "BOOK A TABLE"
-    //   2. INSTAGRAM_DM + handle → "DM ON INSTAGRAM"
-    //   3. website → "VISIT WEBSITE"
-    //   4. nothing → hide the button (better than "Coming Soon" copy
-    //      that just looks like the app is half-built).
+    //   2. website → "BOOK A TABLE" (most restaurants take
+    //      reservations via their own site; sleek + on-brand)
+    //   3. INSTAGRAM_DM + handle → "DM ON INSTAGRAM" (last resort,
+    //      label honestly signals it's a social DM not a booking)
+    //   4. nothing → hide the button.
     if (isRestaurant) {
       final hasBooking = venue.bookingUrl.isNotEmpty;
+      final hasWebsite = venue.website.isNotEmpty;
       final hasInstagramDm = venue.bookingProvider == 'INSTAGRAM_DM' &&
           venue.instagram.isNotEmpty;
-      final hasWebsite = venue.website.isNotEmpty;
 
       String? label;
       IconData? icon;
       if (hasBooking) {
         label = 'BOOK A TABLE';
         icon = Icons.table_bar_outlined;
+      } else if (hasWebsite) {
+        label = 'BOOK A TABLE';
+        icon = Icons.table_bar_outlined;
       } else if (hasInstagramDm) {
         label = 'DM ON INSTAGRAM';
         icon = Icons.alternate_email;
-      } else if (hasWebsite) {
-        label = 'VISIT WEBSITE';
-        icon = Icons.public_outlined;
       }
 
       if (label == null) {
@@ -1275,6 +1276,24 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
           icon: icon!,
           onTap: () async {
             if (!await AuthGuard.requireAuth()) return;
+            // v1.3.1+27: when the destination is the venue's plain
+            // website (no real booking system) open externally in
+            // Safari — same path the non-curated branch uses. The
+            // in-app WebView is reserved for actual booking platforms
+            // (booketing / mtix / crowdstack — all https with form
+            // auto-fill JS injection). Plain restaurant websites
+            // often are http:// (e.g. luigishotpizza.com) which iOS
+            // ATS blocks inside WebView, causing the "tap goes
+            // nowhere" bug Troy hit on Luigi.
+            final useWebsiteFallback = !hasBooking && hasWebsite;
+            if (useWebsiteFallback) {
+              final uri = Uri.tryParse(venue.website);
+              if (uri != null) {
+                _venueController.trackVenueTap(venue.slug, isBooking: true);
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                return;
+              }
+            }
             _openBooking(venue);
           },
         ),
