@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -987,6 +988,10 @@ class _FeaturedEventsSection extends StatelessWidget {
       'time': time.trim(),
       'ticketUrl': ticketUrl,
       'imageUrl': imageUrl,
+      // v1.3.1+24: optional 9:16 portrait promo video. Card auto-plays
+      // this muted + looping when present; otherwise falls back to
+      // the static image above.
+      'videoUrl': event.eventVideoUrl ?? '',
       'eventId': event.id ?? '',
     };
   }
@@ -1029,6 +1034,16 @@ class _FeaturedEventsSection extends StatelessWidget {
                   _isActive(e))
               .toList()
             ..sort((a, b) {
+              // v1.3.1+24: video-having events sort FIRST so the two
+              // cards visible at any time are the strongest content.
+              // Static-image events drop to the swipe-for-more zone.
+              final aHasVideo =
+                  (a.eventVideoUrl != null && a.eventVideoUrl!.isNotEmpty);
+              final bHasVideo =
+                  (b.eventVideoUrl != null && b.eventVideoUrl!.isNotEmpty);
+              if (aHasVideo != bHasVideo) {
+                return aHasVideo ? -1 : 1;
+              }
               final aStart = a.startDate ?? DateTime(2099);
               final bStart = b.startDate ?? DateTime(2099);
               final byStart = aStart.compareTo(bStart);
@@ -1061,20 +1076,51 @@ class _FeaturedEventsSection extends StatelessWidget {
             );
           }
 
-          return SizedBox(
-            // v1.3.0+22: bumped 220 → 280 to give image more vertical
-            // weight + room for a 2-line description below the venue
-            // line. Previously the lower half of each card was empty
-            // grey under the image.
-            height: 280.h,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              itemCount: cards.length,
-              itemBuilder: (context, index) {
-                return _FeaturedEventCard(event: cards[index]);
-              },
-            ),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                // v1.3.1+24 (b): shrunk from 320 → 275 so 2 cards
+                // fit comfortably per screen + clean peek of the
+                // third for the swipe-for-more affordance. 9:16
+                // portrait preserved (155 × 275 ≈ 9:15.97).
+                height: 275.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  itemCount: cards.length,
+                  itemBuilder: (context, index) {
+                    return _FeaturedEventCard(event: cards[index]);
+                  },
+                ),
+              ),
+              if (cards.length > 1) ...[
+                SizedBox(height: 10.h),
+                // Static page-dot row — "there are N items, swipe →"
+                // affordance. Not tied to scroll position (ListView
+                // doesn't track pages); the right-edge peek already
+                // signals which way to swipe. Dots just say "more here".
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(
+                      cards.length,
+                      (i) => Container(
+                        width: 5,
+                        height: 5,
+                        margin: EdgeInsets.symmetric(horizontal: 3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: i == 0
+                              ? AppColors.accentRoseGold
+                              : AppColors.textMuted.withOpacity(0.4),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           );
         }),
       ],
@@ -1082,13 +1128,59 @@ class _FeaturedEventsSection extends StatelessWidget {
   }
 }
 
-class _FeaturedEventCard extends StatelessWidget {
+// 9:16 portrait Featured Event card (v1.3.1+24).
+//
+// The whole card surface is the media (image OR auto-playing video),
+// with text overlaid at the bottom over a black-to-transparent gradient
+// — exactly the visual language users already know from Instagram
+// Stories / Reels / TikTok. Why this matters: venue clients publish
+// promo content in 9:16 vertical, so this format fits without
+// letterboxing.
+//
+// Stateful because video_player needs init+dispose lifecycle. Video
+// is muted + looping + autoplay; falls back to the static image when
+// no eventVideoUrl is set on the event.
+class _FeaturedEventCard extends StatefulWidget {
   const _FeaturedEventCard({required this.event});
 
   final Map<String, String> event;
 
   @override
+  State<_FeaturedEventCard> createState() => _FeaturedEventCardState();
+}
+
+class _FeaturedEventCardState extends State<_FeaturedEventCard> {
+  VideoPlayerController? _video;
+  bool _videoReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final videoUrl = widget.event['videoUrl'] ?? '';
+    if (videoUrl.isNotEmpty) {
+      _video = VideoPlayerController.networkUrl(Uri.parse(videoUrl))
+        ..setLooping(true)
+        ..setVolume(0)
+        ..initialize().then((_) {
+          if (!mounted) return;
+          setState(() => _videoReady = true);
+          _video?.play();
+        }).catchError((_) {
+          // Network failure / decode failure → silently fall back to
+          // the static image. Don't crash the card.
+        });
+    }
+  }
+
+  @override
+  void dispose() {
+    _video?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final event = widget.event;
     return GestureDetector(
       onTap: () {
         final url = event['ticketUrl'] ?? '';
@@ -1100,145 +1192,175 @@ class _FeaturedEventCard extends StatelessWidget {
         }
       },
       child: Container(
-        width: 300.w,
-        margin: EdgeInsets.only(right: 14.w),
+        // v1.3.1+24 (b): 9:16 portrait, shrunk 180 → 155 so two cards
+        // fit per screen + peek of the third. 155 × 275 ≈ 9:15.97.
+        width: 155.w,
+        margin: EdgeInsets.only(right: 12.w),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.borderSubtle, width: 0.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 12,
+              color: Colors.black.withOpacity(0.35),
+              blurRadius: 14,
               offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Event image
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-              child: SizedBox(
-                // Bumped 110 → 160 so the event poster reads properly
-                // (gig flyers / festival hero shots need vertical room).
-                height: 160.h,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.network(
-                      event['imageUrl'] ?? '',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: AppColors.surfaceElevated,
-                        child: Icon(Icons.event, color: AppColors.textMuted, size: 32.sp),
-                      ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background media — video if ready, otherwise image.
+              if (_videoReady && _video != null)
+                FittedBox(
+                  fit: BoxFit.cover,
+                  clipBehavior: Clip.hardEdge,
+                  child: SizedBox(
+                    width: _video!.value.size.width,
+                    height: _video!.value.size.height,
+                    child: VideoPlayer(_video!),
+                  ),
+                )
+              else
+                Image.network(
+                  event['imageUrl'] ?? '',
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: AppColors.surfaceElevated,
+                    child: Icon(
+                      Icons.event,
+                      color: AppColors.textMuted,
+                      size: 32.sp,
                     ),
-                    // Gradient overlay
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: 50.h,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(gradient: AppColors.gradientOverlay),
-                      ),
+                  ),
+                ),
+
+              // Bottom gradient so the text overlay reads cleanly
+              // regardless of the video/image content. Covers the
+              // lower ~55% of the card.
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 180.h,
+                child: const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Color(0xE6000000),
+                        Color(0x99000000),
+                        Color(0x00000000),
+                      ],
+                      stops: [0.0, 0.55, 1.0],
                     ),
-                    // Date badge
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          gradient: AppColors.gradientPrimary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          event['dates'] ?? '',
-                          style: GoogleFonts.poppins(
-                            fontSize: 9.sp,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.backgroundDark,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-            // Event details — v1.3.0+22: shows venue · area on the
-            // rose-gold line, then time, then up to 2 lines of the
-            // event description so the lower half of the card has
-            // actual content instead of empty grey.
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(12.w, 10.h, 12.w, 12.h),
+
+              // Date badge — top-right corner, rose-gold.
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8.w,
+                    vertical: 4.h,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.gradientPrimary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    event['dates'] ?? '',
+                    style: GoogleFonts.poppins(
+                      fontSize: 9.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.backgroundDark,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Video pill — tiny mute icon to signal "this is video"
+              // (subtle, only when video is actually playing).
+              if (_videoReady)
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 6.w,
+                      vertical: 4.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.volume_off,
+                      size: 10.sp,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+
+              // Text overlay — title, venue line, time pinned to bottom.
+              Positioned(
+                left: 12.w,
+                right: 12.w,
+                bottom: 12.h,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       event['title'] ?? '',
                       style: GoogleFonts.outfit(
-                        fontSize: 16.sp,
+                        fontSize: 15.sp,
                         fontWeight: FontWeight.w800,
                         fontStyle: FontStyle.italic,
-                        color: AppColors.textPrimary,
+                        color: Colors.white,
+                        height: 1.15,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if ((event['venue'] ?? '').isNotEmpty) ...[
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 4.h),
                       Text(
                         event['venue'] ?? '',
                         style: GoogleFonts.poppins(
-                          fontSize: 12.sp,
+                          fontSize: 11.sp,
                           color: AppColors.accentRoseGold,
                           letterSpacing: 0.5,
+                          fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                     if ((event['time'] ?? '').isNotEmpty) ...[
-                      SizedBox(height: 4.h),
+                      SizedBox(height: 2.h),
                       Text(
                         event['time'] ?? '',
                         style: GoogleFonts.poppins(
-                          fontSize: 11.sp,
-                          color: AppColors.textSecondary,
+                          fontSize: 10.sp,
+                          color: Colors.white.withOpacity(0.85),
                           fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                    if ((event['description'] ?? '').isNotEmpty) ...[
-                      SizedBox(height: 6.h),
-                      Expanded(
-                        child: Text(
-                          event['description'] ?? '',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11.sp,
-                            color: AppColors.textMuted,
-                            height: 1.35,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

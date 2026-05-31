@@ -97,6 +97,39 @@ model Notification {
   @@map("notifications")
 }
 
+// Pre-composed push notification queued to fire at a future time. The
+// backend worker (runs once a minute) finds rows with status=PENDING +
+// scheduledFor ≤ now, fans them out via the same sendNotifications
+// path the immediate broadcast uses, then flips status to SENT (or
+// FAILED with errorMessage on Firebase rejection). Cancellable from
+// the dashboard up until the moment it fires.
+model ScheduledNotification {
+  id            String                       @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  body          String
+  scheduledFor  DateTime
+  status        ScheduledNotificationStatus  @default(PENDING)
+  // Admin who composed it — for audit log on the Send Notification
+  // page so editors know who queued what.
+  createdById   String                       @db.ObjectId
+  sentAt        DateTime?
+  successCount  Int                          @default(0)
+  failureCount  Int                          @default(0)
+  errorMessage  String                       @default("")
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+
+  @@index([status, scheduledFor])
+  @@map("scheduled_notifications")
+}
+
+enum ScheduledNotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
 model Post {
   id           String         @id @default(auto()) @map("_id") @db.ObjectId
   text         String?
@@ -211,6 +244,12 @@ model Events {
   venueId           String?         @db.ObjectId
   venue             Venue?          @relation("VenueEvents", fields: [venueId], references: [id])
   eventImages       String[]
+  // Optional 9:16 portrait promo video URL (typically a Cloudinary
+  // link uploaded from the dashboard). When set, the Flutter Featured
+  // Event card auto-plays this muted + looping in place of the static
+  // image. Designed to fit Instagram Reels / TikTok-style content from
+  // venue clients.
+  eventVideoUrl     String          @default("")
   // ── Booking integration (mirrors Venue) ─────────────────────────
   // Event-level booking URL takes precedence over venue.bookingUrl
   // when set — lets a venue have one default booking page but a

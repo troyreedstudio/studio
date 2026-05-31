@@ -14,6 +14,7 @@ import {
 import { useGetVenuesQuery } from "@/redux/features/venues/venuesApi";
 import Spinner from "@/components/common/Spinner";
 import ImageCropperModal from "@/components/common/ImageCropperModal";
+import VideoPicker from "@/components/common/VideoPicker";
 
 const inter = { fontFamily: "Inter, sans-serif" };
 const outfit = { fontFamily: "Outfit, sans-serif" };
@@ -75,6 +76,7 @@ const EditEvent = () => {
     endTime: "",
     bookingUrl: "",
     bookingProvider: "",
+    eventVideoUrl: "",
   });
 
   // Prefill form once event data lands.
@@ -94,6 +96,7 @@ const EditEvent = () => {
       endTime: ev.endTime || "",
       bookingUrl: ev.bookingUrl || "",
       bookingProvider: ev.bookingProvider || "",
+      eventVideoUrl: ev.eventVideoUrl || "",
     });
     setExistingImages(Array.isArray(ev.eventImages) ? ev.eventImages : []);
   }, [eventData]);
@@ -106,6 +109,7 @@ const EditEvent = () => {
 
   // Crop queue — picked files awaiting their turn in the modal.
   const [pendingCropFiles, setPendingCropFiles] = useState<File[]>([]);
+  const [pickedVideo, setPickedVideo] = useState<File | null>(null);
 
   const handleNewImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -153,11 +157,13 @@ const EditEvent = () => {
         endTime: form.endTime,
         bookingUrl: form.bookingUrl,
         bookingProvider: form.bookingProvider,
+        eventVideoUrl: form.eventVideoUrl,
         // Empty string → backend stores null (standalone event).
         venueId: form.venueId || null,
       };
       fd.append("eventData", JSON.stringify(eventDataPayload));
       newImages.forEach((f) => fd.append("eventImages", f));
+      if (pickedVideo) fd.append("eventVideo", pickedVideo);
 
       await updateEvent({ id: eventId, formData: fd }).unwrap();
       toast.success("Featured event updated", { id: toastId });
@@ -386,6 +392,22 @@ const EditEvent = () => {
               ))}
             </select>
           </div>
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
+              Promo video (optional)
+            </label>
+            <p className="text-[11px] text-[#6B6B6B] mb-2" style={inter}>
+              Auto-plays muted + looping on the home Featured Events card. Leave blank to keep the static image.
+            </p>
+            <VideoPicker
+              existingUrl={form.eventVideoUrl}
+              pickedFile={pickedVideo}
+              onFilePicked={setPickedVideo}
+            />
+          </div>
         </div>
 
         <div className="border-t border-[#2A2A2A]" />
@@ -509,7 +531,7 @@ const EditEvent = () => {
         <ImageCropperModal
           key={pendingCropFiles[0].name + pendingCropFiles.length}
           file={pendingCropFiles[0]}
-          aspectRatio={16 / 9}
+          aspectRatio={9 / 16}
           onClose={handleCropClose}
         />
       )}

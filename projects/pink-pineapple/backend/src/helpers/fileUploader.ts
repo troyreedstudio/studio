@@ -62,6 +62,11 @@ const updateProfile = upload.fields([
 const event = upload.fields([
   { name: "eventImages", maxCount: 10 },
   { name: "tableImages", maxCount: 10 },
+  // v1.3.1+24: optional 9:16 portrait promo video (mp4 / mov / webm)
+  // for the home Featured Events card. Cloudinary handles auto
+  // transcoding so we don't enforce a codec — just MIME-check at the
+  // service layer. 1 per event.
+  { name: "eventVideo", maxCount: 1 },
 ]);
 const uploadPost = upload.fields([
   { name: "photos", maxCount: 500 },

@@ -10,6 +10,7 @@ import { Upload, X, Info, ExternalLink } from "lucide-react";
 import { useCreateEventMutation } from "@/redux/features/events/events.spi";
 import { useGetVenuesQuery } from "@/redux/features/venues/venuesApi";
 import ImageCropperModal from "@/components/common/ImageCropperModal";
+import VideoPicker from "@/components/common/VideoPicker";
 
 const inter = { fontFamily: "Inter, sans-serif" };
 const outfit = { fontFamily: "Outfit, sans-serif" };
@@ -64,6 +65,7 @@ const CreateEvent = () => {
     endDate: "", // optional — defaults to startDate
     bookingUrl: "",
     bookingProvider: "",
+    eventVideoUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -82,6 +84,7 @@ const CreateEvent = () => {
   // (or cancels) we shift the next file off the queue. This lets the
   // admin pick 3 images at once and crop each in sequence.
   const [pendingCropFiles, setPendingCropFiles] = useState<File[]>([]);
+  const [pickedVideo, setPickedVideo] = useState<File | null>(null);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -136,9 +139,11 @@ const CreateEvent = () => {
         endTime: form.endTime,
         bookingUrl: form.bookingUrl,
         bookingProvider: form.bookingProvider || undefined,
+        eventVideoUrl: form.eventVideoUrl,
       };
       fd.append("eventData", JSON.stringify(eventData));
       eventImages.forEach((f) => fd.append("eventImages", f));
+      if (pickedVideo) fd.append("eventVideo", pickedVideo);
 
       await createEvent(fd).unwrap();
       toast.success("Event created!", { id: toastId });
@@ -423,6 +428,22 @@ const CreateEvent = () => {
               className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
               style={inter}
             >
+              Promo video (optional)
+            </label>
+            <p className="text-[10px] text-[#6B6B6B] mb-2" style={inter}>
+              Auto-plays muted + looping on the home Featured Events card. Leave blank to use the static image.
+            </p>
+            <VideoPicker
+              pickedFile={pickedVideo}
+              onFilePicked={setPickedVideo}
+            />
+          </div>
+
+          <div>
+            <label
+              className="block text-xs text-[#B0B0B0] uppercase tracking-wider mb-2"
+              style={inter}
+            >
               Booking Provider Override
             </label>
             <select
@@ -558,7 +579,7 @@ const CreateEvent = () => {
         <ImageCropperModal
           key={pendingCropFiles[0].name + pendingCropFiles.length}
           file={pendingCropFiles[0]}
-          aspectRatio={16 / 9}
+          aspectRatio={9 / 16}
           onClose={handleCropClose}
         />
       )}

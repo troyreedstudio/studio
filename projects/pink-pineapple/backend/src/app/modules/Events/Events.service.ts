@@ -48,6 +48,20 @@ const createIntoDb = async (req: Request) => {
     )
   );
 
+  // Optional promo video. Cloudinary uploadToCloudinary uses
+  // resource_type:auto so it handles video without changes. When the
+  // client posts a video file alongside the image(s), we use the
+  // returned URL as eventVideoUrl. When they paste a URL in the text
+  // field instead (legacy path / Cloudinary-elsewhere flow) we keep
+  // the pasted URL. File upload wins if both are sent.
+  let uploadedVideoUrl = "";
+  if (files?.eventVideo?.length) {
+    const uploaded = await fileUploader.uploadToCloudinary(
+      files.eventVideo[0]
+    );
+    uploadedVideoUrl = uploaded.Location;
+  }
+
   let tableImageUrls: string[] = [];
   if (tableData?.length && files?.tableImages?.length) {
     tableImageUrls = await Promise.all(
@@ -83,6 +97,12 @@ const createIntoDb = async (req: Request) => {
         additionalGuests: Number(eventData.additionalGuests) || 0,
         extraRequirements: eventData.extraRequirements || "",
         eventImages: eventImageUrls,
+        // Optional promo video URL (typically a Cloudinary link to a
+        // 9:16 vertical clip ≤ 30s). When set, the Flutter Featured
+        // Event card auto-plays this in place of the static image so
+        // Instagram Reels-style content from venue clients lands
+        // natively without re-encoding.
+        eventVideoUrl: uploadedVideoUrl || eventData.eventVideoUrl || "",
         // Booking link-out fields. Empty bookingUrl means "fall back to
         // the venue's bookingUrl" — Flutter checks event first, then venue.
         bookingUrl: eventData.bookingUrl || "",
@@ -208,6 +228,9 @@ const getListFromDb = async (
       additionalGuests: true,
       extraRequirements: true,
       eventImages: true,
+      // v1.3.1+24: 9:16 portrait promo video. Flutter card auto-plays
+      // this muted + looping in place of the static image when set.
+      eventVideoUrl: true,
       eventStatus: true,
       // v1.3.0+23: surface booking link-out fields to the Flutter
       // card so tapping a Featured Event opens the ticket URL.
@@ -377,6 +400,9 @@ const myEvent = async (
       additionalGuests: true,
       extraRequirements: true,
       eventImages: true,
+      // v1.3.1+24: 9:16 portrait promo video. Flutter card auto-plays
+      // this muted + looping in place of the static image when set.
+      eventVideoUrl: true,
       eventStatus: true,
       // v1.3.0+23: surface booking link-out fields to the Flutter
       // card so tapping a Featured Event opens the ticket URL.
@@ -523,6 +549,9 @@ const tonightEvents = await prisma.events.findMany({
       additionalGuests: true,
       extraRequirements: true,
       eventImages: true,
+      // v1.3.1+24: 9:16 portrait promo video. Flutter card auto-plays
+      // this muted + looping in place of the static image when set.
+      eventVideoUrl: true,
       eventStatus: true,
       // v1.3.0+23: surface booking link-out fields to the Flutter
       // card so tapping a Featured Event opens the ticket URL.
@@ -619,6 +648,9 @@ const getByIdFromDb = async (id: string, userId: string) => {
       additionalGuests: true,
       extraRequirements: true,
       eventImages: true,
+      // v1.3.1+24: 9:16 portrait promo video. Flutter card auto-plays
+      // this muted + looping in place of the static image when set.
+      eventVideoUrl: true,
       eventStatus: true,
       // v1.3.0+23: surface booking link-out fields to the Flutter
       // card so tapping a Featured Event opens the ticket URL.
@@ -727,8 +759,7 @@ const updateIntoDb = async (req: Request) => {
   if (!isExists) {
     throw new ApiError(httpStatus.NOT_FOUND, "events not found");
   }
-  if (files) {
-    // const eventImage=files.eventImages
+  if (files?.eventImages?.length) {
     uploadUrls = await Promise.all(
       files.eventImages.map((img: any) =>
         fileUploader.uploadToCloudinary(img).then((res) => res.Location)
@@ -738,6 +769,18 @@ const updateIntoDb = async (req: Request) => {
 
   if (parseData?.eventImages?.length > 0 || uploadUrls.length > 0) {
     combinedImages = [...(parseData?.eventImages || []), ...uploadUrls];
+  }
+
+  // Optional promo video. If a new file is uploaded, Cloudinary URL
+  // wins. If the user pasted a URL in the eventVideoUrl text field
+  // instead (legacy / external Cloudinary), that URL is honoured by
+  // the existing parseData.eventVideoUrl branch below.
+  let uploadedVideoUrl = "";
+  if (files?.eventVideo?.length) {
+    const uploaded = await fileUploader.uploadToCloudinary(
+      files.eventVideo[0]
+    );
+    uploadedVideoUrl = uploaded.Location;
   }
   const update = await prisma.events.update({
     where: { id },
@@ -781,6 +824,15 @@ const updateIntoDb = async (req: Request) => {
       ...(parseData?.bookingProvider !== undefined && {
         bookingProvider: parseData.bookingProvider || null,
       }),
+      // v1.3.1+24: promo video. Direct file upload wins; pasted URL
+      // in the eventVideoUrl text field is the fallback path. Both
+      // empty clears the video and falls back to the static image
+      // on the Flutter card.
+      ...(uploadedVideoUrl
+        ? { eventVideoUrl: uploadedVideoUrl }
+        : parseData?.eventVideoUrl !== undefined
+            ? { eventVideoUrl: parseData.eventVideoUrl || "" }
+            : {}),
     },
   });
   return update;

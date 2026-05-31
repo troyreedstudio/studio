@@ -27,6 +27,10 @@ class AllEventModel {
   // Featured Event card's tap handler.
   final String? bookingUrl;
   final String? bookingProvider;
+  // v1.3.1+24: optional 9:16 portrait promo video URL (typically a
+  // Cloudinary mp4 ≤ 30s). When set, the Featured Event home card
+  // auto-plays this muted + looping in place of the static image.
+  final String? eventVideoUrl;
   final List<EventTicket>? eventTickets;
   final List<EventTable>? eventTable;
   final bool? isFavorite;
@@ -53,6 +57,7 @@ class AllEventModel {
     this.venue,
     this.bookingUrl,
     this.bookingProvider,
+    this.eventVideoUrl,
     this.eventTickets,
     this.eventTable,
     this.isFavorite,
@@ -144,6 +149,7 @@ class AllEventModel {
         : EventVenue.fromJson(json["venue"] as Map<String, dynamic>),
     bookingUrl: json["bookingUrl"]?.toString(),
     bookingProvider: json["bookingProvider"]?.toString(),
+    eventVideoUrl: json["eventVideoUrl"]?.toString(),
     eventTickets: json["eventTickets"] == null
         ? []
         : List<EventTicket>.from(
