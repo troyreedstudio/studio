@@ -288,9 +288,137 @@ const getSingleNotificationFromDB = async (
   }
 };
 
+// ── Scheduled broadcasts ───────────────────────────────────────────
+//
+// Admins compose a notification on the dashboard and schedule it for
+// a future moment ("Friday 7pm — tonight at Mesa"). The row sits as
+// PENDING until the worker (runDueScheduled, fired every 60s from
+// server startup) finds it and fans it out via the same code path the
+// immediate broadcast uses. Cancellable up until the worker grabs it.
+
+const scheduleBroadcast = async (req: any) => {
+  const { title, body, scheduledFor } = req.body || {};
+  if (!title?.trim() || !body?.trim()) {
+    throw new ApiError(400, "Title and body are required");
+  }
+  const when = scheduledFor ? new Date(scheduledFor) : null;
+  if (!when || isNaN(when.getTime())) {
+    throw new ApiError(400, "scheduledFor must be a valid ISO timestamp");
+  }
+  if (when.getTime() < Date.now() - 30_000) {
+    // 30s grace for clock skew; otherwise reject past-dated schedules
+    // so editors don't fire something at "yesterday" by accident.
+    throw new ApiError(400, "scheduledFor must be in the future");
+  }
+  return prisma.scheduledNotification.create({
+    data: {
+      title: title.trim(),
+      body: body.trim(),
+      scheduledFor: when,
+      createdById: req.user.id,
+    },
+  });
+};
+
+const listScheduled = async () => {
+  return prisma.scheduledNotification.findMany({
+    orderBy: { scheduledFor: "asc" },
+    take: 100,
+  });
+};
+
+const cancelScheduled = async (req: any) => {
+  const { id } = req.params;
+  const existing = await prisma.scheduledNotification.findUnique({
+    where: { id },
+  });
+  if (!existing) throw new ApiError(404, "Scheduled notification not found");
+  if (existing.status !== "PENDING") {
+    throw new ApiError(400, `Cannot cancel — already ${existing.status}`);
+  }
+  return prisma.scheduledNotification.update({
+    where: { id },
+    data: { status: "CANCELLED" },
+  });
+};
+
+// Worker tick — called every 60s from server.ts. Picks up any PENDING
+// rows whose scheduledFor has arrived, fires the multicast, records
+// the outcome. Wrapped in try/catch per row so one bad notification
+// doesn't kill the whole batch.
+const runDueScheduled = async () => {
+  const now = new Date();
+  const due = await prisma.scheduledNotification.findMany({
+    where: { status: "PENDING", scheduledFor: { lte: now } },
+    take: 20,
+  });
+  for (const row of due) {
+    try {
+      const users = await prisma.user.findMany({
+        where: { fcmToken: { not: null } },
+        select: { id: true, fcmToken: true },
+      });
+      if (!users.length) {
+        await prisma.scheduledNotification.update({
+          where: { id: row.id },
+          data: {
+            status: "FAILED",
+            errorMessage: "No users with FCM tokens",
+            sentAt: new Date(),
+          },
+        });
+        continue;
+      }
+      const fcmTokens = users.map((u) => u.fcmToken);
+      const response = await admin
+        .messaging()
+        .sendEachForMulticast({
+          notification: { title: row.title, body: row.body },
+          tokens: fcmTokens,
+        } as any);
+
+      const successIndices = response.responses
+        .map((res: any, idx: number) => (res.success ? idx : null))
+        .filter((idx): idx is number => idx !== null);
+      const successfulUsers = successIndices.map((idx) => users[idx]);
+      const notificationData = successfulUsers.map((u) => ({
+        receiverId: u.id,
+        senderId: row.createdById,
+        title: row.title,
+        body: row.body,
+      }));
+      if (notificationData.length) {
+        await prisma.notification.createMany({ data: notificationData });
+      }
+      await prisma.scheduledNotification.update({
+        where: { id: row.id },
+        data: {
+          status: "SENT",
+          sentAt: new Date(),
+          successCount: response.successCount,
+          failureCount: response.failureCount,
+        },
+      });
+    } catch (err: any) {
+      await prisma.scheduledNotification.update({
+        where: { id: row.id },
+        data: {
+          status: "FAILED",
+          sentAt: new Date(),
+          errorMessage: err?.message?.slice(0, 500) || "Unknown error",
+        },
+      });
+    }
+  }
+};
+
 export const notificationServices = {
   sendSingleNotification,
   sendNotifications,
   getNotificationsFromDB,
   getSingleNotificationFromDB,
+  scheduleBroadcast,
+  listScheduled,
+  cancelScheduled,
+  runDueScheduled,
 };

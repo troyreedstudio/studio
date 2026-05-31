@@ -23,7 +23,7 @@ export const baseApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["User", "Event", "Booking", "Venue", "VipBooking"],
+  tagTypes: ["User", "Event", "Booking", "Venue", "VipBooking", "ScheduledNotification"],
   endpoints: (builder) => ({}),
 });
 

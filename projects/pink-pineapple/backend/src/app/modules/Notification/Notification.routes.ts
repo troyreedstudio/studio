@@ -29,6 +29,24 @@ router.post(
   notificationController.sendNotifications
 );
 
+// Scheduled broadcasts — admin-only composer + audit list + cancel.
+// The worker tick on server startup fires due rows every 60s.
+router.post(
+  "/schedule",
+  auth(UserRole.ADMIN),
+  notificationController.scheduleBroadcast
+);
+router.get(
+  "/scheduled",
+  auth(UserRole.ADMIN),
+  notificationController.listScheduled
+);
+router.delete(
+  "/scheduled/:id",
+  auth(UserRole.ADMIN),
+  notificationController.cancelScheduled
+);
+
 router.get("/", auth(), notificationController.getNotifications);
 router.get(
   "/:notificationId",

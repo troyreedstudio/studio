@@ -52,9 +52,46 @@ const getSingleNotificationById = catchAsync(async (req: any, res: any) => {
   });
 });
 
+// Schedule a broadcast for the future. Body: { title, body, scheduledFor (ISO) }
+const scheduleBroadcast = catchAsync(async (req: any, res: any) => {
+  const row = await notificationServices.scheduleBroadcast(req);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Broadcast scheduled",
+    data: row,
+  });
+});
+
+// List recent scheduled broadcasts (pending + sent + failed). Used by
+// the Send Notification page's audit table.
+const listScheduled = catchAsync(async (_req: any, res: any) => {
+  const rows = await notificationServices.listScheduled();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Scheduled notifications retrieved",
+    data: rows,
+  });
+});
+
+// Cancel a PENDING scheduled broadcast before the worker picks it up.
+const cancelScheduled = catchAsync(async (req: any, res: any) => {
+  const row = await notificationServices.cancelScheduled(req);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Scheduled notification cancelled",
+    data: row,
+  });
+});
+
 export const notificationController = {
   sendNotification,
   sendNotifications,
   getNotifications,
   getSingleNotificationById,
+  scheduleBroadcast,
+  listScheduled,
+  cancelScheduled,
 };
