@@ -61,9 +61,27 @@ const id = req.params.id;
 });
 
 
+// Flutter posts here after capturing an FCM token from firebase_messaging.
+// Body shape: { fcmToken: string }. Auth required. The token is stored on
+// the user row and used by Notification.service for push delivery.
+const updateFcmToken = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {
+    const userId = req.user?.id;
+    const token = (req.body?.fcmToken ?? "").toString();
+    const result = await userService.updateFcmToken(userId, token);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "FCM token saved",
+      data: result,
+    });
+  }
+);
+
 export const userController = {
   createUser,
   getUsers,
   updateProfile,
-  updateUser
+  updateUser,
+  updateFcmToken,
 };

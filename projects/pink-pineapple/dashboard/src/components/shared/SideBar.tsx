@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Shield,
   Crown,
+  Bell,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -74,6 +75,11 @@ const admin = [
     title: "Users",
     url: "/user",
     icon: Users,
+  },
+  {
+    title: "Send Notification",
+    url: "/notifications",
+    icon: Bell,
   },
   {
     title: "Settings",

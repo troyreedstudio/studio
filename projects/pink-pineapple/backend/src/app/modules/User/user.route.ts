@@ -45,6 +45,12 @@ router.put(
   userController.updateProfile
 );
 
+// FCM token registration / refresh. Flutter posts { fcmToken } whenever
+// firebase_messaging hands it a new token (app start + onTokenRefresh).
+// Decoupled from login so iOS/Android can rotate tokens without forcing
+// the user to log out and back in.
+router.post("/fcm-token", auth(), userController.updateFcmToken);
+
 // *!update  user
 router.put("/:id", userController.updateUser);
 

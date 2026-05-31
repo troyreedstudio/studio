@@ -528,9 +528,24 @@ const updateUserIntoDb = async (payload: IUser, id: string) => {
 };
 
 
+// Registers or refreshes the user's FCM device token. Flutter calls this
+// on app start (after login) and whenever onTokenRefresh fires from the
+// firebase_messaging SDK. We don't need a re-login round-trip for token
+// rotation — that would force users to log out and back in every time
+// iOS/Android cycled the APNs/FCM credential. Empty string clears it
+// (e.g. on logout / notification opt-out).
+const updateFcmToken = async (userId: string, fcmToken: string) => {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { fcmToken: fcmToken || "" },
+  });
+  return { ok: true };
+};
+
 export const userService = {
   createUserIntoDb,
   getUsersFromDb,
   updateProfile,
   updateUserIntoDb,
+  updateFcmToken,
 };
