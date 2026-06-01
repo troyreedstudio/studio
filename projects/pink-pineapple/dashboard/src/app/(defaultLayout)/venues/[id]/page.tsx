@@ -133,6 +133,8 @@ const dayLabels: Record<DayKey, string> = {
 // carousel. Curate venue-by-venue here so both surfaces stay in sync.
 const nightlifeTierOptions: { value: string; label: string }[] = [
   { value: "", label: "Not nightlife" },
+  { value: "SUNSET", label: "Sunset (5–8pm) — beach clubs, sunset bars" },
+  { value: "DINNER", label: "Dinner (7–10pm) — early restaurants" },
   { value: "WARMUP", label: "Warmup (9–11pm)" },
   { value: "PEAK", label: "Peak (10pm–2am)" },
   { value: "LATE_NIGHT", label: "Late night (12am–4am)" },

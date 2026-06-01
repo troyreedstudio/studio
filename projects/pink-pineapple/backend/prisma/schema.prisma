@@ -435,6 +435,8 @@ enum VenueCategory {
 // Venues that aren't nightlife at all (gyms, pure restaurants without
 // a DJ scene) should leave nightlifeTier null.
 enum NightlifeTier {
+  SUNSET        // 5-8pm — beach clubs, sunset bars (Finns, El Kabron, La Brisa)
+  DINNER        // 7-10pm — early restaurants (Bella, Luigi's, Da Maria, Yuki)
   WARMUP        // 9-11pm — dinner-spillover, sunset cocktail, pre-club
   PEAK          // 10pm-2am — main clubs
   LATE_NIGHT    // 12am-4am — after-hours only

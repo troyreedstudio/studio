@@ -93,6 +93,8 @@ const musicGenreOptions: { value: string; label: string }[] = [
 // edited. Single source of truth shared with the Flutter app.
 const nightlifeTierOptions: { value: string; label: string }[] = [
   { value: "", label: "Not nightlife" },
+  { value: "SUNSET", label: "Sunset (5–8pm) — beach clubs, sunset bars" },
+  { value: "DINNER", label: "Dinner (7–10pm) — early restaurants" },
   { value: "WARMUP", label: "Warmup (9–11pm)" },
   { value: "PEAK", label: "Peak (10pm–2am)" },
   { value: "LATE_NIGHT", label: "Late night (12am–4am)" },
