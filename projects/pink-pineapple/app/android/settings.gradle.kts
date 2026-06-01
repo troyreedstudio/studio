@@ -21,6 +21,10 @@ plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "8.9.1" apply false
     id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+    // v1.3.2+27: Firebase / Google Services Gradle plugin. Loaded at
+    // the settings level so the app module can apply it via the
+    // plugins block without needing classpath in root build.gradle.
+    id("com.google.gms.google-services") version "4.4.2" apply false
 }
 
 include(":app")

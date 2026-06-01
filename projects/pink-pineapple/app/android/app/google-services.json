@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "631973644480",
+    "project_id": "pink-pineapple-76396",
+    "storage_bucket": "pink-pineapple-76396.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:631973644480:android:408225fd90dbf923970525",
+        "android_client_info": {
+          "package_name": "com.pink.pineapple"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTPjRYcB531YrYRPnyiJCxHKgX42UpvLA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

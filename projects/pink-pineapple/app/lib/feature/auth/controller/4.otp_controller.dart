@@ -7,6 +7,7 @@ import '../../../core/global_widgets/app_snackbar.dart';
 import '../../../core/local/local_data.dart';
 import '../../../core/network_caller/endpoints.dart';
 import '../../../core/network_caller/network_config.dart';
+import '../../../core/services/push_notification_service.dart';
 import '../../../core/const/user_info/user_info_controller.dart';
 import '../../home/services/plan_my_night_storage.dart';
 import '../../home_bottom_nav/ui/home_bottom_nav.dart';
@@ -103,6 +104,11 @@ class OtpController extends GetxController {
           final localService = LocalService();
           await localService.setValue<String>(PreferenceKey.token, token);
           log('Sign-up OTP verified, token saved (len=${token.length})');
+
+          // v1.3.2+27: register the FCM token with the backend now
+          // that we have a JWT. Fire-and-forget — failure here
+          // doesn't block sign-up.
+          unawaited(PushNotificationService.registerCurrentToken());
         } else {
           log('Sign-up OTP verified but no accessToken in response: $data');
         }

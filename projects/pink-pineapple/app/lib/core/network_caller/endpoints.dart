@@ -44,6 +44,10 @@ class Urls {
   static const String userProfile = '$baseUrl/auth/profile';
   static const String getSingleUser = '$baseUrl/auth';
   static const String updateUser = '$baseUrl/users/update-profile'; // POST
+  // v1.3.2+27: FCM token registration. Flutter posts here on app start
+  // (after login) and on token refresh. Backend stores it on the user
+  // row for the broadcast worker to fan out from.
+  static const String fcmToken = '$baseUrl/users/fcm-token'; // POST
 
   /// bookings
   static const String bookingList = '$baseUrl/booking/my-booking?status=';

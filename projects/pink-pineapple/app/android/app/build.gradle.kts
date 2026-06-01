@@ -11,6 +11,10 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    // v1.3.2+27: apply Firebase/Google Services. Reads google-services.json
+    // from app/ at build time and writes the generated resource so
+    // firebase_core can initialise without an explicit options call.
+    id("com.google.gms.google-services")
 }
 
 android {

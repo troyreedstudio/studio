@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:get/get.dart';
@@ -7,6 +8,7 @@ import '../../../core/global_widgets/app_snackbar.dart';
 import '../../../core/local/local_data.dart';
 import '../../../core/network_caller/endpoints.dart';
 import '../../../core/network_caller/network_config.dart';
+import '../../../core/services/push_notification_service.dart';
 import '../../../core/services/websocket_service.dart';
 import '../../home/services/plan_my_night_storage.dart';
 import '../../home_bottom_nav/ui/home_bottom_nav.dart';
@@ -55,6 +57,12 @@ class LoginController extends GetxController {
           PreferenceKey.token,
           response["data"]["token"],
         );
+
+        // v1.3.2+27: hand the FCM token to the backend now that we
+        // have a JWT. Fire-and-forget — failure here doesn't block
+        // login (PushNotificationService logs the error and the
+        // next app start will retry via init()).
+        unawaited(PushNotificationService.registerCurrentToken());
 
         // Save userId - trying multiple possible keys
         String? userId;

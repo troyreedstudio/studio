@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- v1.3.2+27: Apple Push Notification environment. "production" -->
+	<!-- works for TestFlight + App Store builds (our ship path). The -->
+	<!-- APNs Auth Key uploaded to Firebase covers both dev and prod -->
+	<!-- environments, so we only need one value here. -->
+	<key>aps-environment</key>
+	<string>production</string>
+</dict>
+</plist>
