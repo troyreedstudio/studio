@@ -105,12 +105,12 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: '#FF8533',
-    fontSize: 14,
+    color: '#fff',
+    fontSize: 15,
     marginBottom: 14,
   },
   title: {
-    fontFamily: 'BodoniModa_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 30,
     color: '#fff',
     letterSpacing: 0.4,
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   statCard: { flex: 1, alignItems: 'center' },
   statValue: {
-    fontFamily: 'GFSDidot_400Regular',
+    fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 24,
     color: '#fff',
     letterSpacing: 0.3,
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#FF8533',
+    color: '#88B4FF',
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -194,14 +194,14 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   venueAvatarText: {
-    fontFamily: 'GFSDidot_400Regular',
+    fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
     color: '#666',
     letterSpacing: 0.3,
   },
   checkInfo: { flex: 1 },
   checkVenue: {
-    fontFamily: 'CormorantGaramond_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 17,
     color: '#fff',
     letterSpacing: 0.3,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   },
   starsRow: { flexDirection: 'row' },
   star: { fontSize: 12, color: '#222' },
-  starActive: { color: '#f59e0b' },
+  starActive: { color: '#FFCB47' },
   checkRight: { alignItems: 'flex-end', gap: 6 },
   tierPill: {
     backgroundColor: '#1a1a1a',
@@ -231,9 +231,9 @@ const styles = StyleSheet.create({
     color: '#888',
     letterSpacing: 1.5,
   },
-  tierPillTextPriority: { color: '#f59e0b' },
+  tierPillTextPriority: { color: '#FFCB47' },
   checkPrice: {
-    fontFamily: 'GFSDidot_400Regular',
+    fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 16,
     color: '#fff',
     letterSpacing: 0.3,

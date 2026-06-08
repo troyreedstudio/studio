@@ -32,7 +32,7 @@ export default function DeliveryScreen() {
             </View>
           </TouchableOpacity>
           <View style={styles.videoBadge}>
-            <Text style={styles.videoBadgeText}>HD · 30s</Text>
+            <Text style={styles.videoBadgeText}>HD · 15s</Text>
           </View>
           <View style={styles.liveTimestamp}>
             <View style={styles.liveBlip} />
@@ -90,13 +90,17 @@ export default function DeliveryScreen() {
         {/* Action Buttons */}
         <TouchableOpacity
           style={styles.primaryBtn}
-          onPress={() => router.push('/(seeker)/home')}
+          onPress={() => router.replace('/(seeker)/home')}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryBtnText}>CHECK ANOTHER VENUE</Text>
+          <Text style={styles.primaryBtnText}>DONE · BACK TO HOME</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.secondaryBtn}
+          onPress={() => router.push({ pathname: '/(seeker)/report', params: { venue } })}
+          activeOpacity={0.7}
+        >
           <Text style={styles.secondaryBtnText}>REPORT ISSUE</Text>
         </TouchableOpacity>
 
@@ -114,9 +118,9 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#14532d',
+    backgroundColor: 'rgba(0,255,127,0.55)',
     borderWidth: 2,
-    borderColor: '#22c55e',
+    borderColor: '#00FF7F',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -124,17 +128,17 @@ const styles = StyleSheet.create({
   checkMark: {
     fontFamily: 'Inter_700Bold',
     fontSize: 36,
-    color: '#22c55e',
+    color: '#00FF7F',
   },
   readyTitle: {
-    fontFamily: 'BodoniModa_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 26,
     color: '#fff',
     letterSpacing: 0.5,
     marginBottom: 8,
   },
   venueName: {
-    fontFamily: 'CormorantGaramond_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 18,
     color: '#cccccc',
     letterSpacing: 0.4,
@@ -191,10 +195,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
   },
-  liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22c55e' },
+  liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#00FF7F' },
   liveTime: {
     fontFamily: 'Inter_600SemiBold',
-    color: '#22c55e',
+    color: '#00FF7F',
     fontSize: 10.5,
     letterSpacing: 0.4,
   },
@@ -212,7 +216,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   aiBadge: {
-    backgroundColor: '#FF8533',
+    backgroundColor: '#88B4FF',
     borderRadius: 100,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -233,7 +237,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#FF8533',
+    color: '#88B4FF',
     letterSpacing: 3,
     marginBottom: 12,
     marginTop: 6,
@@ -250,13 +254,13 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontFamily: 'Inter_600SemiBold',
-    color: '#22c55e',
+    color: '#00FF7F',
     fontSize: 12,
     letterSpacing: 0.4,
   },
   starsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   star: { fontSize: 36, color: '#222' },
-  starActive: { color: '#f59e0b' },
+  starActive: { color: '#FFCB47' },
   ratingFeedback: {
     fontFamily: 'Inter_400Regular',
     color: '#888',
@@ -294,7 +298,7 @@ const styles = StyleSheet.create({
   },
   scoutInfo: { flex: 1 },
   scoutName: {
-    fontFamily: 'CormorantGaramond_700Bold',
+    fontFamily: 'Inter_700Bold',
     color: '#fff',
     fontSize: 17,
     letterSpacing: 0.3,
@@ -316,7 +320,7 @@ const styles = StyleSheet.create({
   },
   verifiedText: {
     fontFamily: 'Inter_700Bold',
-    color: '#22c55e',
+    color: '#00FF7F',
     fontSize: 9,
     letterSpacing: 1.5,
     textTransform: 'uppercase',

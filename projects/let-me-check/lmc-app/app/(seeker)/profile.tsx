@@ -2,11 +2,15 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView } fr
 import { useRouter } from 'expo-router';
 
 const SETTINGS = [
-  { icon: '💳', label: 'Payment Methods' },
-  { icon: '🔔', label: 'Notifications' },
-  { icon: '📍', label: 'Preferred Cities' },
-  { icon: '👥', label: 'Invite Friends' },
-  { icon: '❓', label: 'Help' },
+  { icon: '📋', label: 'Past Checks', route: '/(seeker)/history' },
+  { icon: '👁', label: 'LMC Plus / Pro', route: '/(seeker)/membership' },
+  { icon: '♥', label: 'Saved Places', route: '/(seeker)/saved' },
+  { icon: '↻', label: 'Recurring Checks', route: '/(seeker)/recurring' },
+  { icon: '💳', label: 'Payment Methods', route: '/(seeker)/payment-methods' },
+  { icon: '🔔', label: 'Notifications', route: '/(seeker)/notifications' },
+  { icon: '📍', label: 'Preferred Cities', route: '/(seeker)/preferred-cities' },
+  { icon: '👥', label: 'Invite Friends', route: '/(seeker)/invite' },
+  { icon: '❓', label: 'Help', route: '/(seeker)/help' },
 ];
 
 export default function ProfileScreen() {
@@ -64,6 +68,7 @@ export default function ProfileScreen() {
                 styles.settingRow,
                 i < SETTINGS.length - 1 && styles.settingRowBorder,
               ]}
+              onPress={() => router.push(item.route as any)}
               activeOpacity={0.7}
             >
               <View style={styles.settingLeft}>
@@ -97,7 +102,11 @@ export default function ProfileScreen() {
           <Text style={styles.switchModeBtnText}>Switch to Scout Mode →</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.signOutBtn}>
+        <TouchableOpacity
+          style={styles.signOutBtn}
+          onPress={() => router.replace('/auth/sign-up')}
+          activeOpacity={0.7}
+        >
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
@@ -113,8 +122,8 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 12 },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: '#FF8533',
-    fontSize: 14,
+    color: '#fff',
+    fontSize: 15,
     marginBottom: 8,
   },
   avatarSection: { alignItems: 'center', paddingVertical: 24 },
@@ -130,13 +139,13 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   avatarInitials: {
-    fontFamily: 'GFSDidot_400Regular',
+    fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 36,
     color: '#fff',
     letterSpacing: 0.5,
   },
   userName: {
-    fontFamily: 'BodoniModa_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 24,
     color: '#fff',
     letterSpacing: 0.4,
@@ -160,7 +169,7 @@ const styles = StyleSheet.create({
   },
   verifiedText: {
     fontFamily: 'Inter_700Bold',
-    color: '#22c55e',
+    color: '#00FF7F',
     fontSize: 10,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
@@ -178,7 +187,7 @@ const styles = StyleSheet.create({
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: {
-    fontFamily: 'GFSDidot_400Regular',
+    fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 24,
     color: '#fff',
     letterSpacing: 0.3,
@@ -195,7 +204,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#FF8533',
+    color: '#88B4FF',
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -228,7 +237,7 @@ const styles = StyleSheet.create({
   },
   settingArrow: {
     fontSize: 20,
-    color: '#FF8533',
+    color: '#88B4FF',
   },
   referralBanner: {
     flexDirection: 'row',
@@ -245,9 +254,9 @@ const styles = StyleSheet.create({
   referralLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   referralEmoji: { fontSize: 26 },
   referralTitle: {
-    fontFamily: 'CormorantGaramond_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#f59e0b',
+    color: '#FFCB47',
     letterSpacing: 0.3,
     marginBottom: 3,
   },
@@ -258,7 +267,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   referralBtn: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#FFCB47',
     borderRadius: 100,
     paddingHorizontal: 16,
     paddingVertical: 8,

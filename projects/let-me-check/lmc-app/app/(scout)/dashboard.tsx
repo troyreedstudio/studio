@@ -1,207 +1,388 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Switch } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  SafeAreaView,
+  Switch,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useScoutEarnings } from '../state/scout-earnings';
+
+type IncomingRequest = {
+  id: string;
+  venue: string;
+  area: string;
+  distanceMi: number;
+  payout: number;
+  tier: 'standard' | 'priority';
+  deliveryMin: number;
+  clipSec: number;
+};
+
+const REQUEST_POOL: IncomingRequest[] = [
+  { id: 'req-001', venue: 'Komodo', area: 'Brickell · Miami', distanceMi: 0.3, payout: 10, tier: 'priority', deliveryMin: 7, clipSec: 15 },
+  { id: 'req-002', venue: 'LIV Nightclub', area: 'Fontainebleau · Miami', distanceMi: 0.6, payout: 10, tier: 'priority', deliveryMin: 7, clipSec: 15 },
+  { id: 'req-003', venue: 'E11EVEN', area: 'Downtown · Miami', distanceMi: 0.4, payout: 8, tier: 'standard', deliveryMin: 10, clipSec: 15 },
+  { id: 'req-004', venue: 'Story', area: 'South Beach · Miami', distanceMi: 1.1, payout: 12, tier: 'priority', deliveryMin: 7, clipSec: 15 },
+  { id: 'req-005', venue: 'MIA Terminal D', area: 'Miami International', distanceMi: 2.4, payout: 8, tier: 'standard', deliveryMin: 10, clipSec: 15 },
+];
 
 export default function ScoutDashboard() {
   const router = useRouter();
+  const earnings = useScoutEarnings();
   const [online, setOnline] = useState(true);
+  const [request, setRequest] = useState<IncomingRequest | null>(REQUEST_POOL[0]);
+
+  // Auto-queue a new request whenever Scout is online with no active request.
+  // Picks a different venue each time so the loop feels alive.
+  useEffect(() => {
+    if (!online || request) return;
+    const lastId = request as IncomingRequest | null;
+    const pool = REQUEST_POOL.filter((r) => r.id !== (lastId as IncomingRequest | null)?.id);
+    const next = pool[Math.floor(Math.random() * pool.length)];
+    const t = setTimeout(() => setRequest(next), 4000);
+    return () => clearTimeout(t);
+  }, [online, request]);
+
+  const handleAccept = () => {
+    if (!request) return;
+    router.push({
+      pathname: '/(scout)/filming',
+      params: {
+        venue: request.venue,
+        payout: String(request.payout),
+        tier: request.tier,
+      },
+    });
+  };
+
+  const handleDecline = () => {
+    setRequest(null);
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.mode}>Scout Mode</Text>
-            <View style={styles.greetingRule} />
-            <Text style={styles.subMode}>{online ? 'You are online · ready to earn' : 'You are offline'}</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.profilePill}
-            onPress={() => router.push('/(seeker)/profile')}
-          >
-            <Text style={styles.profileInitials}>TR</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Earnings Card */}
-        <View style={styles.earningsCard}>
-          <Text style={styles.earningsLabel}>TONIGHT'S EARNINGS</Text>
-          <Text style={styles.earningsValue}>$127.00</Text>
-          <View style={styles.earningsRow}>
-            <View style={styles.earningsChip}>
-              <View style={styles.earningsDot} />
-              <Text style={styles.earningsChipText}>12 clips delivered</Text>
-            </View>
-            <TouchableOpacity onPress={() => router.push('/(scout)/earnings')}>
-              <Text style={styles.viewAllText}>VIEW ALL ›</Text>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scroll}
+        >
+          {/* Top bar — Flow Map exit for prototype navigation */}
+          <View style={styles.topBar}>
+            <TouchableOpacity
+              onPress={() => router.push('/flow-map')}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Text style={styles.backText}>‹ Flow Map</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.wireframeBadge}
+              onPress={() => router.push('/flow-map')}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.wireframeBadgeText}>WF</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Online Toggle */}
-        <View style={styles.toggleCard}>
-          <View style={{ flex: 1 }}>
-            <View style={styles.toggleTitleRow}>
-              <View style={[styles.statusBubble, online ? styles.statusBubbleOn : styles.statusBubbleOff]} />
-              <Text style={styles.toggleTitle}>
-                {online ? 'Online — Accepting Requests' : 'Offline — Not Available'}
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.mode}>Scout Mode</Text>
+              <View style={styles.modeRule} />
+              <Text style={styles.subMode}>
+                {online ? 'You’re online · ready to earn' : 'You’re offline'}
               </Text>
             </View>
-            <Text style={styles.toggleSub}>
-              {online ? 'You will receive check requests nearby' : 'Go online to start earning'}
+            <TouchableOpacity
+              style={styles.profilePill}
+              onPress={() => router.push('/(seeker)/profile')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.profileInitials}>TR</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Earnings Card */}
+          <View style={styles.earningsCard}>
+            <Text style={styles.earningsLabel}>TODAY’S EARNINGS</Text>
+            <Text style={styles.earningsValue}>
+              ${earnings.earningsToday.toFixed(2)}
             </Text>
-          </View>
-          <Switch
-            value={online}
-            onValueChange={setOnline}
-            trackColor={{ false: '#222', true: '#14532d' }}
-            thumbColor={online ? '#22c55e' : '#555'}
-          />
-        </View>
-
-        {/* Incoming Request */}
-        {online && (
-          <View style={styles.requestSection}>
-            <View style={styles.requestHeader}>
-              <Text style={styles.requestTitle}>INCOMING REQUEST</Text>
-              <View style={styles.newBadge}>
-                <Text style={styles.newBadgeText}>NEW</Text>
+            <View style={styles.earningsRow}>
+              <View style={styles.earningsChip}>
+                <View style={styles.earningsDot} />
+                <Text style={styles.earningsChipText}>
+                  {earnings.clipsDelivered} clips delivered
+                </Text>
               </View>
-            </View>
-
-            <View style={styles.requestCard}>
-              <View style={styles.requestTop}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.requestVenue}>Komodo Miami</Text>
-                  <Text style={styles.requestDistance}>📍 0.3 miles · Brickell</Text>
-                </View>
-                <View style={styles.priorityBadge}>
-                  <Text style={styles.priorityBadgeText}>PRIORITY</Text>
-                </View>
-              </View>
-
-              <View style={styles.requestDetails}>
-                <View style={styles.requestDetail}>
-                  <Text style={styles.requestDetailLabel}>YOU EARN</Text>
-                  <Text style={styles.requestDetailValue}>$10.00</Text>
-                </View>
-                <View style={styles.requestDetailDivider} />
-                <View style={styles.requestDetail}>
-                  <Text style={styles.requestDetailLabel}>DELIVERY</Text>
-                  <Text style={styles.requestDetailValue}>7 min</Text>
-                </View>
-                <View style={styles.requestDetailDivider} />
-                <View style={styles.requestDetail}>
-                  <Text style={styles.requestDetailLabel}>CLIP</Text>
-                  <Text style={styles.requestDetailValue}>30s HD</Text>
-                </View>
-              </View>
-
-              <View style={styles.requestActions}>
-                <TouchableOpacity
-                  style={styles.declineBtn}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.declineBtnText}>DECLINE</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.acceptBtn}
-                  onPress={() => router.push('/(scout)/filming')}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.acceptBtnText}>ACCEPT · EARN $10</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                onPress={() => router.push('/(scout)/earnings')}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.viewAllText}>VIEW ALL ›</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        )}
 
-        {/* Nav */}
+          {/* Online Toggle */}
+          <View style={styles.toggleCard}>
+            <View style={{ flex: 1 }}>
+              <View style={styles.toggleTitleRow}>
+                <View
+                  style={[
+                    styles.statusBubble,
+                    online ? styles.statusBubbleOn : styles.statusBubbleOff,
+                  ]}
+                />
+                <Text style={styles.toggleTitle}>
+                  {online ? 'Online · Accepting Requests' : 'Offline · Not Available'}
+                </Text>
+              </View>
+              <Text style={styles.toggleSub}>
+                {online
+                  ? 'You’ll be pinged when a check is requested nearby.'
+                  : 'Toggle on to start earning.'}
+              </Text>
+            </View>
+            <Switch
+              value={online}
+              onValueChange={setOnline}
+              trackColor={{ false: '#222', true: 'rgba(0,255,127,0.35)' }}
+              thumbColor={online ? '#00FF7F' : '#666'}
+              ios_backgroundColor="#222"
+            />
+          </View>
+
+          {/* Incoming Request OR Empty State */}
+          {online && request ? (
+            <View style={styles.requestSection}>
+              <View style={styles.requestHeader}>
+                <Text style={styles.requestTitle}>INCOMING REQUEST</Text>
+                <View style={styles.newBadge}>
+                  <Text style={styles.newBadgeText}>NEW</Text>
+                </View>
+              </View>
+
+              <View style={styles.requestCard}>
+                <View style={styles.requestTop}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.requestVenue}>{request.venue}</Text>
+                    <View style={styles.requestDistanceRow}>
+                      <Ionicons
+                        name="location"
+                        size={11}
+                        color="rgba(255,255,255,0.6)"
+                      />
+                      <Text style={styles.requestDistance}>
+                        {request.distanceMi} mi · {request.area}
+                      </Text>
+                    </View>
+                  </View>
+                  {request.tier === 'priority' && (
+                    <View style={styles.priorityBadge}>
+                      <Ionicons name="flash" size={9} color="#1a1a1a" />
+                      <Text style={styles.priorityBadgeText}>PRIORITY</Text>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.requestDetails}>
+                  <View style={styles.requestDetail}>
+                    <Text style={styles.requestDetailLabel}>YOU EARN</Text>
+                    <Text style={styles.requestDetailValue}>${request.payout}.00</Text>
+                  </View>
+                  <View style={styles.requestDetailDivider} />
+                  <View style={styles.requestDetail}>
+                    <Text style={styles.requestDetailLabel}>DELIVERY</Text>
+                    <Text style={styles.requestDetailValue}>{request.deliveryMin} min</Text>
+                  </View>
+                  <View style={styles.requestDetailDivider} />
+                  <View style={styles.requestDetail}>
+                    <Text style={styles.requestDetailLabel}>CLIP</Text>
+                    <Text style={styles.requestDetailValue}>{request.clipSec}s</Text>
+                  </View>
+                </View>
+
+                <View style={styles.requestActions}>
+                  <TouchableOpacity
+                    style={styles.declineBtn}
+                    activeOpacity={0.7}
+                    onPress={handleDecline}
+                  >
+                    <Text style={styles.declineBtnText}>DECLINE</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.acceptBtn}
+                    onPress={handleAccept}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.acceptBtnText}>
+                      ACCEPT · EARN ${request.payout}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ) : online ? (
+            <View style={styles.emptyCard}>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="radio-outline" size={22} color="#88B4FF" />
+              </View>
+              <Text style={styles.emptyTitle}>Listening for requests</Text>
+              <Text style={styles.emptyWhy}>
+                You’ll be pinged the moment a check is requested in your area.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.emptyCard}>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="moon-outline" size={22} color="rgba(255,255,255,0.5)" />
+              </View>
+              <Text style={styles.emptyTitle}>You’re offline</Text>
+              <Text style={styles.emptyWhy}>
+                Toggle on above to receive incoming requests.
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Bottom Nav */}
         <View style={styles.navBar}>
-          <TouchableOpacity style={styles.navItem}>
-            <Text style={styles.navIcon}>📡</Text>
+          <TouchableOpacity style={styles.navItem} activeOpacity={0.7}>
+            <Ionicons name="radio" size={20} color="#ffffff" />
             <Text style={[styles.navLabel, styles.navLabelActive]}>Dashboard</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(scout)/earnings')}>
-            <Text style={styles.navIcon}>💰</Text>
+          <TouchableOpacity
+            style={styles.navItem}
+            activeOpacity={0.7}
+            onPress={() => router.push('/(scout)/earnings')}
+          >
+            <Ionicons name="stats-chart-outline" size={20} color="rgba(255,255,255,0.5)" />
             <Text style={styles.navLabel}>Earnings</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(seeker)/profile')}>
-            <Text style={styles.navIcon}>👤</Text>
+          <TouchableOpacity
+            style={styles.navItem}
+            activeOpacity={0.7}
+            onPress={() => router.replace('/(seeker)/home')}
+          >
+            <Ionicons name="eye-outline" size={20} color="rgba(255,255,255,0.5)" />
+            <Text style={styles.navLabel}>Seeker Mode</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navItem}
+            activeOpacity={0.7}
+            onPress={() => router.push('/(seeker)/profile')}
+          >
+            <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.5)" />
             <Text style={styles.navLabel}>Profile</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  scroll: { paddingBottom: 100 },
+  container: { flex: 1, backgroundColor: '#000000' },
+  safe: { flex: 1 },
+  scroll: { paddingBottom: 110 },
+
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 22,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  backText: {
+    fontFamily: 'Inter_500Medium',
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 14,
+    letterSpacing: 0.5,
+  },
+  wireframeBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,107,0,0.18)',
+  },
+  wireframeBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#FF6B00',
+    fontSize: 9,
+    letterSpacing: 1.4,
+  },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
+    alignItems: 'flex-start',
+    paddingHorizontal: 22,
+    paddingTop: 12,
+    paddingBottom: 22,
   },
   mode: {
-    fontFamily: 'BodoniModa_700Bold',
-    fontSize: 28,
-    color: '#fff',
-    letterSpacing: 0.3,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 26,
+    color: '#ffffff',
+    letterSpacing: 0.2,
   },
-  greetingRule: {
+  modeRule: {
     height: 2,
-    width: 36,
-    backgroundColor: '#22c55e',
+    width: 32,
+    backgroundColor: '#00FF7F',
     marginTop: 8,
   },
   subMode: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 12,
-    color: '#888',
+    fontSize: 12.5,
+    color: 'rgba(255,255,255,0.6)',
     marginTop: 8,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   profilePill: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1a1a1a',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   profileInitials: {
     fontFamily: 'Inter_700Bold',
-    color: '#fff',
-    fontSize: 14,
+    color: '#ffffff',
+    fontSize: 13,
+    letterSpacing: 0.3,
   },
+
   earningsCard: {
-    backgroundColor: '#0d1a0d',
-    borderRadius: 20,
-    marginHorizontal: 20,
+    backgroundColor: 'rgba(20,55,130,0.5)',
+    borderRadius: 18,
+    marginHorizontal: 22,
     padding: 22,
     borderWidth: 1,
-    borderColor: '#1a3a1a',
+    borderColor: 'rgba(60,110,200,0.55)',
     marginBottom: 14,
   },
   earningsLabel: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 11,
-    color: '#22c55e',
-    letterSpacing: 3,
-    marginBottom: 8,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 2.5,
+    marginBottom: 10,
   },
   earningsValue: {
-    fontFamily: 'GFSDidot_400Regular',
-    fontSize: 48,
-    color: '#fff',
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 42,
+    color: '#ffffff',
     letterSpacing: 0.5,
     marginBottom: 14,
   },
@@ -214,42 +395,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#0a1f0a',
-    borderRadius: 100,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: 'rgba(0,255,127,0.1)',
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
     borderWidth: 1,
-    borderColor: '#1a3a1a',
+    borderColor: 'rgba(0,255,127,0.35)',
   },
   earningsDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#22c55e',
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#00FF7F',
   },
   earningsChipText: {
-    fontFamily: 'Inter_600SemiBold',
-    color: '#22c55e',
-    fontSize: 11,
-    letterSpacing: 0.5,
+    fontFamily: 'Inter_700Bold',
+    color: '#00FF7F',
+    fontSize: 10.5,
+    letterSpacing: 0.6,
   },
   viewAllText: {
     fontFamily: 'Inter_700Bold',
-    color: '#FF8533',
-    fontSize: 11,
+    color: '#88B4FF',
+    fontSize: 10.5,
     letterSpacing: 2,
   },
+
   toggleCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 14,
-    marginHorizontal: 20,
+    marginHorizontal: 22,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.1)',
     marginBottom: 22,
     gap: 12,
   },
@@ -264,136 +446,189 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  statusBubbleOn: { backgroundColor: '#22c55e' },
-  statusBubbleOff: { backgroundColor: '#555' },
+  statusBubbleOn: { backgroundColor: '#00FF7F' },
+  statusBubbleOff: { backgroundColor: 'rgba(255,255,255,0.3)' },
   toggleTitle: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 13.5,
-    color: '#fff',
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13,
+    color: '#ffffff',
     letterSpacing: 0.2,
   },
   toggleSub: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 12,
-    color: '#666',
+    fontSize: 11.5,
+    color: 'rgba(255,255,255,0.55)',
     marginLeft: 16,
+    lineHeight: 16,
   },
-  requestSection: { paddingHorizontal: 20 },
+
+  requestSection: { paddingHorizontal: 22 },
   requestHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   requestTitle: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 13,
-    color: '#FF8533',
-    letterSpacing: 4,
-    textTransform: 'uppercase',
+    fontSize: 10,
+    color: '#88B4FF',
+    letterSpacing: 2.5,
   },
   newBadge: {
-    backgroundColor: '#22c55e',
+    backgroundColor: '#00FF7F',
     borderRadius: 4,
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 2,
   },
   newBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#000',
-    letterSpacing: 1.5,
+    color: '#000000',
+    letterSpacing: 1.4,
   },
   requestCard: {
-    backgroundColor: '#0d0d0d',
+    backgroundColor: 'rgba(0,255,127,0.04)',
     borderRadius: 16,
     padding: 18,
     borderWidth: 1.5,
-    borderColor: 'rgba(34,197,94,0.35)',
+    borderColor: 'rgba(0,255,127,0.4)',
   },
   requestTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   requestVenue: {
-    fontFamily: 'CormorantGaramond_700Bold',
-    fontSize: 22,
-    color: '#fff',
-    letterSpacing: 0.4,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 20,
+    color: '#ffffff',
+    letterSpacing: 0.2,
     marginBottom: 4,
   },
+  requestDistanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   requestDistance: {
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Inter_500Medium',
     fontSize: 12,
-    color: '#888',
-    letterSpacing: 0.3,
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 0.2,
   },
   priorityBadge: {
-    backgroundColor: '#f59e0b',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFCB47',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#C99A1F',
   },
   priorityBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#000',
+    color: '#1a1a1a',
     letterSpacing: 1.5,
   },
   requestDetails: {
     flexDirection: 'row',
-    backgroundColor: '#0a0a0a',
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginBottom: 16,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 10,
+    paddingVertical: 13,
+    marginBottom: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   requestDetail: { flex: 1, alignItems: 'center' },
   requestDetailLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#666',
+    color: 'rgba(255,255,255,0.55)',
     letterSpacing: 1.5,
-    marginBottom: 5,
+    marginBottom: 4,
   },
   requestDetailValue: {
-    fontFamily: 'GFSDidot_400Regular',
-    fontSize: 18,
-    color: '#fff',
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 16,
+    color: '#ffffff',
     letterSpacing: 0.3,
   },
-  requestDetailDivider: { width: 1, height: 28, backgroundColor: '#1e1e1e' },
+  requestDetailDivider: {
+    width: 1,
+    height: 26,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
   requestActions: { flexDirection: 'row', gap: 10 },
   declineBtn: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingVertical: 15,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   declineBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
     fontSize: 12,
     letterSpacing: 2,
   },
   acceptBtn: {
     flex: 2,
-    backgroundColor: '#22c55e',
+    backgroundColor: '#00FF7F',
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingVertical: 15,
     alignItems: 'center',
   },
   acceptBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000',
+    color: '#000000',
     fontSize: 12,
     letterSpacing: 2,
   },
+
+  emptyCard: {
+    marginHorizontal: 22,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  emptyIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  emptyTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 14,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+    marginBottom: 4,
+  },
+  emptyWhy: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    lineHeight: 17,
+    paddingHorizontal: 8,
+  },
+
   navBar: {
     position: 'absolute',
     bottom: 0,
@@ -402,17 +637,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#0a0a0a',
     borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
+    borderTopColor: 'rgba(255,255,255,0.08)',
     paddingBottom: 24,
     paddingTop: 12,
   },
   navItem: { flex: 1, alignItems: 'center', gap: 4 },
-  navIcon: { fontSize: 20 },
   navLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 10,
-    color: '#555',
+    color: 'rgba(255,255,255,0.5)',
     letterSpacing: 0.5,
   },
-  navLabelActive: { color: '#fff' },
+  navLabelActive: { color: '#ffffff' },
 });

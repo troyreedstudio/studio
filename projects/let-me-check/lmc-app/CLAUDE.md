@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Let Me Check (LMC)** — universal visual verification on demand. Seekers pay to have a Scout (a real person on the ground) film a 30-second clip of any location anywhere. Phase 1 launch: nightlife wedge in Miami, "Know Before You Go." Long-term vision: any location on earth (DMV queues, airports, restaurants, real estate, hotels, gyms, retail, events, beach clubs, etc.).
+**Let Me Check (LMC)** — universal visual verification on demand. Seekers pay to have a Scout (a real person on the ground) film a 15-second clip of any location anywhere (30 seconds for Partner Interior checks). Phase 1 launch: nightlife wedge in Miami, "Know Before You Go." Long-term vision: any location on earth (DMV queues, airports, restaurants, real estate, hotels, gyms, retail, events, beach clubs, etc.).
 
 Two roles, both as separate route groups in Expo Router:
 - **Seekers** — browse venues, request checks, pay, watch delivered clips

@@ -3,93 +3,83 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { isPartnerVenue, getMarketById, DEFAULT_MARKET_ID } from '../data/markets';
 
 export default function VenueScreen() {
   const router = useRouter();
-  const { name = 'Komodo', city = 'Miami' } = useLocalSearchParams<{ name: string; city: string }>();
+  const {
+    name = 'Komodo',
+    city: cityParam,
+    marketId: marketIdParam,
+  } = useLocalSearchParams<{ name: string; city?: string; marketId?: string }>();
+  const market = getMarketById(marketIdParam || DEFAULT_MARKET_ID) || getMarketById(DEFAULT_MARKET_ID)!;
+  const city = cityParam || market.name;
+  const isLive = market.status === 'live';
   const [selectedTier, setSelectedTier] = useState<'standard' | 'priority'>('standard');
+  const [interior, setInterior] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  const player = useVideoPlayer(require('../../assets/lmc-trailer.mp4'), (p) => {
+  const isPartner = isPartnerVenue(String(name));
+
+  const player = useVideoPlayer(require('../../assets/scout-sample.mov'), (p) => {
     p.loop = true;
     p.muted = true;
+    p.play();
   });
 
-  const tier = selectedTier === 'standard'
-    ? { price: '$15', time: '10 min', label: 'Standard' }
-    : { price: '$20', time: '7 min', label: 'Priority' };
+  const basePrice = selectedTier === 'standard' ? 15 : 20;
+  const totalPrice = basePrice + (interior && isPartner ? 5 : 0);
+  const tier = {
+    price: `$${totalPrice}`,
+    time: selectedTier === 'standard' ? '10 min' : '7 min',
+    label: selectedTier === 'standard' ? 'Standard' : 'Priority',
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => {
+              if (router.canGoBack()) router.back();
+              else router.replace('/(seeker)/home');
+            }}
+          >
             <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
           <Text style={styles.venueName}>{name}</Text>
-          <Text style={styles.venueCity}>{city}</Text>
+          <View style={styles.venueCityRow}>
+            <Text style={styles.venueCity}>{city}</Text>
+            <View style={styles.venueDot} />
+            <View style={styles.venueScoutDot} />
+            <Text style={styles.venueScouts}>
+              {isLive ? `${market.scouts} Scouts nearby` : 'Launching soon'}
+            </Text>
+          </View>
         </View>
 
-        {/* Mock video preview window */}
-        {videoPlaying ? (
-          <View style={styles.photoArea}>
-            <VideoView
-              player={player}
-              style={StyleSheet.absoluteFillObject}
-              contentFit="cover"
-              nativeControls={false}
-            />
-            <View style={styles.photoBadge}>
-              <Text style={styles.photoBadgeText}>SAMPLE PREVIEW · 30s</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.photoCloseBtn}
-              onPress={() => {
-                player.pause();
-                setVideoPlaying(false);
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.photoCloseIcon}>✕</Text>
-            </TouchableOpacity>
+        {/* Auto-playing silent preview — the real impulse trigger */}
+        <View style={styles.photoArea}>
+          <VideoView
+            player={player}
+            style={StyleSheet.absoluteFillObject}
+            contentFit="cover"
+            nativeControls={false}
+          />
+          <View style={styles.photoBadge}>
+            <Text style={styles.photoBadgeText}>PREVIEW · 15s</Text>
           </View>
-        ) : (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => {
-              player.play();
-              setVideoPlaying(true);
-            }}
-          >
-            <ImageBackground
-              source={require('../../assets/splash-assets/miami-night.jpg')}
-              style={styles.photoArea}
-              imageStyle={{ borderRadius: 16 }}
-            >
-              <LinearGradient
-                colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
-                locations={[0, 1]}
-                style={styles.photoGradient}
-              />
-              <View style={styles.photoBadge}>
-                <Text style={styles.photoBadgeText}>SAMPLE PREVIEW · 30s</Text>
-              </View>
-              <View style={styles.photoPlayWrap}>
-                <View style={styles.photoPlayCircle}>
-                  <Text style={styles.photoPlayIcon}>▶</Text>
-                </View>
-              </View>
-              <Text style={styles.photoSub}>Tap to play sample · Real footage replaces this after your check</Text>
-            </ImageBackground>
-          </TouchableOpacity>
-        )}
+        </View>
 
         {/* Live Status */}
         <View style={styles.liveStatus}>
-          <View style={styles.liveBlip} />
-          <Text style={styles.liveText}>LIVE CHECKS AVAILABLE</Text>
+          <View style={[styles.liveBlip, !isLive && styles.liveBlipSoon]} />
+          <Text style={styles.liveText}>
+            {isLive ? 'LIVE CHECKS AVAILABLE' : 'RECRUITING SCOUTS IN ' + city.toUpperCase()}
+          </Text>
         </View>
 
         {/* Info Row */}
@@ -113,7 +103,7 @@ export default function VenueScreen() {
             <Text style={styles.tierLabel}>Standard</Text>
             <Text style={styles.tierPrice}>$15</Text>
             <Text style={styles.tierTime}>~10 min</Text>
-            <Text style={styles.tierDesc}>30-sec HD video of the queue</Text>
+            <Text style={styles.tierDesc}>15-sec HD video of the queue</Text>
             {selectedTier === 'standard' && (
               <View style={styles.selectedBadge}>
                 <Text style={styles.selectedBadgeText}>✓</Text>
@@ -132,7 +122,7 @@ export default function VenueScreen() {
             <Text style={styles.tierLabel}>Priority</Text>
             <Text style={styles.tierPrice}>$20</Text>
             <Text style={styles.tierTime}>~7 min</Text>
-            <Text style={styles.tierDesc}>30-sec HD video · rush delivery</Text>
+            <Text style={styles.tierDesc}>15-sec HD video · rush delivery</Text>
             {selectedTier === 'priority' && (
               <View style={[styles.selectedBadge, styles.selectedBadgeAmber]}>
                 <Text style={styles.selectedBadgeText}>✓</Text>
@@ -141,14 +131,35 @@ export default function VenueScreen() {
           </TouchableOpacity>
         </View>
 
+        {isPartner && (
+          <TouchableOpacity
+            style={styles.interiorCard}
+            activeOpacity={0.85}
+            onPress={() => setInterior(!interior)}
+          >
+            <View style={[styles.interiorCheck, interior && styles.interiorCheckActive]}>
+              {interior && <Text style={styles.interiorCheckGlyph}>✓</Text>}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.interiorEyebrow}>✦ PARTNER VENUE</Text>
+              <View style={styles.interiorTitleRow}>
+                <Text style={styles.interiorTitle}>Include interior</Text>
+                <Text style={styles.interiorBadge}>+$5</Text>
+              </View>
+              <Text style={styles.interiorSub}>
+                {interior
+                  ? `${name} is an LMC Partner. Scout films exterior + inside the venue. 30-sec clip.`
+                  : `${name} is a Partner — add inside footage to your check. 30-sec clip.`}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         <View style={{ height: 120 }} />
       </ScrollView>
 
       {/* CTA */}
       <View style={styles.ctaContainer}>
-        <View style={styles.ctaSummary}>
-          <Text style={styles.ctaSummaryText}>{tier.label} · {tier.price} · ~{tier.time}</Text>
-        </View>
         <TouchableOpacity
           style={[styles.ctaButton, processing && styles.ctaButtonProcessing]}
           disabled={processing}
@@ -158,7 +169,14 @@ export default function VenueScreen() {
               setProcessing(false);
               router.push({
                 pathname: '/(seeker)/payment',
-                params: { venue: name, city, tier: selectedTier, price: tier.price, time: tier.time },
+                params: {
+                  venue: name,
+                  city,
+                  tier: selectedTier,
+                  price: tier.price,
+                  time: tier.time,
+                  interior: interior ? '1' : '0',
+                },
               });
             }, 900);
           }}
@@ -177,16 +195,47 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backBtn: { marginBottom: 12 },
-  backText: { color: '#888', fontSize: 16 },
+  backText: { fontFamily: 'Inter_500Medium', color: '#fff', fontSize: 15 },
   venueName: { fontSize: 28, fontWeight: '800', color: '#fff', marginBottom: 4 },
-  venueCity: { fontSize: 14, color: '#888' },
+  venueCityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  venueCity: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0.3,
+  },
+  venueDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+  venueScoutDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00FF7F',
+    marginRight: -3,
+  },
+  venueScouts: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: '#00FF7F',
+    letterSpacing: 0.3,
+  },
   photoArea: {
-    marginHorizontal: 20,
-    height: 200,
-    borderRadius: 16,
+    alignSelf: 'center',
+    width: '55%',
+    aspectRatio: 9 / 16,
+    borderRadius: 18,
     overflow: 'hidden',
     justifyContent: 'flex-end',
     backgroundColor: '#111',
+    marginTop: 4,
   },
   photoGradient: {
     position: 'absolute',
@@ -198,11 +247,11 @@ const styles = StyleSheet.create({
   },
   photoBadge: {
     position: 'absolute',
-    top: 12,
-    left: 12,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    top: 10,
+    left: 10,
+    backgroundColor: 'rgba(20,55,130,0.85)',
     borderWidth: 1,
-    borderColor: '#FF8533',
+    borderColor: 'rgba(60,110,200,0.85)',
     borderRadius: 100,
     paddingVertical: 4,
     paddingHorizontal: 10,
@@ -210,7 +259,7 @@ const styles = StyleSheet.create({
   photoBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#FF8533',
+    color: '#ffffff',
     letterSpacing: 1.5,
   },
   photoCloseBtn: {
@@ -268,8 +317,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
-  liveBlip: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e' },
-  liveText: { fontSize: 13, color: '#22c55e', fontWeight: '700', letterSpacing: 1.5 },
+  liveBlip: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#00FF7F' },
+  liveBlipSoon: { backgroundColor: '#FF6B00' },
+  liveText: { fontSize: 13, color: '#00FF7F', fontWeight: '700', letterSpacing: 1.5 },
   infoRow: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -312,11 +362,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#151515',
   },
   tierCardPriorityActive: {
-    borderColor: '#f59e0b',
+    borderColor: '#FFCB47',
     backgroundColor: '#151200',
   },
   priorityBadge: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#FFCB47',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -326,7 +376,7 @@ const styles = StyleSheet.create({
   priorityBadgeText: { fontSize: 9, fontWeight: '800', color: '#000', letterSpacing: 1 },
   tierLabel: { fontSize: 15, fontWeight: '700', color: '#fff', marginBottom: 6 },
   tierPrice: { fontSize: 28, fontWeight: '900', color: '#fff', marginBottom: 2 },
-  tierTime: { fontSize: 13, color: '#22c55e', fontWeight: '600', marginBottom: 8 },
+  tierTime: { fontSize: 13, color: '#00FF7F', fontWeight: '600', marginBottom: 8 },
   tierDesc: { fontSize: 11, color: '#666', lineHeight: 16 },
   selectedBadge: {
     position: 'absolute',
@@ -339,8 +389,87 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  selectedBadgeAmber: { backgroundColor: '#f59e0b' },
+  selectedBadgeAmber: { backgroundColor: '#FFCB47' },
   selectedBadgeText: { fontSize: 12, fontWeight: '800', color: '#000' },
+  interiorCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: 'rgba(20,55,130,0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(60,110,200,0.6)',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    marginHorizontal: 20,
+    marginTop: 14,
+  },
+  interiorCardActive: {
+    borderColor: 'rgba(60,110,200,0.9)',
+  },
+  interiorEyebrow: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: '#E8A0B0',
+    letterSpacing: 2,
+    marginBottom: 4,
+  },
+  interiorCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  interiorCheckActive: { backgroundColor: '#00FF7F', borderColor: '#00FF7F' },
+  interiorCheckGlyph: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 12,
+    color: '#000',
+  },
+  interiorTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  interiorTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 14,
+    color: '#fff',
+    letterSpacing: 0.2,
+  },
+  interiorBadge: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 13,
+    color: '#00FF7F',
+    letterSpacing: 0.4,
+  },
+  interiorSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 17,
+    letterSpacing: 0.2,
+  },
+  partnerStar: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(232,160,176,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(232,160,176,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  partnerStarText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 12,
+    color: '#E8A0B0',
+  },
   ctaContainer: {
     position: 'absolute',
     bottom: 0,

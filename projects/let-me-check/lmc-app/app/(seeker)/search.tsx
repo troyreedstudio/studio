@@ -9,8 +9,9 @@ import {
   Keyboard,
   Modal,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
+import { getMarketById, DEFAULT_MARKET_ID } from '../data/markets';
 
 const VOICE_MOCKS = [
   'Soho House New York',
@@ -133,7 +134,40 @@ const ALL_PLACES = [
   { id: 'p81', name: 'Coya Dubai', address: 'DIFC, Dubai', category: 'Restaurants', scouts: 7 },
   { id: 'p82', name: 'Zuma Dubai', address: 'DIFC, Dubai', category: 'Restaurants', scouts: 9 },
   { id: 'p83', name: 'Soul Beach Dubai', address: 'JBR, Dubai', category: 'Beach Clubs', scouts: 8 },
+  { id: 'p84', name: 'E11EVEN', address: '29 NE 11th St, Downtown Miami', category: 'Nightclub', scouts: 17 },
 ];
+
+// Coord lookup for prototype. Known venues → exact coords. Unknown → city fallback.
+const VENUE_COORDS: Record<string, [number, number]> = {
+  Komodo: [-80.1932, 25.7651],
+  'LIV Nightclub': [-80.1228, 25.8186],
+  E11EVEN: [-80.1962, 25.7831],
+  'Soho House Miami Beach': [-80.1300, 25.7858],
+  'JFK Terminal 4': [-73.7795, 40.6443],
+  'Equinox Hudson Yards': [-74.0014, 40.7536],
+  'Marquee New York': [-74.0048, 40.7470],
+  'LAX Terminal 7': [-118.4053, 33.9425],
+  'Heathrow Terminal 5': [-0.4882, 51.4720],
+  Carbone: [-74.0006, 40.7290],
+  'Madison Square Garden': [-73.9934, 40.7505],
+  'Apple Fifth Avenue': [-73.9737, 40.7637],
+  'Burj Al Arab': [55.1853, 25.1413],
+};
+
+function getCoordsFor(place: { name: string; address: string }): [number, number] {
+  if (VENUE_COORDS[place.name]) return VENUE_COORDS[place.name];
+  const addr = (place.address || '').toLowerCase();
+  if (addr.includes('miami beach') || addr.includes('south beach')) return [-80.1300, 25.7906];
+  if (addr.includes('miami') || addr.includes('brickell') || addr.includes('wynwood') || addr.includes('hialeah') || addr.includes('aventura')) return [-80.1918, 25.7617];
+  if (addr.includes('queens') || addr.includes('brooklyn') || addr.includes('bronx') || addr.includes('manhattan') || addr.includes('soho') || addr.includes('chelsea') || addr.includes('tribeca') || addr.includes('new york') || addr.includes('nyc') || addr.includes('greenwich')) return [-74.006, 40.7128];
+  if (addr.includes('hollywood') || addr.includes('beverly') || addr.includes('santa monica') || addr.includes('malibu') || addr.includes('inglewood') || addr.includes('los angeles')) return [-118.2437, 34.0522];
+  if (addr.includes('london') || addr.includes('mayfair') || addr.includes('farringdon')) return [-0.1278, 51.5074];
+  if (addr.includes('dubai') || addr.includes('jumeirah') || addr.includes('difc')) return [55.2708, 25.2048];
+  if (addr.includes('chicago')) return [-87.6298, 41.8781];
+  if (addr.includes('atlanta')) return [-84.388, 33.749];
+  if (addr.includes('san francisco')) return [-122.4194, 37.7749];
+  return [-80.1918, 25.7617];
+}
 
 const RECENTS = [
   { id: 'r1', name: 'Komodo', address: 'Brickell, Miami', when: '2 days ago' },
@@ -143,6 +177,8 @@ const RECENTS = [
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { marketId: marketIdParam } = useLocalSearchParams<{ marketId?: string }>();
+  const activeMarket = getMarketById(marketIdParam || DEFAULT_MARKET_ID) || getMarketById(DEFAULT_MARKET_ID)!;
   const [query, setQuery] = useState('');
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceDots, setVoiceDots] = useState('');
@@ -187,9 +223,15 @@ export default function SearchScreen() {
 
   const handleSelect = (place: { name: string; address: string }) => {
     Keyboard.dismiss();
-    router.push({
-      pathname: '/(seeker)/venue',
-      params: { name: place.name, city: place.address },
+    const [lon, lat] = getCoordsFor(place);
+    router.replace({
+      pathname: '/(seeker)/home',
+      params: {
+        pinLat: String(lat),
+        pinLon: String(lon),
+        pinName: place.name,
+        pinAddress: place.address,
+      },
     });
   };
 
@@ -200,7 +242,7 @@ export default function SearchScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Find a queue to check</Text>
+        <Text style={styles.headerTitle}>Search any place</Text>
         <View style={{ width: 50 }} />
       </View>
 
@@ -240,7 +282,12 @@ export default function SearchScreen() {
         <Text style={styles.locIcon}>📍</Text>
         <View style={styles.locTextWrap}>
           <Text style={styles.locTitle}>Use my current location</Text>
-          <Text style={styles.locSub}>📍 Miami · 142 Scouts active here</Text>
+          <Text style={styles.locSub}>
+            📍 {activeMarket.name} ·{' '}
+            {activeMarket.status === 'live'
+              ? `${activeMarket.scouts} Scouts active here`
+              : 'Launching soon'}
+          </Text>
         </View>
         <Text style={styles.locArrow}>›</Text>
       </TouchableOpacity>
@@ -365,11 +412,11 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontFamily: 'Inter_500Medium',
-    fontSize: 14,
-    color: '#FF8533',
+    fontSize: 15,
+    color: '#fff',
   },
   headerTitle: {
-    fontFamily: 'GFSDidot_400Regular',
+    fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 17,
     color: '#fff',
     letterSpacing: 0.4,
@@ -414,14 +461,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FF8533',
+    borderColor: '#88B4FF',
   },
   voiceMic: {
     fontSize: 44,
     marginBottom: 14,
   },
   voiceListeningText: {
-    fontFamily: 'GFSDidot_400Regular',
+    fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
     color: '#fff',
     letterSpacing: 1,
@@ -443,7 +490,7 @@ const styles = StyleSheet.create({
   },
   voicePulse: {
     width: 4,
-    backgroundColor: '#FF8533',
+    backgroundColor: '#88B4FF',
     borderRadius: 2,
   },
   voiceCancel: {
@@ -453,13 +500,13 @@ const styles = StyleSheet.create({
   voiceCancelText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: '#FF8533',
+    color: '#88B4FF',
     letterSpacing: 1,
   },
   priceChip: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#FF8533',
+    color: '#88B4FF',
     letterSpacing: 0.4,
   },
   locButton: {
@@ -472,7 +519,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#FF8533',
+    borderColor: '#88B4FF',
     gap: 14,
   },
   locIcon: { fontSize: 18 },
@@ -486,12 +533,12 @@ const styles = StyleSheet.create({
   locSub: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11,
-    color: '#22c55e',
+    color: '#00FF7F',
     letterSpacing: 0.3,
   },
   locArrow: {
     fontSize: 22,
-    color: '#FF8533',
+    color: '#88B4FF',
     fontWeight: '500',
   },
   resultsScroll: {
@@ -501,7 +548,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#FF8533',
+    color: '#88B4FF',
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -527,7 +574,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resultIconWrapOrange: {
-    borderColor: '#FF8533',
+    borderColor: '#88B4FF',
   },
   searchAnywhereRow: {
     backgroundColor: 'rgba(255,133,51,0.06)',
@@ -535,7 +582,7 @@ const styles = StyleSheet.create({
   resultPin: { fontSize: 16 },
   resultTextWrap: { flex: 1 },
   resultName: {
-    fontFamily: 'CormorantGaramond_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 18,
     color: '#fff',
     letterSpacing: 0.3,
@@ -555,7 +602,7 @@ const styles = StyleSheet.create({
   resultCategory: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#FF8533',
+    color: '#88B4FF',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
@@ -567,12 +614,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#22c55e',
+    backgroundColor: '#00FF7F',
   },
   resultScouts: {
     fontFamily: 'Inter_500Medium',
     fontSize: 10,
-    color: '#22c55e',
+    color: '#00FF7F',
     letterSpacing: 0.3,
   },
   resultRecentWhen: {
@@ -583,7 +630,7 @@ const styles = StyleSheet.create({
   },
   resultArrow: {
     fontSize: 22,
-    color: '#FF8533',
+    color: '#88B4FF',
     fontWeight: '500',
   },
   noResults: {
@@ -605,7 +652,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   emptySavedTitle: {
-    fontFamily: 'GFSDidot_400Regular',
+    fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 16,
     color: '#fff',
     letterSpacing: 0.3,

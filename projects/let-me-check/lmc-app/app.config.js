@@ -1,0 +1,51 @@
+module.exports = {
+  expo: {
+    name: 'Let Me Check',
+    slug: 'lmc-app',
+    scheme: 'lmc',
+    version: '1.0.0',
+    orientation: 'portrait',
+    icon: './assets/icon.png',
+    userInterfaceStyle: 'light',
+    splash: {
+      image: './assets/splash-icon.png',
+      resizeMode: 'contain',
+      backgroundColor: '#000000',
+    },
+    ios: {
+      supportsTablet: false,
+      bundleIdentifier: 'Com.BlackMalibuinc.letmecheck',
+    },
+    android: {
+      package: 'com.blackmalibuinc.letmecheck',
+      adaptiveIcon: {
+        backgroundColor: '#000000',
+        foregroundImage: './assets/android-icon-foreground.png',
+        backgroundImage: './assets/android-icon-background.png',
+        monochromeImage: './assets/android-icon-monochrome.png',
+      },
+      predictiveBackGestureEnabled: false,
+    },
+    web: {
+      favicon: './assets/favicon.png',
+    },
+    plugins: [
+      'expo-router',
+      'expo-font',
+      'expo-video',
+      [
+        '@rnmapbox/maps',
+        {
+          RNMapboxMapsDownloadToken: process.env.MAPBOX_DOWNLOAD_TOKEN,
+        },
+      ],
+    ],
+    extra: {
+      router: {},
+      eas: {
+        projectId: 'b5ec275f-0b7d-4672-b929-22cb5291c05f',
+      },
+    },
+    owner: 'troyreed',
+  },
+};

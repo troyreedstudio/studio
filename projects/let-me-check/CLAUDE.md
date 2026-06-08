@@ -2,7 +2,7 @@
 
 **Agent name**: Guy — the Claude Code agent for this project. (Other studio projects have their own named agents; use Guy only in `let-me-check/`.)
 
-Universal visual verification on demand. A **Seeker** pays to have a **Scout** (a real person on the ground) film a 30-second clip of any location — DMV queues, airports, restaurants, real estate, gyms, retail, events, hotels, beach clubs, anywhere. Delivered in 7–10 minutes.
+Universal visual verification on demand. A **Seeker** pays to have a **Scout** (a real person on the ground) film a 15-second clip of any location — DMV queues, airports, restaurants, real estate, gyms, retail, events, hotels, beach clubs, anywhere. Delivered in 7–10 minutes. Partner venues unlock 30-second interior checks for +$5.
 
 **Tagline (primary)**: "Know Before You Go."
 **Tagline (secondary)**: "Real Eyes. Right Now. Anywhere."

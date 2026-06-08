@@ -1,232 +1,418 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  SafeAreaView,
+  Alert,
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useScoutEarnings } from '../state/scout-earnings';
 
 const BAR_DATA = [
-  { day: 'Mon', value: 45, amount: '$45' },
-  { day: 'Tue', value: 80, amount: '$80' },
-  { day: 'Wed', value: 60, amount: '$60' },
-  { day: 'Thu', value: 95, amount: '$95' },
-  { day: 'Fri', value: 100, amount: '$127' },
-  { day: 'Sat', value: 30, amount: '$30' },
-  { day: 'Sun', value: 10, amount: '$10' },
+  { day: 'MON', value: 45, amount: '$45' },
+  { day: 'TUE', value: 80, amount: '$80' },
+  { day: 'WED', value: 60, amount: '$60' },
+  { day: 'THU', value: 95, amount: '$95' },
+  { day: 'FRI', value: 100, amount: '$127', today: true },
+  { day: 'SAT', value: 0, amount: '$0' },
+  { day: 'SUN', value: 0, amount: '$0' },
 ];
 
-const MAX_BAR_HEIGHT = 100;
+const MAX_BAR_HEIGHT = 110;
 
-const PAYOUTS = [
-  { id: '1', date: 'Mar 27, 2026', clips: 12, amount: '$127.00', status: 'Pending' },
-  { id: '2', date: 'Mar 20, 2026', clips: 9, amount: '$94.50', status: 'Paid' },
-  { id: '3', date: 'Mar 13, 2026', clips: 11, amount: '$115.50', status: 'Paid' },
-  { id: '4', date: 'Mar 6, 2026', clips: 8, amount: '$84.00', status: 'Paid' },
+type Payout = {
+  id: string;
+  date: string;
+  clips: number;
+  amount: string;
+  status: 'Pending' | 'Paid';
+};
+
+const PAYOUTS: Payout[] = [
+  { id: '1', date: 'Jun 8, 2026', clips: 12, amount: '$127.00', status: 'Pending' },
+  { id: '2', date: 'Jun 1, 2026', clips: 9, amount: '$94.50', status: 'Paid' },
+  { id: '3', date: 'May 25, 2026', clips: 11, amount: '$115.50', status: 'Paid' },
+  { id: '4', date: 'May 18, 2026', clips: 8, amount: '$84.00', status: 'Paid' },
 ];
 
 export default function EarningsScreen() {
   const router = useRouter();
+  const earnings = useScoutEarnings();
+
+  const monthTotal = 220 + earnings.earningsToday;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>EARNINGS</Text>
-        </View>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scroll}
+        >
+          {/* Top bar — matches every other screen */}
+          <View style={styles.topBar}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Text style={styles.backText}>‹ Back</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.wireframeBadge}
+              onPress={() => router.push('/flow-map')}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.wireframeBadgeText}>WF</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Big Total */}
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>THIS MONTH</Text>
-          <Text style={styles.totalValue}>$347.00</Text>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalSub}>+$127 today</Text>
-            <View style={styles.upBadge}>
-              <Text style={styles.upText}>↑ 23%</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Earnings</Text>
+            <View style={styles.titleRule} />
+            <Text style={styles.subtitle}>Your earnings, payouts, and history</Text>
+          </View>
+
+          {/* Big monthly total card */}
+          <View style={styles.totalCard}>
+            <Text style={styles.totalLabel}>THIS MONTH</Text>
+            <Text style={styles.totalValue}>${monthTotal.toFixed(2)}</Text>
+            <View style={styles.totalRow}>
+              <View style={styles.totalChip}>
+                <View style={styles.totalChipDot} />
+                <Text style={styles.totalChipText}>
+                  +${earnings.earningsToday.toFixed(2)} today
+                </Text>
+              </View>
+              <View style={styles.upBadge}>
+                <Ionicons name="trending-up" size={10} color="#00FF7F" />
+                <Text style={styles.upText}>23%</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Bar Chart */}
-        <Text style={styles.sectionLabel}>THIS WEEK</Text>
-        <View style={styles.chartCard}>
-          <View style={styles.barsRow}>
-            {BAR_DATA.map((bar) => (
-              <View key={bar.day} style={styles.barColumn}>
-                <Text style={styles.barAmount}>{bar.value === 100 ? bar.amount : ''}</Text>
-                <View style={styles.barWrapper}>
+          {/* Bar chart */}
+          <Text style={styles.sectionLabel}>THIS WEEK</Text>
+          <View style={styles.chartCard}>
+            <View style={styles.barsRow}>
+              {BAR_DATA.map((bar) => (
+                <View key={bar.day} style={styles.barColumn}>
+                  <Text
+                    style={[
+                      styles.barAmount,
+                      !bar.today && { opacity: 0 },
+                    ]}
+                  >
+                    {bar.amount}
+                  </Text>
+                  <View style={styles.barWrapper}>
+                    <View
+                      style={[
+                        styles.bar,
+                        {
+                          height: Math.max(4, (bar.value / 100) * MAX_BAR_HEIGHT),
+                          backgroundColor: bar.today
+                            ? '#00FF7F'
+                            : bar.value > 0
+                            ? 'rgba(255,255,255,0.12)'
+                            : 'rgba(255,255,255,0.06)',
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.barDay,
+                      bar.today && styles.barDayActive,
+                    ]}
+                  >
+                    {bar.day}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Stats row */}
+          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
+            ALL TIME
+          </Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{earnings.clipsDelivered}</Text>
+              <Text style={styles.statLabel}>CLIPS</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: '#FFCB47' }]}>4.9★</Text>
+              <Text style={styles.statLabel}>RATING</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>$10</Text>
+              <Text style={styles.statLabel}>AVG / CLIP</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: '#00FF7F' }]}>100%</Text>
+              <Text style={styles.statLabel}>DELIVERY</Text>
+            </View>
+          </View>
+
+          {/* Recent payouts */}
+          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
+            RECENT PAYOUTS
+          </Text>
+          <View style={styles.payoutsList}>
+            {PAYOUTS.map((p, i) => (
+              <View
+                key={p.id}
+                style={[
+                  styles.payoutRow,
+                  i < PAYOUTS.length - 1 && styles.payoutRowDivider,
+                ]}
+              >
+                <View style={styles.payoutLeft}>
+                  <Text style={styles.payoutDate}>{p.date}</Text>
+                  <Text style={styles.payoutClips}>{p.clips} clips delivered</Text>
+                </View>
+                <View style={styles.payoutRight}>
+                  <Text style={styles.payoutAmount}>{p.amount}</Text>
                   <View
                     style={[
-                      styles.bar,
-                      {
-                        height: (bar.value / 100) * MAX_BAR_HEIGHT,
-                        backgroundColor: bar.value === 100 ? '#22c55e' : '#1a2e1a',
-                      },
+                      styles.statusBadge,
+                      p.status === 'Paid' && styles.statusBadgePaid,
                     ]}
-                  />
+                  >
+                    <View
+                      style={[
+                        styles.statusDot,
+                        p.status === 'Paid' && styles.statusDotPaid,
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.statusText,
+                        p.status === 'Paid' && styles.statusTextPaid,
+                      ]}
+                    >
+                      {p.status.toUpperCase()}
+                    </Text>
+                  </View>
                 </View>
-                <Text style={[styles.barDay, bar.value === 100 && styles.barDayActive]}>
-                  {bar.day}
-                </Text>
               </View>
             ))}
           </View>
-        </View>
 
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>28</Text>
-            <Text style={styles.statLabel}>Clips</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>4.9★</Text>
-            <Text style={styles.statLabel}>Rating</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>$12</Text>
-            <Text style={styles.statLabel}>Avg/Clip</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>100%</Text>
-            <Text style={styles.statLabel}>Delivery</Text>
-          </View>
-        </View>
-
-        {/* Recent Payouts */}
-        <Text style={styles.sectionLabel}>RECENT PAYOUTS</Text>
-        {PAYOUTS.map((payout) => (
-          <View key={payout.id} style={styles.payoutRow}>
-            <View style={styles.payoutLeft}>
-              <Text style={styles.payoutDate}>{payout.date}</Text>
-              <Text style={styles.payoutClips}>{payout.clips} clips delivered</Text>
-            </View>
-            <View style={styles.payoutRight}>
-              <Text style={styles.payoutAmount}>{payout.amount}</Text>
-              <View style={[styles.statusBadge, payout.status === 'Paid' && styles.statusBadgePaid]}>
-                <Text style={[styles.statusText, payout.status === 'Paid' && styles.statusTextPaid]}>
-                  {payout.status}
+          {/* Withdraw card */}
+          <View style={styles.withdrawCard}>
+            <View style={styles.balanceRow}>
+              <View>
+                <Text style={styles.balanceLabel}>AVAILABLE TO WITHDRAW</Text>
+                <Text style={styles.balanceValue}>
+                  ${earnings.earningsToday.toFixed(2)}
                 </Text>
               </View>
+              <View style={styles.balanceIconWrap}>
+                <Ionicons name="card-outline" size={20} color="#88B4FF" />
+              </View>
             </View>
+            <TouchableOpacity
+              style={styles.withdrawBtn}
+              activeOpacity={0.85}
+              onPress={() =>
+                Alert.alert(
+                  'Withdraw to bank',
+                  'In production this opens Stripe Connect Express to initiate an instant or standard payout.\n\nFor the prototype, this is a placeholder.',
+                  [{ text: 'OK' }],
+                )
+              }
+            >
+              <Text style={styles.withdrawBtnText}>WITHDRAW TO BANK</Text>
+            </TouchableOpacity>
+            <Text style={styles.withdrawFoot}>
+              Standard payouts arrive in 1–2 business days. Instant in ~30 min (1.5% fee).
+            </Text>
           </View>
-        ))}
 
-        {/* CTA */}
-        <View style={styles.ctaContainer}>
-          <View style={styles.balanceRow}>
-            <Text style={styles.balanceLabel}>Available to withdraw</Text>
-            <Text style={styles.balanceValue}>$137.00</Text>
-          </View>
-          <TouchableOpacity style={styles.withdrawBtn} activeOpacity={0.85}>
-            <Text style={styles.withdrawBtnText}>WITHDRAW TO BANK</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ height: 32 }} />
-      </ScrollView>
-    </SafeAreaView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#000000' },
+  safe: { flex: 1 },
   scroll: { paddingBottom: 32 },
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
+
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 22,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: '#FF8533',
+    color: 'rgba(255,255,255,0.85)',
     fontSize: 14,
-    marginBottom: 14,
+    letterSpacing: 0.5,
+  },
+  wireframeBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,107,0,0.18)',
+  },
+  wireframeBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#FF6B00',
+    fontSize: 9,
+    letterSpacing: 1.4,
+  },
+
+  header: {
+    paddingHorizontal: 22,
+    paddingTop: 8,
+    paddingBottom: 22,
   },
   title: {
-    fontFamily: 'BodoniModa_700Bold',
-    fontSize: 30,
-    color: '#fff',
-    letterSpacing: 0.4,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 26,
+    color: '#ffffff',
+    letterSpacing: 0.2,
   },
+  titleRule: {
+    height: 2,
+    width: 32,
+    backgroundColor: '#00FF7F',
+    marginTop: 8,
+  },
+  subtitle: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12.5,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 8,
+    letterSpacing: 0.2,
+  },
+
   totalCard: {
-    backgroundColor: '#0d1a0d',
-    borderRadius: 20,
-    marginHorizontal: 20,
-    padding: 24,
+    backgroundColor: 'rgba(20,55,130,0.5)',
+    borderRadius: 18,
+    marginHorizontal: 22,
+    padding: 22,
     borderWidth: 1,
-    borderColor: '#1a3a1a',
+    borderColor: 'rgba(60,110,200,0.55)',
     marginBottom: 22,
   },
   totalLabel: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 11,
-    color: '#22c55e',
-    letterSpacing: 3,
-    marginBottom: 8,
-  },
-  totalValue: {
-    fontFamily: 'GFSDidot_400Regular',
-    fontSize: 56,
-    color: '#fff',
-    letterSpacing: 0.5,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 2.5,
     marginBottom: 10,
   },
-  totalRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  totalSub: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 13,
-    color: '#22c55e',
+  totalValue: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 42,
+    color: '#ffffff',
+    letterSpacing: 0.5,
+    marginBottom: 14,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  totalChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0,255,127,0.1)',
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,127,0.35)',
+  },
+  totalChipDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#00FF7F',
+  },
+  totalChipText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#00FF7F',
+    fontSize: 10.5,
+    letterSpacing: 0.4,
   },
   upBadge: {
-    backgroundColor: 'rgba(34,197,94,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0,255,127,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(34,197,94,0.4)',
-    borderRadius: 100,
+    borderColor: 'rgba(0,255,127,0.3)',
+    borderRadius: 999,
     paddingHorizontal: 9,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
   upText: {
     fontFamily: 'Inter_700Bold',
-    color: '#22c55e',
-    fontSize: 11,
-    letterSpacing: 0.5,
+    color: '#00FF7F',
+    fontSize: 10,
+    letterSpacing: 0.4,
   },
+
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 11,
-    color: '#FF8533',
-    letterSpacing: 3,
-    paddingHorizontal: 20,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 2,
+    paddingHorizontal: 22,
     marginBottom: 12,
-    textTransform: 'uppercase',
   },
+  sectionLabelGap: { marginTop: 8 },
+
   chartCard: {
-    backgroundColor: '#0d0d0d',
-    borderRadius: 16,
-    marginHorizontal: 20,
-    padding: 18,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    marginHorizontal: 22,
+    paddingVertical: 18,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
-    marginBottom: 18,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 22,
   },
   barsRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    height: 130,
+    height: 150,
   },
-  barColumn: { flex: 1, alignItems: 'center' },
+  barColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
   barAmount: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 9,
-    color: '#22c55e',
-    marginBottom: 4,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 10,
+    color: '#00FF7F',
+    marginBottom: 6,
     height: 14,
     letterSpacing: 0.3,
   },
   barWrapper: {
     height: MAX_BAR_HEIGHT,
     justifyContent: 'flex-end',
-    width: '70%',
+    width: '60%',
   },
   bar: {
     borderRadius: 4,
@@ -236,124 +422,169 @@ const styles = StyleSheet.create({
   barDay: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#666',
+    color: 'rgba(255,255,255,0.4)',
     marginTop: 8,
     letterSpacing: 1.2,
-    textTransform: 'uppercase',
   },
-  barDayActive: { color: '#22c55e' },
+  barDayActive: { color: '#ffffff' },
+
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: '#0d0d0d',
-    borderRadius: 16,
-    marginHorizontal: 20,
-    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    marginHorizontal: 22,
+    paddingVertical: 16,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.08)',
     marginBottom: 22,
     alignItems: 'center',
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: {
-    fontFamily: 'GFSDidot_400Regular',
-    fontSize: 19,
-    color: '#fff',
-    marginBottom: 4,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 18,
+    color: '#ffffff',
+    marginBottom: 5,
     letterSpacing: 0.3,
   },
   statLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#666',
+    color: 'rgba(255,255,255,0.5)',
     letterSpacing: 1.5,
-    textTransform: 'uppercase',
   },
-  statDivider: { width: 1, height: 28, backgroundColor: '#1e1e1e' },
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+
+  payoutsList: {
+    marginHorizontal: 22,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 22,
+  },
   payoutRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#0d0d0d',
-    borderRadius: 14,
-    marginHorizontal: 20,
-    marginBottom: 8,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#1e1e1e',
+    paddingVertical: 14,
+  },
+  payoutRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   payoutLeft: {},
   payoutDate: {
-    fontFamily: 'CormorantGaramond_700Bold',
-    fontSize: 16,
-    color: '#fff',
-    letterSpacing: 0.3,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 14,
+    color: '#ffffff',
+    letterSpacing: 0.2,
     marginBottom: 3,
   },
   payoutClips: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 11,
-    color: '#888',
-    letterSpacing: 0.3,
+    fontSize: 11.5,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.2,
   },
   payoutRight: { alignItems: 'flex-end', gap: 6 },
   payoutAmount: {
-    fontFamily: 'GFSDidot_400Regular',
-    fontSize: 18,
-    color: '#fff',
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 15,
+    color: '#ffffff',
     letterSpacing: 0.3,
   },
   statusBadge: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 100,
-    paddingHorizontal: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
     paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,203,71,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,203,71,0.4)',
   },
-  statusBadgePaid: { backgroundColor: 'rgba(34,197,94,0.15)' },
+  statusBadgePaid: {
+    backgroundColor: 'rgba(0,255,127,0.12)',
+    borderColor: 'rgba(0,255,127,0.4)',
+  },
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#FFCB47',
+  },
+  statusDotPaid: { backgroundColor: '#00FF7F' },
   statusText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#888',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
+    color: '#FFCB47',
+    letterSpacing: 1.4,
   },
-  statusTextPaid: { color: '#22c55e' },
-  ctaContainer: {
-    backgroundColor: '#0d0d0d',
+  statusTextPaid: { color: '#00FF7F' },
+
+  withdrawCard: {
+    backgroundColor: 'rgba(20,55,130,0.5)',
     borderRadius: 18,
-    marginHorizontal: 20,
-    marginTop: 12,
+    marginHorizontal: 22,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(60,110,200,0.55)',
   },
   balanceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 16,
   },
   balanceLabel: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 13,
-    color: '#888',
-    letterSpacing: 0.3,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 2,
+    marginBottom: 6,
   },
   balanceValue: {
-    fontFamily: 'GFSDidot_400Regular',
-    fontSize: 24,
-    color: '#fff',
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 26,
+    color: '#ffffff',
     letterSpacing: 0.4,
   },
-  withdrawBtn: {
-    backgroundColor: '#FAF6F0',
-    borderRadius: 12,
-    paddingVertical: 16,
+  balanceIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(136,180,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(136,180,255,0.35)',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  withdrawBtn: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginBottom: 10,
   },
   withdrawBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000',
-    fontSize: 13,
+    color: '#000000',
+    fontSize: 12.5,
     letterSpacing: 2.5,
+  },
+  withdrawFoot: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center',
+    lineHeight: 15,
+    letterSpacing: 0.2,
   },
 });
