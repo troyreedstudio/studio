@@ -10,8 +10,9 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { requestUserLocation, detectCityByIP, getUserCity } from '../state/location';
 
 type PermKey = 'location' | 'notif';
 type PermState = 'pending' | 'granted' | 'skipped';
@@ -59,12 +60,45 @@ const PRIVACY_BULLETS = [
 
 export default function PermissionsScreen() {
   const router = useRouter();
+  const { next } = useLocalSearchParams<{ next?: string }>();
+  const continueTo = next || '/onboarding/role';
   const [states, setStates] = useState<Record<PermKey, PermState>>({
     location: 'pending',
     notif: 'pending',
   });
+  // When GPS is declined we approximate the city from IP — this holds that name
+  // so we can tell the user what we resolved (and let them correct it).
+  const [approxCity, setApproxCity] = useState<string | null>(null);
 
-  const handleAllow = (perm: Perm) => {
+  const handleAllow = async (perm: Perm) => {
+    // Location fires the REAL iOS system prompt and reads actual GPS.
+    if (perm.key === 'location') {
+      const { status } = await requestUserLocation();
+      if (status === 'granted') {
+        setApproxCity(null);
+        setStates((s) => ({ ...s, location: 'granted' }));
+        return;
+      }
+      // Declined GPS → silently approximate the city from their connection so we
+      // still show THEIR place (never a hard-coded default). Manual pick backs it up.
+      const ip = await detectCityByIP();
+      if (ip.coords) {
+        setApproxCity(ip.city || getUserCity() || 'your area');
+        setStates((s) => ({ ...s, location: 'granted' }));
+      } else {
+        Alert.alert(
+          'Set your city',
+          "We couldn't detect your location. Pick your city and we'll show that map.",
+          [
+            { text: 'Choose city', onPress: () => router.push('/onboarding/city') },
+            { text: 'Try again', style: 'cancel' },
+          ],
+        );
+      }
+      return;
+    }
+
+    // Notifications stays a prototype stub until the push pipeline is wired.
     Alert.alert(
       perm.prompt,
       `${perm.iosDescription}\n\nFor the prototype we’ll mark it allowed.`,
@@ -236,11 +270,27 @@ export default function PermissionsScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* APPROX-LOCATION NOTE — shown when we fell back to IP city detection */}
+          {approxCity && (
+            <View style={styles.approxNote}>
+              <Ionicons name="navigate-circle-outline" size={14} color="#88B4FF" />
+              <Text style={styles.approxText}>
+                Using your approximate area ({approxCity}) from your connection.{' '}
+                <Text
+                  style={styles.approxLink}
+                  onPress={() => router.push('/onboarding/city')}
+                >
+                  Set city manually
+                </Text>
+              </Text>
+            </View>
+          )}
+
           {/* CTA */}
           <TouchableOpacity
             style={[styles.primaryBtn, !canContinue && styles.primaryBtnDisabled]}
             disabled={!canContinue}
-            onPress={() => router.replace('/onboarding/role')}
+            onPress={() => router.replace(continueTo as never)}
             activeOpacity={0.85}
           >
             <Text
@@ -521,5 +571,29 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',
     lineHeight: 16,
+  },
+
+  approxNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: 'rgba(136,180,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(136,180,255,0.25)',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+  },
+  approxText: {
+    flex: 1,
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.75)',
+    lineHeight: 17,
+  },
+  approxLink: {
+    fontFamily: 'Inter_700Bold',
+    color: '#88B4FF',
+    textDecorationLine: 'underline',
   },
 });

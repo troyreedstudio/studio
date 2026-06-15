@@ -66,10 +66,10 @@ export default function ScoutPayoutScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.push('/flow-map')}
+            onPress={() => (router.canGoBack() ? router.back() : router.push('/scout/become'))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Flow Map</Text>
+            <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[1, 2, 3].map((n) => (
@@ -94,12 +94,19 @@ export default function ScoutPayoutScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Configure payouts</Text>
+          <Text style={styles.title}>Start earning</Text>
           <Text style={styles.subtitle}>
             Where you&apos;d like your earnings to land. Handled by Stripe Connect Express — encrypted, direct to your bank.
           </Text>
 
           {/* PAYOUT SPEED */}
+          {/*
+            FEES. Standard ACH is free / 1–2 days (Stripe pass-through).
+            Instant: Scout is charged 2% (DECIDED 2026-06-15). Stripe's Instant Payout fee
+            is ~1.5% (flat US-wide, debit-rail based — not state-dependent), so LMC keeps
+            ~0.5% margin per instant payout. Confirm Stripe's exact live fee when wiring
+            Connect and keep the 2% Scout-facing rate above it. See studio/OUTSTANDING.md.
+          */}
           <Text style={styles.sectionLabel}>PAYOUT SPEED</Text>
           <View style={styles.speedRow}>
             <TouchableOpacity
@@ -130,7 +137,7 @@ export default function ScoutPayoutScreen() {
                 )}
               </View>
               <Text style={styles.speedTime}>~30 min</Text>
-              <Text style={styles.speedFee}>1.5% fee</Text>
+              <Text style={styles.speedFee}>2% fee</Text>
               <Text style={styles.speedNote}>Requires eligible debit card.</Text>
             </TouchableOpacity>
           </View>
@@ -168,8 +175,8 @@ export default function ScoutPayoutScreen() {
             </View>
             <View style={styles.earnCell}>
               <Text style={styles.earnAmount}>$3</Text>
-              <Text style={styles.earnLabel}>Honest abort</Text>
-              <Text style={styles.earnWhy}>TROUBLE HERE + GPS proof</Text>
+              <Text style={styles.earnLabel}>No-fault pay</Text>
+              <Text style={styles.earnWhy}>Couldn’t film for a valid reason — GPS-verified</Text>
             </View>
             <View style={styles.earnCell}>
               <Text style={[styles.earnAmount, { color: '#FFCB47' }]}>$80–$200</Text>

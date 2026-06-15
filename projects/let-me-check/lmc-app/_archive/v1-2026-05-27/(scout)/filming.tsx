@@ -1,0 +1,313 @@
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState, useEffect } from 'react';
+
+const STEPS = [
+  { id: 0, label: 'Walk to venue', done: true, active: false },
+  { id: 1, label: 'Film 30 seconds', done: false, active: true },
+  { id: 2, label: 'Submit clip', done: false, active: false },
+];
+
+export default function FilmingScreen() {
+  const router = useRouter();
+  const [secondsLeft, setSecondsLeft] = useState(420); // 7 min priority
+  const [recording, setRecording] = useState(false);
+  const [recordSecs, setRecordSecs] = useState(0);
+
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+    const t = setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    if (!recording) return;
+    if (recordSecs >= 30) {
+      setRecording(false);
+      return;
+    }
+    const t = setInterval(() => setRecordSecs((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [recording, recordSecs]);
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const timeLeft = `${pad(Math.floor(secondsLeft / 60))}:${pad(secondsLeft % 60)}`;
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.inner}>
+        {/* Back / Cancel header */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.replace('/(scout)/dashboard')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Text style={styles.cancelText}>‹ Back</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Accepted Header */}
+        <View style={styles.acceptedBadge}>
+          <Text style={styles.acceptedText}>✓ REQUEST ACCEPTED</Text>
+        </View>
+
+        <Text style={styles.venueName}>Komodo Miami</Text>
+        <Text style={styles.venueAddress}>900 S Miami Ave · 0.3 mi</Text>
+
+        {/* Delivery Countdown */}
+        <View style={styles.countdownBox}>
+          <Text style={styles.countdownLabel}>DELIVERY DEADLINE</Text>
+          <Text style={styles.countdown}>{timeLeft}</Text>
+          <Text style={styles.countdownSub}>Priority Rush — 7 min window</Text>
+        </View>
+
+        {/* Steps */}
+        <View style={styles.stepsBox}>
+          {STEPS.map((step, i) => (
+            <View key={step.id} style={styles.stepRow}>
+              <View style={styles.stepLeft}>
+                <View style={[
+                  styles.stepDot,
+                  step.done && styles.stepDotDone,
+                  step.active && styles.stepDotActive,
+                ]}>
+                  {step.done && <Text style={styles.stepCheck}>✓</Text>}
+                  {step.active && <View style={styles.stepPulse} />}
+                </View>
+                {i < STEPS.length - 1 && (
+                  <View style={[styles.stepLine, step.done && styles.stepLineDone]} />
+                )}
+              </View>
+              <Text style={[
+                styles.stepLabel,
+                step.done && styles.stepLabelDone,
+                step.active && styles.stepLabelActive,
+              ]}>
+                {step.label}
+                {step.active && recording && (
+                  <Text style={styles.recordProgress}> — {recordSecs}s / 30s</Text>
+                )}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* GPS Badge */}
+        <View style={styles.gpsBadge}>
+          <Text style={styles.gpsText}>📍 GPS Verified — You're at the right place</Text>
+        </View>
+
+        {/* Record Button */}
+        <TouchableOpacity
+          style={[styles.recordBtn, recording && styles.recordBtnActive]}
+          onPress={() => {
+            if (recordSecs >= 30) {
+              router.push('/(scout)/submitted');
+            } else {
+              setRecording(!recording);
+            }
+          }}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.recordInner, recording && styles.recordInnerActive]}>
+            {recording ? (
+              <View style={styles.stopSquare} />
+            ) : recordSecs > 0 ? (
+              <Text style={styles.recordLabel}>▶</Text>
+            ) : (
+              <View style={styles.recordCircle} />
+            )}
+          </View>
+          <Text style={styles.recordHint}>
+            {recordSecs >= 30
+              ? 'Tap to submit clip →'
+              : recording
+              ? `Recording... ${recordSecs}s`
+              : recordSecs > 0
+              ? 'Tap to resume'
+              : 'Tap to start recording'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Earning Note */}
+        <Text style={styles.earningNote}>You will earn $10 upon delivery</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#000' },
+  inner: { flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32 },
+  topBar: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    paddingBottom: 14,
+  },
+  cancelText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 15,
+    color: '#fff',
+    letterSpacing: 0.3,
+  },
+  acceptedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34,197,94,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.4)',
+    borderRadius: 100,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginBottom: 18,
+  },
+  acceptedText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#22c55e',
+    fontSize: 11,
+    letterSpacing: 2,
+  },
+  venueName: {
+    fontFamily: 'CormorantGaramond_700Bold',
+    fontSize: 28,
+    color: '#fff',
+    letterSpacing: 0.4,
+    marginBottom: 4,
+  },
+  venueAddress: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#888',
+    letterSpacing: 0.3,
+    marginBottom: 24,
+  },
+  countdownBox: {
+    backgroundColor: '#0d0d0d',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
+    marginBottom: 26,
+  },
+  countdownLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: '#FF8533',
+    letterSpacing: 3,
+    marginBottom: 8,
+  },
+  countdown: {
+    fontFamily: 'GFSDidot_400Regular',
+    fontSize: 52,
+    color: '#fff',
+    letterSpacing: 4,
+    marginBottom: 6,
+  },
+  countdownSub: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 11,
+    color: '#f59e0b',
+    letterSpacing: 1.2,
+  },
+  stepsBox: { width: '100%', paddingLeft: 8, marginBottom: 18 },
+  stepRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  stepLeft: { alignItems: 'center', width: 32, marginRight: 12 },
+  stepDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1.5,
+    borderColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepDotDone: { backgroundColor: '#14532d', borderColor: '#22c55e' },
+  stepDotActive: { backgroundColor: '#1a1a1a', borderColor: '#22c55e' },
+  stepCheck: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: '#22c55e',
+  },
+  stepPulse: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' },
+  stepLine: { width: 2, height: 32, backgroundColor: '#1a1a1a', marginTop: 2 },
+  stepLineDone: { backgroundColor: '#22c55e' },
+  stepLabel: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 14,
+    color: '#666',
+    paddingTop: 3,
+    paddingBottom: 28,
+    letterSpacing: 0.2,
+  },
+  stepLabelDone: { color: '#888' },
+  stepLabelActive: {
+    color: '#fff',
+    fontFamily: 'Inter_700Bold',
+  },
+  recordProgress: { color: '#22c55e' },
+  gpsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(34,197,94,0.1)',
+    borderRadius: 100,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    marginBottom: 26,
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.35)',
+  },
+  gpsText: {
+    fontFamily: 'Inter_600SemiBold',
+    color: '#22c55e',
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
+  recordBtn: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  recordBtnActive: {},
+  recordInner: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: '#1a0000',
+    borderWidth: 4,
+    borderColor: '#ef4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  recordInnerActive: {
+    backgroundColor: '#ef4444',
+    borderColor: '#ff6666',
+  },
+  recordCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ef4444',
+  },
+  stopSquare: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    backgroundColor: '#fff',
+  },
+  recordLabel: { fontSize: 28, color: '#ef4444' },
+  recordHint: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12.5,
+    color: '#888',
+    letterSpacing: 0.3,
+  },
+  earningNote: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12,
+    color: '#22c55e',
+    position: 'absolute',
+    bottom: 32,
+    letterSpacing: 0.5,
+  },
+});

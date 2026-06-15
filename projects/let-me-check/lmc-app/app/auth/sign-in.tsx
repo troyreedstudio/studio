@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
 
 type Step = 'method' | 'phone' | 'otp';
 
@@ -92,7 +91,7 @@ export default function SignInScreen() {
                     onPress={() => setStep('phone')}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name="phone-portrait-outline" size={18} color="#ffffff" />
+                    <Text style={styles.methodIcon}>✆</Text>
                     <Text style={styles.methodLabel}>Continue with Phone</Text>
                   </TouchableOpacity>
                 </View>
@@ -258,27 +257,28 @@ const styles = StyleSheet.create({
   methodBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(255,255,255,0.14)',
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 18,
   },
   methodIcon: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 20,
+    fontSize: 18,
     color: '#ffffff',
     width: 22,
     textAlign: 'center',
   },
-  methodIconG: { color: '#FFD56B' },
+  methodIconG: { color: '#ffffff' },
   methodLabel: {
     fontFamily: 'Inter_600SemiBold',
-    fontSize: 15,
+    fontSize: 14,
     color: '#ffffff',
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
   divider: {
     flexDirection: 'row',

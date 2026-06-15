@@ -13,13 +13,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import MaskedView from '@react-native-masked-view/masked-view';
-import { LinearGradient } from 'expo-linear-gradient';
-
-const CHROME_STOPS: [string, string, ...string[]] = [
-  '#a8a8a8', '#ffffff', '#ffffff', '#f2f2f2', '#8c8c8c', '#363636', '#161616',
-];
-const CHROME_LOCATIONS: [number, number, ...number[]] = [0, 0.22, 0.5, 0.58, 0.68, 0.88, 1];
 
 function generateScoutId(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -38,23 +31,15 @@ const ON_FILE = [
 ];
 
 const UNLOCKED = [
-  { icon: 'notifications-outline' as const, title: 'Real-time job alerts', detail: 'Get pinged the moment a check appears in your geofence.' },
-  { icon: 'stats-chart-outline' as const, title: 'Earnings dashboard', detail: 'Live tracker, weekly bar chart, payout history.' },
-  { icon: 'card-outline' as const, title: 'Weekly auto-payouts', detail: 'Standard ACH every Friday — or Instant on demand.' },
-  { icon: 'gift-outline' as const, title: 'Refer-a-Scout $50 bonus', detail: 'Earn $50 when a friend completes 10 paid checks.' },
+  { icon: 'notifications-outline' as const, title: 'Real-time job alerts', detail: 'Pinged when a check appears near you.' },
+  { icon: 'card-outline' as const, title: 'Weekly auto-payouts', detail: 'Every Friday — or Instant on demand.' },
+  { icon: 'gift-outline' as const, title: 'Refer-a-Scout — $50', detail: 'When a friend completes 10 paid checks.' },
 ];
 
 const FIRST_STEPS = [
   { title: 'Open your Scout dashboard', detail: 'Set availability + go online when you’re ready to earn.' },
   { title: 'Allow location & notifications', detail: 'You can only be dispatched when location is on.' },
   { title: 'Take a practice clip', detail: 'A free 15-second test so you’re calibrated for your first paid check.' },
-];
-
-const REMINDERS = [
-  '15s max (30s for Partner Interior).',
-  'Mic stays off. Always.',
-  'No close-ups of faces. No children. No private property.',
-  'If asked to stop, stop. Hit TROUBLE HERE.',
 ];
 
 export default function ScoutApprovedScreen() {
@@ -85,10 +70,10 @@ export default function ScoutApprovedScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.push('/flow-map')}
+            onPress={() => (router.canGoBack() ? router.back() : router.push('/scout/become'))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Flow Map</Text>
+            <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[1, 2, 3].map((n) => (
@@ -112,30 +97,20 @@ export default function ScoutApprovedScreen() {
           >
             {/* HERO */}
             <View style={styles.hero}>
-              <Animated.View style={[styles.checkWrap, { transform: [{ scale: breath }] }]}>
-                <MaskedView
-                  style={styles.checkMask}
-                  maskElement={
-                    <View style={styles.checkCenter}>
-                      <Ionicons name="checkmark" size={100} color="#000" />
-                    </View>
-                  }
+              <View style={styles.checkWrap}>
+                <Animated.View
+                  style={[styles.ring, { opacity: 0.22, transform: [{ scale: breath }] }]}
+                />
+                <Animated.View
+                  style={[styles.checkCircle, { transform: [{ scale: breath }] }]}
                 >
-                  <View style={styles.gradientWrap}>
-                    <LinearGradient
-                      colors={CHROME_STOPS}
-                      locations={CHROME_LOCATIONS}
-                      start={{ x: 0.5, y: 0 }}
-                      end={{ x: 0.5, y: 1 }}
-                      style={StyleSheet.absoluteFillObject}
-                    />
-                  </View>
-                </MaskedView>
-              </Animated.View>
+                  <Text style={styles.checkGlyph}>✓</Text>
+                </Animated.View>
+              </View>
 
               <Text style={styles.title}>Congratulations, you&apos;re a Scout!</Text>
               <Text style={styles.subtitle}>
-                Welcome to the supply side. You can accept check requests now.
+                You&apos;re verified and ready to earn. Accept check requests whenever you go online.
               </Text>
             </View>
 
@@ -180,27 +155,6 @@ export default function ScoutApprovedScreen() {
               ))}
             </View>
 
-            {/* EARNINGS PREVIEW */}
-            <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-              EARNINGS PREVIEW
-            </Text>
-            <View style={styles.statsRow}>
-              <View style={styles.stat}>
-                <Text style={styles.statValue}>$8–$12</Text>
-                <Text style={styles.statLabel}>PER CHECK</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.stat}>
-                <Text style={styles.statValue}>~5 min</Text>
-                <Text style={styles.statLabel}>PER JOB</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.stat}>
-                <Text style={styles.statValue}>1–2 days</Text>
-                <Text style={styles.statLabel}>TO BANK</Text>
-              </View>
-            </View>
-
             {/* WHAT YOU UNLOCKED */}
             <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
               WHAT YOU UNLOCKED
@@ -233,24 +187,15 @@ export default function ScoutApprovedScreen() {
               </View>
             ))}
 
-            {/* REMEMBER */}
-            <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>REMEMBER</Text>
-            <View style={styles.remindCard}>
-              {REMINDERS.map((r, i) => (
-                <View key={i} style={styles.remindRow}>
-                  <Text style={styles.remindBullet}>·</Text>
-                  <Text style={styles.remindText}>{r}</Text>
-                </View>
-              ))}
-              <TouchableOpacity
-                onPress={() => router.push('/legal/code')}
-                activeOpacity={0.7}
-                style={styles.rulesLinkRow}
-              >
-                <Ionicons name="document-text-outline" size={14} color="#88B4FF" />
-                <Text style={styles.rulesLink}>Read the full Code of Conduct</Text>
-              </TouchableOpacity>
-            </View>
+            {/* FULL CODE LINK */}
+            <TouchableOpacity
+              onPress={() => router.push('/legal/code')}
+              activeOpacity={0.7}
+              style={styles.codeLinkRow}
+            >
+              <Ionicons name="document-text-outline" size={14} color="#88B4FF" />
+              <Text style={styles.rulesLink}>Read the full Code of Conduct</Text>
+            </TouchableOpacity>
 
             {/* SUPPORT */}
             <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>NEED HELP</Text>
@@ -344,10 +289,32 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 24,
   },
-  checkWrap: { width: 120, height: 120, marginBottom: 18 },
-  checkMask: { width: 120, height: 120 },
-  checkCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
-  gradientWrap: { flex: 1, overflow: 'hidden' },
+  checkWrap: { width: 120, height: 120, marginBottom: 18, alignItems: 'center', justifyContent: 'center' },
+  ring: {
+    position: 'absolute',
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: '#00FF7F',
+  },
+  checkCircle: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    backgroundColor: '#00FF7F',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#00FF7F',
+    shadowOpacity: 0.6,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  checkGlyph: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 48,
+    color: '#000000',
+    marginTop: 2,
+  },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
@@ -587,6 +554,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#88B4FF',
     letterSpacing: 0.4,
+  },
+  codeLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 20,
   },
 
   supportCard: {

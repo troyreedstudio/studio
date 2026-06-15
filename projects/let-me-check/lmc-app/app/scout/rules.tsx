@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,136 +7,107 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
+  useWindowDimensions,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-// Source of truth: docs/SCOUT-CONDUCT.md + docs/FILMING-POLICY.md
+// Source of truth: docs/SCOUT-CONDUCT.md + docs/FILMING-POLICY.md.
+// Binding legal text lives in the full Scout Agreement (/legal/code) — these
+// cards are the plain-English summary, so copy is kept short on purpose.
 
-const WHERE = [
-  {
-    title: 'Public sidewalks, streets, parking lots',
-    why: 'You can always film a venue from a public vantage point — sidewalk, street, public plaza, parking lot.',
-  },
-  {
-    title: 'The line, queue, or entry area',
-    why: 'Wide shots of the door, the staff, the wait. Filmed from where the public is allowed to stand.',
-  },
-  {
-    title: 'Public-facing interiors (GREEN venues)',
-    why: 'Restaurant dining room, hotel lobby, retail floor, stadium concourse, DMV waiting room, airport check-in lobby. Wide shots only.',
-  },
-  {
-    title: 'Partner Interior (+$5, up to 30s)',
-    why: 'Only when the venue is marked PARTNER and the Seeker chose Partner Interior. Otherwise stay outside.',
-  },
+const ACCENT = '#00FF7F';
+const ACCENT_CHIP = 'rgba(0,255,127,0.12)';
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+const WHERE: { icon: IconName; title: string; why: string }[] = [
+  { icon: 'walk-outline', title: 'Public ground', why: 'Sidewalks, streets, plazas, parking lots — any public vantage point.' },
+  { icon: 'people-outline', title: 'The queue & entrance', why: 'Wide shots of the door, the wait, the staff — from where the public stands.' },
+  { icon: 'business-outline', title: 'Public interiors (GREEN venues)', why: 'Dining rooms, lobbies, retail floors, waiting rooms. Wide shots only.' },
+  { icon: 'add-circle-outline', title: 'Partner interiors (+$5)', why: 'Only when the venue is a PARTNER and the Seeker paid for it. Otherwise stay outside.' },
 ];
 
-const NEVER_PEOPLE = [
-  {
-    title: 'No close-ups of strangers’ faces',
-    why: 'Wide shots only. If a face fills the frame, the clip won’t deliver.',
-  },
-  {
-    title: 'No children in frame',
-    why: 'If kids are visible, reposition or hit TROUBLE HERE and abort.',
-  },
-  {
-    title: 'No one who objects to being filmed',
-    why: 'If someone tells you to stop, stop. No argument. Hit TROUBLE HERE if needed.',
-  },
+const NEVER: { icon: IconName; title: string; why: string }[] = [
+  { icon: 'eye-off-outline', title: 'Faces & close-ups', why: 'Wide shots only. A face filling the frame won’t deliver.' },
+  { icon: 'happy-outline', title: 'Children', why: 'If kids are in shot, reposition — or stop and report it.' },
+  { icon: 'hand-left-outline', title: 'Anyone who objects', why: 'Someone says stop? Stop. No argument.' },
+  { icon: 'camera-outline', title: '“No Photography” zones', why: 'See a sign, stop and report it.' },
+  { icon: 'medkit-outline', title: 'Red venues', why: 'Hospitals, schools, courts, police, military. Refuse the job.' },
+  { icon: 'lock-closed-outline', title: 'Bathrooms & changing rooms', why: 'Ever. Any venue. No exceptions.' },
+  { icon: 'ban-outline', title: 'Past security / private property', why: 'No airport gates, no trespassing. Public access only.' },
+  { icon: 'mic-off-outline', title: 'Audio', why: 'Mic stays muted — two-party consent laws.' },
 ];
 
-const NEVER_PLACES = [
-  {
-    title: 'No "No Photography" zones',
-    why: 'If you see a sign, stop. Abort. Hit TROUBLE HERE with reason "Posted no-filming".',
-  },
-  {
-    title: 'No airport security, gates, or customs',
-    why: 'TSA forbids it. Curbside drop-off and check-in lobby only. Never past security.',
-  },
-  {
-    title: 'No hospitals, schools, courts, police, military',
-    why: 'These are RED venues. Auto-rejected on submission. Refuse the job.',
-  },
-  {
-    title: 'No bathrooms, locker rooms, dressing rooms',
-    why: 'Ever. Regardless of venue. Bright privacy line.',
-  },
-  {
-    title: 'No trespassing',
-    why: 'No fences. No staff-only doors. No private property. If you can’t get the shot from public access, abort.',
-  },
+const CONDUCT: { icon: IconName; title: string; why: string }[] = [
+  { icon: 'eye-outline', title: 'Be discreet', why: 'Hold the phone like you’re watching a video. In, get the shot, out.' },
+  { icon: 'chatbubble-outline', title: 'If asked what you’re doing', why: 'Say you’re doing an LMC location check, and offer to leave.' },
+  { icon: 'hand-right-outline', title: 'If asked to stop', why: 'Stop immediately, report it, walk away. You’re still paid for the trip.' },
+  { icon: 'warning-outline', title: 'Don’t provoke', why: 'No fights, no drama, no distressed people. When in doubt, stop.' },
+  { icon: 'shield-checkmark-outline', title: 'Never fake it', why: 'One real take. Staging or faking = instant removal + clawback.' },
 ];
 
-const NEVER_AUDIO = [
-  {
-    title: 'Camera mic stays muted',
-    why: 'Florida and many states require two-party consent to record audio. You don’t have it. The mic stays off.',
-  },
+const REJECT: { icon: IconName; text: string }[] = [
+  { icon: 'close-circle-outline', text: 'Blurry, shaky, or out of focus' },
+  { icon: 'close-circle-outline', text: 'Wrong venue, or venue not visible' },
+  { icon: 'close-circle-outline', text: 'GPS doesn’t match the venue' },
+  { icon: 'close-circle-outline', text: 'Finger or lens blocking the shot' },
+  { icon: 'close-circle-outline', text: 'Faces that couldn’t be auto-blurred' },
+  { icon: 'close-circle-outline', text: 'Audio detected, or clip cut too short' },
 ];
 
-const CONDUCT = [
-  {
-    title: 'Be unobtrusive',
-    why: 'Hold the phone like you’re watching a video, not filming. Stand to the side. Get in, get the shot, get out.',
-  },
-  {
-    title: 'If asked what you’re doing',
-    why: 'Say: "I’m using LMC, an app that does location checks. I can leave right now if that’s a problem." Then leave if asked.',
-  },
-  {
-    title: 'If asked to stop',
-    why: 'Stop immediately. Hit TROUBLE HERE in the app, pick the right reason, walk away. You’ll still be paid for travel.',
-  },
-  {
-    title: 'Don’t provoke a reaction',
-    why: 'Don’t film fights, arguments, intoxicated or distressed people. Aborting is always the right call.',
-  },
-  {
-    title: 'No staging, no re-shoots, no faking',
-    why: 'One take, real-time. GPS-stamping verifies you were on-site. Faking a clip is fraud and triggers immediate deactivation + clawback.',
-  },
+const AGREEMENT: { icon: IconName; text: string }[] = [
+  { icon: 'cloud-upload-outline', text: 'Clips upload straight to LMC — no local copies you keep.' },
+  { icon: 'shield-checkmark-outline', text: 'Faces are auto-blurred, the clip stays private to the Seeker, and it’s deleted after 30 days.' },
+  { icon: 'briefcase-outline', text: 'You’re an independent contractor — your own hours, your own taxes (we send a 1099 each January).' },
+  { icon: 'time-outline', text: 'LMC can deactivate for violations. Any earnings owed are paid within 7 business days.' },
 ];
 
-const PAY = [
-  { title: 'Standard $8', why: 'Clip delivered within the 10-minute window.' },
-  { title: 'Priority $12', why: 'Clip delivered within the 7-minute window.' },
-  { title: 'Honest abort $3', why: 'TROUBLE HERE with a valid reason + GPS confirms you were inside the geofence.' },
-  { title: 'Fake / abandon $0', why: 'Plus possible account suspension.' },
-];
-
-const CONTRACTOR = [
-  'You are an independent contractor — not an LMC employee.',
-  'You set your own hours and choose which checks to accept.',
-  'You are responsible for your own taxes. We send a 1099 each January.',
-  'You acknowledge LMC is not liable for harm you cause by ignoring this Code.',
-  'LMC may deactivate your account at any time for violations. Outstanding earnings paid within 7 business days.',
-];
+const TOTAL_CARDS = 5;
 
 export default function ScoutRulesScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const scrollRef = useRef<ScrollView>(null);
+  const [page, setPage] = useState(0);
   const [consented, setConsented] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const bothGated = consented && agreed;
+
+  const goTo = (p: number) => {
+    const next = Math.max(0, Math.min(TOTAL_CARDS - 1, p));
+    scrollRef.current?.scrollTo({ x: next * width, animated: true });
+    setPage(next);
+  };
+
+  const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setPage(Math.round(e.nativeEvent.contentOffset.x / width));
+  };
 
   return (
     <View style={styles.bg}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.push('/flow-map')}
+            onPress={() => (page === 0 ? (router.canGoBack() ? router.back() : router.push('/scout/become')) : goTo(page - 1))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Flow Map</Text>
+            <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
+
           <View style={styles.progressRow}>
-            {[1, 2, 3].map((n) => (
-              <View key={n} style={[styles.dot, styles.dotActive]} />
+            {Array.from({ length: TOTAL_CARDS }).map((_, i) => (
+              <View
+                key={i}
+                style={[styles.dot, i === page && styles.dotActive, i < page && styles.dotDone]}
+              />
             ))}
           </View>
+
           <TouchableOpacity
             style={styles.wireframeBadge}
             onPress={() => router.push('/flow-map')}
@@ -147,170 +118,124 @@ export default function ScoutRulesScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>The Scout Code</Text>
-          <Text style={styles.subtitle}>
-            What every Scout agrees to before their first check. Plain English, no legalese — but every line matters.
-          </Text>
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={onMomentumEnd}
+          style={styles.pager}
+        >
+          {/* CARD 1 — Where you can film */}
+          <Card width={width} title="Where you can film">
+            <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator={false}>
+              {WHERE.map((r, i) => (
+                <DetailRow key={i} icon={r.icon} title={r.title} why={r.why} />
+              ))}
+            </ScrollView>
+            <NextButton onPress={() => goTo(1)} />
+          </Card>
 
-          <View style={styles.tldrCard}>
-            <Text style={styles.tldrLabel}>TL;DR</Text>
-            <Text style={styles.tldrText}>
-              Film public spaces. Don’t film people’s faces. Don’t record audio. Stop the moment anyone with authority at the venue tells you to.
-            </Text>
-          </View>
+          {/* CARD 2 — What you never film */}
+          <Card width={width} title="What you never film">
+            <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator={false}>
+              {NEVER.map((r, i) => (
+                <DetailRow key={i} icon={r.icon} title={r.title} why={r.why} />
+              ))}
+            </ScrollView>
+            <NextButton onPress={() => goTo(2)} />
+          </Card>
 
-          {/* WHERE YOU CAN FILM */}
-          <Text style={styles.sectionLabel}>WHERE YOU CAN FILM</Text>
-          {WHERE.map((r, i) => (
-            <Row key={i} type="ok" title={r.title} why={r.why} />
-          ))}
+          {/* CARD 3 — How to carry yourself */}
+          <Card width={width} title="How to carry yourself">
+            <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator={false}>
+              {CONDUCT.map((r, i) => (
+                <DetailRow key={i} icon={r.icon} title={r.title} why={r.why} />
+              ))}
+            </ScrollView>
+            <NextButton onPress={() => goTo(3)} />
+          </Card>
 
-          {/* PEOPLE */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>PEOPLE — NEVER</Text>
-          {NEVER_PEOPLE.map((r, i) => (
-            <Row key={i} type="no" title={r.title} why={r.why} />
-          ))}
-
-          {/* PLACES */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>PLACES — NEVER</Text>
-          {NEVER_PLACES.map((r, i) => (
-            <Row key={i} type="no" title={r.title} why={r.why} />
-          ))}
-
-          {/* AUDIO */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>AUDIO</Text>
-          {NEVER_AUDIO.map((r, i) => (
-            <Row key={i} type="no" title={r.title} why={r.why} />
-          ))}
-
-          {/* CONDUCT */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>CONDUCT AT THE VENUE</Text>
-          {CONDUCT.map((r, i) => (
-            <Row key={i} type="info" title={r.title} why={r.why} />
-          ))}
-
-          {/* QUALITY STANDARDS — what gets a clip rejected and why pay is conditional */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>QUALITY STANDARDS</Text>
-          <View style={styles.qualityCard}>
-            <View style={styles.qualityHeader}>
-              <Ionicons name="alert-circle" size={16} color="#FFCB47" />
-              <Text style={styles.qualityHeaderText}>REJECTION = NO PAYMENT</Text>
-            </View>
-            <Text style={styles.qualityBody}>
-              Seekers and our verification system can reject a clip when the quality or location doesn’t meet the standard. If your clip is rejected, you don’t get paid for it. A clip can be rejected for any of these:
-            </Text>
-            <View style={styles.qualityList}>
-              <QualityRow text="Blurry, shaky, or out-of-focus footage" />
-              <QualityRow text="Venue not visible / wrong venue captured" />
-              <QualityRow text="GPS doesn’t match the venue’s geofence" />
-              <QualityRow text="Lens covered, finger in shot, or framing cropped" />
-              <QualityRow text="Faces in frame that couldn’t be auto-blurred" />
-              <QualityRow text="Audio detected (mic should always stay muted)" />
-              <QualityRow text="Clip shorter than required or cut early" />
-            </View>
-            <View style={styles.qualityFooter}>
-              <Ionicons name="information-circle" size={13} color="#88B4FF" />
-              <Text style={styles.qualityFooterText}>
-                You get up to 3 takes per check. Use them — review your shot before submitting.
+          {/* CARD 4 — Rejection = no pay */}
+          <Card width={width} title="Quality standards">
+            <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContentGate} showsVerticalScrollIndicator={false}>
+              <Text style={styles.subEmphasis}>REJECTION = NO PAYMENT</Text>
+              <Text style={styles.lead}>
+                A clip that misses the bar gets rejected by the Seeker or our system — and a rejected clip isn’t paid. So nail it. Common reasons:
               </Text>
-            </View>
-          </View>
+              {REJECT.map((r, i) => (
+                <SimpleRow key={i} icon={r.icon} text={r.text} />
+              ))}
+              <Text style={styles.foot}>
+                You get 3 takes per check — review your shot before you submit.
+              </Text>
+            </ScrollView>
+            <NextButton onPress={() => goTo(4)} label="ALMOST THERE" />
+          </Card>
 
-          {/* PAY */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>PAY</Text>
-          <View style={styles.payGrid}>
-            {PAY.map((p, i) => (
-              <View key={i} style={styles.payCell}>
-                <Text style={styles.payAmount}>{p.title}</Text>
-                <Text style={styles.payWhy}>{p.why}</Text>
-              </View>
-            ))}
-          </View>
+          {/* CARD 5 — The agreement + consent */}
+          <Card width={width} title="The agreement">
+            <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContentGate} showsVerticalScrollIndicator={false}>
+              {AGREEMENT.map((r, i) => (
+                <SimpleRow key={i} icon={r.icon} text={r.text} />
+              ))}
 
-          {/* CLIP HANDLING */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>WHAT HAPPENS TO YOUR FOOTAGE</Text>
-          <View style={styles.contractCard}>
-            <Bullet text="Every clip uploads directly to LMC. You cannot keep a local copy." />
-            <Bullet text="Faces in frame are automatically blurred before delivery." />
-            <Bullet text="GPS coordinates and venue signage must match. If they don’t, the clip is rejected and you’re notified." />
-            <Bullet text="Once delivered, the clip is private to the Seeker. Not posted, not advertised, not sold." />
-            <Bullet text="Clips are deleted from the CDN after 30 days unless flagged for a takedown or legal hold." />
-          </View>
+              <TouchableOpacity onPress={() => router.push('/legal/code')} activeOpacity={0.7}>
+                <Text style={styles.link}>Read the full Scout Agreement →</Text>
+              </TouchableOpacity>
 
-          {/* INDEPENDENT CONTRACTOR AGREEMENT */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-            INDEPENDENT CONTRACTOR AGREEMENT
-          </Text>
-          <View style={styles.contractCard}>
-            {CONTRACTOR.map((b, i) => (
-              <Bullet key={i} text={b} />
-            ))}
-          </View>
+              <View style={styles.gateDivider} />
 
-          {/* TWO GATES */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>BEFORE YOU CONTINUE</Text>
+              <TouchableOpacity style={styles.gateRow} activeOpacity={0.75} onPress={() => setConsented((v) => !v)}>
+                <View style={[styles.checkbox, consented && styles.checkboxOn]}>
+                  {consented && <Ionicons name="checkmark" size={14} color="#000" />}
+                </View>
+                <Text style={styles.gateText}>
+                  <Text style={styles.gateBold}>I understand</Text> the filming rules and will only film as described — no faces, kids, audio, or no-go zones.
+                </Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.gateRow}
-            activeOpacity={0.75}
-            onPress={() => setConsented((v) => !v)}
-          >
-            <View style={[styles.checkbox, consented && styles.checkboxOn]}>
-              {consented && <Ionicons name="checkmark" size={14} color="#000" />}
-            </View>
-            <Text style={styles.gateText}>
-              <Text style={styles.gateBold}>CONSENT.</Text> I understand the filming rules and I will only film in the ways described above. I will not film faces, children, audio, or anything in a no-go zone.
-            </Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.gateRow} activeOpacity={0.75} onPress={() => setAgreed((v) => !v)}>
+                <View style={[styles.checkbox, agreed && styles.checkboxOn]}>
+                  {agreed && <Ionicons name="checkmark" size={14} color="#000" />}
+                </View>
+                <Text style={styles.gateText}>
+                  <Text style={styles.gateBold}>I agree</Text> to the Scout Agreement and confirm I’m an independent contractor, not an employee.
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
 
-          <TouchableOpacity
-            style={styles.gateRow}
-            activeOpacity={0.75}
-            onPress={() => setAgreed((v) => !v)}
-          >
-            <View style={[styles.checkbox, agreed && styles.checkboxOn]}>
-              {agreed && <Ionicons name="checkmark" size={14} color="#000" />}
-            </View>
-            <Text style={styles.gateText}>
-              <Text style={styles.gateBold}>AGREE.</Text> I have read and accept the Independent Contractor Agreement and the Scout Code of Conduct. I am not an employee of LMC.
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.primaryBtn, !bothGated && styles.primaryBtnDisabled]}
-            disabled={!bothGated}
-            onPress={() => router.push('/scout/approved')}
-            activeOpacity={0.85}
-          >
-            <Text
-              style={[styles.primaryBtnText, !bothGated && styles.primaryBtnTextDisabled]}
+            <TouchableOpacity
+              style={[styles.primaryBtn, !bothGated && styles.primaryBtnDisabled]}
+              disabled={!bothGated}
+              onPress={() => router.push('/scout/approved')}
+              activeOpacity={0.85}
             >
-              {bothGated ? 'I AGREE · CONTINUE' : 'TICK BOTH BOXES TO CONTINUE'}
-            </Text>
-          </TouchableOpacity>
-
-          <Text style={styles.foot}>
-            You can revisit the full Code of Conduct any time from your Scout dashboard.
-          </Text>
+              <Text style={[styles.primaryBtnText, !bothGated && styles.primaryBtnTextDisabled]}>
+                {bothGated ? 'CONTINUE' : 'TICK BOTH TO CONTINUE'}
+              </Text>
+            </TouchableOpacity>
+          </Card>
         </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
 
-function Row({ type, title, why }: { type: 'ok' | 'no' | 'info'; title: string; why: string }) {
-  const icon = type === 'ok' ? 'checkmark' : type === 'no' ? 'close' : 'information';
-  const color = type === 'ok' ? '#00FF7F' : type === 'no' ? '#FF3B30' : '#88B4FF';
-  const bg = type === 'ok'
-    ? 'rgba(0,255,127,0.1)'
-    : type === 'no'
-    ? 'rgba(255,59,48,0.1)'
-    : 'rgba(136,180,255,0.1)';
+function Card({ width, title, children }: { width: number; title: string; children: React.ReactNode }) {
+  return (
+    <View style={[styles.card, { width }]}>
+      <Text style={styles.cardTitle}>{title}</Text>
+      {children}
+    </View>
+  );
+}
+
+function DetailRow({ icon, title, why }: { icon: IconName; title: string; why: string }) {
   return (
     <View style={styles.row}>
-      <View style={[styles.rowIcon, { backgroundColor: bg }]}>
-        <Ionicons name={icon} size={16} color={color} />
+      <View style={styles.rowIcon}>
+        <Ionicons name={icon} size={22} color={ACCENT} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowTitle}>{title}</Text>
@@ -320,21 +245,23 @@ function Row({ type, title, why }: { type: 'ok' | 'no' | 'info'; title: string; 
   );
 }
 
-function QualityRow({ text }: { text: string }) {
+function SimpleRow({ icon, text }: { icon: IconName; text: string }) {
   return (
-    <View style={styles.qualityRow}>
-      <Ionicons name="close" size={12} color="#FF6B6B" />
-      <Text style={styles.qualityRowText}>{text}</Text>
+    <View style={styles.row}>
+      <View style={styles.rowIcon}>
+        <Ionicons name={icon} size={22} color={ACCENT} />
+      </View>
+      <Text style={styles.simpleText}>{text}</Text>
     </View>
   );
 }
 
-function Bullet({ text }: { text: string }) {
+function NextButton({ onPress, label = 'NEXT' }: { onPress: () => void; label?: string }) {
   return (
-    <View style={styles.contractRow}>
-      <Text style={styles.contractBullet}>·</Text>
-      <Text style={styles.contractText}>{text}</Text>
-    </View>
+    <TouchableOpacity style={styles.nextBtn} onPress={onPress} activeOpacity={0.85}>
+      <Text style={styles.nextBtnText}>{label}</Text>
+      <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+    </TouchableOpacity>
   );
 }
 
@@ -355,15 +282,12 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
     fontSize: 14,
     letterSpacing: 0.5,
+    width: 80,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: {
-    width: 24,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  dotActive: { backgroundColor: '#00FF7F' },
+  dot: { width: 20, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
+  dotDone: { backgroundColor: 'rgba(0,255,127,0.5)' },
+  dotActive: { backgroundColor: ACCENT },
   wireframeBadge: {
     paddingHorizontal: 6,
     paddingVertical: 3,
@@ -377,198 +301,111 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
 
-  scroll: { paddingHorizontal: 26, paddingBottom: 64 },
-
-  title: {
+  pager: { flex: 1 },
+  card: {
+    flex: 1,
+    paddingHorizontal: 26,
+    paddingTop: 18,
+    paddingBottom: 20,
+  },
+  cardTitle: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 26,
+    fontSize: 28,
     color: '#ffffff',
     letterSpacing: 0.2,
-    marginBottom: 6,
+    lineHeight: 34,
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  subtitle: {
-    fontFamily: 'Inter_300Light',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
-    letterSpacing: 0.3,
-    lineHeight: 20,
-    marginBottom: 20,
+  cardScroll: { flex: 1 },
+  cardContent: {
+    flexGrow: 1,
+    justifyContent: 'space-evenly',
+    paddingVertical: 10,
   },
-
-  tldrCard: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 24,
+  cardContentGate: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    gap: 18,
+    paddingTop: 16,
+    paddingBottom: 10,
   },
-  tldrLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 2,
-    marginBottom: 6,
-  },
-  tldrText: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 14,
-    color: '#ffffff',
-    letterSpacing: 0.1,
-    lineHeight: 21,
-  },
-
-  sectionLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
-    letterSpacing: 2,
-    marginBottom: 12,
-  },
-  sectionLabelGap: { marginTop: 18 },
 
   row: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
+    alignItems: 'center',
+    gap: 16,
   },
   rowIcon: {
-    width: 28,
-    height: 28,
+    width: 46,
+    height: 46,
     borderRadius: 14,
+    backgroundColor: ACCENT_CHIP,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rowTitle: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 14,
+    fontSize: 16,
     color: '#ffffff',
     letterSpacing: 0.2,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   rowWhy: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 12,
+    fontSize: 13,
     color: 'rgba(255,255,255,0.6)',
-    lineHeight: 17,
-  },
-
-  payGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 4,
-  },
-  payCell: {
-    flexBasis: '48%',
-    flexGrow: 1,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 10,
-    padding: 12,
-  },
-  payAmount: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 14,
-    color: '#00FF7F',
-    letterSpacing: 0.2,
-    marginBottom: 4,
-  },
-  payWhy: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11.5,
-    color: 'rgba(255,255,255,0.6)',
-    lineHeight: 16,
-  },
-
-  qualityCard: {
-    backgroundColor: 'rgba(255,203,71,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.35)',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 4,
-  },
-  qualityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
-  },
-  qualityHeaderText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 11,
-    color: '#FFCB47',
-    letterSpacing: 1.4,
-  },
-  qualityBody: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 12.5,
-    color: 'rgba(255,255,255,0.75)',
     lineHeight: 18,
-    marginBottom: 10,
   },
-  qualityList: { gap: 6, marginBottom: 10 },
-  qualityRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  qualityRowText: {
+  simpleText: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 17,
-  },
-  qualityFooter: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-  },
-  qualityFooterText: {
-    flex: 1,
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11.5,
-    color: 'rgba(255,255,255,0.65)',
-    lineHeight: 16,
-    letterSpacing: 0.2,
-  },
-  contractCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 4,
-  },
-  contractRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
-  },
-  contractBullet: {
-    fontFamily: 'Inter_700Bold',
-    color: 'rgba(255,255,255,0.55)',
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  contractText: {
-    flex: 1,
-    fontFamily: 'Inter_400Regular',
-    fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 18,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.9)',
+    lineHeight: 21,
+    letterSpacing: 0.1,
   },
 
+  subEmphasis: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 12,
+    color: '#FFCB47',
+    letterSpacing: 2,
+    textAlign: 'center',
+  },
+  lead: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    lineHeight: 19,
+    letterSpacing: 0.2,
+  },
+  foot: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12,
+    color: ACCENT,
+    lineHeight: 17,
+    letterSpacing: 0.2,
+  },
+  link: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13,
+    color: '#88B4FF',
+    letterSpacing: 0.2,
+  },
+
+  gateDivider: {
+    height: 1,
+    width: 220,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignSelf: 'center',
+    marginVertical: 4,
+  },
   gateRow: {
     flexDirection: 'row',
     gap: 12,
     alignItems: 'flex-start',
-    paddingVertical: 10,
-    marginBottom: 4,
+    paddingVertical: 4,
   },
   checkbox: {
     width: 22,
@@ -580,10 +417,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 2,
   },
-  checkboxOn: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
-  },
+  checkboxOn: { backgroundColor: '#ffffff', borderColor: '#ffffff' },
   gateText: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
@@ -592,10 +426,25 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     letterSpacing: 0.1,
   },
-  gateBold: {
+  gateBold: { fontFamily: 'Inter_700Bold', color: '#ffffff' },
+
+  nextBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    paddingVertical: 16,
+    marginTop: 12,
+  },
+  nextBtnText: {
     fontFamily: 'Inter_700Bold',
     color: '#ffffff',
-    letterSpacing: 1,
+    fontSize: 12,
+    letterSpacing: 2,
   },
 
   primaryBtn: {
@@ -603,28 +452,14 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 14,
+    marginTop: 12,
   },
-  primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
+  primaryBtnDisabled: { backgroundColor: 'rgba(255,255,255,0.12)' },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
     color: '#000000',
     fontSize: 13,
     letterSpacing: 2.5,
   },
-  primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 2,
-  },
-
-  foot: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
-    textAlign: 'center',
-    lineHeight: 16,
-  },
+  primaryBtnTextDisabled: { color: 'rgba(255,255,255,0.4)', letterSpacing: 2 },
 });

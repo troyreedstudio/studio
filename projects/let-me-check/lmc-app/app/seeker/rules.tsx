@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,99 +7,105 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
+  useWindowDimensions,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getIntendedRole } from '../state/intended-role';
 
 // Source of truth: docs/FILMING-POLICY.md, mirrored to the Seeker (requester) perspective.
+// The binding legal text lives in the full Terms / Privacy / AUP (linked at sign-up);
+// these cards are the plain-language summary, so copy is kept short on purpose.
 
-const WILL_GET = [
-  {
-    title: '15-second silent video',
-    why: 'Or 30 seconds for Partner Interior checks (+$5). Always silent — no audio is ever recorded.',
-  },
-  {
-    title: 'Wide shots only',
-    why: 'The Scout films the scene, not individuals. No close-ups of strangers.',
-  },
-  {
-    title: 'Faces auto-blurred',
-    why: 'Any faces detected in frame are blurred before delivery. We don\'t deliver clips with identifiable people.',
-  },
-  {
-    title: 'GPS-verified delivery',
-    why: 'The Scout had to be inside the venue\'s geofence to deliver. Off-target clips are auto-rejected and refunded.',
-  },
-  {
-    title: 'Delivered in 7–10 minutes',
-    why: 'Once a Scout accepts. If no Scout accepts in 15 minutes, you get a full refund.',
-  },
+// One place to retune the brand accent. Currently GREEN. Switch to '#F47B20' (+ chip
+// 'rgba(244,123,32,0.12)') for the orange variant.
+const ACCENT = '#00FF7F';
+const ACCENT_CHIP = 'rgba(0,255,127,0.12)';
+
+type IconName = keyof typeof Ionicons.glyphMap;
+
+const WILL_GET: { icon: IconName; title: string; why: string }[] = [
+  { icon: 'videocam-outline', title: '15-sec silent clip', why: '30 sec for Partner Interiors (+$5). Always muted.' },
+  { icon: 'scan-outline', title: 'The place, not people', why: 'Wide shots only — no close-ups of strangers.' },
+  { icon: 'eye-off-outline', title: 'Faces auto-blurred', why: 'Anyone in frame is blurred before it reaches you.' },
+  { icon: 'location-outline', title: 'GPS-verified', why: 'Filmed on-site, or auto-rejected and refunded.' },
+  { icon: 'flash-outline', title: '7–10 min, or refund', why: 'No Scout in 15 min = full refund.' },
 ];
 
-const WONT_FILM = [
-  {
-    title: 'A specific person',
-    why: 'Even if you name them in the request. LMC is a place-checking service, not a people-finding service.',
-  },
-  {
-    title: 'Areas marked "No Photography"',
-    why: 'If a venue posts a No Photography sign, Scouts stop and abort. You get a refund, the Scout gets travel pay.',
-  },
-  {
-    title: 'Bathrooms, locker rooms, dressing rooms',
-    why: 'Ever. Regardless of venue. Bright privacy line.',
-  },
-  {
-    title: 'Hospitals, schools, courts, police, military',
-    why: 'These venues are RED-tier — dispatch is declined at request time and you\'re refunded immediately.',
-  },
-  {
-    title: 'Private homes or private property',
-    why: 'No trespassing. No fences. No staff-only areas. The Scout films from public access only.',
-  },
-  {
-    title: 'Audio of any kind',
-    why: 'The camera mic stays muted. Two-party-consent laws prevent recording conversations.',
-  },
+const WONT_FILM: { icon: IconName; title: string; why: string }[] = [
+  { icon: 'person-outline', title: 'A specific person', why: 'We check places, not people.' },
+  { icon: 'mic-off-outline', title: 'Audio — ever', why: 'The mic stays off, always.' },
+  { icon: 'lock-closed-outline', title: 'Bathrooms & changing rooms', why: 'Never, anywhere. No exceptions.' },
+  { icon: 'home-outline', title: 'Homes & private property', why: 'Public access only. No trespass.' },
+  { icon: 'business-outline', title: 'Hospitals, schools, courts, police', why: 'Off-limits — declined instantly, refunded.' },
+  { icon: 'camera-outline', title: '“No Photography” zones', why: 'Scout stops on sight. You’re refunded.' },
 ];
 
-const DONT_USE = [
-  'Stalk, surveil, or track a specific person',
-  'Monitor an ex-partner, family member, or coworker',
-  'Plan or scout for any illegal activity',
-  'Capture footage you don\'t have the right to obtain via public access',
+const PROMISE: { icon: IconName; text: string }[] = [
+  { icon: 'eye-outline', text: 'Track or surveil a person' },
+  { icon: 'heart-dislike-outline', text: 'Monitor an ex, family, or coworker' },
+  { icon: 'warning-outline', text: 'Scout anything illegal' },
+  { icon: 'lock-closed-outline', text: 'Grab footage you’ve no right to' },
 ];
+
+const REFUNDS: { icon: IconName; text: string }[] = [
+  { icon: 'checkmark-circle-outline', text: 'No clip delivered → full refund' },
+  { icon: 'checkmark-circle-outline', text: 'Off-target or wrong venue → refunded' },
+  { icon: 'remove-circle-outline', text: 'A real result (line short, place empty) → no refund. That’s the product working.' },
+];
+
+const TOTAL_CARDS = 4;
 
 export default function SeekerRulesScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const scrollRef = useRef<ScrollView>(null);
+  const [page, setPage] = useState(0);
   const [understood, setUnderstood] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const bothGated = understood && agreed;
+
+  const goTo = (p: number) => {
+    const next = Math.max(0, Math.min(TOTAL_CARDS - 1, p));
+    scrollRef.current?.scrollTo({ x: next * width, animated: true });
+    setPage(next);
+  };
+
+  const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setPage(Math.round(e.nativeEvent.contentOffset.x / width));
+  };
+
+  const finish = () => {
+    // Both users see the fork screen; everyone else heads to the location step
+    // (Scouts/venues are location-driven, so we ask before showing the map).
+    const dest = getIntendedRole() === 'both' ? '/onboarding/both-fork' : '/(seeker)/home';
+    router.replace({ pathname: '/onboarding/permissions', params: { next: dest } });
+  };
 
   return (
     <View style={styles.bg}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.push('/flow-map')}
+            onPress={() => (page === 0 ? router.push('/flow-map') : goTo(page - 1))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Flow Map</Text>
+            <Text style={styles.backText}>{page === 0 ? '‹ Flow Map' : '‹ Back'}</Text>
           </TouchableOpacity>
+
           <View style={styles.progressRow}>
-            {[0, 1, 2, 3, 4].map((_, i) => (
+            {Array.from({ length: TOTAL_CARDS }).map((_, i) => (
               <View
                 key={i}
-                style={[
-                  styles.dot,
-                  i < 2 && styles.dotDone,
-                  i === 2 && styles.dotActive,
-                ]}
+                style={[styles.dot, i === page && styles.dotActive, i < page && styles.dotDone]}
               />
             ))}
           </View>
+
           <TouchableOpacity
             style={styles.wireframeBadge}
             onPress={() => router.push('/flow-map')}
@@ -110,129 +116,109 @@ export default function SeekerRulesScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>How LMC works</Text>
-          <Text style={styles.subtitle}>
-            A quick read before your first check. Here&apos;s what your clip will look like, the boundaries we honor, and how we keep the service respectful for everyone involved.
-          </Text>
+        {/* Swipeable cards */}
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={onMomentumEnd}
+          style={styles.pager}
+        >
+          {/* CARD 1 — What you'll get */}
+          <Card width={width} title="What you’ll get">
+            <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator={false}>
+              {WILL_GET.map((r, i) => (
+                <DetailRow key={i} icon={r.icon} title={r.title} why={r.why} />
+              ))}
+            </ScrollView>
+            <NextButton onPress={() => goTo(1)} />
+          </Card>
 
-          {/* TL;DR */}
-          <View style={styles.tldrCard}>
-            <Text style={styles.tldrLabel}>TL;DR</Text>
-            <Text style={styles.tldrText}>
-              LMC deploys a real person to film a 15-second silent clip of a public-facing place. We never film specific people, audio, or private spaces. Some venues may be off-limits entirely.
-            </Text>
-          </View>
+          {/* CARD 2 — What we'll never film */}
+          <Card width={width} title="What we’ll never film">
+            <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator={false}>
+              {WONT_FILM.map((r, i) => (
+                <DetailRow key={i} icon={r.icon} title={r.title} why={r.why} />
+              ))}
+            </ScrollView>
+            <NextButton onPress={() => goTo(2)} />
+          </Card>
 
-          {/* WHAT YOU'LL GET */}
-          <Text style={styles.sectionLabel}>WHAT YOU&apos;LL GET</Text>
-          {WILL_GET.map((row, i) => (
-            <Row key={i} type="ok" title={row.title} why={row.why} />
-          ))}
-
-          {/* WHAT WE DON'T CAPTURE */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-            WHAT WE DON&apos;T CAPTURE
-          </Text>
-          {WONT_FILM.map((row, i) => (
-            <Row key={i} type="no" title={row.title} why={row.why} />
-          ))}
-
-          {/* AVOID USING LMC TO */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-            AVOID USING LMC TO
-          </Text>
-          <View style={styles.warnCard}>
-            {DONT_USE.map((t, i) => (
-              <View key={i} style={styles.warnRow}>
-                <Ionicons name="close" size={14} color="#FF6B6B" />
-                <Text style={styles.warnText}>{t}</Text>
-              </View>
-            ))}
-            <View style={styles.warnFoot}>
-              <Ionicons name="alert-circle" size={14} color="#FFCB47" />
-              <Text style={styles.warnFootText}>
-                These boundaries keep LMC safe for everyone. Misuse may result in account suspension, and we cooperate with law enforcement when warranted.
+          {/* CARD 3 — Our promise to each other */}
+          <Card width={width} title="Our promise to each other">
+            <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator={false}>
+              <Text style={styles.lead}>You agree never to use LMC to:</Text>
+              {PROMISE.map((r, i) => (
+                <SimpleRow key={i} icon={r.icon} text={r.text} />
+              ))}
+              <Text style={styles.foot}>
+                These keep LMC safe for everyone. Misuse can suspend your account.
               </Text>
-            </View>
-          </View>
+            </ScrollView>
+            <NextButton onPress={() => goTo(3)} label="ALMOST THERE" />
+          </Card>
 
-          {/* REFUND POLICY (mini) */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>REFUNDS</Text>
-          <View style={styles.contractCard}>
-            <Bullet text="Auto-refund: No clip delivered · Scout off-fence · venue closed · GPS failure · wrong venue." />
-            <Bullet text="Partial refund: Clip delivered but missing a key requested element you flagged in advance." />
-            <Bullet text="No refund: Clip is legitimate and shows reality (line was short, place was empty, your friend wasn&apos;t there). That&apos;s the product working." />
-          </View>
+          {/* CARD 4 — Our promise to you (refunds + consent) */}
+          <Card width={width} title="Our promise to you">
+            <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContentGate} showsVerticalScrollIndicator={false}>
+              <Text style={styles.lead}>Our refund promise:</Text>
+              {REFUNDS.map((r, i) => (
+                <SimpleRow key={i} icon={r.icon} text={r.text} />
+              ))}
 
-          {/* DUAL GATE */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>BEFORE YOU CONTINUE</Text>
+              <View style={styles.gateDivider} />
 
-          <TouchableOpacity
-            style={styles.gateRow}
-            activeOpacity={0.75}
-            onPress={() => setUnderstood((v) => !v)}
-          >
-            <View style={[styles.checkbox, understood && styles.checkboxOn]}>
-              {understood && <Ionicons name="checkmark" size={14} color="#000" />}
-            </View>
-            <Text style={styles.gateText}>
-              <Text style={styles.gateBold}>I UNDERSTAND.</Text> I know what I&apos;ll receive (a 15-second silent public-facing clip with faces blurred) and what I won&apos;t (specific people, audio, private spaces, no-go venues).
-            </Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.gateRow} activeOpacity={0.75} onPress={() => setUnderstood((v) => !v)}>
+                <View style={[styles.checkbox, understood && styles.checkboxOn]}>
+                  {understood && <Ionicons name="checkmark" size={14} color="#000" />}
+                </View>
+                <Text style={styles.gateText}>
+                  <Text style={styles.gateBold}>I understand</Text> what I’ll get (a 15-sec silent, face-blurred public clip) and what I won’t.
+                </Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.gateRow}
-            activeOpacity={0.75}
-            onPress={() => setAgreed((v) => !v)}
-          >
-            <View style={[styles.checkbox, agreed && styles.checkboxOn]}>
-              {agreed && <Ionicons name="checkmark" size={14} color="#000" />}
-            </View>
-            <Text style={styles.gateText}>
-              <Text style={styles.gateBold}>I AGREE.</Text> I won&apos;t use LMC to stalk, surveil, monitor a specific individual, or do anything on the prohibited list above.
-            </Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.gateRow} activeOpacity={0.75} onPress={() => setAgreed((v) => !v)}>
+                <View style={[styles.checkbox, agreed && styles.checkboxOn]}>
+                  {agreed && <Ionicons name="checkmark" size={14} color="#000" />}
+                </View>
+                <Text style={styles.gateText}>
+                  <Text style={styles.gateBold}>I agree</Text> to the promise above and won’t use LMC to track or surveil anyone.
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
 
-          <TouchableOpacity
-            style={[styles.primaryBtn, !bothGated && styles.primaryBtnDisabled]}
-            disabled={!bothGated}
-            onPress={() => {
-              // Both users see the fork screen so they can choose to activate
-              // Scout setup now (preferred) or start as Seeker first.
-              const next =
-                getIntendedRole() === 'both' ? '/onboarding/both-fork' : '/(seeker)/home';
-              router.replace(next);
-            }}
-            activeOpacity={0.85}
-          >
-            <Text
-              style={[styles.primaryBtnText, !bothGated && styles.primaryBtnTextDisabled]}
+            <TouchableOpacity
+              style={[styles.primaryBtn, !bothGated && styles.primaryBtnDisabled]}
+              disabled={!bothGated}
+              onPress={finish}
+              activeOpacity={0.85}
             >
-              {bothGated ? 'I AGREE · CONTINUE' : 'TICK BOTH BOXES TO CONTINUE'}
-            </Text>
-          </TouchableOpacity>
-
-          <Text style={styles.foot}>
-            You can revisit these rules any time from your profile.
-          </Text>
+              <Text style={[styles.primaryBtnText, !bothGated && styles.primaryBtnTextDisabled]}>
+                {bothGated ? 'CONTINUE' : 'TICK BOTH TO CONTINUE'}
+              </Text>
+            </TouchableOpacity>
+          </Card>
         </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
 
-function Row({ type, title, why }: { type: 'ok' | 'no'; title: string; why: string }) {
-  const icon = type === 'ok' ? 'checkmark' : 'close';
-  const color = type === 'ok' ? '#00FF7F' : '#FF6B6B';
-  const bg =
-    type === 'ok'
-      ? 'rgba(0,255,127,0.1)'
-      : 'rgba(255,107,107,0.1)';
+function Card({ width, title, children }: { width: number; title: string; children: React.ReactNode }) {
+  return (
+    <View style={[styles.card, { width }]}>
+      <Text style={styles.cardTitle}>{title}</Text>
+      {children}
+    </View>
+  );
+}
+
+function DetailRow({ icon, title, why }: { icon: IconName; title: string; why: string }) {
   return (
     <View style={styles.row}>
-      <View style={[styles.rowIcon, { backgroundColor: bg }]}>
-        <Ionicons name={icon} size={16} color={color} />
+      <View style={styles.rowIcon}>
+        <Ionicons name={icon} size={22} color={ACCENT} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowTitle}>{title}</Text>
@@ -242,12 +228,23 @@ function Row({ type, title, why }: { type: 'ok' | 'no'; title: string; why: stri
   );
 }
 
-function Bullet({ text }: { text: string }) {
+function SimpleRow({ icon, text }: { icon: IconName; text: string }) {
   return (
-    <View style={styles.contractRow}>
-      <Text style={styles.contractBullet}>·</Text>
-      <Text style={styles.contractText}>{text}</Text>
+    <View style={styles.row}>
+      <View style={styles.rowIcon}>
+        <Ionicons name={icon} size={22} color={ACCENT} />
+      </View>
+      <Text style={styles.simpleText}>{text}</Text>
     </View>
+  );
+}
+
+function NextButton({ onPress, label = 'NEXT' }: { onPress: () => void; label?: string }) {
+  return (
+    <TouchableOpacity style={styles.nextBtn} onPress={onPress} activeOpacity={0.85}>
+      <Text style={styles.nextBtnText}>{label}</Text>
+      <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+    </TouchableOpacity>
   );
 }
 
@@ -268,11 +265,12 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
     fontSize: 14,
     letterSpacing: 0.5,
+    width: 80,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
   dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
-  dotDone: { backgroundColor: 'rgba(0,255,127,0.55)' },
-  dotActive: { backgroundColor: '#00FF7F' },
+  dotDone: { backgroundColor: 'rgba(0,255,127,0.5)' },
+  dotActive: { backgroundColor: ACCENT },
   wireframeBadge: {
     paddingHorizontal: 6,
     paddingVertical: 3,
@@ -286,152 +284,101 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
 
-  scroll: { paddingHorizontal: 26, paddingBottom: 64 },
-
-  title: {
+  pager: { flex: 1 },
+  card: {
+    flex: 1,
+    paddingHorizontal: 26,
+    paddingTop: 18,
+    paddingBottom: 20,
+  },
+  cardTitle: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 26,
+    fontSize: 28,
     color: '#ffffff',
     letterSpacing: 0.2,
-    marginBottom: 6,
+    lineHeight: 34,
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  subtitle: {
-    fontFamily: 'Inter_300Light',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
-    letterSpacing: 0.3,
-    lineHeight: 20,
-    marginBottom: 20,
+  cardScroll: { flex: 1 },
+  // List cards: spread rows evenly down the page to fill the space.
+  cardContent: {
+    flexGrow: 1,
+    justifyContent: 'space-evenly',
+    paddingVertical: 10,
   },
-
-  tldrCard: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 24,
-  },
-  tldrLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 2,
-    marginBottom: 6,
-  },
-  tldrText: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 14,
-    color: '#ffffff',
-    letterSpacing: 0.1,
-    lineHeight: 21,
+  // Gate card: start right under the title (no top gap), even spacing, button pinned below.
+  cardContentGate: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    gap: 18,
+    paddingTop: 16,
+    paddingBottom: 10,
   },
 
-  sectionLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
-    letterSpacing: 2,
-    marginBottom: 12,
-  },
-  sectionLabelGap: { marginTop: 20 },
-
+  // Horizontal rows: icon first, text beside it, left-aligned.
   row: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
+    alignItems: 'center',
+    gap: 16,
   },
   rowIcon: {
-    width: 28,
-    height: 28,
+    width: 46,
+    height: 46,
     borderRadius: 14,
+    backgroundColor: ACCENT_CHIP,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rowTitle: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 14,
+    fontSize: 16,
     color: '#ffffff',
     letterSpacing: 0.2,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   rowWhy: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 12,
+    fontSize: 13,
     color: 'rgba(255,255,255,0.6)',
-    lineHeight: 17,
-  },
-
-  warnCard: {
-    backgroundColor: 'rgba(255,107,107,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,107,0.25)',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 4,
-  },
-  warnRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    marginBottom: 8,
-  },
-  warnText: {
-    flex: 1,
-    fontFamily: 'Inter_500Medium',
-    fontSize: 12.5,
-    color: 'rgba(255,255,255,0.85)',
     lineHeight: 18,
   },
-  warnFoot: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    marginTop: 6,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,107,107,0.2)',
-  },
-  warnFootText: {
+  simpleText: {
     flex: 1,
-    fontFamily: 'Inter_700Bold',
-    fontSize: 11.5,
-    color: '#FFCB47',
-    lineHeight: 16,
+    fontFamily: 'Inter_500Medium',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.9)',
+    lineHeight: 21,
+    letterSpacing: 0.1,
+  },
+
+  lead: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.2,
+  },
+  foot: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12,
+    color: ACCENT,
+    lineHeight: 17,
     letterSpacing: 0.2,
   },
 
-  contractCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 4,
+  gateDivider: {
+    height: 1,
+    width: 220,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignSelf: 'center',
+    marginVertical: 4,
   },
-  contractRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
-  },
-  contractBullet: {
-    fontFamily: 'Inter_700Bold',
-    color: 'rgba(255,255,255,0.55)',
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  contractText: {
-    flex: 1,
-    fontFamily: 'Inter_400Regular',
-    fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 18,
-  },
-
   gateRow: {
     flexDirection: 'row',
     gap: 12,
     alignItems: 'flex-start',
-    paddingVertical: 10,
-    marginBottom: 4,
+    paddingVertical: 8,
+    maxWidth: 320,
   },
   checkbox: {
     width: 22,
@@ -443,10 +390,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 2,
   },
-  checkboxOn: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
-  },
+  checkboxOn: { backgroundColor: '#ffffff', borderColor: '#ffffff' },
   gateText: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
@@ -455,10 +399,25 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     letterSpacing: 0.1,
   },
-  gateBold: {
+  gateBold: { fontFamily: 'Inter_700Bold', color: '#ffffff' },
+
+  nextBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    paddingVertical: 16,
+    marginTop: 12,
+  },
+  nextBtnText: {
     fontFamily: 'Inter_700Bold',
     color: '#ffffff',
-    letterSpacing: 1,
+    fontSize: 12,
+    letterSpacing: 2,
   },
 
   primaryBtn: {
@@ -466,28 +425,14 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 14,
+    marginTop: 12,
   },
-  primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
+  primaryBtnDisabled: { backgroundColor: 'rgba(255,255,255,0.12)' },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
     color: '#000000',
     fontSize: 13,
     letterSpacing: 2.5,
   },
-  primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 2,
-  },
-
-  foot: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
-    textAlign: 'center',
-    lineHeight: 16,
-  },
+  primaryBtnTextDisabled: { color: 'rgba(255,255,255,0.4)', letterSpacing: 2 },
 });

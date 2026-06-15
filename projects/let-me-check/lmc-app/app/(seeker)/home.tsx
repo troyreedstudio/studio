@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, Keyboard } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, Keyboard, ScrollView } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -10,74 +10,84 @@ import {
   getVenuesForMarket,
   searchInMarket,
   isPartnerVenue,
+  nearestLiveMarket,
+  getVenueByName,
   type Market,
   type Venue,
 } from '../data/markets';
 import { useSavedPlaces } from '../state/saved';
+import { getUserCoords, getUserCity } from '../state/location';
+import { useRecents, relativeTime } from '../state/recents';
 
 // Mapbox uses [longitude, latitude] order
 const MIAMI_CENTER: [number, number] = [-80.1918, 25.7617];
 const MIAMI_ZOOM = 14.5;
 
-// The Seeker (current user) — distinct from Scouts
-const USER_COORD: [number, number] = [-80.1918, 25.7617];
-
-// Static Scout locations scattered around Miami (visual supply density)
-const SCOUTS: [number, number][] = [
-  [-80.193, 25.760],
-  [-80.188, 25.785],
-  [-80.130, 25.785],
-  [-80.130, 25.770],
-  [-80.220, 25.745],
-  [-80.196, 25.737],
-  [-80.175, 25.795],
-  [-80.143, 25.760],
-  [-80.205, 25.770],
-  [-80.155, 25.740],
-  [-80.165, 25.810],
-  [-80.215, 25.795],
-  [-80.118, 25.750],
-  [-80.180, 25.755],
-  [-80.225, 25.760],
-  [-80.150, 25.795],
-  [-80.200, 25.745],
-  [-80.135, 25.745],
-  [-80.170, 25.730],
-  [-80.190, 25.800],
-];
-
-// Only 2 "live" Scouts actively filming — keep visual noise low
-const LIVE_SCOUTS: [number, number][] = [
-  [-80.193, 25.770],
-  [-80.175, 25.755],
-];
-
-// Branded hot venues — recognizable landmarks for the map
-const HOT_VENUES: { name: string; coord: [number, number] }[] = [
-  { name: 'LIV', coord: [-80.1228, 25.8186] },
-  { name: 'E11EVEN', coord: [-80.1962, 25.7831] },
-  { name: 'Story', coord: [-80.1290, 25.7790] },
-  { name: 'Mr Jones', coord: [-80.1330, 25.7860] },
-];
-
-const RECENTS = [
-  { id: 'r1', name: 'JFK Terminal 4', sub: 'Queens, New York · 4 min ago' },
-  { id: 'r2', name: 'Equinox Hudson Yards', sub: '33 Hudson Yards, NYC · Yesterday' },
-];
-
-
-const scoutsGeoJSON = {
-  type: 'FeatureCollection' as const,
-  features: SCOUTS.map((coords, i) => ({
-    type: 'Feature' as const,
-    id: i,
-    geometry: { type: 'Point' as const, coordinates: coords },
-    properties: {},
-  })),
+// Per-market demo supply. Miami + New York are the two "rich" demo cities — each
+// gets scattered Scouts, live (pulsing) Scouts, vision cones, and venue pins.
+// Add an entry here to make any market demo-rich; cities without one show a clean
+// map (real supply comes from the backend).
+type DemoMarket = {
+  user: [number, number];
+  scouts: [number, number][];
+  liveScouts: [number, number][];
+  venues: { name: string; coord: [number, number] }[];
 };
 
-// Stable pseudo-random bearings per scout (vision cone direction)
-const SCOUT_BEARINGS = SCOUTS.map((_, i) => (i * 47) % 360);
+const MIAMI_DEMO: DemoMarket = {
+  user: [-80.1918, 25.7617],
+  scouts: [
+    [-80.193, 25.760], [-80.188, 25.785], [-80.130, 25.785], [-80.130, 25.770],
+    [-80.220, 25.745], [-80.196, 25.737], [-80.175, 25.795], [-80.143, 25.760],
+    [-80.205, 25.770], [-80.155, 25.740], [-80.165, 25.810], [-80.215, 25.795],
+    [-80.118, 25.750], [-80.180, 25.755], [-80.225, 25.760], [-80.150, 25.795],
+    [-80.200, 25.745], [-80.135, 25.745], [-80.170, 25.730], [-80.190, 25.800],
+  ],
+  liveScouts: [[-80.193, 25.770], [-80.175, 25.755]],
+  venues: [
+    { name: 'LIV', coord: [-80.1228, 25.8186] },
+    { name: 'E11EVEN', coord: [-80.1962, 25.7831] },
+    { name: 'Story', coord: [-80.1290, 25.7790] },
+    { name: 'Mr Jones', coord: [-80.1330, 25.7860] },
+  ],
+};
+
+const NYC_DEMO: DemoMarket = {
+  user: [-74.006, 40.7128],
+  scouts: [
+    [-74.006, 40.713], [-74.013, 40.719], [-73.997, 40.723], [-74.004, 40.707],
+    [-73.990, 40.727], [-74.017, 40.711], [-73.994, 40.716], [-74.009, 40.731],
+    [-73.987, 40.720], [-74.001, 40.734], [-74.019, 40.725], [-73.992, 40.709],
+    [-74.007, 40.737], [-73.985, 40.724], [-74.014, 40.704], [-73.998, 40.729],
+    [-74.003, 40.706], [-73.991, 40.734], [-74.016, 40.717], [-74.000, 40.721],
+  ],
+  liveScouts: [[-74.006, 40.715], [-73.998, 40.722]],
+  venues: [
+    { name: 'The Box', coord: [-73.9918, 40.7212] },
+    { name: 'PHD Downtown', coord: [-74.0090, 40.7250] },
+    { name: 'Pier 17', coord: [-74.0011, 40.7063] },
+    { name: 'Le Bain', coord: [-74.0079, 40.7396] },
+  ],
+};
+
+const DEMO_BY_MARKET: Record<string, DemoMarket> = {
+  mia: MIAMI_DEMO,
+  nyc: NYC_DEMO,
+};
+
+
+
+function scoutsToGeoJSON(scouts: [number, number][]) {
+  return {
+    type: 'FeatureCollection' as const,
+    features: scouts.map((coords, i) => ({
+      type: 'Feature' as const,
+      id: i,
+      geometry: { type: 'Point' as const, coordinates: coords },
+      properties: {},
+    })),
+  };
+}
 
 function makeCone(
   center: [number, number],
@@ -124,18 +134,20 @@ function makeRing(
   return pts;
 }
 
-const conesGeoJSON = {
+function conesToGeoJSON(scouts: [number, number][]) {
+  return {
   type: 'FeatureCollection' as const,
-  features: SCOUTS.map((coords, i) => ({
+  features: scouts.map((coords, i) => ({
     type: 'Feature' as const,
     id: i,
     geometry: {
       type: 'Polygon' as const,
-      coordinates: [makeCone(coords, SCOUT_BEARINGS[i], 180, 55)],
+      coordinates: [makeCone(coords, (i * 47) % 360, 180, 55)],
     },
     properties: {},
   })),
-};
+  };
+}
 
 function UserPin({ coordinate }: { coordinate: [number, number] }) {
   const pulse = useRef(new Animated.Value(0)).current;
@@ -248,16 +260,46 @@ export default function HomeScreen() {
   }>();
   const marketId = params.marketId || DEFAULT_MARKET_ID;
   const market: Market = getMarketById(marketId) || getMarketById(DEFAULT_MARKET_ID)!;
+  // Demo supply for the active market (Miami / New York). null = clean map.
+  const demo = DEMO_BY_MARKET[market.id] ?? null;
+  const conesShape = conesToGeoJSON(demo?.scouts ?? []);
   const cameraRef = useRef<Mapbox.Camera>(null);
-  const [scoutShape, setScoutShape] = useState(scoutsGeoJSON);
-  const [liveCoords, setLiveCoords] = useState<[number, number][]>(LIVE_SCOUTS);
+  const [scoutShape, setScoutShape] = useState(() => scoutsToGeoJSON(demo?.scouts ?? []));
+  const [liveCoords, setLiveCoords] = useState<[number, number][]>(demo?.liveScouts ?? []);
   const [currentCenter, setCurrentCenter] = useState<[number, number]>(MIAMI_CENTER);
   const [currentZoom, setCurrentZoom] = useState<number>(MIAMI_ZOOM);
   const [droppedPin, setDroppedPin] = useState<[number, number] | null>(null);
   const [pinName, setPinName] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [listening, setListening] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
   const saved = useSavedPlaces();
+  const recents = useRecents();
+
+  // Mock voice search until real speech-to-text lands: brief "Listening…" then
+  // fills the box with a venue from the current market so results appear.
+  const startVoiceMock = () => {
+    if (listening) return;
+    setListening(true);
+    setTimeout(() => {
+      const v = getVenuesForMarket(marketId)[0];
+      setSearchQuery(v ? v.name : 'Soho House');
+      setListening(false);
+    }, 1500);
+  };
+
+  // Lift the bottom sheet above the keyboard so inline search stays visible.
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardWillShow', (e) =>
+      setKeyboardHeight(e.endCoordinates.height)
+    );
+    const hide = Keyboard.addListener('keyboardWillHide', () => setKeyboardHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const currentPinSavedId = droppedPin && pinName ? `${pinName}-${droppedPin[0].toFixed(4)}` : null;
   const isCurrentPinSaved = currentPinSavedId ? saved.isSaved(currentPinSavedId) : false;
@@ -363,11 +405,59 @@ export default function HomeScreen() {
     }
   };
 
+  // On first load, centre the map on the user's REAL location (captured at the
+  // permission step — GPS, or IP-approximated, or manually chosen). We ALWAYS
+  // show their actual place; we never fall back to a default city. When they're
+  // outside a live market they still see where they are, plus a waitlist banner.
+  // Skips when arriving via an explicit pin/search so we don't override it.
   useEffect(() => {
+    if (params.pinLat || params.marketId) return;
+    const coords = getUserCoords();
+    if (!coords) return;
+    setCurrentCenter(coords);
+    cameraRef.current?.setCamera({
+      centerCoordinate: coords,
+      zoomLevel: 14.5,
+      animationDuration: 900,
+    });
+  }, [params.pinLat, params.marketId]);
+
+  // Is the user outside every live market? Drives the honest "not live yet" banner.
+  const userCoords = getUserCoords();
+  const coverage = userCoords ? nearestLiveMarket(userCoords) : null;
+  const usingRealLocation = !params.marketId && !params.pinLat && !!userCoords;
+  const outOfCoverage = usingRealLocation && !!coverage && !coverage.inMarket;
+  const inLiveMarket = usingRealLocation && !!coverage && coverage.inMarket;
+  const userCityLabel = getUserCity() || 'your area';
+
+  // The location pill must reflect the user's REAL place, not the hard-coded
+  // default market. Explicit picks (marketId/pin) win; otherwise use live coords.
+  const displayCity = outOfCoverage
+    ? userCityLabel
+    : inLiveMarket
+    ? coverage!.market.name
+    : market.name;
+  const displayStatusText = outOfCoverage
+    ? 'Not live yet'
+    : inLiveMarket
+    ? `${coverage!.market.scouts} Scouts`
+    : market.status === 'live'
+    ? `${market.scouts} Scouts`
+    : market.status === 'soon'
+    ? 'Launching soon'
+    : 'Waitlist';
+
+  useEffect(() => {
+    // Reset to the active market's supply, then keep it gently alive.
+    setScoutShape(scoutsToGeoJSON(demo?.scouts ?? []));
+    setLiveCoords(demo?.liveScouts ?? []);
+    if (!demo) return;
+    const baseScouts = demo.scouts;
+    const baseLive = demo.liveScouts;
     const interval = setInterval(() => {
       setScoutShape({
         type: 'FeatureCollection' as const,
-        features: SCOUTS.map((coords, i) => ({
+        features: baseScouts.map((coords, i) => ({
           type: 'Feature' as const,
           id: i,
           geometry: {
@@ -381,7 +471,7 @@ export default function HomeScreen() {
         })),
       });
       setLiveCoords(
-        LIVE_SCOUTS.map(
+        baseLive.map(
           (coords) =>
             [
               coords[0] + (Math.random() - 0.5) * 0.0008,
@@ -391,7 +481,7 @@ export default function HomeScreen() {
       );
     }, 2800);
     return () => clearInterval(interval);
-  }, []);
+  }, [market.id]);
 
   return (
     <View style={styles.container}>
@@ -413,25 +503,32 @@ export default function HomeScreen() {
         <Mapbox.Camera
           ref={cameraRef}
           defaultSettings={{
-            centerCoordinate: MIAMI_CENTER,
-            zoomLevel: MIAMI_ZOOM,
+            // Start on the right spot so a freshly-loaded map opens correctly —
+            // a selected venue (pin) wins, then the user's live coords, then the market.
+            centerCoordinate:
+              params.pinLat && params.pinLon
+                ? [parseFloat(params.pinLon), parseFloat(params.pinLat)]
+                : usingRealLocation && userCoords
+                ? userCoords
+                : market.center,
+            zoomLevel: params.pinLat ? 16.5 : MIAMI_ZOOM,
             pitch: 50,
           }}
         />
 
-        {market.id === 'mia' && (
+        {demo && (
           <>
-            <UserPin coordinate={USER_COORD} />
-            {HOT_VENUES.map((v) => (
+            <UserPin coordinate={demo.user} />
+            {demo.venues.map((v) => (
               <VenuePin key={v.name} name={v.name} coordinate={v.coord} />
             ))}
           </>
         )}
 
-        {market.id === 'mia' && (
+        {demo && (
           <>
             {/* Scout vision cones — HUD field-of-view */}
-            <Mapbox.ShapeSource id="cones-src" shape={conesGeoJSON}>
+            <Mapbox.ShapeSource id="cones-src" shape={conesShape}>
               <Mapbox.FillLayer
                 id="cones-fill"
                 style={{
@@ -597,15 +694,9 @@ export default function HomeScreen() {
             activeOpacity={0.85}
           >
             <Text style={styles.locPin}>📍</Text>
-            <Text style={styles.locCity}>{market.name}</Text>
-            <View style={styles.scoutDot} />
-            <Text style={styles.locScouts}>
-              {market.status === 'live'
-                ? `${market.scouts} Scouts`
-                : market.status === 'soon'
-                ? 'Launching soon'
-                : 'Waitlist'}
-            </Text>
+            <Text style={styles.locCity}>{displayCity}</Text>
+            <View style={[styles.scoutDot, outOfCoverage && styles.scoutDotOff]} />
+            <Text style={styles.locScouts}>{displayStatusText}</Text>
             <Text style={styles.locChevron}>▾</Text>
           </TouchableOpacity>
 
@@ -617,10 +708,27 @@ export default function HomeScreen() {
             <Text style={styles.profileInitials}>TR</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Honest out-of-coverage banner — never pretend we serve a city we don't */}
+        {outOfCoverage && (
+          <View style={styles.waitlistBanner}>
+            <Text style={styles.waitlistPin}>📍</Text>
+            <Text style={styles.waitlistText}>
+              We&apos;re not live in {userCityLabel} yet.
+            </Text>
+            <TouchableOpacity
+              style={styles.waitlistBtn}
+              onPress={() => router.push('/onboarding/city')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.waitlistBtnText}>JOIN WAITLIST</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </SafeAreaView>
 
-      {/* Bottom sheet — translucent over satellite */}
-      <View style={styles.sheet}>
+      {/* Bottom sheet — translucent over satellite, lifts above the keyboard */}
+      <View style={[styles.sheet, { bottom: keyboardHeight }]}>
         <View style={styles.sheetTint} pointerEvents="none" />
         <View style={styles.sheetHandle} />
 
@@ -635,17 +743,13 @@ export default function HomeScreen() {
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            onFocus={() => {
-              searchInputRef.current?.blur();
-              router.push('/(seeker)/search');
-            }}
-            placeholder="Any place. Any address."
+            placeholder={listening ? 'Listening…' : 'Any place. Any address.'}
             placeholderTextColor="rgba(0,0,0,0.4)"
             returnKeyType="search"
             autoCorrect={false}
             autoCapitalize="words"
           />
-          {searchQuery.length > 0 && (
+          {searchQuery.length > 0 ? (
             <TouchableOpacity
               onPress={() => {
                 setSearchQuery('');
@@ -654,6 +758,13 @@ export default function HomeScreen() {
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text style={styles.searchClear}>✕</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={startVoiceMock}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={[styles.searchMic, listening && styles.searchMicActive]}>🎤</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -698,40 +809,33 @@ export default function HomeScreen() {
               </>
             )}
 
-            {/* Quick affordances */}
-            <View style={styles.quickRow}>
-              <TouchableOpacity style={styles.quickChip} activeOpacity={0.7}>
-                <Text style={styles.quickIcon}>🎤</Text>
-                <Text style={styles.quickLabel}>Voice</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.quickChip} activeOpacity={0.7}>
-                <Text style={styles.quickIcon}>📍</Text>
-                <Text style={styles.quickLabel}>Current location</Text>
-              </TouchableOpacity>
-            </View>
 
-            {/* Recent — max 2, kept minimal */}
-            <Text style={styles.recentLabel}>RECENT</Text>
-            {RECENTS.map((r) => (
-              <TouchableOpacity
-                key={r.id}
-                style={styles.recentRow}
-                activeOpacity={0.7}
-                onPress={() => {
-                  const match = getVenuesForMarket(marketId).find((p) => p.name === r.name);
-                  if (match) handlePickVenue(match);
-                }}
-              >
-                <View style={styles.recentIconWrap}>
-                  <Text style={styles.recentIcon}>🕐</Text>
-                </View>
-                <View style={styles.recentText}>
-                  <Text style={styles.recentName}>{r.name}</Text>
-                  <Text style={styles.recentSub}>{r.sub}</Text>
-                </View>
-                <Text style={styles.recentArrow}>›</Text>
-              </TouchableOpacity>
-            ))}
+            {/* Recent — the user's last 2 confirmed checks, newest first */}
+            {recents.length > 0 && (
+              <>
+                <Text style={styles.recentLabel}>RECENT</Text>
+                {recents.slice(0, 2).map((r) => (
+                  <TouchableOpacity
+                    key={r.name}
+                    style={styles.recentRow}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      const match = getVenueByName(r.name);
+                      if (match) handlePickVenue(match);
+                    }}
+                  >
+                    <View style={styles.recentIconWrap}>
+                      <Text style={styles.recentIcon}>🕐</Text>
+                    </View>
+                    <View style={styles.recentText}>
+                      <Text style={styles.recentName}>{r.name}</Text>
+                      <Text style={styles.recentSub}>{r.city} · {relativeTime(r.ts)}</Text>
+                    </View>
+                    <Text style={styles.recentArrow}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
 
             {/* Refined Scout invitation — supply-side recruit moment */}
             <TouchableOpacity
@@ -752,33 +856,11 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </>
         ) : (
-          <>
-            {searchResults.cities.length > 0 && (
-              <>
-                <Text style={styles.recentLabel}>CITIES</Text>
-                {searchResults.cities.map((c) => (
-                  <TouchableOpacity
-                    key={c.id}
-                    style={styles.recentRow}
-                    activeOpacity={0.7}
-                    onPress={() => handlePickCity(c)}
-                  >
-                    <View style={[styles.recentIconWrap, styles.cityIconWrap]}>
-                      <Text style={styles.cityMono}>{c.name.charAt(0)}</Text>
-                    </View>
-                    <View style={styles.recentText}>
-                      <Text style={styles.recentName}>{c.name}</Text>
-                      <Text style={styles.recentSub}>
-                        {c.region}
-                        {c.status === 'live' ? ` · ${c.scouts} Scouts` : c.status === 'soon' ? ' · Launching soon' : ' · Waitlist'}
-                      </Text>
-                    </View>
-                    <Text style={styles.recentArrow}>›</Text>
-                  </TouchableOpacity>
-                ))}
-              </>
-            )}
-
+          <ScrollView
+            style={styles.resultsScroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             {searchResults.neighborhoods.length > 0 && (
               <>
                 <Text style={styles.recentLabel}>NEIGHBORHOODS IN {market.name.toUpperCase()}</Text>
@@ -835,17 +917,16 @@ export default function HomeScreen() {
               </>
             )}
 
-            {searchResults.cities.length === 0 &&
-              searchResults.neighborhoods.length === 0 &&
+            {searchResults.neighborhoods.length === 0 &&
               searchResults.venues.length === 0 && (
                 <>
                   <Text style={styles.recentLabel}>NO MATCHES</Text>
                   <Text style={styles.recentSub}>
-                    Try a city, neighborhood, or venue name.
+                    Try a neighborhood or venue name in {market.name}.
                   </Text>
                 </>
               )}
-          </>
+          </ScrollView>
         )}
       </View>
     </View>
@@ -912,7 +993,7 @@ const pinStyles = StyleSheet.create({
     gap: 6,
   },
   cardConfirm: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#00FF7F',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 5,
@@ -920,7 +1001,7 @@ const pinStyles = StyleSheet.create({
   cardConfirmText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#143782',
+    color: '#000000',
     letterSpacing: 1.2,
   },
   cardCancel: {
@@ -1338,6 +1419,42 @@ const styles = StyleSheet.create({
     backgroundColor: '#00FF7F',
     marginHorizontal: 2,
   },
+  scoutDotOff: {
+    backgroundColor: '#FFCB47',
+  },
+  waitlistBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,203,71,0.4)',
+  },
+  waitlistPin: { fontSize: 13 },
+  waitlistText: {
+    flex: 1,
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12.5,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+  },
+  waitlistBtn: {
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#FFCB47',
+  },
+  waitlistBtnText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: '#000000',
+    letterSpacing: 1,
+  },
   locScouts: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12,
@@ -1452,37 +1569,22 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     padding: 0,
   },
+  resultsScroll: {
+    maxHeight: 300,
+  },
   searchClear: {
     fontSize: 14,
     color: 'rgba(0,0,0,0.55)',
     fontFamily: 'Inter_700Bold',
     paddingHorizontal: 4,
   },
-
-  // Quick affordances
-  quickRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
+  searchMic: {
+    fontSize: 16,
+    paddingHorizontal: 4,
+    opacity: 0.55,
   },
-  quickChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12,
-    paddingVertical: 13,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-    gap: 8,
-  },
-  quickIcon: { fontSize: 14 },
-  quickLabel: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 12.5,
-    color: '#fff',
-    letterSpacing: 0.3,
+  searchMicActive: {
+    opacity: 1,
   },
 
   // Saved

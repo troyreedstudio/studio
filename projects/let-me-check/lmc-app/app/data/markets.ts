@@ -485,6 +485,54 @@ export function getMarketsForCountry(countryCode: string): Market[] {
   return MARKETS.filter((m) => m.countryCode === countryCode);
 }
 
+export function getLiveMarkets(): Market[] {
+  return MARKETS.filter((m) => m.status === 'live');
+}
+
+/** Great-circle distance in km between two [lon, lat] points (Haversine). */
+export function distanceKm(a: [number, number], b: [number, number]): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(b[1] - a[1]);
+  const dLon = toRad(b[0] - a[0]);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+/** Serviceable radius (km) around a live market's centre. */
+export const MARKET_RADIUS_KM = 80;
+
+/**
+ * Resolve the user's real coordinates to the nearest LIVE market.
+ * `inMarket` is true only when the user is within MARKET_RADIUS_KM of that
+ * market's centre. When false (or no live markets exist), we fall back to the
+ * default launch market so the experience still has content to show.
+ */
+export function nearestLiveMarket(coords: [number, number]): {
+  market: Market;
+  distanceKm: number;
+  inMarket: boolean;
+} {
+  const fallback = getMarketById(DEFAULT_MARKET_ID)!;
+  const live = getLiveMarkets();
+  if (live.length === 0) {
+    return { market: fallback, distanceKm: Infinity, inMarket: false };
+  }
+  let best = live[0];
+  let bestDist = Infinity;
+  for (const m of live) {
+    const d = distanceKm(coords, m.center);
+    if (d < bestDist) {
+      bestDist = d;
+      best = m;
+    }
+  }
+  const inMarket = bestDist <= MARKET_RADIUS_KM;
+  return { market: inMarket ? best : fallback, distanceKm: bestDist, inMarket };
+}
+
 export function getVenuesForMarket(marketId: string): Venue[] {
   return VENUES.filter((v) => v.marketId === marketId);
 }

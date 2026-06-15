@@ -23,24 +23,8 @@ type Step = {
   badge?: string;
 };
 
-const FULL_SEEKER: Step[] = [
-  { num: 1, name: 'Splash', desc: 'Chrome LMC boot · chime · 4 sec auto-advance', route: '/', status: 'BUILT' },
-  { num: 2, name: 'Welcome', desc: 'Brand mark + tagline + GET STARTED · Sign in', route: '/welcome', status: 'BUILT' },
-  { num: 3, name: 'Intro Carousel', desc: '3 slides · Real Eyes / Right Now / Anywhere', route: '/intro', status: 'BUILT' },
-  { num: 4, name: 'Sign Up — Method', desc: 'Apple · Google · Phone', route: '/auth/sign-up', status: 'BUILT' },
-  { num: 5, name: 'Sign In (returning users)', desc: 'Apple · Google · Phone OTP → /onboarding/welcome-back', route: '/auth/sign-in', status: 'BUILT' },
-  { num: 6, name: 'Welcome Back', desc: 'Returning-user role picker · Seeker → home / Scout → dashboard', route: '/onboarding/welcome-back', status: 'BUILT' },
-  { num: 7, name: 'Phone + OTP', desc: 'Number entry → SMS code (Phone path only)', route: '/auth/sign-up', status: 'BUILT' },
-  { num: 8, name: 'Personal Info (Seeker)', desc: 'Name · email · phone verified pill · "I am 18+" checkbox + bundled consent (Terms · Privacy · AUP). NO DOB / SSN / bank — that all lives in the Scout flow only.', route: '/onboarding/personal-info', status: 'BUILT' },
-  { num: 9, name: 'Rules / Acceptable Use', desc: 'Acceptable use + Terms + Privacy checkboxes', route: '/auth/sign-up', status: 'BUILT' },
-  { num: 10, name: 'Permissions', desc: 'Location (REQUIRED) + Notifications (RECOMMENDED) · iOS-style prompts · if-denied warnings · iOS Settings deeplink', route: '/onboarding/permissions', status: 'BUILT' },
-  { num: 11, name: 'Choose Your Path', desc: 'Seeker vs Scout vs Both · ALL routes go through /auth/sign-up now (Scout no longer skips auth)', route: '/onboarding/role', status: 'BUILT' },
-  { num: 12, name: 'Seeker Home', desc: 'Map + bottom sheet · browse + request a check', route: '/(seeker)/home', status: 'BUILT' },
-  { num: 13, name: 'Legal docs', desc: 'Terms · Privacy · AUP · Scout Code — reachable from consent links anywhere in onboarding', route: '/legal/terms', status: 'BUILT' },
-  { num: 14, name: 'Payment (at checkout)', desc: 'Stripe Payment Sheet — built inline on payment.tsx, slides up from bottom · saves card via shared state', route: '/(seeker)/payment', status: 'BUILT' },
-];
-
-const FULL_SCOUT: Step[] = [
+// SCOUT flow (shared across versions — never trimmed). Used as LEAN_SCOUT below.
+const LEAN_SCOUT: Step[] = [
   // ===== ONBOARDING =====
   { num: 1, name: 'Become a Scout', desc: 'Entry from Choose Path or Seeker profile · explains the ~10 min flow · all 4 step rows tappable', route: '/scout/become', status: 'BUILT' },
   { num: 2, name: 'Identity Verification', desc: 'ID-type selector · front/back/selfie slots · consent gate · Stripe Identity handoff', route: '/scout/identity', status: 'BUILT' },
@@ -115,8 +99,6 @@ const LEAN_CUTS: Step[] = [
   { num: 0, name: 'Payment screen', desc: 'DEFERRED to first checkout via Stripe sheet. No card on file required to browse. (Uber: same — payment added at first ride)', route: '/onboarding/payment-checkout', status: 'DEFERRED' },
 ];
 
-const LEAN_SCOUT: Step[] = FULL_SCOUT;
-
 const CHROME_STOPS: [string, string, ...string[]] = [
   '#a8a8a8', '#ffffff', '#ffffff', '#f2f2f2', '#8c8c8c', '#363636', '#161616',
 ];
@@ -124,17 +106,11 @@ const CHROME_LOCATIONS: [number, number, ...number[]] = [0, 0.22, 0.5, 0.58, 0.6
 
 export default function FlowMapScreen() {
   const router = useRouter();
-  const [version, setVersion] = useState<'full' | 'lean'>('full');
   const [mode, setMode] = useState<'seeker' | 'scout'>('seeker');
 
-  const flow =
-    version === 'full'
-      ? mode === 'seeker' ? FULL_SEEKER : FULL_SCOUT
-      : mode === 'seeker' ? LEAN_SEEKER : LEAN_SCOUT;
-
-  const cuts = version === 'lean' && mode === 'seeker' ? LEAN_CUTS : [];
-
-  const fullCount = mode === 'seeker' ? FULL_SEEKER.length : FULL_SCOUT.length;
+  // V2 Lean only — the V1 "FULL" flow was archived to _archive/flow-map-v1-full.md
+  const flow = mode === 'seeker' ? LEAN_SEEKER : LEAN_SCOUT;
+  const cuts = mode === 'seeker' ? LEAN_CUTS : [];
   const leanCount = mode === 'seeker' ? LEAN_SEEKER.length : LEAN_SCOUT.length;
 
   return (
@@ -167,31 +143,9 @@ export default function FlowMapScreen() {
           </View>
         </View>
 
-        <View style={styles.versionTabs}>
-          <TouchableOpacity
-            onPress={() => setVersion('full')}
-            style={[styles.versionTab, version === 'full' && styles.versionTabActiveFull]}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.versionTabText, version === 'full' && styles.versionTabTextActiveFull]}>
-              v1 · FULL
-            </Text>
-            <Text style={[styles.versionTabCount, version === 'full' && styles.versionTabCountActiveFull]}>
-              {fullCount} steps
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setVersion('lean')}
-            style={[styles.versionTab, version === 'lean' && styles.versionTabActiveLean]}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.versionTabText, version === 'lean' && styles.versionTabTextActiveLean]}>
-              v2 · LEAN
-            </Text>
-            <Text style={[styles.versionTabCount, version === 'lean' && styles.versionTabCountActiveLean]}>
-              {leanCount} steps
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.versionBadge}>
+          <Text style={styles.versionBadgeText}>v2 · LEAN</Text>
+          <Text style={styles.versionBadgeCount}>{leanCount} steps</Text>
         </View>
 
         <View style={styles.tabs}>
@@ -216,7 +170,7 @@ export default function FlowMapScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          {version === 'lean' && mode === 'seeker' && (
+          {mode === 'seeker' && (
             <View style={styles.compareBox}>
               <Text style={styles.compareTitle}>v2 LEAN saves 4 screens</Text>
               <Text style={styles.compareSub}>
@@ -372,46 +326,31 @@ const styles = StyleSheet.create({
     color: '#FFCB47',
     letterSpacing: 1.2,
   },
-  versionTabs: {
+  versionBadge: {
     flexDirection: 'row',
-    paddingHorizontal: 22,
+    alignItems: 'center',
+    alignSelf: 'center',
     gap: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,127,0.4)',
+    backgroundColor: 'rgba(0,255,127,0.08)',
     marginTop: 8,
     marginBottom: 10,
   },
-  versionTab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    alignItems: 'center',
-  },
-  versionTabActiveFull: {
-    borderColor: '#FF6B00',
-    backgroundColor: 'rgba(255,107,0,0.08)',
-  },
-  versionTabActiveLean: {
-    borderColor: '#00FF7F',
-    backgroundColor: 'rgba(0,255,127,0.08)',
-  },
-  versionTabText: {
+  versionBadgeText: {
     fontFamily: 'Inter_700Bold',
-    color: 'rgba(255,255,255,0.55)',
+    color: '#00FF7F',
     fontSize: 11,
     letterSpacing: 1.6,
   },
-  versionTabTextActiveFull: { color: '#FF6B00' },
-  versionTabTextActiveLean: { color: '#00FF7F' },
-  versionTabCount: {
+  versionBadgeCount: {
     fontFamily: 'JetBrainsMono_500Medium',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(0,255,127,0.7)',
     fontSize: 10,
-    marginTop: 2,
   },
-  versionTabCountActiveFull: { color: 'rgba(255,107,0,0.8)' },
-  versionTabCountActiveLean: { color: 'rgba(0,255,127,0.8)' },
   tabs: {
     flexDirection: 'row',
     paddingHorizontal: 22,

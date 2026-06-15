@@ -13,16 +13,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 const STEPS = [
   { icon: 'card-outline', title: 'Verify your identity', time: '2 min', why: 'Photo of your gov ID + selfie. Handled by Stripe Identity.', route: '/scout/identity' as const },
-  { icon: 'cash-outline', title: 'Configure payouts', time: '5 min', why: 'Bank + tax info. Handled by Stripe Connect — direct to your bank.', route: '/scout/payout' as const },
+  { icon: 'cash-outline', title: 'Start earning', time: '5 min', why: 'Add your bank — earnings land straight in your account. Secured by Stripe Connect.', route: '/scout/payout' as const },
   { icon: 'document-text-outline', title: 'The Scout Code', time: '2 min', why: 'What every Scout agrees to. Independent contractor terms.', route: '/scout/rules' as const },
-  { icon: 'checkmark-circle-outline', title: 'Welcome to the corps', time: 'Instant', why: 'Most Scouts approved in under 10 min total.', route: '/scout/approved' as const },
-];
-
-const NO_BG_CHECK = [
-  'No background check',
-  'No police verification',
-  'No driving record',
-  'No long approval wait',
+  { icon: 'checkmark-circle-outline', title: 'Get approved', time: 'Instant', why: 'Most Scouts approved in under 10 min total.', route: '/scout/approved' as const },
 ];
 
 export default function BecomeScoutScreen() {
@@ -33,8 +26,8 @@ export default function BecomeScoutScreen() {
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push('/flow-map')} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <Text style={styles.backText}>‹ Flow Map</Text>
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.push('/flow-map'))} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+            <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.wireframeBadge}
@@ -78,19 +71,6 @@ export default function BecomeScoutScreen() {
                 <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.35)" style={styles.stepChevron} />
               </TouchableOpacity>
             ))}
-          </View>
-
-          <View style={styles.notRequiredCard}>
-            <Text style={styles.notRequiredLabel}>NOT REQUIRED</Text>
-            {NO_BG_CHECK.map((item, i) => (
-              <View key={i} style={styles.notRequiredRow}>
-                <Ionicons name="close" size={14} color="rgba(255,255,255,0.5)" />
-                <Text style={styles.notRequiredText}>{item}</Text>
-              </View>
-            ))}
-            <Text style={styles.notRequiredNote}>
-              You never meet Seekers in person. Content quality is enforced by AI + community moderation, not gatekeeping.
-            </Text>
           </View>
 
           <TouchableOpacity
@@ -212,42 +192,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255,255,255,0.6)',
     lineHeight: 17,
-  },
-  notRequiredCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 22,
-  },
-  notRequiredLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
-    letterSpacing: 2,
-    marginBottom: 10,
-  },
-  notRequiredRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
-  },
-  notRequiredText: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.65)',
-  },
-  notRequiredNote: {
-    fontFamily: 'Inter_300Light',
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
-    lineHeight: 16,
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
   },
   primaryBtn: {
     backgroundColor: '#ffffff',

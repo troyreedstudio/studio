@@ -1,0 +1,30 @@
+# Native build folders — EAS builds its own in the cloud
+ios/
+android/
+
+# Dependencies — EAS installs them on its servers
+node_modules/
+
+# Expo cache
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Reference / dev only — not part of the app
+_archive/
+.claude-flow/
+.claude/
+.swarm/
+.mcp.json
+scripts/
+
+# Local env (secrets stay local)
+.env
+.env.*
+.env*.local
+
+# Misc
+.DS_Store
+*.log
+*.tsbuildinfo

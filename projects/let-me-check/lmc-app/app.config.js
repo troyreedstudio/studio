@@ -15,6 +15,17 @@ module.exports = {
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'Com.BlackMalibuinc.letmecheck',
+      infoPlist: {
+        NSLocationWhenInUseUsageDescription:
+          'Let Me Check uses your location to find nearby Scouts and verified venues.',
+        NSCameraUsageDescription:
+          'Let Me Check uses your camera to film verification clips.',
+        NSMicrophoneUsageDescription:
+          'Let Me Check uses your microphone for sound in verification clips.',
+        NSPhotoLibraryUsageDescription:
+          'Let Me Check uses your photo library to save your past check videos.',
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       package: 'com.blackmalibuinc.letmecheck',
@@ -43,9 +54,9 @@ module.exports = {
     extra: {
       router: {},
       eas: {
-        projectId: 'b5ec275f-0b7d-4672-b929-22cb5291c05f',
+        projectId: '59bc5e82-de99-4541-b883-82e09005acfc',
       },
     },
-    owner: 'troyreed',
+    owner: 'troyreed26',
   },
 };

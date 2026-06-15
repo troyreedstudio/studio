@@ -10,6 +10,7 @@ import {
   Easing,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { addRecent } from '../state/recents';
 
 export default function ConfirmedScreen() {
   const router = useRouter();
@@ -28,6 +29,12 @@ export default function ConfirmedScreen() {
   }>();
 
   const isPriority = tier === 'priority';
+
+  // A confirmed check is a real check — record it so it surfaces in "RECENT" on home.
+  useEffect(() => {
+    addRecent({ name: venue, city });
+  }, [venue, city]);
+
   const checkScale = useRef(new Animated.Value(0)).current;
   const ringScale = useRef(new Animated.Value(0)).current;
   const ringOpacity = useRef(new Animated.Value(0.7)).current;
@@ -85,7 +92,7 @@ export default function ConfirmedScreen() {
             <Text style={styles.eyebrow}>PAYMENT CONFIRMED</Text>
             <Text style={styles.title}>Your check is on the way.</Text>
             <Text style={styles.subtitle}>
-              We&apos;re dispatching a Scout near {venue} now. You&apos;ll get your clip in about {time}.
+              We&apos;re dispatching a Scout near {venue} now. Your clip will be with you in up to {time}.
             </Text>
 
             {/* Receipt */}

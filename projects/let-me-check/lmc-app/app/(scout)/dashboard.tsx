@@ -100,7 +100,7 @@ export default function ScoutDashboard() {
             </View>
             <TouchableOpacity
               style={styles.profilePill}
-              onPress={() => router.push('/(seeker)/profile')}
+              onPress={() => router.push('/(scout)/profile')}
               activeOpacity={0.8}
             >
               <Text style={styles.profileInitials}>TR</Text>
@@ -276,7 +276,7 @@ export default function ScoutDashboard() {
           <TouchableOpacity
             style={styles.navItem}
             activeOpacity={0.7}
-            onPress={() => router.push('/(seeker)/profile')}
+            onPress={() => router.push('/(scout)/profile')}
           >
             <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.5)" />
             <Text style={styles.navLabel}>Profile</Text>

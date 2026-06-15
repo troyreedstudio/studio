@@ -1,23 +1,48 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-const SETTINGS: { icon: IconName; label: string; route: string }[] = [
-  { icon: 'receipt-outline', label: 'Past Checks', route: '/(seeker)/history' },
-  { icon: 'star-outline', label: 'LMC Plus / Pro', route: '/(seeker)/membership' },
-  { icon: 'heart-outline', label: 'Saved Places', route: '/(seeker)/saved' },
-  { icon: 'repeat-outline', label: 'Recurring Checks', route: '/(seeker)/recurring' },
-  { icon: 'card-outline', label: 'Payment Methods', route: '/(seeker)/payment-methods' },
+// One account, two hats — this is the Scout (worker) hub. Shared account items
+// (notifications, help, personal info) are common to both roles.
+const SCOUT_ITEMS: { icon: IconName; label: string; route: string }[] = [
+  { icon: 'stats-chart-outline', label: 'Earnings', route: '/(scout)/earnings' },
+  { icon: 'card-outline', label: 'Payout method', route: '/scout/payout' },
+  { icon: 'shield-checkmark-outline', label: 'Identity & verification', route: '/scout/identity' },
+  { icon: 'document-text-outline', label: 'Tax documents (1099)', route: '/scout/payout' },
+  { icon: 'reader-outline', label: 'The Scout Code', route: '/legal/code' },
+];
+
+const ACCOUNT_ITEMS: { icon: IconName; label: string; route: string }[] = [
+  { icon: 'person-outline', label: 'Personal info', route: '/onboarding/personal-info' },
   { icon: 'notifications-outline', label: 'Notifications', route: '/(seeker)/notifications' },
-  { icon: 'location-outline', label: 'Preferred Cities', route: '/(seeker)/preferred-cities' },
-  { icon: 'people-outline', label: 'Invite Friends', route: '/(seeker)/invite' },
   { icon: 'help-circle-outline', label: 'Help', route: '/(seeker)/help' },
 ];
 
-export default function ProfileScreen() {
+const SCOUT_ID = 'SCT-7K4M-X9P';
+
+export default function ScoutProfileScreen() {
   const router = useRouter();
+  const [online, setOnline] = useState(false);
+
+  const renderItem = (item: { icon: IconName; label: string; route: string }, i: number, len: number) => (
+    <TouchableOpacity
+      key={item.label}
+      style={[styles.settingRow, i < len - 1 && styles.settingRowBorder]}
+      onPress={() => router.push(item.route as never)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.settingLeft}>
+        <View style={styles.settingIconWrap}>
+          <Ionicons name={item.icon} size={18} color="#00FF7F" />
+        </View>
+        <Text style={styles.settingLabel}>{item.label}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -25,7 +50,7 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => (router.canGoBack() ? router.back() : router.push('/(seeker)/home'))}
+            onPress={() => (router.canGoBack() ? router.back() : router.push('/(scout)/dashboard'))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Text style={styles.backText}>‹ Back</Text>
@@ -38,64 +63,72 @@ export default function ProfileScreen() {
             <Text style={styles.avatarInitials}>TR</Text>
           </View>
           <Text style={styles.userName}>Troy R.</Text>
-          <Text style={styles.memberSince}>Member since January 2026</Text>
+          <Text style={styles.memberSince}>Scout · {SCOUT_ID}</Text>
           <View style={styles.verifiedBadge}>
             <Ionicons name="checkmark-circle" size={12} color="#00FF7F" />
-            <Text style={styles.verifiedText}>VERIFIED SEEKER</Text>
+            <Text style={styles.verifiedText}>VERIFIED SCOUT</Text>
           </View>
+        </View>
+
+        {/* Availability */}
+        <View style={[styles.availCard, online && styles.availCardOn]}>
+          <View style={styles.availLeft}>
+            <View style={[styles.availDot, online && styles.availDotOn]} />
+            <View>
+              <Text style={styles.availTitle}>{online ? 'You’re online' : 'You’re offline'}</Text>
+              <Text style={styles.availSub}>
+                {online ? 'Receiving check requests near you.' : 'Go online to receive checks.'}
+              </Text>
+            </View>
+          </View>
+          <Switch
+            value={online}
+            onValueChange={setOnline}
+            trackColor={{ false: 'rgba(255,255,255,0.15)', true: 'rgba(0,255,127,0.5)' }}
+            thumbColor={online ? '#00FF7F' : '#f4f4f4'}
+            ios_backgroundColor="rgba(255,255,255,0.15)"
+          />
         </View>
 
         {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>14</Text>
+            <Text style={styles.statValue}>$1,240</Text>
+            <Text style={styles.statLabel}>EARNED</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>87</Text>
             <Text style={styles.statLabel}>CHECKS</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>$245</Text>
-            <Text style={styles.statLabel}>SPENT</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>4.8★</Text>
-            <Text style={styles.statLabel}>AVG RATING</Text>
+            <Text style={styles.statValue}>4.9★</Text>
+            <Text style={styles.statLabel}>RATING</Text>
           </View>
         </View>
 
-        {/* Settings List */}
+        {/* Scout section */}
+        <Text style={styles.sectionLabel}>SCOUT</Text>
+        <View style={styles.settingsList}>
+          {SCOUT_ITEMS.map((item, i) => renderItem(item, i, SCOUT_ITEMS.length))}
+        </View>
+
+        {/* Account section */}
         <Text style={styles.sectionLabel}>ACCOUNT</Text>
         <View style={styles.settingsList}>
-          {SETTINGS.map((item, i) => (
-            <TouchableOpacity
-              key={item.label}
-              style={[
-                styles.settingRow,
-                i < SETTINGS.length - 1 && styles.settingRowBorder,
-              ]}
-              onPress={() => router.push(item.route as never)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.settingLeft}>
-                <View style={styles.settingIconWrap}>
-                  <Ionicons name={item.icon} size={18} color="#00FF7F" />
-                </View>
-                <Text style={styles.settingLabel}>{item.label}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
-            </TouchableOpacity>
-          ))}
+          {ACCOUNT_ITEMS.map((item, i) => renderItem(item, i, ACCOUNT_ITEMS.length))}
         </View>
 
-        {/* Referral Banner */}
+        {/* Refer a Scout */}
         <View style={styles.referralBanner}>
           <View style={styles.referralLeft}>
             <View style={styles.referralIconWrap}>
               <Ionicons name="gift-outline" size={20} color="#FFCB47" />
             </View>
             <View>
-              <Text style={styles.referralTitle}>Give $5, Get $5</Text>
-              <Text style={styles.referralSub}>Invite friends and earn credits</Text>
+              <Text style={styles.referralTitle}>Refer a Scout — $50</Text>
+              <Text style={styles.referralSub}>When a friend completes 10 paid checks</Text>
             </View>
           </View>
           <TouchableOpacity
@@ -110,11 +143,11 @@ export default function ProfileScreen() {
         {/* Switch Mode */}
         <TouchableOpacity
           style={styles.switchModeBtn}
-          onPress={() => router.replace('/(scout)/dashboard')}
+          onPress={() => router.replace('/(seeker)/home')}
           activeOpacity={0.85}
         >
           <Ionicons name="swap-horizontal" size={16} color="#ffffff" />
-          <Text style={styles.switchModeBtnText}>SWITCH TO SCOUT MODE</Text>
+          <Text style={styles.switchModeBtnText}>SWITCH TO SEEKER MODE</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -168,10 +201,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   memberSince: {
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 12,
     color: '#888',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
     marginBottom: 12,
   },
   verifiedBadge: {
@@ -191,12 +224,51 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 1.4,
   },
+
+  availCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    marginHorizontal: 22,
+    marginBottom: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  availCardOn: {
+    backgroundColor: 'rgba(0,255,127,0.06)',
+    borderColor: 'rgba(0,255,127,0.3)',
+  },
+  availLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  availDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  availDotOn: { backgroundColor: '#00FF7F' },
+  availTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 14,
+    color: '#fff',
+    letterSpacing: 0.2,
+    marginBottom: 2,
+  },
+  availSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 11.5,
+    color: '#888',
+    letterSpacing: 0.2,
+  },
+
   statsRow: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 16,
     marginHorizontal: 22,
-    marginTop: 8,
     marginBottom: 24,
     padding: 18,
     borderWidth: 1,
@@ -218,6 +290,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
   statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.1)' },
+
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
@@ -232,7 +305,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 22,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
-    marginBottom: 18,
+    marginBottom: 22,
     overflow: 'hidden',
   },
   settingRow: {
@@ -258,6 +331,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     letterSpacing: 0.2,
   },
+
   referralBanner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -304,6 +378,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 1.4,
   },
+
   switchModeBtn: {
     flexDirection: 'row',
     alignItems: 'center',

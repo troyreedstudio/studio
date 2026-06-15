@@ -77,10 +77,10 @@ export default function ScoutIdentityScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.push('/flow-map')}
+            onPress={() => (router.canGoBack() ? router.back() : router.push('/scout/become'))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Flow Map</Text>
+            <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[1, 2, 3].map((n) => (
