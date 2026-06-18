@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   cardScout: {
     backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.55)',
+    borderColor: 'rgba(136,180,255,0.5)',
   },
   cardTop: {
     flexDirection: 'row',
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    borderTopColor: 'rgba(255,255,255,0.12)',
   },
   cardCtaText: {
     fontFamily: 'Inter_700Bold',

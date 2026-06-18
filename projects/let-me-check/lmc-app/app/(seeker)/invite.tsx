@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function InviteScreen() {
   const router = useRouter();
@@ -17,7 +18,9 @@ export default function InviteScreen() {
 
         {/* Big Reward Card */}
         <View style={styles.rewardCard}>
-          <Text style={styles.rewardEmoji}>🎁</Text>
+          <View style={styles.rewardIconWrap}>
+            <Ionicons name="gift-outline" size={30} color="#FFCB47" />
+          </View>
           <Text style={styles.rewardTitle}>Give $5, Get $5</Text>
           <Text style={styles.rewardSub}>
             Friends who sign up with your code get $5 off their first check. You earn $5 in credits when they redeem.
@@ -55,15 +58,15 @@ export default function InviteScreen() {
         <Text style={styles.sectionLabel}>SHARE</Text>
         <View style={styles.shareButtons}>
           <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85}>
-            <Text style={styles.shareBtnIcon}>💬</Text>
+            <Ionicons name="chatbubble-outline" size={22} color="#00FF7F" />
             <Text style={styles.shareBtnText}>iMessage</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85}>
-            <Text style={styles.shareBtnIcon}>📧</Text>
+            <Ionicons name="mail-outline" size={22} color="#00FF7F" />
             <Text style={styles.shareBtnText}>Email</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85}>
-            <Text style={styles.shareBtnIcon}>🔗</Text>
+            <Ionicons name="share-social-outline" size={22} color="#00FF7F" />
             <Text style={styles.shareBtnText}>More</Text>
           </TouchableOpacity>
         </View>
@@ -77,11 +80,11 @@ export default function InviteScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#000000' },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#fff', fontSize: 15, marginBottom: 16 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#fff', letterSpacing: 0.4 },
+  backText: { fontFamily: 'Inter_500Medium', color: '#ffffff', fontSize: 15, marginBottom: 16 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#ffffff', letterSpacing: 0.4 },
   rewardCard: {
     backgroundColor: 'rgba(245,158,11,0.08)',
     borderRadius: 20,
@@ -92,7 +95,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     alignItems: 'center',
   },
-  rewardEmoji: { fontSize: 36, marginBottom: 10 },
+  rewardIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,203,71,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
   rewardTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 24,
@@ -111,7 +122,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#88B4FF',
+    color: 'rgba(255,255,255,0.55)',
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -127,24 +138,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.12)',
     marginBottom: 22,
   },
   codeText: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 24,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 2,
   },
   copyBtn: {
-    backgroundColor: '#88B4FF',
+    backgroundColor: '#00FF7F',
     borderRadius: 100,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   copyBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000',
+    color: '#ffffff',
     fontSize: 11,
     letterSpacing: 1.5,
   },
@@ -155,7 +166,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.12)',
     marginBottom: 22,
     alignItems: 'center',
   },
@@ -163,7 +174,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 26,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.3,
     marginBottom: 4,
   },
@@ -174,7 +185,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
-  statDivider: { width: 1, height: 36, backgroundColor: '#1e1e1e' },
+  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.12)' },
   shareButtons: {
     flexDirection: 'row',
     gap: 10,
@@ -189,13 +200,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   shareBtnIcon: { fontSize: 22 },
   shareBtnText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 12,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.3,
   },
   disclaimer: {

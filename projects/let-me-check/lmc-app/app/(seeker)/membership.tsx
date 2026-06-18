@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(20,55,130,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   tierCard: {
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 18,
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   tierCardSelected: {
-    borderColor: 'rgba(60,110,200,0.7)',
+    borderColor: 'rgba(20,55,130,0.5)',
     backgroundColor: INDIGO_LIGHT,
   },
   tierCardFeatured: {
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   popularBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#000000',
+    color: '#ffffff',
     letterSpacing: 1.5,
   },
   tierHeader: {

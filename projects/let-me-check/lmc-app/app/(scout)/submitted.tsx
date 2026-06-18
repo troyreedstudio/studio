@@ -58,6 +58,14 @@ export default function SubmittedScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safe}>
+        <TouchableOpacity
+          style={styles.backFab}
+          onPress={() => router.replace('/(scout)/dashboard')}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+        </TouchableOpacity>
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
@@ -299,6 +307,16 @@ function TimelineRow({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000000' },
   safe: { flex: 1 },
+  backFab: {
+    position: 'absolute',
+    top: 6,
+    left: 10,
+    zIndex: 5,
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   scroll: { paddingBottom: 24 },
   body: { paddingHorizontal: 22, paddingTop: 24 },
 

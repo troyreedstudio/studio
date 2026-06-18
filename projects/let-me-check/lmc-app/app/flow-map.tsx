@@ -45,8 +45,8 @@ const LEAN_SCOUT: Step[] = [
 const LEAN_SEEKER: Step[] = [
   // ===== ONBOARDING (new user sign-up) =====
   { num: 1, name: 'Splash', desc: 'Brand boot · 2 sec auto-advance · 1st-time only', route: '/', status: 'BUILT' },
-  { num: 2, name: 'Welcome', desc: 'Brand mark + Know Before You Go + GET STARTED · Sign in for returning users', route: '/welcome', status: 'BUILT' },
-  { num: 3, name: 'Choose Your Path', desc: 'Seeker · Scout · Both. Segments early so sign-up copy + funnel adapt to role.', route: '/onboarding/role', status: 'BUILT' },
+  { num: 2, name: 'How It Works (video)', desc: 'Combined concept video (promo pack) in a framed window, then "Choose your profile" flows into Choose Your Path. Sits between splash and the role picker. Video TBD.', route: '/how-it-works', status: 'BUILT' },
+  { num: 3, name: 'Choose Your Profile', desc: 'Seeker · Scout · Both (Both recommended). Segments early so sign-up copy + funnel adapt to role.', route: '/onboarding/role', status: 'BUILT' },
   { num: 4, name: 'Sign Up — Method', desc: 'Apple · Google · Phone — copy adapts by role chosen at step 3', route: '/auth/sign-up', status: 'BUILT' },
   { num: 5, name: 'Phone + OTP', desc: 'Number entry → SMS 6-digit code. Phone path only — skipped for Apple/Google.', route: '/auth/sign-up', status: 'BUILT', badge: 'CONDITIONAL' },
   { num: 6, name: 'Quick Finish (Seeker)', desc: 'Name + email auto-fill (Apple/Google) · phone-verified pill · single bundled 18+ + Terms/Privacy/AUP checkbox. NO DOB / SSN / bank.', route: '/onboarding/quick-finish', status: 'BUILT' },
@@ -122,7 +122,7 @@ export default function FlowMapScreen() {
             style={styles.maskWrap}
             maskElement={
               <View style={styles.maskCenter}>
-                <Text style={styles.lmcMask}>LMC</Text>
+                <Text style={styles.lmcMask} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>LET ME CHECK</Text>
               </View>
             }
           >
@@ -297,9 +297,9 @@ const styles = StyleSheet.create({
   bg: { flex: 1, backgroundColor: '#000000' },
   safe: { flex: 1 },
   brandHeader: { alignItems: 'center', paddingTop: 8, paddingBottom: 12 },
-  maskWrap: { width: 130, height: 32 },
+  maskWrap: { width: 260, height: 32 },
   maskCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
-  lmcMask: { fontFamily: 'Orbitron_700Bold', fontSize: 28, color: '#000', backgroundColor: 'transparent' },
+  lmcMask: { fontFamily: 'Orbitron_700Bold', fontSize: 20, letterSpacing: 1, textAlign: 'center', color: '#000', backgroundColor: 'transparent' },
   gradientWrap: { flex: 1, overflow: 'hidden' },
   eyebrow: { fontFamily: 'Orbitron_500Medium', color: 'rgba(255,255,255,0.55)', fontSize: 10, letterSpacing: 4, marginTop: 12 },
   prototypePill: {

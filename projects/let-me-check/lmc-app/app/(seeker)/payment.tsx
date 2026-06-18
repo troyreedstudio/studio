@@ -227,7 +227,7 @@ export default function PaymentScreen() {
             setTimeout(() => {
               setProcessing(false);
               router.replace({
-                pathname: '/(seeker)/confirmed',
+                pathname: '/(seeker)/finding',
                 params: { venue, city, tier, time, total },
               });
             }, 1800);
@@ -235,11 +235,11 @@ export default function PaymentScreen() {
           activeOpacity={0.85}
         >
           <Text style={[styles.ctaButtonText, !card && styles.ctaButtonTextNoCard]}>
-            {processing ? 'PROCESSING PAYMENT...' : !card ? `ADD CARD TO PAY ${total}` : `CONFIRM & PAY ${total}`}
+            {processing ? 'AUTHORIZING…' : !card ? 'ADD CARD TO CONTINUE' : 'CONFIRM & FIND MY SCOUT'}
           </Text>
         </TouchableOpacity>
         <Text style={styles.disclaimer}>
-          {processing ? 'Securing your payment with Stripe...' : 'Secure payment · No refunds after scout departs'}
+          {processing ? 'Authorizing with Stripe…' : 'You’re only charged once a Scout accepts.'}
         </Text>
       </View>
 

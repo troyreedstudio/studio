@@ -80,7 +80,7 @@ export default function ReportIssueScreen() {
         <TextInput
           style={styles.detailsInput}
           placeholder="Tell us more about what happened..."
-          placeholderTextColor="#555"
+          placeholderTextColor="rgba(255,255,255,0.25)"
           value={details}
           onChangeText={setDetails}
           multiline
@@ -115,19 +115,19 @@ export default function ReportIssueScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#000000' },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 15,
     marginBottom: 16,
   },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.4,
     marginBottom: 5,
   },
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.12)',
     overflow: 'hidden',
   },
   reasonRow: {
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: 'rgba(255,255,255,0.12)',
   },
   reasonRowActive: {
     backgroundColor: 'rgba(255,133,51,0.06)',
@@ -176,13 +176,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   radioActive: {
-    borderColor: '#88B4FF',
+    borderColor: '#00FF7F',
   },
   radioDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#88B4FF',
+    backgroundColor: '#00FF7F',
   },
   reasonLabel: {
     flex: 1,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     color: '#cccccc',
     letterSpacing: 0.2,
   },
-  reasonLabelActive: { color: '#fff' },
+  reasonLabelActive: { color: '#ffffff' },
   detailsInput: {
     fontFamily: 'Inter_400Regular',
     backgroundColor: '#0d0d0d',
@@ -200,9 +200,9 @@ const styles = StyleSheet.create({
     padding: 14,
     minHeight: 110,
     fontSize: 14,
-    color: '#fff',
+    color: '#ffffff',
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.12)',
     letterSpacing: 0.2,
     lineHeight: 20,
   },
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   submitBtn: {
-    backgroundColor: '#FAF6F0',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
     marginHorizontal: 20,
     paddingVertical: 18,
@@ -229,12 +229,12 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   submitBtnDisabled: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     shadowOpacity: 0,
   },
   submitBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000',
+    color: '#000000',
     fontSize: 13,
     letterSpacing: 2.5,
   },
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(34,197,94,0.15)',
+    backgroundColor: 'rgba(0,255,127,0.15)',
     borderWidth: 2,
     borderColor: '#00FF7F',
     justifyContent: 'center',
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   successTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 24,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.4,
     marginBottom: 8,
   },

@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 
 const TAGS = ['Busy Tonight', 'Short Line', 'Worth It'];
@@ -14,6 +15,14 @@ export default function DeliveryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <TouchableOpacity
+        style={styles.backFab}
+        onPress={() => router.replace('/(seeker)/home')}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+      </TouchableOpacity>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Success Header */}
         <View style={styles.successHeader}>
@@ -112,6 +121,16 @@ export default function DeliveryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
+  backFab: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    zIndex: 5,
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   scroll: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 32 },
   successHeader: { alignItems: 'center', marginBottom: 28 },
   checkCircle: {
@@ -216,7 +235,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   aiBadge: {
-    backgroundColor: '#88B4FF',
+    backgroundColor: '#00FF7F',
     borderRadius: 100,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -237,7 +256,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 3,
     marginBottom: 12,
     marginTop: 6,

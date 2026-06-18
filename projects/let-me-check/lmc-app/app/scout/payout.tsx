@@ -18,27 +18,27 @@ const WHAT_STRIPE_NEEDS = [
   {
     icon: 'business-outline' as const,
     title: 'Bank account or debit card',
-    why: 'Routing + account number (Standard) or debit card (Instant). You can connect via Plaid in one tap.',
+    why: 'Connect your bank in one tap.',
   },
   {
     icon: 'shield-checkmark-outline' as const,
     title: 'Full SSN (US only)',
-    why: 'Required by the IRS for 1099 reporting. Stripe stores it. Let Me Check never sees it.',
+    why: 'IRS requirement. Stripe stores it, we never see it.',
   },
   {
     icon: 'person-outline' as const,
     title: 'Legal name + DOB',
-    why: 'Auto-filled from your ID verification step. Stripe re-confirms against the bank.',
+    why: 'Auto-filled from your ID check.',
   },
   {
     icon: 'home-outline' as const,
     title: 'Home address',
-    why: 'For your annual 1099 tax form. Must match the address on file with your bank.',
+    why: 'For your 1099 tax form.',
   },
 ];
 
 const TRUST_BULLETS = [
-  'Stripe Connect Express — same platform that pays Uber, Lyft, DoorDash, Substack',
+  'Payouts handled by Stripe Connect Express',
   'Bank-level encryption (256-bit) + PCI DSS Level 1 compliance',
   'Let Me Check never stores your SSN or bank credentials — Stripe does',
   'You can update bank or close the account from your Scout dashboard',
@@ -96,8 +96,33 @@ export default function ScoutPayoutScreen() {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Start earning</Text>
           <Text style={styles.subtitle}>
-            Where you&apos;d like your earnings to land. Handled by Stripe Connect Express — encrypted, direct to your bank.
+            Here&apos;s what you&apos;ll make. Set up your payouts below, secured by Stripe.
           </Text>
+
+          {/* WHAT YOU EARN — lead with the upside */}
+          <Text style={styles.sectionLabel}>WHAT YOU EARN</Text>
+          <View style={styles.earnGrid}>
+            <View style={styles.earnCell}>
+              <Text style={styles.earnAmount}>$8</Text>
+              <Text style={styles.earnLabel}>Standard check</Text>
+              <Text style={styles.earnWhy}>10-min delivery window</Text>
+            </View>
+            <View style={styles.earnCell}>
+              <Text style={styles.earnAmount}>$12</Text>
+              <Text style={styles.earnLabel}>Priority check</Text>
+              <Text style={styles.earnWhy}>7-min delivery window</Text>
+            </View>
+            <View style={styles.earnCell}>
+              <Text style={styles.earnAmount}>$3</Text>
+              <Text style={styles.earnLabel}>No-fault pay</Text>
+              <Text style={styles.earnWhy}>Couldn’t film for a valid reason, GPS verified</Text>
+            </View>
+            <View style={styles.earnCell}>
+              <Text style={[styles.earnAmount, { color: '#FFCB47' }]}>$80–$200</Text>
+              <Text style={styles.earnLabel}>Typical week</Text>
+              <Text style={styles.earnWhy}>Active hours in a live market</Text>
+            </View>
+          </View>
 
           {/* PAYOUT SPEED */}
           {/*
@@ -107,7 +132,7 @@ export default function ScoutPayoutScreen() {
             ~0.5% margin per instant payout. Confirm Stripe's exact live fee when wiring
             Connect and keep the 2% Scout-facing rate above it. See studio/OUTSTANDING.md.
           */}
-          <Text style={styles.sectionLabel}>PAYOUT SPEED</Text>
+          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>PAYOUT SPEED</Text>
           <View style={styles.speedRow}>
             <TouchableOpacity
               style={[styles.speedCard, speed === 'standard' && styles.speedCardActive]}
@@ -158,33 +183,6 @@ export default function ScoutPayoutScreen() {
             </View>
           ))}
 
-          {/* EARNINGS PREVIEW */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-            WHAT YOU EARN
-          </Text>
-          <View style={styles.earnGrid}>
-            <View style={styles.earnCell}>
-              <Text style={styles.earnAmount}>$8</Text>
-              <Text style={styles.earnLabel}>Standard check</Text>
-              <Text style={styles.earnWhy}>10-min delivery window</Text>
-            </View>
-            <View style={styles.earnCell}>
-              <Text style={styles.earnAmount}>$12</Text>
-              <Text style={styles.earnLabel}>Priority check</Text>
-              <Text style={styles.earnWhy}>7-min delivery window</Text>
-            </View>
-            <View style={styles.earnCell}>
-              <Text style={styles.earnAmount}>$3</Text>
-              <Text style={styles.earnLabel}>No-fault pay</Text>
-              <Text style={styles.earnWhy}>Couldn’t film for a valid reason — GPS-verified</Text>
-            </View>
-            <View style={styles.earnCell}>
-              <Text style={[styles.earnAmount, { color: '#FFCB47' }]}>$80–$200</Text>
-              <Text style={styles.earnLabel}>Typical week</Text>
-              <Text style={styles.earnWhy}>Active hours in a live market</Text>
-            </View>
-          </View>
-
           {/* TAX COMPLIANCE */}
           <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
             TAX COMPLIANCE
@@ -232,7 +230,7 @@ export default function ScoutPayoutScreen() {
               <Ionicons
                 name="open-outline"
                 size={16}
-                color={authorized ? '#000' : 'rgba(255,255,255,0.4)'}
+                color={authorized ? '#000' : 'rgba(255,255,255,0.35)'}
               />
               <Text
                 style={[styles.primaryBtnText, !authorized && styles.primaryBtnTextDisabled]}
@@ -328,15 +326,15 @@ const styles = StyleSheet.create({
   },
   speedCard: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     padding: 14,
   },
   speedCardActive: {
     backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.7)',
+    borderColor: 'rgba(60,110,200,0.6)',
   },
   speedTop: {
     flexDirection: 'row',
@@ -378,7 +376,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -404,9 +402,9 @@ const styles = StyleSheet.create({
   earnCell: {
     flexBasis: '48%',
     flexGrow: 1,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 10,
     padding: 12,
   },
@@ -432,9 +430,9 @@ const styles = StyleSheet.create({
   },
 
   contractCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
     padding: 14,
   },
@@ -515,7 +513,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2.5,
   },
   primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.35)',
     letterSpacing: 2,
   },
 

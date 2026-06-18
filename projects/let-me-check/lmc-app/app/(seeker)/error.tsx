@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 type ErrorType = 'no-scouts' | 'payment-declined' | 'connection' | 'missed-window';
 
@@ -52,6 +53,14 @@ export default function ErrorScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <TouchableOpacity
+        style={styles.backFab}
+        onPress={() => router.replace('/(seeker)/home')}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+      </TouchableOpacity>
       <View style={styles.inner}>
         {/* Icon */}
         <View style={styles.iconCircle}>
@@ -86,6 +95,16 @@ export default function ErrorScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
+  backFab: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    zIndex: 5,
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   inner: {
     flex: 1,
     alignItems: 'center',

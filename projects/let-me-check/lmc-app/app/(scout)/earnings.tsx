@@ -217,7 +217,7 @@ export default function EarningsScreen() {
                 </Text>
               </View>
               <View style={styles.balanceIconWrap}>
-                <Ionicons name="card-outline" size={20} color="#88B4FF" />
+                <Ionicons name="card-outline" size={20} color="#00FF7F" />
               </View>
             </View>
             <TouchableOpacity
@@ -560,9 +560,9 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(136,180,255,0.12)',
+    backgroundColor: 'rgba(0,255,127,0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(136,180,255,0.35)',
+    borderColor: 'rgba(0,255,127,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },

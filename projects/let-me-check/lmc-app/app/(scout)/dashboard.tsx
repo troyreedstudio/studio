@@ -231,7 +231,7 @@ export default function ScoutDashboard() {
           ) : online ? (
             <View style={styles.emptyCard}>
               <View style={styles.emptyIconWrap}>
-                <Ionicons name="radio-outline" size={22} color="#88B4FF" />
+                <Ionicons name="radio-outline" size={22} color="#00FF7F" />
               </View>
               <Text style={styles.emptyTitle}>Listening for requests</Text>
               <Text style={styles.emptyWhy}>
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontFamily: 'Inter_700Bold',
-    color: '#88B4FF',
+    color: '#00FF7F',
     fontSize: 10.5,
     letterSpacing: 2,
   },
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   requestTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 2.5,
   },
   newBadge: {

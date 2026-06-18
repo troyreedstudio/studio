@@ -183,7 +183,7 @@ export default function VenueScreen() {
           activeOpacity={0.85}
         >
           <Text style={styles.ctaButtonText}>
-            {processing ? 'FINDING SCOUTS...' : `PAY ${tier.price} · ${tier.label.toUpperCase()}`}
+            {processing ? 'ONE MOMENT…' : `REVIEW & PAY · ${tier.price}`}
           </Text>
         </TouchableOpacity>
       </View>

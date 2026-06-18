@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const STEPS = [
   { icon: 'card-outline', title: 'Verify your identity', time: '2 min', why: 'Photo of your gov ID + selfie. Handled by Stripe Identity.', route: '/scout/identity' as const },
-  { icon: 'cash-outline', title: 'Start earning', time: '5 min', why: 'Add your bank — earnings land straight in your account. Secured by Stripe Connect.', route: '/scout/payout' as const },
+  { icon: 'cash-outline', title: 'Start earning', time: '5 min', why: 'Add your bank and earnings land straight in your account. Secured by Stripe Connect.', route: '/scout/payout' as const },
   { icon: 'document-text-outline', title: 'The Scout Code', time: '2 min', why: 'What every Scout agrees to. Independent contractor terms.', route: '/scout/rules' as const },
   { icon: 'checkmark-circle-outline', title: 'Get approved', time: 'Instant', why: 'Most Scouts approved in under 10 min total.', route: '/scout/approved' as const },
 ];
@@ -46,7 +46,7 @@ export default function BecomeScoutScreen() {
 
           <Text style={styles.title}>Be the eyes for the city</Text>
           <Text style={styles.subtitle}>
-            Capture 15-second moments around town. Discreet, brief, and paid directly to your bank — $8–$12 per check.
+            Capture 15-second moments around town. Discreet, brief, and paid directly to your bank, $8–$12 per check.
           </Text>
 
           <View style={styles.section}>
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     alignItems: 'center',
     justifyContent: 'center',
   },

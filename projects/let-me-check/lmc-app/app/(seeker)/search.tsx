@@ -177,7 +177,8 @@ const RECENTS = [
 
 export default function SearchScreen() {
   const router = useRouter();
-  const { marketId: marketIdParam, voice } = useLocalSearchParams<{ marketId?: string; voice?: string }>();
+  const { marketId: marketIdParam, voice, mode } = useLocalSearchParams<{ marketId?: string; voice?: string; mode?: string }>();
+  const isRecurring = mode === 'recurring';
   const activeMarket = getMarketById(marketIdParam || DEFAULT_MARKET_ID) || getMarketById(DEFAULT_MARKET_ID)!;
   const [query, setQuery] = useState('');
   // Arriving from the home "Voice" chip starts listening straight away.
@@ -230,6 +231,20 @@ export default function SearchScreen() {
     // (Search a NYC venue from the Miami map → the venue page should say New York.)
     const resolved = nearestLiveMarket(coords);
     const marketId = resolved.inMarket ? resolved.market.id : marketIdParam || activeMarket.id;
+    // Scheduling a recurring check → hand off to the schedule screen (no charge now).
+    if (isRecurring) {
+      router.replace({
+        pathname: '/(seeker)/recurring-setup',
+        params: {
+          pinLat: String(lat),
+          pinLon: String(lon),
+          pinName: place.name,
+          pinAddress: place.address,
+          marketId,
+        },
+      });
+      return;
+    }
     router.replace({
       pathname: '/(seeker)/home',
       params: {
@@ -249,7 +264,7 @@ export default function SearchScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Search any place</Text>
+        <Text style={styles.headerTitle}>{isRecurring ? 'Pick a place to repeat' : 'Search any place'}</Text>
         <View style={{ width: 50 }} />
       </View>
 
@@ -468,7 +483,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#88B4FF',
+    borderColor: '#00FF7F',
   },
   voiceMic: {
     fontSize: 44,
@@ -497,7 +512,7 @@ const styles = StyleSheet.create({
   },
   voicePulse: {
     width: 4,
-    backgroundColor: '#88B4FF',
+    backgroundColor: '#00FF7F',
     borderRadius: 2,
   },
   voiceCancel: {
@@ -507,13 +522,13 @@ const styles = StyleSheet.create({
   voiceCancelText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 1,
   },
   priceChip: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 0.4,
   },
   locButton: {
@@ -526,7 +541,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#88B4FF',
+    borderColor: '#00FF7F',
     gap: 14,
   },
   locIcon: { fontSize: 18 },
@@ -545,7 +560,7 @@ const styles = StyleSheet.create({
   },
   locArrow: {
     fontSize: 22,
-    color: '#88B4FF',
+    color: '#00FF7F',
     fontWeight: '500',
   },
   resultsScroll: {
@@ -555,7 +570,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -581,7 +596,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resultIconWrapOrange: {
-    borderColor: '#88B4FF',
+    borderColor: '#00FF7F',
   },
   searchAnywhereRow: {
     backgroundColor: 'rgba(255,133,51,0.06)',
@@ -609,7 +624,7 @@ const styles = StyleSheet.create({
   resultCategory: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
@@ -637,7 +652,7 @@ const styles = StyleSheet.create({
   },
   resultArrow: {
     fontSize: 22,
-    color: '#88B4FF',
+    color: '#00FF7F',
     fontWeight: '500',
   },
   noResults: {

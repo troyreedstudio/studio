@@ -24,21 +24,21 @@ const ACCENT_CHIP = 'rgba(0,255,127,0.12)';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 const WHERE: { icon: IconName; title: string; why: string }[] = [
-  { icon: 'walk-outline', title: 'Public ground', why: 'Sidewalks, streets, plazas, parking lots — any public vantage point.' },
-  { icon: 'people-outline', title: 'The queue & entrance', why: 'Wide shots of the door, the wait, the staff — from where the public stands.' },
+  { icon: 'walk-outline', title: 'Public ground', why: 'Sidewalks, streets, plazas, parking lots, any public vantage point.' },
+  { icon: 'people-outline', title: 'The queue & entrance', why: 'Wide shots of the door, the wait, the staff, from where the public stands.' },
   { icon: 'business-outline', title: 'Public interiors (GREEN venues)', why: 'Dining rooms, lobbies, retail floors, waiting rooms. Wide shots only.' },
   { icon: 'add-circle-outline', title: 'Partner interiors (+$5)', why: 'Only when the venue is a PARTNER and the Seeker paid for it. Otherwise stay outside.' },
 ];
 
 const NEVER: { icon: IconName; title: string; why: string }[] = [
   { icon: 'eye-off-outline', title: 'Faces & close-ups', why: 'Wide shots only. A face filling the frame won’t deliver.' },
-  { icon: 'happy-outline', title: 'Children', why: 'If kids are in shot, reposition — or stop and report it.' },
+  { icon: 'happy-outline', title: 'Children', why: 'If kids are in shot, reposition, or stop and report it.' },
   { icon: 'hand-left-outline', title: 'Anyone who objects', why: 'Someone says stop? Stop. No argument.' },
   { icon: 'camera-outline', title: '“No Photography” zones', why: 'See a sign, stop and report it.' },
   { icon: 'medkit-outline', title: 'Red venues', why: 'Hospitals, schools, courts, police, military. Refuse the job.' },
   { icon: 'lock-closed-outline', title: 'Bathrooms & changing rooms', why: 'Ever. Any venue. No exceptions.' },
   { icon: 'ban-outline', title: 'Past security / private property', why: 'No airport gates, no trespassing. Public access only.' },
-  { icon: 'mic-off-outline', title: 'Audio', why: 'Mic stays muted — two-party consent laws.' },
+  { icon: 'mic-off-outline', title: 'Audio', why: 'Mic stays muted for two-party consent laws.' },
 ];
 
 const CONDUCT: { icon: IconName; title: string; why: string }[] = [
@@ -59,9 +59,9 @@ const REJECT: { icon: IconName; text: string }[] = [
 ];
 
 const AGREEMENT: { icon: IconName; text: string }[] = [
-  { icon: 'cloud-upload-outline', text: 'Clips upload straight to LMC — no local copies you keep.' },
+  { icon: 'cloud-upload-outline', text: 'Clips upload straight to LMC, no local copies you keep.' },
   { icon: 'shield-checkmark-outline', text: 'Faces are auto-blurred, the clip stays private to the Seeker, and it’s deleted after 30 days.' },
-  { icon: 'briefcase-outline', text: 'You’re an independent contractor — your own hours, your own taxes (we send a 1099 each January).' },
+  { icon: 'briefcase-outline', text: 'You’re an independent contractor: your own hours, your own taxes (we send a 1099 each January).' },
   { icon: 'time-outline', text: 'LMC can deactivate for violations. Any earnings owed are paid within 7 business days.' },
 ];
 
@@ -161,13 +161,13 @@ export default function ScoutRulesScreen() {
             <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContentGate} showsVerticalScrollIndicator={false}>
               <Text style={styles.subEmphasis}>REJECTION = NO PAYMENT</Text>
               <Text style={styles.lead}>
-                A clip that misses the bar gets rejected by the Seeker or our system — and a rejected clip isn’t paid. So nail it. Common reasons:
+                A clip that misses the bar gets rejected by the Seeker or our system, and a rejected clip isn’t paid. So nail it. Common reasons:
               </Text>
               {REJECT.map((r, i) => (
                 <SimpleRow key={i} icon={r.icon} text={r.text} />
               ))}
               <Text style={styles.foot}>
-                You get 3 takes per check — review your shot before you submit.
+                You get 3 takes per check, so review your shot before you submit.
               </Text>
             </ScrollView>
             <NextButton onPress={() => goTo(4)} label="ALMOST THERE" />
@@ -191,7 +191,7 @@ export default function ScoutRulesScreen() {
                   {consented && <Ionicons name="checkmark" size={14} color="#000" />}
                 </View>
                 <Text style={styles.gateText}>
-                  <Text style={styles.gateBold}>I understand</Text> the filming rules and will only film as described — no faces, kids, audio, or no-go zones.
+                  <Text style={styles.gateBold}>I understand</Text> the filming rules and will only film as described: no faces, kids, audio, or no-go zones.
                 </Text>
               </TouchableOpacity>
 
@@ -390,14 +390,14 @@ const styles = StyleSheet.create({
   link: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 0.2,
   },
 
   gateDivider: {
     height: 1,
     width: 220,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     alignSelf: 'center',
     marginVertical: 4,
   },
@@ -434,8 +434,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderRadius: 14,
     paddingVertical: 16,
     marginTop: 12,
@@ -461,5 +461,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 2.5,
   },
-  primaryBtnTextDisabled: { color: 'rgba(255,255,255,0.4)', letterSpacing: 2 },
+  primaryBtnTextDisabled: { color: 'rgba(255,255,255,0.35)', letterSpacing: 2 },
 });

@@ -1081,7 +1081,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FF3B30',
   },
   stopSquare: {
     width: 22,
@@ -1114,7 +1114,7 @@ const styles = StyleSheet.create({
   decisionTakeLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 2,
   },
   takesRemaining: {
@@ -1209,7 +1209,7 @@ const styles = StyleSheet.create({
   uploadStageLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 2,
   },
   uploadPct: {

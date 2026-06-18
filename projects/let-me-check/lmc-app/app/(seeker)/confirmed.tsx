@@ -10,6 +10,7 @@ import {
   Easing,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { addRecent } from '../state/recents';
 
 export default function ConfirmedScreen() {
@@ -20,12 +21,14 @@ export default function ConfirmedScreen() {
     tier = 'standard',
     time = '10 min',
     total = '$16.50',
+    scout = 'Your Scout',
   } = useLocalSearchParams<{
     venue: string;
     city: string;
     tier: string;
     time: string;
     total: string;
+    scout: string;
   }>();
 
   const isPriority = tier === 'priority';
@@ -73,6 +76,14 @@ export default function ConfirmedScreen() {
     <View style={styles.bg}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
+        <TouchableOpacity
+          style={styles.backFab}
+          onPress={() => router.replace('/(seeker)/home')}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+        </TouchableOpacity>
         <View style={styles.center}>
           <View style={styles.checkWrap}>
             <Animated.View
@@ -89,10 +100,10 @@ export default function ConfirmedScreen() {
           </View>
 
           <Animated.View style={{ opacity: fade, alignItems: 'center' }}>
-            <Text style={styles.eyebrow}>PAYMENT CONFIRMED</Text>
+            <Text style={styles.eyebrow}>SCOUT MATCHED</Text>
             <Text style={styles.title}>Your check is on the way.</Text>
             <Text style={styles.subtitle}>
-              We&apos;re dispatching a Scout near {venue} now. Your clip will be with you in up to {time}.
+              {scout} accepted your check near {venue}. Your clip will be with you within {time}.
             </Text>
 
             {/* Receipt */}
@@ -140,7 +151,7 @@ export default function ConfirmedScreen() {
             </View>
 
             <Text style={styles.foot}>
-              Receipt sent to your email. Auto-refund if no Scout shows up.
+              Receipt sent to your email. Full refund if your Scout misses the delivery window.
             </Text>
           </Animated.View>
         </View>
@@ -169,6 +180,16 @@ const INDIGO = 'rgba(20,55,130,0.5)';
 const styles = StyleSheet.create({
   bg: { flex: 1, backgroundColor: '#000000' },
   safe: { flex: 1, paddingHorizontal: 22 },
+  backFab: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    zIndex: 5,
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   checkWrap: {
     width: 96,

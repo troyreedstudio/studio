@@ -53,15 +53,15 @@ export default function PaymentMethodsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#000000' },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#fff', fontSize: 15, marginBottom: 16 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#fff', letterSpacing: 0.4 },
+  backText: { fontFamily: 'Inter_500Medium', color: '#ffffff', fontSize: 15, marginBottom: 16 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#ffffff', letterSpacing: 0.4 },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#88B4FF',
+    color: 'rgba(255,255,255,0.55)',
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -77,14 +77,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   cardLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   cardIcon: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0d0d0d',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   cardName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.4,
     marginBottom: 3,
   },
@@ -105,9 +105,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   primaryBadge: {
-    backgroundColor: 'rgba(255,133,51,0.15)',
+    backgroundColor: 'rgba(0,255,127,0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(255,133,51,0.4)',
+    borderColor: 'rgba(0,255,127,0.4)',
     borderRadius: 100,
     paddingHorizontal: 9,
     paddingVertical: 3,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   primaryBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 1.5,
   },
   addBtn: {
@@ -130,14 +130,14 @@ const styles = StyleSheet.create({
     marginBottom: 22,
     paddingVertical: 18,
     borderWidth: 1,
-    borderColor: '#88B4FF',
+    borderColor: '#00FF7F',
     borderStyle: 'dashed',
   },
-  addBtnPlus: { fontSize: 18, color: '#88B4FF' },
+  addBtnPlus: { fontSize: 18, color: '#00FF7F' },
   addBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 2,
   },
   disclaimer: {

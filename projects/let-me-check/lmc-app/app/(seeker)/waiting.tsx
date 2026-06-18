@@ -797,13 +797,13 @@ const styles = StyleSheet.create({
 
   // Tier badges
   tierBadgePriority: {
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#FFCB47',
     borderRadius: 100,
     paddingHorizontal: 16,
     paddingVertical: 9,
     alignSelf: 'center',
     marginBottom: 10,
-    shadowColor: '#FF6B00',
+    shadowColor: '#FFCB47',
     shadowOpacity: 0.45,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },

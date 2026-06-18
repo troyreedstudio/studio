@@ -76,16 +76,16 @@ export default function PreferredCitiesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#000000' },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#fff', fontSize: 15, marginBottom: 16 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#fff', letterSpacing: 0.4, marginBottom: 5 },
+  backText: { fontFamily: 'Inter_500Medium', color: '#ffffff', fontSize: 15, marginBottom: 16 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#ffffff', letterSpacing: 0.4, marginBottom: 5 },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#888', letterSpacing: 0.3 },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -102,10 +102,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   cityRowActive: {
-    borderColor: '#88B4FF',
+    borderColor: '#00FF7F',
     backgroundColor: 'rgba(255,133,51,0.05)',
   },
   cityLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   cityName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.3,
     marginBottom: 2,
   },
@@ -129,9 +129,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(34,197,94,0.1)',
+    backgroundColor: 'rgba(0,255,127,0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(34,197,94,0.3)',
+    borderColor: 'rgba(0,255,127,0.3)',
     borderRadius: 100,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxActive: {
-    backgroundColor: '#88B4FF',
-    borderColor: '#88B4FF',
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
   },
   checkboxCheck: {
     fontFamily: 'Inter_700Bold',

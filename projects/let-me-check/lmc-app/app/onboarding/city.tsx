@@ -100,7 +100,7 @@ export default function CityPickerScreen() {
             value={query}
             onChangeText={setQuery}
             placeholder="Search city or country"
-            placeholderTextColor="rgba(255,255,255,0.35)"
+            placeholderTextColor="rgba(255,255,255,0.25)"
             style={styles.searchInput}
             autoCapitalize="words"
             autoCorrect={false}
@@ -329,9 +329,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 11,
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(0,255,127,0.07)',
+    backgroundColor: 'rgba(0,255,127,0.08)',
     borderWidth: 1,
     borderColor: 'rgba(0,255,127,0.25)',
     borderRadius: 14,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   },
   cardSelected: {
     backgroundColor: INDIGO_LIGHT,
-    borderColor: 'rgba(60,110,200,0.7)',
+    borderColor: 'rgba(60,110,200,0.6)',
   },
   cardDimmed: {
     opacity: 0.6,
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(0,255,127,0.4)',
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(0,255,127,0.08)',
   },
   waitlistBtnText: {
     fontFamily: 'Inter_700Bold',

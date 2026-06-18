@@ -103,7 +103,7 @@ export default function ScoutIdentityScreen() {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Verify your identity</Text>
           <Text style={styles.subtitle}>
-            A quick verification before your first check. Handled by Stripe Identity — encrypted, private, and never shared.
+            A quick verification before your first check. Handled by Stripe Identity, encrypted, private, and never shared.
           </Text>
 
           {/* WHY card */}
@@ -150,7 +150,7 @@ export default function ScoutIdentityScreen() {
 
           {/* UPLOADS */}
           <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-            CAPTURE — {requiredSlots.length} STEP{requiredSlots.length > 1 ? 'S' : ''}
+            CAPTURE · {requiredSlots.length} STEP{requiredSlots.length > 1 ? 'S' : ''}
           </Text>
 
           <UploadSlot
@@ -183,7 +183,7 @@ export default function ScoutIdentityScreen() {
           <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>TIPS FOR A FAST APPROVAL</Text>
           <View style={styles.tipsCard}>
             <Tip text="Clean, dry, undamaged ID." />
-            <Tip text="No glare or reflections — angle the ID slightly if you see one." />
+            <Tip text="No glare or reflections, angle the ID slightly if you see one." />
             <Tip text="Whole ID in frame. No fingers covering text or photo." />
             <Tip text="Selfie: plain background, good lighting, no hat or sunglasses." />
           </View>
@@ -214,7 +214,7 @@ export default function ScoutIdentityScreen() {
               <Ionicons
                 name="shield-checkmark-outline"
                 size={16}
-                color={canSubmit ? '#000' : 'rgba(255,255,255,0.4)'}
+                color={canSubmit ? '#000' : 'rgba(255,255,255,0.35)'}
               />
               <Text
                 style={[styles.primaryBtnText, !canSubmit && styles.primaryBtnTextDisabled]}
@@ -372,9 +372,9 @@ const styles = StyleSheet.create({
   sectionLabelGap: { marginTop: 20 },
 
   needCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
     padding: 14,
     gap: 10,
@@ -400,14 +400,14 @@ const styles = StyleSheet.create({
   typePill: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 999,
   },
   typePillActive: {
     backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.7)',
+    borderColor: 'rgba(60,110,200,0.6)',
   },
   typePillText: {
     fontFamily: 'Inter_600SemiBold',
@@ -421,16 +421,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
   },
   slotDone: {
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(0,255,127,0.08)',
     borderStyle: 'solid',
     borderColor: 'rgba(0,255,127,0.4)',
   },
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
   },
   slotCheck: {
     width: 28,
@@ -475,13 +475,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
   },
 
   tipsCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
     padding: 14,
     gap: 8,
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2.5,
   },
   primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.35)',
     letterSpacing: 2,
   },
 

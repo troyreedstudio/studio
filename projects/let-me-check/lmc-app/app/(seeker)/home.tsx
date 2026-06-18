@@ -1332,7 +1332,7 @@ const scoutInviteStyles = StyleSheet.create({
   label: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 2,
     marginBottom: 2,
   },

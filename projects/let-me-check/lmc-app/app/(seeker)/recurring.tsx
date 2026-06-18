@@ -33,7 +33,15 @@ export default function RecurringScreen() {
             <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Recurring Checks</Text>
-          <View style={{ width: 50 }} />
+          <TouchableOpacity
+            style={styles.newBtn}
+            onPress={() => router.push({ pathname: '/(seeker)/search', params: { mode: 'recurring' } })}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="add" size={16} color="#00FF7F" />
+            <Text style={styles.newBtnText}>New</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.subtitle}>
@@ -48,14 +56,15 @@ export default function RecurringScreen() {
               </View>
               <Text style={styles.emptyTitle}>No recurring checks yet</Text>
               <Text style={styles.emptySub}>
-                Drop a pin → toggle &ldquo;Make this recurring&rdquo; on the payment screen to schedule one.
+                Schedule a Scout to check a place on repeat, like your gym on Monday mornings or JFK before every flight.
               </Text>
               <TouchableOpacity
                 style={styles.cta}
                 activeOpacity={0.85}
-                onPress={() => router.replace('/(seeker)/home')}
+                onPress={() => router.push({ pathname: '/(seeker)/search', params: { mode: 'recurring' } })}
               >
-                <Text style={styles.ctaText}>BACK TO MAP</Text>
+                <Ionicons name="add" size={16} color="#000" />
+                <Text style={styles.ctaText}>NEW RECURRING CHECK</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -79,7 +88,7 @@ export default function RecurringScreen() {
                   <Switch
                     value={r.active}
                     onValueChange={() => toggle(r.id)}
-                    trackColor={{ false: '#1e1e1e', true: '#00FF7F' }}
+                    trackColor={{ false: 'rgba(255,255,255,0.12)', true: '#00FF7F' }}
                     thumbColor="#ffffff"
                   />
                   <TouchableOpacity
@@ -138,7 +147,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -159,7 +168,23 @@ const styles = StyleSheet.create({
     marginBottom: 22,
     paddingHorizontal: 30,
   },
+  newBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    width: 50,
+    justifyContent: 'flex-end',
+  },
+  newBtnText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 14,
+    color: '#00FF7F',
+    letterSpacing: 0.2,
+  },
   cta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
     backgroundColor: '#ffffff',
     borderRadius: 12,
     paddingHorizontal: 22,
@@ -177,7 +202,7 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -221,7 +246,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     justifyContent: 'center',
     alignItems: 'center',
   },

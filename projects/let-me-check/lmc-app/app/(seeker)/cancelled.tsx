@@ -10,6 +10,7 @@ import {
   Easing,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function CancelledScreen() {
   const router = useRouter();
@@ -47,6 +48,14 @@ export default function CancelledScreen() {
     <View style={styles.bg}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
+        <TouchableOpacity
+          style={styles.backFab}
+          onPress={() => router.replace('/(seeker)/home')}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+        </TouchableOpacity>
         <View style={styles.center}>
           <Animated.View style={[styles.glyphCircle, { transform: [{ scale }] }]}>
             <Text style={styles.glyph}>✕</Text>
@@ -100,6 +109,16 @@ export default function CancelledScreen() {
 const styles = StyleSheet.create({
   bg: { flex: 1, backgroundColor: '#000000' },
   safe: { flex: 1, paddingHorizontal: 22 },
+  backFab: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    zIndex: 5,
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   glyphCircle: {
     width: 84,

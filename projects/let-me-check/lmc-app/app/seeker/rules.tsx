@@ -28,7 +28,7 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 const WILL_GET: { icon: IconName; title: string; why: string }[] = [
   { icon: 'videocam-outline', title: '15-sec silent clip', why: '30 sec for Partner Interiors (+$5). Always muted.' },
-  { icon: 'scan-outline', title: 'The place, not people', why: 'Wide shots only — no close-ups of strangers.' },
+  { icon: 'scan-outline', title: 'The place, not people', why: 'Wide shots, no close-ups of strangers.' },
   { icon: 'eye-off-outline', title: 'Faces auto-blurred', why: 'Anyone in frame is blurred before it reaches you.' },
   { icon: 'location-outline', title: 'GPS-verified', why: 'Filmed on-site, or auto-rejected and refunded.' },
   { icon: 'flash-outline', title: '7–10 min, or refund', why: 'No Scout in 15 min = full refund.' },
@@ -36,10 +36,10 @@ const WILL_GET: { icon: IconName; title: string; why: string }[] = [
 
 const WONT_FILM: { icon: IconName; title: string; why: string }[] = [
   { icon: 'person-outline', title: 'A specific person', why: 'We check places, not people.' },
-  { icon: 'mic-off-outline', title: 'Audio — ever', why: 'The mic stays off, always.' },
+  { icon: 'mic-off-outline', title: 'No audio, ever', why: 'The mic stays off, always.' },
   { icon: 'lock-closed-outline', title: 'Bathrooms & changing rooms', why: 'Never, anywhere. No exceptions.' },
   { icon: 'home-outline', title: 'Homes & private property', why: 'Public access only. No trespass.' },
-  { icon: 'business-outline', title: 'Hospitals, schools, courts, police', why: 'Off-limits — declined instantly, refunded.' },
+  { icon: 'business-outline', title: 'Hospitals, schools, courts, police', why: 'Off-limits, declined instantly, refunded.' },
   { icon: 'camera-outline', title: '“No Photography” zones', why: 'Scout stops on sight. You’re refunded.' },
 ];
 
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   gateDivider: {
     height: 1,
     width: 220,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     alignSelf: 'center',
     marginVertical: 4,
   },
@@ -407,8 +407,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderRadius: 14,
     paddingVertical: 16,
     marginTop: 12,
@@ -434,5 +434,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 2.5,
   },
-  primaryBtnTextDisabled: { color: 'rgba(255,255,255,0.4)', letterSpacing: 2 },
+  primaryBtnTextDisabled: { color: 'rgba(255,255,255,0.35)', letterSpacing: 2 },
 });

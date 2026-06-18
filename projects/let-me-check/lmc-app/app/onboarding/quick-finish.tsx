@@ -319,12 +319,12 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
+  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.12)' },
   dotDone: { backgroundColor: 'rgba(0,255,127,0.55)' },
   dotActive: { backgroundColor: '#00FF7F' },
   wireframeBadge: {
@@ -385,8 +385,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   sourcePillApple: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   sourcePillGoogle: {
     backgroundColor: 'rgba(255,213,107,0.1)',
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   sourcePillText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 1.4,
   },
 
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   fieldHint: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(0,255,127,0.85)',
+    color: '#00FF7F',
     marginTop: 6,
     paddingHorizontal: 4,
     lineHeight: 16,
@@ -438,8 +438,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   inputAutoFilled: {
-    backgroundColor: 'rgba(0,255,127,0.06)',
-    borderColor: 'rgba(0,255,127,0.3)',
+    backgroundColor: 'rgba(0,255,127,0.08)',
+    borderColor: 'rgba(0,255,127,0.4)',
   },
   fieldError: {
     fontFamily: 'Inter_500Medium',
@@ -453,9 +453,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(0,255,127,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.25)',
+    borderColor: 'rgba(0,255,127,0.3)',
     borderRadius: 12,
     padding: 14,
     marginBottom: 4,
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(0,255,127,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: 'rgba(255,255,255,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.7)',
     lineHeight: 19,
     letterSpacing: 0.1,
   },
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
   },
   consentLink: {
     fontFamily: 'Inter_700Bold',
-    color: '#88B4FF',
+    color: '#00FF7F',
     textDecorationLine: 'underline',
   },
   consentOptional: {
@@ -531,10 +531,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
     padding: 14,
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(0,255,127,0.08)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.2)',
+    borderColor: 'rgba(0,255,127,0.3)',
     marginTop: 18,
     marginBottom: 16,
   },
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   trustWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.65)',
     lineHeight: 16,
   },
 
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
     lineHeight: 16,
     paddingHorizontal: 8,

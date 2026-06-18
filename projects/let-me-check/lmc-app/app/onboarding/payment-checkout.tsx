@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardField: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 10,
     padding: 12,
     marginBottom: 10,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   cardDivider: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   cardOrText: {
     fontFamily: 'Inter_500Medium',

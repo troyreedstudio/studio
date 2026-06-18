@@ -10,36 +10,24 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { setIntendedRole } from '../state/intended-role';
+import { setIntendedRole, getIntendedRole } from '../state/intended-role';
 
 type Role = 'seeker' | 'scout' | 'both';
 
-const SEEKER_PERKS = [
-  'Real eyes on any location — venues, airports, DMVs',
-  '$15–$20 for a 15-second clip, delivered in minutes',
-  'Watch, rate, and save the moment',
-];
-
-const SCOUT_PERKS = [
-  'Capture moments around the city — $8–$12 per check',
-  'On your own time, in your own city',
-  'Discreet, brief, premium — direct to your bank',
+const BOTH_PERKS = [
+  'See any place before you go — in minutes',
+  'Earn $8–$12 per check, on your own hours',
+  'One account — flip between both anytime',
 ];
 
 export default function RoleScreen() {
   const router = useRouter();
-  // Default to 'both' — recommended pick for the marketplace. Subtle nudge,
-  // not a forced choice. User can switch to Seeker or Scout with one tap.
-  const [selected, setSelected] = useState<Role | null>('both');
+  // Default to 'both' (recommended hero) — unless they leaned a way on the
+  // how-it-works videos, in which case start on that side.
+  const [selected, setSelected] = useState<Role>(getIntendedRole() ?? 'both');
 
   const handleContinue = () => {
-    if (!selected) return;
     setIntendedRole(selected);
-    // Every role routes through sign-up first so the user has an account.
-    // Quick Finish then routes based on intended role:
-    //   - seeker → /seeker/rules → /(seeker)/home
-    //   - both → /seeker/rules → /onboarding/both-fork
-    //   - scout → /scout/become (skips Seeker rules; Scout Code is shown later in flow)
     router.replace({ pathname: '/auth/sign-up', params: { role: selected } });
   };
 
@@ -56,14 +44,7 @@ export default function RoleScreen() {
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  i < 1 && styles.dotDone,
-                  i === 1 && styles.dotActive,
-                ]}
-              />
+              <View key={i} style={[styles.dot, i < 1 && styles.dotDone, i === 1 && styles.dotActive]} />
             ))}
           </View>
           <TouchableOpacity
@@ -77,122 +58,107 @@ export default function RoleScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text
-            style={styles.title}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.8}
-          >
-            How do you want to use LMC?
-          </Text>
           <Text style={styles.subtitle}>
-            You can switch or do both anytime from your profile. We just want to land you in the right place first.
+            Most people do both. You can switch anytime from your profile.
           </Text>
 
-          {/* SEEKER CARD */}
-          <TouchableOpacity
-            style={[styles.roleCard, selected === 'seeker' && styles.roleCardActive]}
-            onPress={() => setSelected('seeker')}
-            activeOpacity={0.9}
-          >
-            <View style={styles.roleTop}>
-              <View style={styles.roleIconWrap}>
-                <Ionicons name="eye-outline" size={28} color="#ffffff" />
-              </View>
-              {selected === 'seeker' && (
-                <Ionicons name="checkmark-circle" size={22} color="#00FF7F" />
-              )}
-            </View>
-            <Text style={styles.roleHeadline}>I want to know before I go</Text>
-            <View style={[styles.tagPill, styles.tagPillSeeker]}>
-              <Ionicons name="eye" size={11} color="#88B4FF" />
-              <Text style={[styles.tagPillText, styles.tagPillSeekerText]}>SEEKER</Text>
-            </View>
-            <View style={styles.perkList}>
-              {SEEKER_PERKS.map((p, i) => (
-                <View key={i} style={styles.perkRow}>
-                  <Ionicons name="checkmark" size={14} color="#00FF7F" />
-                  <Text style={styles.perkText}>{p}</Text>
-                </View>
-              ))}
-            </View>
-            <Text style={styles.roleFoot}>You&apos;ll land on the Seeker home map.</Text>
-          </TouchableOpacity>
-
-          {/* SCOUT CARD */}
-          <TouchableOpacity
-            style={[styles.roleCard, selected === 'scout' && styles.roleCardActive]}
-            onPress={() => setSelected('scout')}
-            activeOpacity={0.9}
-          >
-            <View style={styles.roleTop}>
-              <View style={styles.roleIconWrap}>
-                <Ionicons name="videocam-outline" size={28} color="#ffffff" />
-              </View>
-              {selected === 'scout' && (
-                <Ionicons name="checkmark-circle" size={22} color="#00FF7F" />
-              )}
-            </View>
-            <Text style={styles.roleHeadline}>I&apos;ll be the eyes for the city</Text>
-            <View style={[styles.tagPill, styles.tagPillScout]}>
-              <Ionicons name="videocam" size={11} color="#00FF7F" />
-              <Text style={[styles.tagPillText, styles.tagPillScoutText]}>SCOUT</Text>
-            </View>
-            <View style={styles.perkList}>
-              {SCOUT_PERKS.map((p, i) => (
-                <View key={i} style={styles.perkRow}>
-                  <Ionicons name="checkmark" size={14} color="#00FF7F" />
-                  <Text style={styles.perkText}>{p}</Text>
-                </View>
-              ))}
-            </View>
-            <Text style={styles.roleFoot}>
-              You&apos;ll start the ~10 min Scout setup (ID + payout + rules).
-            </Text>
-          </TouchableOpacity>
-
-          {/* BOTH — recommended hero pick. Always carries champagne accent + RECOMMENDED pill. */}
-          <View style={styles.bothWrap}>
+          {/* BOTH — the recommended hero */}
+          <View style={styles.heroWrap}>
             <View style={styles.recommendedPill}>
               <Ionicons name="star" size={9} color="#1a1a1a" />
               <Text style={styles.recommendedPillText}>RECOMMENDED</Text>
             </View>
             <TouchableOpacity
-              style={[styles.bothRow, styles.bothRowHero, selected === 'both' && styles.bothRowActive]}
+              style={[styles.heroCard, selected === 'both' && styles.cardActive]}
               onPress={() => setSelected('both')}
-              activeOpacity={0.85}
+              activeOpacity={0.9}
             >
-              <View style={styles.bothLeft}>
-                <Ionicons name="swap-horizontal-outline" size={18} color="#88B4FF" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.bothTitle}>Both — Seeker and Scout</Text>
-                  <Text style={styles.bothWhy}>
-                    Sign up once. Full LMC access — keep the option to earn whenever you&apos;re ready.
-                  </Text>
+              <View style={styles.roleTop}>
+                <View style={styles.heroIcons}>
+                  <View style={styles.roleIconWrap}>
+                    <Ionicons name="eye-outline" size={22} color="#ffffff" />
+                  </View>
+                  <View style={styles.roleIconWrap}>
+                    <Ionicons name="videocam-outline" size={22} color="#ffffff" />
+                  </View>
                 </View>
+                {selected === 'both' && <Ionicons name="checkmark-circle" size={24} color="#00FF7F" />}
               </View>
-              {selected === 'both' && (
-                <Ionicons name="checkmark-circle" size={20} color="#88B4FF" />
-              )}
+              <Text style={styles.heroTitle}>Seeker + Scout</Text>
+              <Text style={styles.heroSub}>
+                Know before you go — and earn as the eyes for your city.
+              </Text>
+              <View style={styles.perkList}>
+                {BOTH_PERKS.map((p, i) => (
+                  <View key={i} style={styles.perkRow}>
+                    <Ionicons name="checkmark" size={14} color="#00FF7F" />
+                    <Text style={styles.perkText}>{p}</Text>
+                  </View>
+                ))}
+              </View>
             </TouchableOpacity>
           </View>
 
-          {/* CTA */}
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR JUST ONE</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* SEEKER */}
           <TouchableOpacity
-            style={[styles.primaryBtn, !selected && styles.primaryBtnDisabled]}
-            disabled={!selected}
-            onPress={handleContinue}
-            activeOpacity={0.85}
+            style={[styles.roleCard, selected === 'seeker' && styles.cardActive]}
+            onPress={() => setSelected('seeker')}
+            activeOpacity={0.9}
           >
+            <View style={styles.roleTop}>
+              <View style={styles.roleIconWrap}>
+                <Ionicons name="eye-outline" size={26} color="#ffffff" />
+              </View>
+              {selected === 'seeker' && <Ionicons name="checkmark-circle" size={22} color="#00FF7F" />}
+            </View>
+            <View style={styles.roleTitleRow}>
+              <Text style={styles.roleHeadline}>Know before you go</Text>
+              <View style={[styles.tagPill, styles.tagPillSeeker]}>
+                <Ionicons name="eye" size={10} color="#88B4FF" />
+                <Text style={[styles.tagPillText, styles.tagPillSeekerText]}>SEEKER</Text>
+              </View>
+            </View>
+            <Text style={styles.roleDesc}>
+              Pay a real person on the ground to film any place — the line, the crowd, the vibe — and watch it in minutes.
+            </Text>
+          </TouchableOpacity>
+
+          {/* SCOUT */}
+          <TouchableOpacity
+            style={[styles.roleCard, selected === 'scout' && styles.cardActive]}
+            onPress={() => setSelected('scout')}
+            activeOpacity={0.9}
+          >
+            <View style={styles.roleTop}>
+              <View style={styles.roleIconWrap}>
+                <Ionicons name="videocam-outline" size={26} color="#ffffff" />
+              </View>
+              {selected === 'scout' && <Ionicons name="checkmark-circle" size={22} color="#00FF7F" />}
+            </View>
+            <View style={styles.roleTitleRow}>
+              <Text style={styles.roleHeadline}>Be the eyes for the city</Text>
+              <View style={[styles.tagPill, styles.tagPillScout]}>
+                <Ionicons name="videocam" size={10} color="#00FF7F" />
+                <Text style={[styles.tagPillText, styles.tagPillScoutText]}>SCOUT</Text>
+              </View>
+            </View>
+            <Text style={styles.roleDesc}>
+              Earn $8–$12 a check filming quick clips of places near you, on your own time. Direct to your bank.
+            </Text>
+          </TouchableOpacity>
+
+          {/* CTA */}
+          <TouchableOpacity style={styles.primaryBtn} onPress={handleContinue} activeOpacity={0.85}>
             <View style={styles.primaryBtnInner}>
-              <Text
-                style={[styles.primaryBtnText, !selected && styles.primaryBtnTextDisabled]}
-              >
-                {selected ? 'CONTINUE' : 'PICK ONE TO CONTINUE'}
-              </Text>
-              {selected && (
-                <Ionicons name="arrow-forward" size={16} color="#000" />
-              )}
+              <Text style={styles.primaryBtnText}>CONTINUE</Text>
+              <Ionicons name="arrow-forward" size={16} color="#000" />
             </View>
           </TouchableOpacity>
 
@@ -219,12 +185,12 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
+  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.12)' },
   dotDone: { backgroundColor: 'rgba(0,255,127,0.55)' },
   dotActive: { backgroundColor: '#00FF7F' },
   wireframeBadge: {
@@ -255,96 +221,17 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     letterSpacing: 0.3,
     lineHeight: 20,
-    marginBottom: 22,
+    marginBottom: 26,
   },
 
-  roleCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
-  },
-  roleCardActive: {
+  // Shared selected state — light BLUE tint so black text stays readable
+  cardActive: {
     backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.7)',
-  },
-  roleTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  roleIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  roleHeadline: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 16,
-    color: '#ffffff',
-    letterSpacing: 0.2,
-    marginBottom: 4,
-  },
-  tagPill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-    borderWidth: 1,
-    marginBottom: 14,
-  },
-  tagPillSeeker: {
-    backgroundColor: 'rgba(60,110,200,0.18)',
-    borderColor: 'rgba(136,180,255,0.5)',
-  },
-  tagPillScout: {
-    backgroundColor: 'rgba(0,255,127,0.12)',
-    borderColor: 'rgba(0,255,127,0.45)',
-  },
-  tagPillText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 11,
-    letterSpacing: 2.2,
-  },
-  tagPillSeekerText: { color: '#88B4FF' },
-  tagPillScoutText: { color: '#00FF7F' },
-  perkList: { gap: 8, marginBottom: 12 },
-  perkRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  perkText: {
-    flex: 1,
-    fontFamily: 'Inter_400Regular',
-    fontSize: 12.5,
-    color: 'rgba(255,255,255,0.75)',
-    lineHeight: 18,
-  },
-  roleFoot: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 0.2,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(60,110,200,0.6)',
   },
 
-  bothWrap: {
-    position: 'relative',
-    marginTop: 4,
-    marginBottom: 20,
-  },
+  // HERO (Both)
+  heroWrap: { position: 'relative', marginBottom: 22 },
   recommendedPill: {
     position: 'absolute',
     top: -10,
@@ -366,77 +253,136 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     letterSpacing: 1.6,
   },
-  bothRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
+  heroCard: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.14)',
+    borderRadius: 18,
+    padding: 20,
+    paddingTop: 22,
   },
-  bothRowHero: {
-    backgroundColor: 'rgba(20,55,130,0.3)',
-    borderColor: 'rgba(60,110,200,0.55)',
-    paddingTop: 18,
-    paddingBottom: 16,
-  },
-  bothRowActive: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.7)',
-  },
-  bothLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-  bothTitle: {
+  heroIcons: { flexDirection: 'row', gap: 8 },
+  heroTitle: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 13.5,
+    fontSize: 22,
     color: '#ffffff',
     letterSpacing: 0.2,
-    marginBottom: 2,
+    marginBottom: 6,
   },
-  bothWhy: {
+  heroSub: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
-    lineHeight: 17,
+    fontSize: 13.5,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 19,
+    marginBottom: 16,
   },
+  perkList: { gap: 9 },
+  perkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
+  perkText: {
+    flex: 1,
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 18,
+  },
+
+  // Divider
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.12)' },
+  dividerText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 2,
+  },
+
+  // Secondary role cards (Seeker / Scout) — full width, with descriptions
+  roleCard: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
+  },
+  roleTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  roleIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 8,
+  },
+  roleHeadline: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 17,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+  },
+  roleDesc: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.65)',
+    lineHeight: 19,
+  },
+  tagPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  tagPillSeeker: {
+    backgroundColor: 'rgba(60,110,200,0.18)',
+    borderColor: 'rgba(136,180,255,0.5)',
+  },
+  tagPillScout: {
+    backgroundColor: 'rgba(0,255,127,0.12)',
+    borderColor: 'rgba(0,255,127,0.45)',
+  },
+  tagPillText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    letterSpacing: 1.8,
+  },
+  tagPillSeekerText: { color: '#88B4FF' },
+  tagPillScoutText: { color: '#00FF7F' },
 
   primaryBtn: {
     backgroundColor: '#ffffff',
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
+    marginTop: 8,
     marginBottom: 14,
   },
-  primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
-  primaryBtnInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
+  primaryBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
     color: '#000000',
     fontSize: 13,
     letterSpacing: 2.5,
   },
-  primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 2,
-  },
 
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
     lineHeight: 16,
   },

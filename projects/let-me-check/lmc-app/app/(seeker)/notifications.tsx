@@ -42,7 +42,7 @@ export default function NotificationsScreen() {
               <Switch
                 value={values[s.id]}
                 onValueChange={(v) => setValues((prev) => ({ ...prev, [s.id]: v }))}
-                trackColor={{ false: '#222', true: '#88B4FF' }}
+                trackColor={{ false: '#222', true: '#00FF7F' }}
                 thumbColor={values[s.id] ? '#fff' : '#666'}
               />
             </View>
@@ -58,16 +58,16 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#000000' },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#fff', fontSize: 15, marginBottom: 16 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#fff', letterSpacing: 0.4, marginBottom: 5 },
+  backText: { fontFamily: 'Inter_500Medium', color: '#ffffff', fontSize: 15, marginBottom: 16 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#ffffff', letterSpacing: 0.4, marginBottom: 5 },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#888', letterSpacing: 0.3 },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#88B4FF',
+    color: 'rgba(255,255,255,0.55)',
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: 'rgba(255,255,255,0.12)',
     marginBottom: 18,
     overflow: 'hidden',
   },
@@ -89,12 +89,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
   },
-  rowBorder: { borderBottomWidth: 1, borderBottomColor: '#1a1a1a' },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
   rowText: { flex: 1 },
   rowLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.2,
     marginBottom: 3,
   },

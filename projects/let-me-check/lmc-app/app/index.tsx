@@ -8,9 +8,9 @@ import { useRouter } from 'expo-router';
 const bootChime = require('../assets/sounds/boot-deep.wav');
 
 const SIZE = 60;
-const MASK_WIDTH = 260;
-const MASK_HEIGHT = SIZE * 1.2;
-const SHINE_WIDTH = 70;
+const MASK_WIDTH = 320;
+const MASK_HEIGHT = SIZE * 1.3;
+const SHINE_WIDTH = 120;
 
 const LIQUID_CHROME_STOPS: [string, string, ...string[]] = [
   '#a8a8a8',
@@ -27,13 +27,13 @@ const LIQUID_CHROME_LOCATIONS: [number, number, ...number[]] = [0, 0.22, 0.5, 0.
 export default function BootSplash() {
   const shineX = useRef(new Animated.Value(-SHINE_WIDTH)).current;
   const overlayOpacity = useRef(new Animated.Value(1)).current;
-  const scale = useRef(new Animated.Value(1.4)).current;
+  const scale = useRef(new Animated.Value(1.15)).current;
   const breath = useRef(new Animated.Value(1)).current;
   const player = useAudioPlayer(bootChime);
   const router = useRouter();
 
   useEffect(() => {
-    scale.setValue(1.4);
+    scale.setValue(1.15);
     overlayOpacity.setValue(1);
     breath.setValue(1);
     shineX.setValue(-SHINE_WIDTH);
@@ -78,10 +78,10 @@ export default function BootSplash() {
 
     const sweep = Animated.loop(
       Animated.sequence([
-        Animated.delay(1800),
+        Animated.delay(1000),
         Animated.timing(shineX, {
           toValue: MASK_WIDTH + SHINE_WIDTH,
-          duration: 1700,
+          duration: 2000,
           useNativeDriver: true,
         }),
         Animated.timing(shineX, {
@@ -100,7 +100,7 @@ export default function BootSplash() {
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }).start(() => {
-        router.replace('/welcome');
+        router.replace('/how-it-works');
       });
     }, 3800);
 
@@ -122,7 +122,14 @@ export default function BootSplash() {
           style={styles.maskWrap}
           maskElement={
             <View style={styles.maskCenter}>
-              <Text style={styles.lmcMask}>LMC</Text>
+              <Text
+                style={styles.lmcMask}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.4}
+              >
+                LET ME CHECK
+              </Text>
             </View>
           }
         >
@@ -141,7 +148,13 @@ export default function BootSplash() {
               ]}
             >
               <LinearGradient
-                colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']}
+                colors={[
+                  'rgba(255,255,255,0)',
+                  'rgba(255,255,255,1)',
+                  'rgba(255,255,255,1)',
+                  'rgba(255,255,255,0)',
+                ]}
+                locations={[0, 0.42, 0.58, 1]}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
                 style={StyleSheet.absoluteFillObject}
@@ -189,6 +202,8 @@ const styles = StyleSheet.create({
   lmcMask: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: SIZE,
+    letterSpacing: 1,
+    textAlign: 'center',
     color: '#000',
     backgroundColor: 'transparent',
   },

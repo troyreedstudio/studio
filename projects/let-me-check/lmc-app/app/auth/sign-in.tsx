@@ -166,7 +166,7 @@ export default function SignInScreen() {
                   value={otp}
                   onChangeText={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
-                  placeholderTextColor="rgba(255,255,255,0.2)"
+                  placeholderTextColor="rgba(255,255,255,0.25)"
                   keyboardType="number-pad"
                   maxLength={6}
                   autoFocus
@@ -259,9 +259,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 18,
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 16,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.08)' },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.12)' },
   dividerText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 14,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     paddingHorizontal: 16,
     letterSpacing: 0.5,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
     paddingVertical: 18,
     letterSpacing: 8,
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   resendText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12.5,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 0.4,
   },
 

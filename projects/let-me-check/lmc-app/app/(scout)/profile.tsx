@@ -165,7 +165,7 @@ export default function ScoutProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#000000' },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 22, paddingTop: 12 },
   backText: {
@@ -180,9 +180,9 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#111111',
+    backgroundColor: '#0d0d0d',
     borderWidth: 2,
-    borderColor: '#333',
+    borderColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
@@ -190,20 +190,20 @@ const styles = StyleSheet.create({
   avatarInitials: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 34,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.5,
   },
   userName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 24,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.3,
     marginBottom: 5,
   },
   memberSince: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 12,
-    color: '#888',
+    color: 'rgba(255,255,255,0.5)',
     letterSpacing: 0.5,
     marginBottom: 12,
   },
@@ -229,9 +229,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 16,
     marginHorizontal: 22,
     marginBottom: 18,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   availCardOn: {
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(0,255,127,0.08)',
     borderColor: 'rgba(0,255,127,0.3)',
   },
   availLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
@@ -253,33 +253,33 @@ const styles = StyleSheet.create({
   availTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   availSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: '#888',
+    color: 'rgba(255,255,255,0.5)',
     letterSpacing: 0.2,
   },
 
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderRadius: 16,
     marginHorizontal: 22,
     marginBottom: 24,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.3,
     marginBottom: 5,
   },
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.45)',
     letterSpacing: 1.4,
   },
-  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.1)' },
+  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.12)' },
 
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
@@ -300,11 +300,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   settingsList: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderRadius: 16,
     marginHorizontal: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     marginBottom: 22,
     overflow: 'hidden',
   },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 15,
   },
-  settingRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
+  settingRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
   settingLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   settingIconWrap: {
     width: 34,
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontFamily: 'Inter_500Medium',
     fontSize: 14,
-    color: '#fff',
+    color: '#ffffff',
     letterSpacing: 0.2,
   },
 
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   referralSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: '#888',
+    color: 'rgba(255,255,255,0.5)',
     letterSpacing: 0.2,
   },
   referralBtn: {
@@ -386,15 +386,15 @@ const styles = StyleSheet.create({
     gap: 8,
     marginHorizontal: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderRadius: 14,
     paddingVertical: 16,
     marginBottom: 12,
   },
   switchModeBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 12,
     letterSpacing: 2,
   },
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontFamily: 'Inter_500Medium',
-    color: '#666',
+    color: 'rgba(255,255,255,0.5)',
     fontSize: 12.5,
     letterSpacing: 0.5,
   },

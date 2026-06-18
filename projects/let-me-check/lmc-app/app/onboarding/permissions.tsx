@@ -265,7 +265,7 @@ export default function PermissionsScreen() {
               activeOpacity={0.7}
               style={styles.settingsLinkRow}
             >
-              <Ionicons name="settings-outline" size={14} color="#88B4FF" />
+              <Ionicons name="settings-outline" size={14} color="#00FF7F" />
               <Text style={styles.settingsLink}>Open iOS Settings → Let Me Check</Text>
             </TouchableOpacity>
           </View>
@@ -273,7 +273,7 @@ export default function PermissionsScreen() {
           {/* APPROX-LOCATION NOTE — shown when we fell back to IP city detection */}
           {approxCity && (
             <View style={styles.approxNote}>
-              <Ionicons name="navigate-circle-outline" size={14} color="#88B4FF" />
+              <Ionicons name="navigate-circle-outline" size={14} color="#00FF7F" />
               <Text style={styles.approxText}>
                 Using your approximate area ({approxCity}) from your connection.{' '}
                 <Text
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -406,8 +406,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,107,0,0.4)',
   },
   permTagOptional: {
-    backgroundColor: 'rgba(136,180,255,0.1)',
-    borderColor: 'rgba(136,180,255,0.4)',
+    backgroundColor: 'rgba(0,255,127,0.12)',
+    borderColor: 'rgba(0,255,127,0.4)',
   },
   permTagText: {
     fontFamily: 'Inter_700Bold',
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
   permTagTextRequired: { color: '#FF6B00' },
-  permTagTextOptional: { color: '#88B4FF' },
+  permTagTextOptional: { color: '#00FF7F' },
 
   permWhy: {
     fontFamily: 'Inter_400Regular',
@@ -475,14 +475,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#00FF7F',
   },
   permBtnSkipped: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   permBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#000',
+    color: '#000000',
     letterSpacing: 1.5,
   },
   permBtnTextGranted: { color: '#000' },
@@ -508,9 +508,9 @@ const styles = StyleSheet.create({
   sectionLabelGap: { marginTop: 12 },
 
   privacyCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
     padding: 14,
     marginBottom: 24,
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
   settingsLink: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11.5,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 0.4,
   },
 
@@ -577,9 +577,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: 'rgba(136,180,255,0.08)',
+    backgroundColor: 'rgba(0,255,127,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(136,180,255,0.25)',
+    borderColor: 'rgba(0,255,127,0.25)',
     borderRadius: 12,
     padding: 12,
     marginBottom: 14,
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
   },
   approxLink: {
     fontFamily: 'Inter_700Bold',
-    color: '#88B4FF',
+    color: '#00FF7F',
     textDecorationLine: 'underline',
   },
 });

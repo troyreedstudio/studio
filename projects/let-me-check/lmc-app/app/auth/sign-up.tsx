@@ -18,9 +18,9 @@ import { COUNTRY_DIAL_CODES, type DialCode } from '../data/markets';
 
 type Step = 'method' | 'phone' | 'otp' | 'terms';
 
-const LMC_SIZE = 32;
-const LMC_MASK_W = 150;
-const LMC_MASK_H = LMC_SIZE * 1.2;
+const LMC_SIZE = 22;
+const LMC_MASK_W = 250;
+const LMC_MASK_H = LMC_SIZE * 1.4;
 
 const CHROME_STOPS: [string, string, ...string[]] = [
   '#a8a8a8',
@@ -55,7 +55,7 @@ export default function SignUpScreen() {
     role === 'scout'
       ? 'Sign up to start earning'
       : role === 'both'
-      ? 'Sign up to start checking'
+      ? 'Sign up to start checking and earning'
       : role === 'seeker'
       ? 'Sign up to start checking'
       : 'How would you like to sign up?';
@@ -134,7 +134,14 @@ export default function SignUpScreen() {
             style={styles.maskWrap}
             maskElement={
               <View style={styles.maskCenter}>
-                <Text style={styles.lmcMask}>LMC</Text>
+                <Text
+                  style={styles.lmcMask}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.5}
+                >
+                  LET ME CHECK
+                </Text>
               </View>
             }
           >
@@ -148,7 +155,6 @@ export default function SignUpScreen() {
               />
             </View>
           </MaskedView>
-          <Text style={styles.wordmark}>LET ME CHECK</Text>
         </View>
 
         <ScrollView
@@ -272,7 +278,7 @@ export default function SignUpScreen() {
                   value={otp}
                   onChangeText={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))}
                   placeholder="––––––"
-                  placeholderTextColor="rgba(255,255,255,0.18)"
+                  placeholderTextColor="rgba(255,255,255,0.25)"
                   keyboardType="number-pad"
                   maxLength={6}
                   autoFocus
@@ -439,7 +445,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -451,7 +457,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 3,
     borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   progressDotDone: {
     backgroundColor: 'rgba(255,255,255,0.55)',
@@ -477,6 +483,8 @@ const styles = StyleSheet.create({
   lmcMask: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: LMC_SIZE,
+    letterSpacing: 1,
+    textAlign: 'center',
     color: '#000',
     backgroundColor: 'transparent',
   },
@@ -529,7 +537,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(255,255,255,0.6)',
     letterSpacing: 0.3,
     lineHeight: 21,
     marginBottom: 36,
@@ -543,7 +551,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.14)',
     borderRadius: 14,
@@ -571,7 +579,7 @@ const styles = StyleSheet.create({
   legal: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
     paddingHorizontal: 16,
     lineHeight: 16,
@@ -579,7 +587,7 @@ const styles = StyleSheet.create({
   },
   legalLink: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(255,255,255,0.7)',
   },
   phoneWrap: {
     flexDirection: 'row',
@@ -605,7 +613,7 @@ const styles = StyleSheet.create({
   countryChevron: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(255,255,255,0.5)',
     marginLeft: 4,
   },
   modalBackdrop: {
@@ -614,7 +622,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#000000',
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     paddingTop: 8,
@@ -672,7 +680,7 @@ const styles = StyleSheet.create({
   modalDial: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.8)',
     letterSpacing: 0.5,
   },
   modalCheck: {
@@ -728,7 +736,7 @@ const styles = StyleSheet.create({
   disclaimer: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
     lineHeight: 16,
     letterSpacing: 0.3,
@@ -767,7 +775,7 @@ const styles = StyleSheet.create({
   },
   ruleRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   ruleX: {
     fontFamily: 'Inter_700Bold',
@@ -779,7 +787,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.78)',
+    color: 'rgba(255,255,255,0.72)',
     letterSpacing: 0.2,
     lineHeight: 19,
   },
@@ -806,13 +814,13 @@ const styles = StyleSheet.create({
   checkboxCheck: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#000000',
+    color: '#000',
   },
   checkLabel: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.65)',
     letterSpacing: 0.2,
     lineHeight: 18,
   },

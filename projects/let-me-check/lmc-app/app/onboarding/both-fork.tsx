@@ -48,7 +48,7 @@ export default function BothForkScreen() {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>You&apos;re in.</Text>
           <Text style={styles.subtitle}>
-            Your LMC account is set. Choose which side to activate first — you&apos;ll keep access to both, on your own time.
+            Your LMC account is set. Choose which side to activate first. You&apos;ll keep access to both, on your own time.
           </Text>
 
           {/* SCOUT CARD — lead position */}
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   cardScout: {
     backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.55)',
+    borderColor: 'rgba(136,180,255,0.5)',
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    borderTopColor: 'rgba(255,255,255,0.12)',
   },
   cardCtaText: {
     fontFamily: 'Inter_700Bold',

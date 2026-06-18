@@ -24,16 +24,16 @@ function generateScoutId(): string {
 }
 
 const ON_FILE = [
-  { title: 'Identity verified', detail: 'Stripe Identity — gov ID + selfie liveness' },
-  { title: 'Payout method set', detail: 'Stripe Connect Express — bank •••• 4242' },
+  { title: 'Identity verified', detail: 'Stripe Identity, gov ID + selfie liveness' },
+  { title: 'Payout method set', detail: 'Stripe Connect Express, bank •••• 4242' },
   { title: 'Code of Conduct signed', detail: 'Consent + agreement on record (today)' },
-  { title: 'Independent Contractor agreement', detail: 'W-9 on file via Stripe — 1099 each January' },
+  { title: 'Independent Contractor agreement', detail: 'W-9 on file via Stripe, 1099 each January' },
 ];
 
 const UNLOCKED = [
   { icon: 'notifications-outline' as const, title: 'Real-time job alerts', detail: 'Pinged when a check appears near you.' },
-  { icon: 'card-outline' as const, title: 'Weekly auto-payouts', detail: 'Every Friday — or Instant on demand.' },
-  { icon: 'gift-outline' as const, title: 'Refer-a-Scout — $50', detail: 'When a friend completes 10 paid checks.' },
+  { icon: 'card-outline' as const, title: 'Weekly auto-payouts', detail: 'Every Friday, or Instant on demand.' },
+  { icon: 'gift-outline' as const, title: 'Refer-a-Scout: $50', detail: 'When a friend completes 10 paid checks.' },
 ];
 
 const FIRST_STEPS = [
@@ -193,7 +193,7 @@ export default function ScoutApprovedScreen() {
               activeOpacity={0.7}
               style={styles.codeLinkRow}
             >
-              <Ionicons name="document-text-outline" size={14} color="#88B4FF" />
+              <Ionicons name="document-text-outline" size={14} color="#00FF7F" />
               <Text style={styles.rulesLink}>Read the full Code of Conduct</Text>
             </TouchableOpacity>
 
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   checkGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 48,
-    color: '#000000',
+    color: '#ffffff',
     marginTop: 2,
   },
   title: {
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.5)',
+    borderColor: 'rgba(60,110,200,0.6)',
   },
   scoutCardTop: {
     flexDirection: 'row',
@@ -412,9 +412,9 @@ const styles = StyleSheet.create({
   sectionLabelGap: { marginTop: 22 },
 
   listCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
     paddingHorizontal: 14,
   },
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   },
   listRowDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: 'rgba(255,255,255,0.12)',
   },
   greenCheck: {
     width: 22,
@@ -455,10 +455,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     paddingVertical: 16,
   },
   stat: { flex: 1, alignItems: 'center' },
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 30,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
 
   unlockRow: {
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -516,9 +516,9 @@ const styles = StyleSheet.create({
   },
 
   remindCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
     padding: 14,
   },
@@ -547,12 +547,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
+    borderTopColor: 'rgba(255,255,255,0.12)',
   },
   rulesLink: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#88B4FF',
+    color: '#00FF7F',
     letterSpacing: 0.4,
   },
   codeLinkRow: {
@@ -567,9 +567,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
     padding: 14,
     marginBottom: 24,

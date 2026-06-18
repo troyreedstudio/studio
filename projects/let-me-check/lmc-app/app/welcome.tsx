@@ -4,9 +4,9 @@ import { useRouter } from 'expo-router';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const LMC_SIZE = 54;
-const LMC_MASK_W = 240;
-const LMC_MASK_H = LMC_SIZE * 1.2;
+const LMC_SIZE = 60;
+const LMC_MASK_W = 332;
+const LMC_MASK_H = LMC_SIZE * 1.3;
 
 const CHROME_STOPS: [string, string, ...string[]] = [
   '#a8a8a8',
@@ -58,7 +58,14 @@ export default function WelcomeScreen() {
             style={styles.maskWrap}
             maskElement={
               <View style={styles.maskCenter}>
-                <Text style={styles.lmcMask}>LMC</Text>
+                <Text
+                  style={styles.lmcMask}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.4}
+                >
+                  LET ME CHECK
+                </Text>
               </View>
             }
           >
@@ -72,8 +79,6 @@ export default function WelcomeScreen() {
               />
             </View>
           </MaskedView>
-
-          <Text style={styles.wordmark}>LET ME CHECK</Text>
 
           <Text style={styles.tagline}>KNOW BEFORE YOU GO</Text>
 
@@ -160,6 +165,8 @@ const styles = StyleSheet.create({
   lmcMask: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: LMC_SIZE,
+    letterSpacing: 1,
+    textAlign: 'center',
     color: '#000',
     backgroundColor: 'transparent',
   },
