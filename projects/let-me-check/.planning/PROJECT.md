@@ -37,7 +37,7 @@ Today it is a **fully-built React Native + Expo UI prototype on mock data** — 
 
 **Core loop made real (first)**
 - [ ] Real auth (Apple, Google, phone OTP), persistent sessions, dual-role
-- [ ] Supabase backend + persistence; server owns the check state machine (no business logic/secrets on client)
+- [ ] Supabase backend + persistence + **immutable event log from day 1** (foundation for later predictive AI); server owns the check state machine (no business logic/secrets on client)
 - [ ] One real check end-to-end: request → dispatch → Scout films a real clip → upload/transcode → delivered
 
 **Video**
@@ -54,7 +54,8 @@ Today it is a **fully-built React Native + Expo UI prototype on mock data** — 
 
 **Dispatch + trust (beta-grade verification + safety)**
 - [ ] Real-time, server-driven dispatch: only Scouts inside the geofence are pinged; **atomic claim (no double-assignment)**; dispatch timeout/fallback
-- [ ] Verification: GPS geofence on capture, reference-photo confirm, GPS-stamped clip, Scout cooldown, manual review + rating
+- [ ] Verification (full per-clip AI in V1): GPS geofence + GPS-stamp, reference-photo confirm, Scout cooldown, **AI signage detection + auto-reject (managed Vision API)**, **anti-GPS-spoof**, **AI Verdict summary**, manual review + rating
+- [ ] **B2B partner venues**: partner-interior checks (30-sec, +$5) + partner management
 - [ ] **Safety guardrails:** auto-block no-film zones (hospitals, schools, courts, police, private residences); abuse/stalking signals
 - [ ] Push (Expo): job alerts to Scouts, delivery alerts to Seekers
 
@@ -66,9 +67,9 @@ Today it is a **fully-built React Native + Expo UI prototype on mock data** — 
 
 - **Background checks on Scouts** — Scouts never contact the customer; no in-person safety/liability, so unnecessary friction
 - **Separate gov-ID + selfie identity verification** — beyond the tax + Stripe-payout KYC that's legally required; don't add friction
-- **AI signage detection / auto-reject** — deferred post-beta; manual review covers integrity meanwhile
-- **GPS-spoof detection** — fast-follow (v1.5), not the first verification build
-- **B2B/partner-interior premium, live feed, AI Scout coach, Library mode** — post-launch vision
+- **Predictive AI** (demand forecasting, surge dispatch, fraud/quality/churn prediction, RL ratings→ranking) — Phase 2+; needs accumulated event data (per CTO plan; DATA event log makes it possible later)
+- **Crowd-density / exact headcount from video** — deferred; off-the-shelf models are unreliable ("47 when it's 200")
+- **Live feed, AI Scout coach, Library mode, personalized feed** — post-launch vision
 - **Audio in clips** — illegal in all-party-consent states (e.g. Florida); video-only, always
 - **Native rewrite** — staying on React Native + Expo
 
@@ -103,7 +104,7 @@ Today it is a **fully-built React Native + Expo UI prototype on mock data** — 
 | Scout keeps pay when a passing clip is refunded (LMC funds it) | Driver trust = supply; don't burn honest Scouts | — Pending |
 | **No background checks**; identity = only tax + Stripe payout KYC | Scouts never meet customers → no in-person risk → no friction beyond legal minimum | — Pending |
 | Clips are video-only, audio stripped by default | All-party-consent states make audio recording a felony | — Pending |
-| Beta-grade verification first incl. fresh-capture enforcement; AI signage deferred | Ship sooner; fresh-capture + GPS + manual review cover integrity | — Pending |
+| Full per-clip AI verification in V1 (signage detection + auto-reject + AI Verdict) via managed Vision API; only PREDICTIVE AI deferred | Quality of the check is the differentiator + momentum driver; a managed API makes it cheap (~$1/mo) and feasible; don't rely on manual clip-checking (CTO plan: moat is non-negotiable for V1) | — Pending |
 | Stay on React Native + Expo | Prototype complete and shipping to TestFlight | ✓ Good |
 
 ## Evolution

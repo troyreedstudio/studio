@@ -14,6 +14,7 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 - [ ] **DATA-01**: App data persists in a real backend (Supabase), replacing in-memory stores
 - [ ] **DATA-02**: A check's lifecycle is a server-owned state machine; the client holds no business logic or secrets
 - [ ] **DATA-03**: Core entities persist: users, roles, checks, venues/locations, clips, payments, payouts, ratings
+- [ ] **DATA-04**: **Immutable event log from day 1** — every action (request created, Scout pinged/accepted/declined, clip captured/submitted/rejected, cancel, rating, GPS ping, payment auth/capture/refund/payout) logged with timestamp + geo + context. Decided before schemas are drawn. Foundation for later predictive AI (per CTO plan §6).
 
 ### The Core Check Loop
 - [ ] **CHECK-01**: A Seeker can request a check at a chosen location (tier: Standard/Priority)
@@ -52,6 +53,9 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 - [ ] **VER-02**: A Scout confirms a reference photo of the target before filming
 - [ ] **VER-03**: A Scout has a cooldown per location (anti-spam / anti-farming)
 - [ ] **VER-04**: A manual-review path exists for flagged/disputed clips
+- [ ] **VER-05**: **Location integrity is hardened for V1** — maximize GPS accuracy and **detect/reject spoofed GPS** (location accuracy is a core quality bar, not a fast-follow)
+- [ ] **VER-06**: **AI signage/place detection on every clip (V1)** — managed vision API (Google Vision, ~$1/mo) detects the venue's sign/logo + cross-checks GPS, and **auto-rejects wrong/faked clips** (the "last line of defence"); ambiguous cases fall to manual review (VER-04)
+- [ ] **VER-07**: **AI clip auto-summary ("AI Verdict", V1)** — a qualitative one-line read of the clip ("short line · medium energy"); deliberately **NOT precise headcounts** (crowd-counting from video is deferred — unreliable off-the-shelf)
 - [ ] **SAFE-01**: No-film zones are auto-blocked (hospitals, schools, courts, police, private residences)
 - [ ] **SAFE-02**: 18+ + consent gates and acceptable-use are enforced at onboarding and use
 
@@ -65,12 +69,15 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 - [ ] **MKT-03**: Launch sequence is supported: New York first, then Miami, LA, Atlanta, Chicago
 - [ ] **REC-01**: Recurring checks (already prototyped) are wired to real dispatch + billing
 
+### B2B / Partner Venues (V1)
+- [ ] **B2B-01**: Partner venues unlock **interior** checks (30-sec, +$5); partner onboarding + a way to manage partner venues/pricing
+- [ ] **B2B-02**: Partner-venue status surfaces in the app (a check at a partner shows the interior-check option)
+
 ## v2 / Fast-Follow (deferred)
 
-- **VER-AI**: AI signage detection + auto-reject of off-target/faked clips
-- **VER-SPOOF**: GPS-spoof detection
-- **B2B-01**: Partner / interior premium checks (+$5)
-- **GROWTH-01**: Live feed, AI Scout coach, Library mode
+- **PRED-AI**: Predictive AI — demand forecasting, surge dispatch, fraud/quality/churn prediction, RL ratings→ranking. Phase 2+ (needs accumulated event data; DATA-04 makes it possible later). *Hard rule per CTO plan: no predictive AI in V1.*
+- **CROWD-AI**: Crowd-density / exact headcount estimation from video — deferred (off-the-shelf unreliable; "47 when it's 200")
+- **GROWTH-01**: Live feed, AI Scout coach, Library mode, personalized "For You" feed
 - **OPS-01**: Background checks (only if a future feature ever creates Scout↔customer contact)
 
 ## Out of Scope (with reasons)
