@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { switchRole, signOut } from '../lib/auth';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -18,6 +19,20 @@ const SETTINGS: { icon: IconName; label: string; route: string }[] = [
 
 export default function ProfileScreen() {
   const router = useRouter();
+
+  // AUTH-03: persist current_role='scout' (logs auth.role_switched) then route to
+  // the Scout hub. Route optimistically; the write completes in the background.
+  const handleSwitchToScout = () => {
+    void switchRole('scout').catch(() => {});
+    router.replace('/(scout)/dashboard');
+  };
+
+  // AUTH-04: sign out (logs auth.signed_out + clears the session) then return to
+  // the entry flow. The boot gate keeps a signed-out user out of the hubs.
+  const handleSignOut = () => {
+    void signOut().catch(() => {});
+    router.replace('/index');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -110,7 +125,7 @@ export default function ProfileScreen() {
         {/* Switch Mode */}
         <TouchableOpacity
           style={styles.switchModeBtn}
-          onPress={() => router.replace('/(scout)/dashboard')}
+          onPress={handleSwitchToScout}
           activeOpacity={0.85}
         >
           <Ionicons name="swap-horizontal" size={16} color="#ffffff" />
@@ -119,7 +134,7 @@ export default function ProfileScreen() {
 
         <TouchableOpacity
           style={styles.signOutBtn}
-          onPress={() => router.replace('/auth/sign-up')}
+          onPress={handleSignOut}
           activeOpacity={0.7}
         >
           <Text style={styles.signOutText}>Sign Out</Text>

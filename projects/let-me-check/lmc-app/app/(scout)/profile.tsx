@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { switchRole, signOut } from '../lib/auth';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -26,6 +27,19 @@ const SCOUT_ID = 'SCT-7K4M-X9P';
 export default function ScoutProfileScreen() {
   const router = useRouter();
   const [online, setOnline] = useState(false);
+
+  // AUTH-03: persist current_role='seeker' (logs auth.role_switched) then route to
+  // the Seeker hub.
+  const handleSwitchToSeeker = () => {
+    void switchRole('seeker').catch(() => {});
+    router.replace('/(seeker)/home');
+  };
+
+  // AUTH-04: sign out then return to the entry flow.
+  const handleSignOut = () => {
+    void signOut().catch(() => {});
+    router.replace('/index');
+  };
 
   const renderItem = (item: { icon: IconName; label: string; route: string }, i: number, len: number) => (
     <TouchableOpacity
@@ -143,7 +157,7 @@ export default function ScoutProfileScreen() {
         {/* Switch Mode */}
         <TouchableOpacity
           style={styles.switchModeBtn}
-          onPress={() => router.replace('/(seeker)/home')}
+          onPress={handleSwitchToSeeker}
           activeOpacity={0.85}
         >
           <Ionicons name="swap-horizontal" size={16} color="#ffffff" />
@@ -152,7 +166,7 @@ export default function ScoutProfileScreen() {
 
         <TouchableOpacity
           style={styles.signOutBtn}
-          onPress={() => router.replace('/auth/sign-up')}
+          onPress={handleSignOut}
           activeOpacity={0.7}
         >
           <Text style={styles.signOutText}>Sign Out</Text>

@@ -1,13 +1,14 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { usePaymentMethod, type CardBrand } from '../state/payment-method';
 
-const CARDS = [
-  { id: '1', brand: 'Visa', last4: '4242', name: 'Troy Reed', expiry: '08/29', primary: true },
-  { id: '2', brand: 'Mastercard', last4: '8821', name: 'Troy Reed', expiry: '03/27', primary: false },
-];
+// Phase-1 placeholder card to add when none is on file (no Stripe yet — brand +
+// last4 only, persisted via the payment-method store → Supabase).
+const PLACEHOLDER_CARD: { brand: CardBrand; last4: string } = { brand: 'Visa', last4: '4242' };
 
 export default function PaymentMethodsScreen() {
   const router = useRouter();
+  const { card, save, clear } = usePaymentMethod();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -20,32 +21,41 @@ export default function PaymentMethodsScreen() {
         </View>
 
         <Text style={styles.sectionLabel}>YOUR CARDS</Text>
-        {CARDS.map((card) => (
-          <View key={card.id} style={styles.cardRow}>
+
+        {card ? (
+          <View style={styles.cardRow}>
             <View style={styles.cardLeft}>
               <View style={styles.cardIcon}>
                 <Text style={styles.cardEmoji}>💳</Text>
               </View>
               <View style={styles.cardInfo}>
                 <Text style={styles.cardName}>{card.brand} ····  {card.last4}</Text>
-                <Text style={styles.cardExpiry}>{card.name} · Expires {card.expiry}</Text>
+                <Text style={styles.cardExpiry}>Saved for future checks</Text>
               </View>
             </View>
-            {card.primary && (
-              <View style={styles.primaryBadge}>
-                <Text style={styles.primaryBadgeText}>PRIMARY</Text>
-              </View>
-            )}
+            <TouchableOpacity
+              style={styles.primaryBadge}
+              onPress={() => clear()}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.primaryBadgeText}>REMOVE</Text>
+            </TouchableOpacity>
           </View>
-        ))}
+        ) : (
+          <Text style={styles.emptyText}>No card on file yet.</Text>
+        )}
 
-        <TouchableOpacity style={styles.addBtn} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.addBtn}
+          activeOpacity={0.7}
+          onPress={() => save(PLACEHOLDER_CARD.brand, PLACEHOLDER_CARD.last4)}
+        >
           <Text style={styles.addBtnPlus}>+</Text>
           <Text style={styles.addBtnText}>ADD NEW CARD</Text>
         </TouchableOpacity>
 
         <Text style={styles.disclaimer}>
-          Cards are securely stored with Stripe. We never store your full card number.
+          Cards will be securely stored with Stripe. We never store your full card number.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -104,10 +114,17 @@ const styles = StyleSheet.create({
     color: '#888',
     letterSpacing: 0.3,
   },
+  emptyText: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: '#888',
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
   primaryBadge: {
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.4)',
+    borderColor: 'rgba(255,255,255,0.2)',
     borderRadius: 100,
     paddingHorizontal: 9,
     paddingVertical: 3,
@@ -115,7 +132,7 @@ const styles = StyleSheet.create({
   primaryBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#00FF7F',
+    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 1.5,
   },
   addBtn: {

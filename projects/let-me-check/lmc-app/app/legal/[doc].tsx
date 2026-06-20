@@ -7,7 +7,9 @@ import {
   ScrollView,
   StatusBar,
 } from 'react-native';
+import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { recordDocConsent } from '../lib/consent';
 
 type DocKey = 'terms' | 'privacy' | 'aup' | 'code';
 
@@ -196,6 +198,14 @@ export default function LegalDocScreen() {
   const { doc } = useLocalSearchParams<{ doc?: string }>();
   const key = (doc as DocKey) in DOCS ? (doc as DocKey) : 'terms';
   const content = DOCS[key];
+  const [accepted, setAccepted] = useState(false);
+
+  // SAFE-02: tapping Accept records a versioned consent row + a consent.accepted
+  // event for this specific document.
+  const handleAccept = () => {
+    setAccepted(true);
+    void recordDocConsent(key);
+  };
 
   return (
     <View style={styles.bg}>
@@ -234,6 +244,17 @@ export default function LegalDocScreen() {
               <Text style={styles.body}>{s.body}</Text>
             </View>
           ))}
+
+          <TouchableOpacity
+            style={[styles.acceptBtn, accepted && styles.acceptBtnDone]}
+            onPress={handleAccept}
+            disabled={accepted}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.acceptBtnText, accepted && styles.acceptBtnTextDone]}>
+              {accepted ? '✓ ACCEPTED' : 'I ACCEPT'}
+            </Text>
+          </TouchableOpacity>
 
           <Text style={styles.foot}>
             Questions about this document? Email legal@letmecheck.app.
@@ -323,6 +344,29 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     lineHeight: 19,
     letterSpacing: 0.2,
+  },
+
+  acceptBtn: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  acceptBtnDone: {
+    backgroundColor: 'rgba(0,255,127,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,127,0.45)',
+  },
+  acceptBtnText: {
+    fontFamily: 'Inter_700Bold',
+    color: '#000000',
+    fontSize: 12,
+    letterSpacing: 2.5,
+  },
+  acceptBtnTextDone: {
+    color: '#00FF7F',
   },
 
   foot: {

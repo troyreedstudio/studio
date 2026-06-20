@@ -12,6 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getIntendedRole } from '../state/intended-role';
+import { recordOnboardingConsents } from '../lib/consent';
 
 type AuthSource = 'apple' | 'google' | 'phone';
 
@@ -45,6 +46,9 @@ export default function QuickFinishScreen() {
 
   const handleFinish = () => {
     setSubmitting(true);
+    // SAFE-02: record 18+/Terms/Privacy/AUP acceptance to the consents table +
+    // event log. Best-effort and non-blocking — the box was a hard gate (`ready`).
+    void recordOnboardingConsents();
     setTimeout(() => {
       setSubmitting(false);
       // Scout-only users go straight into Scout-specific onboarding.
