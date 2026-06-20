@@ -128,7 +128,7 @@ Today there are **no automated tests** (only `tsc` + manual QA) — fine for a U
 **Plans**: 3 plans (3 waves)
 - [x] 01-01-PLAN.md — Supabase backend: event-log-first schema, RLS on every table, check state machine, test harness, schema push
 - [x] 01-02-PLAN.md — Client data+auth layer: SecureStore session, Apple/Google/phone-OTP sign-in, boot gate, typed api wrappers
-- [ ] 01-03-PLAN.md — Persist the 6 stores via Supabase, record consent (SAFE-02), role switch + sign-out, EAS env, on-device verification
+- [x] 01-03-PLAN.md — Persist the 6 stores via Supabase, record consent (SAFE-02), role switch + sign-out, EAS env, on-device verification
 
 ### Phase 2: One Real Check (no money, no dispatch)
 **Goal**: Prove the Postgres-as-state-machine + Realtime spine — a genuine check is created, moves through real states (including failure states), and the Seeker watches it live.

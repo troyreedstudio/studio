@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 01-02-PLAN.md (Apple/Google auth live, phone deferred); BLOCKED on human checkpoint: Google OAuth client + Supabase provider config + on-device test"
-last_updated: "2026-06-20T11:19:08.318Z"
+stopped_at: Completed 01-03-PLAN.md (code-complete; Task 4 on-device verify pending)
+last_updated: "2026-06-20T12:54:11.004Z"
 last_activity: 2026-06-20
 progress:
   total_phases: 7
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
-  percent: 67
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 1 of 7 (Foundation — Auth + Persistence + Event Log)
-Plan: 2 of 3 (01-01 Supabase backend) — offline tasks 0-5 complete, committed
+Plan: 3 of 3 (01-01 Supabase backend) — offline tasks 0-5 complete, committed
 Status: Ready to execute
 Last activity: 2026-06-20
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 
 *Updated after each plan completion*
 | Phase 01 P02 | 9 | 3 tasks | 12 files |
+| Phase 01 P03 | 8 | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - Money: Capture-on-delivery, not on acceptance (no charge for an undelivered clip; fewer chargebacks)
 - Verification: Full per-clip AI verification (signage auto-reject + AI Verdict) is in V1; only PREDICTIVE AI is deferred to Phase 2+
 - [Phase 01]: Phone-OTP deferred behind PHONE_AUTH_ENABLED flag (Twilio + A2P not live); Apple+Google are the live sign-in methods this wave
+- [Phase 01]: Stores keep synchronous mutator signatures (optimistic cache + background persist) so importing screens need no changes
+- [Phase 01]: EAS env vars pulled via per-profile environment key (no secret literals in eas.json)
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-20T11:18:50.956Z
-Stopped at: Completed 01-02-PLAN.md (Apple/Google auth live, phone deferred); BLOCKED on human checkpoint: Google OAuth client + Supabase provider config + on-device test
+Last session: 2026-06-20T12:54:11.001Z
+Stopped at: Completed 01-03-PLAN.md (code-complete; Task 4 on-device verify pending)
 Resume file: None

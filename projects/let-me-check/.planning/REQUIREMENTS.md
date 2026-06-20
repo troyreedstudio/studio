@@ -13,7 +13,7 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 ### Backend & Data
 - [x] **DATA-01**: App data persists in a real backend (Supabase), replacing in-memory stores
 - [x] **DATA-02**: A check's lifecycle is a server-owned state machine; the client holds no business logic or secrets
-- [ ] **DATA-03**: Core entities persist: users, roles, checks, venues/locations, clips, payments, payouts, ratings
+- [x] **DATA-03**: Core entities persist: users, roles, checks, venues/locations, clips, payments, payouts, ratings
 - [ ] **DATA-04**: **Immutable event log from day 1** — every action (request created, Scout pinged/accepted/declined, clip captured/submitted/rejected, cancel, rating, GPS ping, payment auth/capture/refund/payout) logged with timestamp + geo + context. Decided before schemas are drawn. Foundation for later predictive AI (per CTO plan §6).
 
 ### The Core Check Loop
@@ -57,7 +57,7 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 - [ ] **VER-06**: **AI signage/place detection on every clip (V1)** — managed vision API (Google Vision, ~$1/mo) detects the venue's sign/logo + cross-checks GPS, and **auto-rejects wrong/faked clips** (the "last line of defence"); ambiguous cases fall to manual review (VER-04)
 - [ ] **VER-07**: **AI clip auto-summary ("AI Verdict", V1)** — a qualitative one-line read of the clip ("short line · medium energy"); deliberately **NOT precise headcounts** (crowd-counting from video is deferred — unreliable off-the-shelf)
 - [ ] **SAFE-01**: No-film zones are auto-blocked (hospitals, schools, courts, police, private residences)
-- [ ] **SAFE-02**: 18+ + consent gates and acceptable-use are enforced at onboarding and use
+- [x] **SAFE-02**: 18+ + consent gates and acceptable-use are enforced at onboarding and use
 
 ### Notifications
 - [ ] **NOTIF-01**: Scouts get push alerts for nearby jobs
@@ -100,9 +100,9 @@ Every v1 requirement maps to exactly one phase. Coverage: 41/41.
 | AUTH-04 | Phase 1 | Complete |
 | DATA-01 | Phase 1 | Complete |
 | DATA-02 | Phase 1 | Complete |
-| DATA-03 | Phase 1 | Pending |
+| DATA-03 | Phase 1 | Complete |
 | DATA-04 | Phase 1 | Pending |
-| SAFE-02 | Phase 1 | Pending |
+| SAFE-02 | Phase 1 | Complete |
 | CHECK-01 | Phase 2 | Pending |
 | CHECK-02 | Phase 2 | Pending |
 | CHECK-03 | Phase 2 | Pending |
