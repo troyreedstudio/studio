@@ -23,3 +23,26 @@ ios/Pods/
 ios/.symlinks/
 android/.gradle/
 android/app/build/
+
+# Claude Code / RuFlo / agent tooling (machine-generated, not source)
+.claude-flow/
+.claude/
+.swarm/
+.mcp.json
+*.db
+
+# Generated security-audit reports (noisy, regenerated on demand)
+SECURITY_*.json
+SECURITY_*.txt
+security-audit.json
+
+# Local backups (large, not source)
+backups/
+project backups*/
+*.WRONG-BACKUP
+*.OLD
+
+# Android signing material — must NEVER be committed
+*.jks
+*.keystore
+key.properties
