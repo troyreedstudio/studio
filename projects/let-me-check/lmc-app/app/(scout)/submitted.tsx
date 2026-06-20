@@ -24,6 +24,7 @@ const STAGE_LABELS: Record<Stage, string> = {
 export default function SubmittedScreen() {
   const router = useRouter();
   const { venue = 'Komodo', payout = '10' } = useLocalSearchParams<{
+    checkId?: string;
     venue?: string;
     payout?: string;
   }>();
@@ -31,8 +32,9 @@ export default function SubmittedScreen() {
   const [stage, setStage] = useState<Stage>('verifying');
   const fade = useRef(new Animated.Value(0)).current;
   const toastAnim = useRef(new Animated.Value(0)).current;
+  // Read-only: the existing running balance is shown in the cleared toast.
+  // NO earnings are credited here — money is Phase 4 (see TODO below).
   const earnings = useScoutEarnings();
-  const [didCredit, setDidCredit] = useState(false);
 
   useEffect(() => {
     Animated.timing(fade, { toValue: 1, duration: 500, useNativeDriver: true }).start();
@@ -44,16 +46,15 @@ export default function SubmittedScreen() {
     };
   }, [fade]);
 
-  // When the verification pipeline clears, credit the Scout's earnings ONCE
-  // and slide up the cleared-payment toast.
+  // When the check reads as delivered/accepted, slide up the confirmation toast.
+  // TODO(phase-4): credit the Scout payout on capture/delivery here (real money,
+  // server-owned). This phase reflects delivery only — no earnings mutation.
   useEffect(() => {
-    if (stage !== 'accepted' || didCredit) return;
-    earnings.addClipEarning(Number(payout));
-    setDidCredit(true);
+    if (stage !== 'accepted') return;
     Animated.sequence([
       Animated.timing(toastAnim, { toValue: 1, duration: 320, useNativeDriver: true }),
     ]).start();
-  }, [stage, didCredit, earnings, payout, toastAnim]);
+  }, [stage, toastAnim]);
 
   return (
     <View style={styles.container}>
