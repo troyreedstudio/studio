@@ -66,6 +66,16 @@ module.exports = {
       eas: {
         projectId: '59bc5e82-de99-4541-b883-82e09005acfc',
       },
+      // Public Supabase config — bundled into the manifest so Release builds have it
+      // (Release does not inline .env). The anon key is the public, RLS-protected key.
+      supabaseUrl: 'https://cawqasszfbzvbtunamda.supabase.co',
+      supabaseAnonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhd3Fhc3N6ZmJ6dmJ0dW5hbWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MjAwMjUsImV4cCI6MjA5NzQ5NjAyNX0.h2y8PmDXKJodAgFOzHdxtg-6UCZvvu9WEZyJWV1n_S0',
+      // Public Google OAuth client IDs (also bundled so Release builds have them).
+      googleWebClientId:
+        '676403846721-n1u58r2tdp07n9qb536782kllcgukfnf.apps.googleusercontent.com',
+      googleIosClientId:
+        '676403846721-denqiskp74ddp8s5ich1rpqdqhfkr5sq.apps.googleusercontent.com',
     },
     owner: 'troyreed26',
   },

@@ -4,6 +4,8 @@ import Mapbox from '@rnmapbox/maps';
 import { useEffect } from 'react';
 import { SessionProvider, useSession, hubRouteForRole } from './lib/session';
 
+// TODO(device-release): also surface this token via app.config extra (like Supabase/
+// Google) so Release builds have it — Release does not inline .env. Works in dev/Simulator.
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? null);
 
 import { useFonts, PlayfairDisplay_400Regular, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';

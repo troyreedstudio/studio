@@ -17,7 +17,19 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { AppState } from 'react-native';
+import Constants from 'expo-constants';
 import type { Database } from './database.types';
+
+// Release builds do NOT inline `.env` EXPO_PUBLIC_* vars into the embedded JS bundle
+// (only dev/export do), so read the public Supabase config from the app manifest
+// (`extra`, set in app.config.js) — which IS always bundled — with an env fallback
+// for the dev server.
+const extra = (Constants.expoConfig?.extra ?? {}) as {
+  supabaseUrl?: string;
+  supabaseAnonKey?: string;
+};
+const SUPABASE_URL = extra.supabaseUrl ?? process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = extra.supabaseAnonKey ?? process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
 const SecureStoreAdapter = {
   getItem: (key: string) => SecureStore.getItemAsync(key),
@@ -26,8 +38,8 @@ const SecureStoreAdapter = {
 };
 
 export const supabase = createClient<Database>(
-  process.env.EXPO_PUBLIC_SUPABASE_URL!,
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
   {
     auth: {
       storage: SecureStoreAdapter,
