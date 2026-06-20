@@ -142,7 +142,7 @@ Today there are **no automated tests** (only `tsc` + manual QA) — fine for a U
 **Plans**: 5 plans
 - [x] 02-01-PLAN.md — Server SQL spine: hardened transition_check + accept_check + clips/location/no_scout + Scout RLS + Realtime publication + pgTAP matrix
 - [ ] 02-02-PLAN.md — [BLOCKING] push migrations 0007-0009 live + confirm Realtime publication + regenerate database.types.ts
-- [ ] 02-03-PLAN.md — Client lib: lib/checks.ts (create/list/accept/markDelivered/rate/cancel) + lib/realtime.ts (subscribeToCheck) + Vitest
+- [x] 02-03-PLAN.md — Client lib: lib/checks.ts (create/list/accept/markDelivered/rate/cancel) + lib/realtime.ts (subscribeToCheck) + Vitest
 - [ ] 02-04-PLAN.md — Seeker wiring: payment->createCheck, finding/waiting->live status, delivery->clip metadata + rateCheck
 - [ ] 02-05-PLAN.md — Scout wiring: dashboard->listOpenChecks/acceptCheck, filming->markDelivered (stub clip), submitted (no earnings)
 
