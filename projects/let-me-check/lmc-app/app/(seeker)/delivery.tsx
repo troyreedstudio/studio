@@ -2,7 +2,9 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Ale
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { getCheck, getCheckClip, rateCheck, type CheckRow, type ClipRow } from '../lib/checks';
+import { getPlaybackToken } from '../lib/clips';
 
 const TAGS = ['Busy Tonight', 'Short Line', 'Worth It'];
 
@@ -30,6 +32,9 @@ export default function DeliveryScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [check, setCheck] = useState<CheckRow | null>(null);
   const [clip, setClip] = useState<ClipRow | null>(null);
+  // Signed Mux HLS source. Built only once the clip is ready (has a playback id)
+  // and a per-Seeker playback token is minted (VID-04 — scoped to the buyer).
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
 
   // Load the real check row + its clip metadata (when/where filmed).
   useEffect(() => {
@@ -37,6 +42,30 @@ export default function DeliveryScreen() {
     getCheck(checkId).then(setCheck).catch(() => {});
     getCheckClip(checkId).then(setClip).catch(() => {});
   }, [checkId]);
+
+  // Once the clip is ready (Mux finished — playback id present), mint a signed
+  // token and build the HLS URL. Only the owning Seeker gets a token, so a
+  // second account cannot watch it (VID-04). Until then videoSrc stays null and
+  // the screen shows a "processing" state.
+  useEffect(() => {
+    if (!checkId || !clip?.mux_playback_id) return;
+    let cancelled = false;
+    getPlaybackToken(checkId)
+      .then((token) => {
+        if (!cancelled) {
+          setVideoSrc(`https://stream.mux.com/${clip.mux_playback_id}.m3u8?token=${token}`);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [checkId, clip?.mux_playback_id]);
+
+  // expo-video player on the signed Mux HLS stream (mirrors venue.tsx usage).
+  const player = useVideoPlayer(videoSrc, (p) => {
+    p.loop = false;
+  });
 
   // Prefer the real check's location label; fall back to the passed venue/city.
   const locationLabel = check?.location_label || `${venue}, ${city}`;
@@ -81,13 +110,23 @@ export default function DeliveryScreen() {
           <Text style={styles.venueName}>{locationLabel}</Text>
         </View>
 
-        {/* Video Placeholder */}
+        {/* Real signed Mux HLS player (VID-04) — or a processing state until the
+            webhook finalizes the clip and a playback token is minted. */}
         <View style={styles.videoBox}>
-          <TouchableOpacity style={styles.playButton} activeOpacity={0.8}>
-            <View style={styles.playIcon}>
-              <Text style={styles.playArrow}>▶</Text>
+          {videoSrc ? (
+            <VideoView
+              player={player}
+              style={StyleSheet.absoluteFillObject}
+              contentFit="cover"
+              allowsFullscreen
+              nativeControls
+            />
+          ) : (
+            <View style={styles.processingWrap}>
+              <Ionicons name="hourglass-outline" size={28} color="rgba(255,255,255,0.6)" />
+              <Text style={styles.processingText}>Processing your clip…</Text>
             </View>
-          </TouchableOpacity>
+          )}
           <View style={styles.videoBadge}>
             <Text style={styles.videoBadgeText}>HD · 15s</Text>
           </View>
@@ -227,23 +266,17 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  playButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
+  processingWrap: {
     alignItems: 'center',
-  },
-  playIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#fff',
     justifyContent: 'center',
-    alignItems: 'center',
+    gap: 10,
   },
-  playArrow: { fontSize: 20, color: '#000', marginLeft: 4 },
+  processingText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12.5,
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 0.3,
+  },
   videoBadge: {
     position: 'absolute',
     top: 12,
