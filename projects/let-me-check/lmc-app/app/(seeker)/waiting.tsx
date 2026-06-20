@@ -1,8 +1,10 @@
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert, AppState } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
+import { getCheck, cancelCheck, type CheckRow } from '../lib/checks';
+import { subscribeToCheck } from '../lib/realtime';
 
 // Mapbox uses [longitude, latitude]
 const VENUE: [number, number] = [-80.1917, 25.7634];
@@ -162,34 +164,55 @@ function VenuePin({ coordinate, label }: { coordinate: [number, number]; label: 
 
 export default function WaitingScreen() {
   const router = useRouter();
-  const { venue = 'Komodo', city = 'Miami', tier = 'standard', time = '10' } = useLocalSearchParams<{
+  const { checkId, venue = 'Komodo', city = 'Miami', tier = 'standard' } = useLocalSearchParams<{
+    checkId: string;
     venue: string;
     city: string;
     tier: string;
     time: string;
   }>();
 
-  const minutes = parseInt(time.replace(/\D/g, ''), 10) || 10;
-  const [secondsLeft, setSecondsLeft] = useState(minutes * 60);
+  const [check, setCheck] = useState<CheckRow | null>(null);
   const [scoutShape, setScoutShape] = useState(scoutsGeoJSON);
   const cameraRef = useRef<Mapbox.Camera>(null);
 
+  // Live status off the real row (DISP-04). Initial getCheck() then subscribe;
+  // onError re-fetches to reconcile a transition missed while disconnected.
   useEffect(() => {
-    if (secondsLeft <= 0) return;
-    const interval = setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(interval);
-  }, [secondsLeft]);
+    if (!checkId) return;
+    const refetch = () => getCheck(checkId).then(setCheck).catch(() => {});
+    refetch();
+    const unsub = subscribeToCheck(checkId, setCheck, refetch);
+    return unsub;
+  }, [checkId]);
 
+  // Re-fetch on foreground — the row is source-of-truth, so reconcile any
+  // transition that landed while the app was backgrounded (Pitfall 4).
   useEffect(() => {
-    if (secondsLeft > 0) return;
-    const t = setTimeout(() => {
-      router.replace({
-        pathname: '/(seeker)/delivery',
-        params: { venue: String(venue), city: String(city) },
-      });
-    }, 600);
-    return () => clearTimeout(t);
-  }, [secondsLeft, router, venue, city]);
+    if (!checkId) return;
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') getCheck(checkId).then(setCheck).catch(() => {});
+    });
+    return () => sub.remove();
+  }, [checkId]);
+
+  // Route off the REAL status — no faked countdown.
+  useEffect(() => {
+    if (!check) return;
+    switch (check.status) {
+      case 'delivered':
+      case 'rated':
+        router.replace({ pathname: '/(seeker)/delivery', params: { checkId: check.id } });
+        break;
+      case 'cancelled':
+        router.replace({ pathname: '/(seeker)/cancelled', params: { venue: String(venue) } });
+        break;
+      case 'no_scout':
+      case 'expired':
+        router.replace({ pathname: '/(seeker)/error', params: { type: 'no-scouts', reason: check.status } });
+        break;
+    }
+  }, [check, router, venue]);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -212,9 +235,10 @@ export default function WaitingScreen() {
     return () => clearInterval(t);
   }, []);
 
-  const mins = Math.floor(secondsLeft / 60);
-  const secs = secondsLeft % 60;
-  const pad = (n: number) => String(n).padStart(2, '0');
+  // Map the real status to the visible phase. 'assigned' = Scout accepted and
+  // is on-site; 'filming' = recording in progress.
+  const status = check?.status ?? 'assigned';
+  const isFilming = status === 'filming';
 
   // Scout is AT the venue — jitter position every 2s to feel alive
   const [scoutPos, setScoutPos] = useState<[number, number]>(SCOUT_BASE);
@@ -348,10 +372,12 @@ export default function WaitingScreen() {
         {/* LMC mini brand mark — centered hero above the countdown */}
         <Text style={styles.brandMonogram}>LMC</Text>
 
-        {/* Big orange countdown — the attention moment */}
-        <Text style={styles.etaLabel}>YOUR CHECK ARRIVES IN</Text>
-        <Text style={styles.countdown}>
-          {pad(mins)}<Text style={styles.countdownColon}>:</Text>{pad(secs)}
+        {/* Live status hero — driven by the real check row, not a timer */}
+        <Text style={styles.etaLabel}>
+          {isFilming ? 'YOUR SCOUT IS FILMING' : 'YOUR SCOUT IS ON SITE'}
+        </Text>
+        <Text style={styles.statusHero}>
+          {isFilming ? 'Recording your clip…' : 'Getting into position…'}
         </Text>
 
         {/* Venue + Scout meta */}
@@ -360,18 +386,16 @@ export default function WaitingScreen() {
           <Text style={styles.metaDot}>·</Text>
           <Text style={styles.metaPrimary}>{city}</Text>
           <Text style={styles.metaDot}>·</Text>
-          <Text style={styles.metaStatus}>Scout on-site</Text>
-          <Text style={styles.metaDot}>·</Text>
-          <Text style={styles.metaStatus}>filming</Text>
+          <Text style={styles.metaStatus}>{isFilming ? 'filming' : 'Scout on-site'}</Text>
         </View>
 
-        {/* Progress steps — green (done) + orange (active) */}
+        {/* Progress steps — driven by the real status */}
         <View style={styles.stepsRow}>
           <Step label="Paid" state="done" />
           <StepLine state="done" />
           <Step label="Assigned" state="done" />
-          <StepLine state="active" />
-          <Step label="Recording" state="active" />
+          <StepLine state={isFilming ? 'done' : 'active'} />
+          <Step label="Recording" state={isFilming ? 'active' : 'pending'} />
           <StepLine state="pending" />
           <Step label="Delivered" state="pending" />
         </View>
@@ -403,7 +427,8 @@ export default function WaitingScreen() {
                 {
                   text: `Cancel · Refund $${refund}`,
                   style: 'destructive',
-                  onPress: () =>
+                  onPress: async () => {
+                    if (checkId) await cancelCheck(checkId).catch(() => {});
                     router.replace({
                       pathname: '/(seeker)/cancelled',
                       params: {
@@ -412,7 +437,8 @@ export default function WaitingScreen() {
                         refund,
                         total: baseTotal.toFixed(2),
                       },
-                    }),
+                    });
+                  },
                 },
               ]
             );
@@ -420,19 +446,6 @@ export default function WaitingScreen() {
           activeOpacity={0.6}
         >
           <Text style={styles.cancelLinkText}>Cancel request</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.skipAheadLink}
-          onPress={() =>
-            router.replace({
-              pathname: '/(seeker)/delivery',
-              params: { venue: String(venue), city: String(city) },
-            })
-          }
-          activeOpacity={0.6}
-        >
-          <Text style={styles.skipAheadText}>Skip ahead · prototype</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -744,16 +757,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 4,
   },
-  countdown: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 56,
+  statusHero: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 24,
     color: '#ffffff',
-    letterSpacing: 2,
+    letterSpacing: 0.3,
     textAlign: 'center',
-    lineHeight: 60,
-  },
-  countdownColon: {
-    color: 'rgba(255,255,255,0.45)',
+    lineHeight: 30,
+    marginTop: 2,
   },
   metaRow: {
     flexDirection: 'row',
@@ -836,18 +847,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#ffffff',
     letterSpacing: 0.5,
-  },
-
-  skipAheadLink: {
-    alignSelf: 'center',
-    paddingVertical: 4,
-    marginTop: 2,
-  },
-  skipAheadText: {
-    fontFamily: 'JetBrainsMono_400Regular',
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.35)',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
   },
 });

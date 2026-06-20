@@ -11,22 +11,20 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { getCheck, cancelCheck, type CheckRow } from '../lib/checks';
+import { subscribeToCheck } from '../lib/realtime';
 
-// MATCHING / DISPATCH PHASE — the "finding a Scout" wait.
+// MATCHING / DISPATCH PHASE — the "finding a Scout" wait (status 'dispatching').
 // This time is INCIDENTAL (Uber-style): it is NOT counted against the delivery
-// SLA. The 10-minute delivery clock only starts once a Scout ACCEPTS (on the
-// waiting screen). If no Scout accepts in time, we bail to the no-scouts refund
-// so the Seeker can make a Plan B instead of waiting in no-man's-land.
-
-const MATCH_MS = 5500; // prototype: Scout accepts after ~5.5s of searching
-const REVEAL_MS = 1400; // hold the "accepted" reveal before the clock starts
-
-const MATCHED_SCOUT = { name: 'Jake C.', rating: '4.9', clips: '247' };
+// SLA. The 10-minute delivery clock only starts once a Scout ACCEPTS. We watch
+// the REAL check row over Realtime (DISP-04): on 'assigned' we move to waiting;
+// on 'no_scout'/'expired' we bail to error.tsx so the Seeker can make a Plan B;
+// on 'cancelled' we route to the cancelled screen.
 
 const STATUSES = [
   'Pinging Scouts inside the venue',
   '3 Scouts nearby',
-  'Jake is reviewing the job',
+  'A Scout is reviewing the job',
 ];
 
 function pad(n: number) {
@@ -36,21 +34,75 @@ function pad(n: number) {
 export default function FindingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
+    checkId?: string;
     venue?: string;
     city?: string;
     tier?: string;
     time?: string;
-    total?: string;
   }>();
+  const checkId = params.checkId;
   const venue = params.venue || 'this venue';
 
   const [elapsed, setElapsed] = useState(0);
   const [statusIdx, setStatusIdx] = useState(0);
   const [matched, setMatched] = useState(false);
+  const [check, setCheck] = useState<CheckRow | null>(null);
 
   const ring1 = useRef(new Animated.Value(0)).current;
   const ring2 = useRef(new Animated.Value(0)).current;
   const matchFade = useRef(new Animated.Value(0)).current;
+
+  // Watch the real check row live (DISP-04). Initial getCheck() then subscribe;
+  // onError re-fetches so a transition missed while disconnected reconciles.
+  useEffect(() => {
+    if (!checkId) return;
+    getCheck(checkId).then(setCheck).catch(() => {});
+    const unsub = subscribeToCheck(
+      checkId,
+      setCheck,
+      () => getCheck(checkId).then(setCheck).catch(() => {}),
+    );
+    return unsub;
+  }, [checkId]);
+
+  // Route off the REAL status — never a faked timer.
+  useEffect(() => {
+    if (!check) return;
+    switch (check.status) {
+      case 'assigned':
+      case 'filming':
+      case 'delivered':
+      case 'rated':
+        // A Scout has it — hand off to the waiting/delivery flow.
+        setMatched(true);
+        Animated.timing(matchFade, {
+          toValue: 1,
+          duration: 350,
+          useNativeDriver: true,
+        }).start();
+        router.replace({
+          pathname: '/(seeker)/waiting',
+          params: {
+            checkId: check.id,
+            venue: String(params.venue ?? ''),
+            city: String(params.city ?? ''),
+            tier: String(params.tier ?? check.tier),
+            time: String(params.time ?? ''),
+          },
+        });
+        break;
+      case 'no_scout':
+      case 'expired':
+        router.replace({
+          pathname: '/(seeker)/error',
+          params: { type: 'no-scouts', reason: check.status },
+        });
+        break;
+      case 'cancelled':
+        router.replace({ pathname: '/(seeker)/cancelled', params: { venue: String(params.venue ?? '') } });
+        break;
+    }
+  }, [check, params.venue, params.city, params.tier, params.time, router, matchFade]);
 
   // Pulsing radar rings
   useEffect(() => {
@@ -77,42 +129,22 @@ export default function FindingScreen() {
     };
   }, [ring1, ring2]);
 
-  // Incidental elapsed timer
+  // Incidental elapsed timer — COSMETIC ONLY. It never drives navigation; the
+  // real status row decides when we leave this screen.
   useEffect(() => {
     if (matched) return;
     const t = setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, [matched]);
 
-  // Cycle the status lines
+  // Advance the status copy gently while searching (cosmetic, not navigation).
   useEffect(() => {
     if (matched) return;
     const t = setInterval(() => {
       setStatusIdx((i) => Math.min(STATUSES.length - 1, i + 1));
-    }, MATCH_MS / STATUSES.length);
+    }, 2000);
     return () => clearInterval(t);
   }, [matched]);
-
-  // Match, reveal, then start the delivery clock on the waiting screen
-  useEffect(() => {
-    const matchT = setTimeout(() => {
-      setMatched(true);
-      Animated.timing(matchFade, {
-        toValue: 1,
-        duration: 350,
-        useNativeDriver: true,
-      }).start();
-    }, MATCH_MS);
-    return () => clearTimeout(matchT);
-  }, [matchFade]);
-
-  useEffect(() => {
-    if (!matched) return;
-    const goT = setTimeout(() => {
-      router.replace({ pathname: '/(seeker)/confirmed', params: { ...params, scout: MATCHED_SCOUT.name } });
-    }, REVEAL_MS);
-    return () => clearTimeout(goT);
-  }, [matched, params, router]);
 
   const ringStyle = (val: Animated.Value) => ({
     opacity: val.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.5, 0] }),
@@ -123,11 +155,15 @@ export default function FindingScreen() {
     <View style={styles.bg}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
-        {/* Cancel is free here — no Scout has committed yet */}
+        {/* Cancel is free here — no Scout has committed yet. Cancelling the
+            real check (server-owned transition) frees it from dispatch. */}
         <View style={styles.header}>
           {!matched ? (
             <TouchableOpacity
-              onPress={() => router.replace('/(seeker)/home')}
+              onPress={async () => {
+                if (checkId) await cancelCheck(checkId).catch(() => {});
+                router.replace('/(seeker)/home');
+              }}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <Text style={styles.cancelText}>Cancel</Text>
@@ -166,29 +202,19 @@ export default function FindingScreen() {
           ) : (
             <Animated.View style={{ opacity: matchFade, alignItems: 'center' }}>
               <Text style={styles.matchedEyebrow}>SCOUT FOUND</Text>
-              <Text style={styles.matchedName}>{MATCHED_SCOUT.name} accepted</Text>
+              <Text style={styles.matchedName}>A Scout accepted</Text>
               <View style={styles.matchedMeta}>
-                <Ionicons name="star" size={12} color="#FFCB47" />
-                <Text style={styles.matchedMetaText}>
-                  {MATCHED_SCOUT.rating} · {MATCHED_SCOUT.clips} clips · on-site
-                </Text>
+                <Ionicons name="checkmark-circle" size={13} color="#00FF7F" />
+                <Text style={styles.matchedMetaText}>On-site · starting your clock</Text>
               </View>
-              <Text style={styles.matchedNote}>Payment confirmed. Starting your clock…</Text>
+              <Text style={styles.matchedNote}>Taking you to your live check…</Text>
             </Animated.View>
           )}
         </View>
 
-        {/* Plan-B path: if no Scout takes the job, the Seeker isn't stuck */}
-        {!matched && (
-          <TouchableOpacity
-            style={styles.noScoutLink}
-            onPress={() => router.replace({ pathname: '/(seeker)/error', params: { type: 'no-scouts' } })}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.noScoutText}>Simulate: no Scouts available</Text>
-          </TouchableOpacity>
-        )}
+        {/* Plan-B path: if no Scout takes the job, the dispatch service
+            transitions the check to no_scout/expired and the live row routes
+            us to error.tsx automatically — no client-driven shortcut. */}
       </SafeAreaView>
     </View>
   );
