@@ -12,6 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { markFilming, markDelivered } from '../lib/checks';
 
 const TROUBLE_REASONS = [
   'Line is gone / venue empty',
@@ -22,13 +23,16 @@ const TROUBLE_REASONS = [
 
 export default function FilmingScreen() {
   const router = useRouter();
-  const { venue = 'Komodo', payout = '10', tier = 'priority' } = useLocalSearchParams<{
+  const { checkId, venue = 'Komodo', payout = '10', tier = 'priority' } = useLocalSearchParams<{
+    checkId?: string;
     venue?: string;
     payout?: string;
     tier?: string;
   }>();
   const isPriority = tier === 'priority';
   const totalSeconds = isPriority ? 420 : 600;
+  // Guard so 'assigned -> filming' fires exactly once (the first capture start).
+  const filmingMarked = useRef(false);
 
   const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
   const [recording, setRecording] = useState(false);
@@ -87,6 +91,36 @@ export default function FilmingScreen() {
     setRecording(false);
   };
 
+  // Toggle the record button. On the FIRST capture start, move the check
+  // 'assigned -> filming' (required before the stub-clip insert per RLS 0009,
+  // and it drives the Seeker's "filming" step). Fires once via filmingMarked.
+  const handleToggleRecord = () => {
+    const starting = !recording;
+    if (starting && checkId && !filmingMarked.current) {
+      filmingMarked.current = true;
+      markFilming(checkId).catch(() => {
+        // Allow a retry if the transition didn't land (e.g. transient network).
+        filmingMarked.current = false;
+      });
+    }
+    setRecording(starting);
+  };
+
+  // SUBMIT: mark the check delivered with a STUB clip (no real camera/Mux this
+  // phase) and route to the success screen with the real checkId.
+  // TODO(phase-3): replace the stub clip with a real Mux capture/upload.
+  const handleSubmit = () => {
+    if (!checkId) {
+      setUploading(true);
+      return;
+    }
+    setUploading(true);
+    markDelivered(checkId, new Date().toISOString()).catch(() => {
+      // Delivery failed — drop out of the upload animation so the Scout can retry.
+      setUploading(false);
+    });
+  };
+
   // Upload progression — runs when uploading flips true.
   // Stage tracked locally to avoid the effect retriggering on stage change.
   useEffect(() => {
@@ -107,13 +141,20 @@ export default function FilmingScreen() {
         setUploadPct(100);
         setUploadStage('done');
         clearInterval(tick);
-        setTimeout(() => router.replace('/(scout)/submitted'), 700);
+        setTimeout(
+          () =>
+            router.replace({
+              pathname: '/(scout)/submitted',
+              params: { checkId: String(checkId ?? ''), tier: String(tier) },
+            }),
+          700,
+        );
         return;
       }
       setUploadPct(pct);
     }, 220);
     return () => clearInterval(tick);
-  }, [uploading, router]);
+  }, [uploading, router, checkId, tier]);
 
   const pad = (n: number) => String(n).padStart(2, '0');
   const timeLeft = `${pad(Math.floor(secondsLeft / 60))}:${pad(secondsLeft % 60)}`;
@@ -353,7 +394,7 @@ export default function FilmingScreen() {
                     takesCount >= MAX_TAKES && styles.submitBtnFull,
                   ]}
                   activeOpacity={0.9}
-                  onPress={() => setUploading(true)}
+                  onPress={handleSubmit}
                 >
                   <Ionicons name="arrow-up" size={14} color="#000" />
                   <Text style={styles.submitBtnText}>SUBMIT CLIP</Text>
@@ -364,7 +405,7 @@ export default function FilmingScreen() {
             <View style={styles.recordWrap}>
               <TouchableOpacity
                 style={styles.recordBtn}
-                onPress={() => setRecording(!recording)}
+                onPress={handleToggleRecord}
                 activeOpacity={0.85}
               >
                 {!recording && (
