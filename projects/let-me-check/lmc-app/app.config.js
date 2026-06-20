@@ -51,6 +51,15 @@ module.exports = {
           RNMapboxMapsDownloadToken: process.env.MAPBOX_DOWNLOAD_TOKEN,
         },
       ],
+      'expo-apple-authentication',
+      [
+        '@react-native-google-signin/google-signin',
+        {
+          // Reversed iOS client ID (com.googleusercontent.apps.<ios-client-id>)
+          iosUrlScheme:
+            'com.googleusercontent.apps.676403846721-denqiskp74ddp8s5ich1rpqdqhfkr5sq',
+        },
+      ],
     ],
     extra: {
       router: {},
