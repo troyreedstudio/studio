@@ -17,7 +17,7 @@ create table public.profiles (
   phone text,
   is_seeker boolean not null default false,
   is_scout boolean not null default false,
-  current_role text not null default 'seeker' check (current_role in ('seeker','scout')),
+  "current_role" text not null default 'seeker' check ("current_role" in ('seeker','scout')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
