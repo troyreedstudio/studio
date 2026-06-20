@@ -75,10 +75,45 @@ export async function verifyMuxSignature(
   headers: Headers,
 ): Promise<void> {
   const secret = requireEnv("MUX_WEBHOOK_SECRET");
-  const mux = await getMux();
-  // The SDK reads the `mux-signature` header from the Headers object and does a
-  // constant-time compare; it throws on a bad/missing signature.
-  mux.webhooks.verifySignature(rawBody, headers, secret);
+  // Verify with native Web Crypto. The Mux Node SDK's verifier relies on Node
+  // crypto APIs that fatally crash in the Edge runtime (uncatchable -> 503).
+  // Mux scheme: header `Mux-Signature: t=<unix>,v1=<hex hmac>` where
+  //   hmac = HMAC_SHA256(`${t}.${rawBody}`, secret).
+  const sigHeader = headers.get("mux-signature") ?? headers.get("Mux-Signature") ?? "";
+  const fields: Record<string, string> = {};
+  for (const pair of sigHeader.split(",")) {
+    const idx = pair.indexOf("=");
+    if (idx > 0) fields[pair.slice(0, idx).trim()] = pair.slice(idx + 1).trim();
+  }
+  const t = fields["t"];
+  const v1 = fields["v1"];
+  if (!t || !v1) throw new Error("missing mux signature");
+  // Replay protection: reject signatures whose timestamp is >5 min off.
+  const skew = Math.abs(Math.floor(Date.now() / 1000) - Number(t));
+  if (!Number.isFinite(skew) || skew > 300) {
+    throw new Error("mux signature timestamp outside tolerance");
+  }
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const macBuf = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(`${t}.${rawBody}`),
+  );
+  const expected = Array.from(new Uint8Array(macBuf), (b) =>
+    b.toString(16).padStart(2, "0")).join("");
+  // constant-time compare
+  if (expected.length !== v1.length) throw new Error("bad mux signature");
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ v1.charCodeAt(i);
+  }
+  if (diff !== 0) throw new Error("bad mux signature");
 }
 
 /**

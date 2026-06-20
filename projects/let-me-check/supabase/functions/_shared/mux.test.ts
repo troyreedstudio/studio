@@ -79,9 +79,27 @@ Deno.test("A2: verifyMuxSignature throws on a forged mux-signature header", asyn
 });
 
 Deno.test("A3: verifyMuxSignature does NOT throw on a correctly-signed body", async () => {
-  installMockMux();
-  const good = new Headers({ "mux-signature": "valid-signature" });
-  await verifyMuxSignature('{"type":"video.asset.ready"}', good); // must not throw
+  // Real HMAC — verification is now native Web Crypto (no SDK), so build a genuine
+  // Mux-Signature: t=<now>,v1=<hex HMAC_SHA256(`${t}.${body}`, secret)>.
+  const secret = Deno.env.get("MUX_WEBHOOK_SECRET")!;
+  const body = '{"type":"video.asset.ready"}';
+  const t = Math.floor(Date.now() / 1000).toString();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const mac = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(`${t}.${body}`),
+  );
+  const v1 = Array.from(new Uint8Array(mac), (b) =>
+    b.toString(16).padStart(2, "0")).join("");
+  const good = new Headers({ "mux-signature": `t=${t},v1=${v1}` });
+  await verifyMuxSignature(body, good); // must not throw
   assert(true);
 });
 
