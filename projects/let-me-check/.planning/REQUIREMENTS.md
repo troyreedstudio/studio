@@ -66,7 +66,7 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 ### Markets & Rollout (national, city-by-city)
 - [ ] **MKT-01**: Cities/markets are **data-driven** (venues, coverage, pricing, **plus country, currency, and locale**) as data, not code — the foundation that makes non-US markets additive later
 - [ ] **MKT-02**: An operator can **activate a new city quickly** via admin — no engineering release
-- [ ] **MKT-03**: Launch sequence is supported: New York first, then Miami, LA, Atlanta, Chicago
+- [ ] **MKT-03**: Launch sequence is supported (7 cities): New York first, then Miami, LA, Atlanta, Chicago, Houston, San Francisco
 - [ ] **REC-01**: Recurring checks (already prototyped) are wired to real dispatch + billing
 
 ### B2B / Partner Venues (V1)
@@ -90,4 +90,56 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 
 ## Traceability
 
-(Filled by the roadmap — each REQ mapped to exactly one phase.)
+Every v1 requirement maps to exactly one phase. Coverage: 41/41.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| DATA-01 | Phase 1 | Pending |
+| DATA-02 | Phase 1 | Pending |
+| DATA-03 | Phase 1 | Pending |
+| DATA-04 | Phase 1 | Pending |
+| SAFE-02 | Phase 1 | Pending |
+| CHECK-01 | Phase 2 | Pending |
+| CHECK-02 | Phase 2 | Pending |
+| CHECK-03 | Phase 2 | Pending |
+| CHECK-05 | Phase 2 | Pending |
+| CHECK-06 | Phase 2 | Pending |
+| DISP-04 | Phase 2 | Pending |
+| VID-01 | Phase 3 | Pending |
+| VID-02 | Phase 3 | Pending |
+| VID-03 | Phase 3 | Pending |
+| VID-04 | Phase 3 | Pending |
+| CHECK-04 | Phase 3 | Pending |
+| PAY-01 | Phase 4 | Pending |
+| PAY-02 | Phase 4 | Pending |
+| PAY-03 | Phase 4 | Pending |
+| PAY-04 | Phase 4 | Pending |
+| PAY-05 | Phase 4 | Pending |
+| SCOUT-01 | Phase 4 | Pending |
+| SCOUT-02 | Phase 4 | Pending |
+| DISP-01 | Phase 5 | Pending |
+| DISP-02 | Phase 5 | Pending |
+| DISP-03 | Phase 5 | Pending |
+| SCOUT-03 | Phase 5 | Pending |
+| VER-01 | Phase 5 | Pending |
+| VER-03 | Phase 5 | Pending |
+| VER-05 | Phase 5 | Pending |
+| SAFE-01 | Phase 5 | Pending |
+| VER-02 | Phase 6 | Pending |
+| VER-04 | Phase 6 | Pending |
+| VER-06 | Phase 6 | Pending |
+| VER-07 | Phase 6 | Pending |
+| NOTIF-01 | Phase 7 | Pending |
+| NOTIF-02 | Phase 7 | Pending |
+| REC-01 | Phase 7 | Pending |
+| MKT-01 | Phase 7 | Pending |
+| MKT-02 | Phase 7 | Pending |
+| MKT-03 | Phase 7 | Pending |
+| B2B-01 | Phase 7 | Pending |
+| B2B-02 | Phase 7 | Pending |
+
+**Note on CHECK-04:** "A filmed clip is uploaded, processed, and delivered" is the through-line of the whole loop. It is owned by **Phase 3** (the video pipeline that actually produces, uploads, and delivers a real clip). Phases 2 (delivery state) and 5/6 (dispatch + verification feeding it) contribute, but the requirement is satisfied — a real clip arriving — only when Phase 3 ships.

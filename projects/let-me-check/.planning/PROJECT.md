@@ -4,7 +4,7 @@
 
 On-demand visual verification. A **Seeker** pays to have a **Scout** (a real person already on the ground) film a 15-second, video-only clip of any location — a nightclub line, an airport queue, a restaurant, a gym, real estate, anywhere — delivered in 7–10 minutes. One account holds both roles. Tagline: *"Know Before You Go."*
 
-Built for the **whole United States** from day one, but **rolled out city by city** to win each market before opening the next. Launch order: **New York → Miami → Los Angeles → Atlanta → Chicago.**
+Built for the **whole United States** from day one, but **rolled out city by city** to win each market before opening the next. Launch order (7 cities): **New York → Miami → Los Angeles → Atlanta → Chicago → Houston → San Francisco.**
 
 Today it is a **fully-built React Native + Expo UI prototype on mock data** — every screen and flow works, but there is no real backend, payments, camera, dispatch, or verification yet. This project plans and executes the path from that prototype to a launched product.
 
@@ -96,7 +96,7 @@ Today it is a **fully-built React Native + Expo UI prototype on mock data** — 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| National build, city-by-city rollout (NYC → Miami → LA → ATL → CHI) | Win one market's coverage/ratings/marketing, then roll momentum into the next | — Pending |
+| National build, city-by-city rollout (NYC → Miami → LA → ATL → CHI → HOU → SF) | Win one market's coverage/ratings/marketing, then roll momentum into the next | — Pending |
 | Demand via viral influencers; cities switch on instantly (data/admin) | Virality spikes demand fast; must open a city without a code release | — Pending |
 | Supply via existing gig drivers (Uber Eats/Postmates/couriers) | Pre-positioned, idle, gig-comfortable fleet = the answer to cold-start | — Pending |
 | Charge the Seeker on **delivery** (hold at request, capture on delivery) | No clip = no charge automatically; fewest refunds; Seeker-friendly | — Pending |
