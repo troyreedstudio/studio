@@ -18,6 +18,7 @@
 
 // expo-file-system 19 (SDK 54) moved the resumable upload task API to the
 // `/legacy` entry point; createUploadTask + FileSystemUploadType live there.
+import { useCallback, useRef, useState } from 'react';
 import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
 
@@ -79,13 +80,14 @@ export async function uploadWithRetry(
   localPath: string,
   uploadUrl: string,
   max = 4,
+  onProgress?: (fraction: number) => void,
 ): Promise<void> {
   let attempt = 0;
   let delay = 1000;
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
-      await uploadClip(localPath, uploadUrl);
+      await uploadClip(localPath, uploadUrl, onProgress);
       return;
     } catch (e) {
       attempt += 1;
@@ -109,4 +111,88 @@ export async function getPlaybackToken(checkId: string): Promise<string> {
   if (error) throw error;
   if (!data?.token) throw new Error('getPlaybackToken: missing token in response');
   return data.token;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Submit orchestration (extracted from filming.tsx — VID-03).
+//
+// This is the upload flow the Scout's filming screen drives on "submit", lifted
+// OUT of the screen so the screen stays a thin presenter (CLAUDE.md <500 lines)
+// and the orchestration is unit-testable in node. Given a locally recorded clip
+// path it: mints a single-use Mux upload URL (requestUploadUrl), then PUTs the
+// file with bounded retry (uploadWithRetry), surfacing progress + a small status
+// machine. It NEVER transitions the check — `delivered` is owned by the
+// signature-verified Mux webhook (03-02). The screen's job ends at 'processing'.
+// ────────────────────────────────────────────────────────────────────────────
+
+export type ClipUploadStatus = 'idle' | 'uploading' | 'processing' | 'error';
+
+export type ClipUploadGps = { lat: number; lng: number } | null;
+
+export type UseClipUpload = {
+  /** 0..1 upload fraction (drives the screen's progress bar). */
+  progress: number;
+  /** Small status machine the screen renders from. */
+  status: ClipUploadStatus;
+  /** Last error message when status === 'error', else null. */
+  error: string | null;
+  /**
+   * Run the real submit flow for a freshly recorded clip. Resolves true once the
+   * upload PUT succeeded (status -> 'processing'); resolves false on failure
+   * (status -> 'error') so the Scout can retake/retry. Never throws to the
+   * caller and never marks the check delivered.
+   */
+  submit: (checkId: string, localPath: string, gps?: ClipUploadGps) => Promise<boolean>;
+  /** Reset back to idle (e.g. before a retry). */
+  reset: () => void;
+};
+
+/**
+ * VID-03: the extracted recorder-upload orchestration the thin filming screen
+ * calls. Composes requestUploadUrl + uploadWithRetry, exposes progress/status,
+ * and — by construction — never calls transition_check (the webhook owns
+ * `delivered`). The optional GPS stamp is accepted for the provenance trail but
+ * is not verified here (verification is Phase 5).
+ */
+export function useClipUpload(): UseClipUpload {
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState<ClipUploadStatus>('idle');
+  const [error, setError] = useState<string | null>(null);
+  // Guard against a double-submit while an upload is already in flight.
+  const inFlight = useRef(false);
+
+  const reset = useCallback(() => {
+    inFlight.current = false;
+    setProgress(0);
+    setStatus('idle');
+    setError(null);
+  }, []);
+
+  const submit = useCallback(
+    async (checkId: string, localPath: string, _gps?: ClipUploadGps): Promise<boolean> => {
+      if (inFlight.current) return false;
+      inFlight.current = true;
+      setStatus('uploading');
+      setProgress(0);
+      setError(null);
+      try {
+        const { uploadUrl } = await requestUploadUrl(checkId);
+        await uploadWithRetry(localPath, uploadUrl, 4, (f) => setProgress(f));
+        // Upload PUT returned success. We STOP here — the webhook drives the
+        // check to delivered. The screen shows "processing" until Realtime flips.
+        setProgress(1);
+        setStatus('processing');
+        inFlight.current = false;
+        return true;
+      } catch (e) {
+        setStatus('error');
+        setError(e instanceof Error ? e.message : 'Upload failed');
+        inFlight.current = false;
+        return false;
+      }
+    },
+    [],
+  );
+
+  return { progress, status, error, submit, reset };
 }
