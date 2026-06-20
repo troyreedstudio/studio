@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 02-04-PLAN.md (Seeker screens wired to real checks; on-device walk-through BLOCKED)
-last_updated: "2026-06-20T16:57:16.736Z"
-last_activity: 2026-06-20 -- Phase 3 planning complete
+status: verifying
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-06-20T17:15:54.732Z"
+last_activity: 2026-06-20
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 5
-  completed_plans: 0
-  percent: 0
+  completed_plans: 2
+  percent: 40
 ---
 
 # Project State
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 
 Phase: 1 of 7 (Foundation — Auth + Persistence + Event Log)
 Plan: 3 of 3 (01-01 Supabase backend) — offline tasks 0-5 complete, committed
-Status: Ready to execute
-Last activity: 2026-06-20 -- Phase 3 planning complete
+Status: Phase complete — ready for verification
+Last activity: 2026-06-20
 
 Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-01 schema is pushed live)
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 02 P03 | 4m | 3 tasks | 4 files |
 | Phase 02 P05 | 3m | 3 tasks | 3 files |
 | Phase 02 P04 | 5m | 3 tasks | 4 files |
+| Phase 03 P02 | 16 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Scout delivery uses a stub clip (markDelivered) with no earnings credit; real camera is Phase 3, payouts Phase 4
 - [Phase 02]: Seeker confirm creates the real check now; Stripe hold is a documented TODO(phase-4) seam, no money in Phase 2
 - [Phase 02]: All seeker navigation off a check is driven by the real status row only; fake countdown + prototype skip link deleted
+- [Phase 03]: Mux secrets live only in Edge Functions (Deno.env); no helper returns a secret to a caller
+- [Phase 03]: mux-webhook is the SOLE driver of delivered (service role) — client cannot fake delivery
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-20T14:15:32.473Z
-Stopped at: Completed 02-04-PLAN.md (Seeker screens wired to real checks; on-device walk-through BLOCKED)
+Last session: 2026-06-20T17:15:49.764Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None

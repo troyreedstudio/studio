@@ -20,15 +20,15 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 - [x] **CHECK-01**: A Seeker can request a check at a chosen location (tier: Standard/Priority)
 - [x] **CHECK-02**: The request is dispatched to an eligible nearby Scout
 - [x] **CHECK-03**: A Scout can accept a request and is guided to film it
-- [ ] **CHECK-04**: A filmed clip is uploaded, processed, and delivered to the Seeker
+- [x] **CHECK-04**: A filmed clip is uploaded, processed, and delivered to the Seeker
 - [x] **CHECK-05**: A Seeker can watch the delivered clip and see its details (when/where filmed)
 - [x] **CHECK-06**: A Seeker can rate the delivered check
 
 ### Video Capture & Pipeline
 - [ ] **VID-01**: A Scout films a **live** 15-second clip in-app; **gallery/camera-roll import is blocked** (fresh-capture enforcement)
 - [ ] **VID-02**: Clips are **video-only — audio is stripped/never recorded** by default
-- [ ] **VID-03**: Upload is resilient on weak mobile networks (resumable/retried)
-- [ ] **VID-04**: Clips are transcoded and streamed via CDN (Mux); Seeker playback is smooth
+- [x] **VID-03**: Upload is resilient on weak mobile networks (resumable/retried)
+- [x] **VID-04**: Clips are transcoded and streamed via CDN (Mux); Seeker playback is smooth
 
 ### Payments & Payouts
 - [ ] **PAY-01**: A Seeker's card is **authorized (held)** when they confirm a request
@@ -111,9 +111,9 @@ Every v1 requirement maps to exactly one phase. Coverage: 41/41.
 | DISP-04 | Phase 2 | Complete |
 | VID-01 | Phase 3 | Pending |
 | VID-02 | Phase 3 | Pending |
-| VID-03 | Phase 3 | Pending |
-| VID-04 | Phase 3 | Pending |
-| CHECK-04 | Phase 3 | Pending |
+| VID-03 | Phase 3 | Complete |
+| VID-04 | Phase 3 | Complete |
+| CHECK-04 | Phase 3 | Complete |
 | PAY-01 | Phase 4 | Pending |
 | PAY-02 | Phase 4 | Pending |
 | PAY-03 | Phase 4 | Pending |
