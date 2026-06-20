@@ -106,28 +106,43 @@ export type Database = {
         Row: {
           check_id: string
           created_at: string
+          duration_secs: number | null
           filmed_at: string | null
           filmed_lat: number | null
           filmed_lng: number | null
           id: string
+          mux_asset_id: string | null
+          mux_playback_id: string | null
+          mux_playback_policy: string | null
+          mux_upload_id: string | null
           status: string
         }
         Insert: {
           check_id: string
           created_at?: string
+          duration_secs?: number | null
           filmed_at?: string | null
           filmed_lat?: number | null
           filmed_lng?: number | null
           id?: string
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          mux_playback_policy?: string | null
+          mux_upload_id?: string | null
           status?: string
         }
         Update: {
           check_id?: string
           created_at?: string
+          duration_secs?: number | null
           filmed_at?: string | null
           filmed_lat?: number | null
           filmed_lng?: number | null
           id?: string
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          mux_playback_policy?: string | null
+          mux_upload_id?: string | null
           status?: string
         }
         Relationships: [
