@@ -12,12 +12,20 @@
 -- scout_id are reachable only through these SECURITY DEFINER functions, which run
 -- as owner and therefore MUST self-authorize against auth.uid().
 --
--- Depends on 0008 (clips table) for the deliver-needs-clip guard and on the
--- no_scout enum value added in 0008.
+-- Runs BEFORE 0008. The plpgsql bodies (transition_check) reference public.clips
+-- and the no_scout/expired enum labels only at EXECUTION time (after the full push),
+-- so the forward reference is safe; is_valid_check_transition avoids any create-time
+-- enum-label resolution by comparing on ::text (see ORDERING NOTE below).
 
 -- 1. Legal-edge table -------------------------------------------------------
 -- ONLY this phase's edges are legal. Money states (authorized) and video states
 -- (uploaded/processing) are Phase 3/4 — omitted here, added additively later.
+--
+-- ORDERING NOTE: this migration is numbered 0007, BEFORE 0008 which adds the
+-- 'no_scout' enum value. A `language sql` function resolves its literals at CREATE
+-- time, so embedding `'no_scout'::check_status` here would fail (label not added
+-- yet). We therefore compare the enum params cast to text — identical semantics,
+-- no create-time label resolution, no forward dependency on 0008's enum-add.
 create or replace function public.is_valid_check_transition(
   p_from check_status,
   p_to   check_status
@@ -27,11 +35,11 @@ language sql
 immutable
 as $$
   select case
-    when p_from = 'requested'   and p_to in ('dispatching','cancelled')                    then true
-    when p_from = 'dispatching' and p_to in ('assigned','cancelled','no_scout','expired')  then true
-    when p_from = 'assigned'    and p_to in ('filming','cancelled')                        then true
-    when p_from = 'filming'     and p_to = 'delivered'                                     then true
-    when p_from = 'delivered'   and p_to = 'rated'                                         then true
+    when p_from::text = 'requested'   and p_to::text in ('dispatching','cancelled')                    then true
+    when p_from::text = 'dispatching' and p_to::text in ('assigned','cancelled','no_scout','expired')  then true
+    when p_from::text = 'assigned'    and p_to::text in ('filming','cancelled')                        then true
+    when p_from::text = 'filming'     and p_to::text = 'delivered'                                     then true
+    when p_from::text = 'delivered'   and p_to::text = 'rated'                                          then true
     else false
   end;
 $$;
