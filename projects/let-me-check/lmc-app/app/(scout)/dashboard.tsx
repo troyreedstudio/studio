@@ -7,61 +7,80 @@ import {
   SafeAreaView,
   Switch,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useState, useEffect, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useScoutEarnings } from '../state/scout-earnings';
+import { listOpenChecks, acceptCheck, type CheckRow } from '../lib/checks';
 
-type IncomingRequest = {
-  id: string;
-  venue: string;
-  area: string;
-  distanceMi: number;
-  payout: number;
-  tier: 'standard' | 'priority';
-  deliveryMin: number;
-  clipSec: number;
-};
-
-const REQUEST_POOL: IncomingRequest[] = [
-  { id: 'req-001', venue: 'Komodo', area: 'Brickell · Miami', distanceMi: 0.3, payout: 10, tier: 'priority', deliveryMin: 7, clipSec: 15 },
-  { id: 'req-002', venue: 'LIV Nightclub', area: 'Fontainebleau · Miami', distanceMi: 0.6, payout: 10, tier: 'priority', deliveryMin: 7, clipSec: 15 },
-  { id: 'req-003', venue: 'E11EVEN', area: 'Downtown · Miami', distanceMi: 0.4, payout: 8, tier: 'standard', deliveryMin: 10, clipSec: 15 },
-  { id: 'req-004', venue: 'Story', area: 'South Beach · Miami', distanceMi: 1.1, payout: 12, tier: 'priority', deliveryMin: 7, clipSec: 15 },
-  { id: 'req-005', venue: 'MIA Terminal D', area: 'Miami International', distanceMi: 2.4, payout: 8, tier: 'standard', deliveryMin: 10, clipSec: 15 },
-];
+// Display-only payout label derived from the check tier. NO money is written
+// here — earnings are credited in Phase 4. Real pricing: standard $8, priority $12.
+const TIER_PAYOUT: Record<string, number> = { standard: 8, priority: 12 };
+const payoutForTier = (tier: string | null | undefined) =>
+  TIER_PAYOUT[tier ?? 'standard'] ?? 8;
 
 export default function ScoutDashboard() {
   const router = useRouter();
   const earnings = useScoutEarnings();
   const [online, setOnline] = useState(true);
-  const [request, setRequest] = useState<IncomingRequest | null>(REQUEST_POOL[0]);
+  const [openChecks, setOpenChecks] = useState<CheckRow[]>([]);
+  const [taken, setTaken] = useState(false);
 
-  // Auto-queue a new request whenever Scout is online with no active request.
-  // Picks a different venue each time so the loop feels alive.
+  // The first open check is what the Scout sees in the incoming-request card.
+  const request = openChecks[0] ?? null;
+
+  // Pull the real open-check list (status='dispatching', RLS-scoped). Only fetch
+  // when online — going offline clears the list.
+  const refresh = useCallback(async () => {
+    try {
+      const checks = await listOpenChecks();
+      setOpenChecks(checks);
+    } catch {
+      setOpenChecks([]);
+    }
+  }, []);
+
+  // Fetch on mount + whenever the Scout goes online; clear when offline.
   useEffect(() => {
-    if (!online || request) return;
-    const lastId = request as IncomingRequest | null;
-    const pool = REQUEST_POOL.filter((r) => r.id !== (lastId as IncomingRequest | null)?.id);
-    const next = pool[Math.floor(Math.random() * pool.length)];
-    const t = setTimeout(() => setRequest(next), 4000);
-    return () => clearTimeout(t);
-  }, [online, request]);
+    if (online) {
+      refresh();
+    } else {
+      setOpenChecks([]);
+    }
+  }, [online, refresh]);
 
-  const handleAccept = () => {
+  // Refresh when the dashboard regains focus (e.g. returning from filming).
+  useFocusEffect(
+    useCallback(() => {
+      if (online) refresh();
+    }, [online, refresh]),
+  );
+
+  const handleAccept = async () => {
     if (!request) return;
-    router.push({
-      pathname: '/(scout)/filming',
-      params: {
-        venue: request.venue,
-        payout: String(request.payout),
-        tier: request.tier,
-      },
-    });
+    setTaken(false);
+    try {
+      // Atomic claim (accept_check). A lost race throws -> show "taken" + refresh.
+      await acceptCheck(request.id);
+      router.push({
+        pathname: '/(scout)/filming',
+        params: {
+          checkId: request.id,
+          venue: request.location_label ?? 'Location',
+          tier: request.tier,
+        },
+      });
+    } catch {
+      // Someone else won the race (or the check moved on). Surface it inline and
+      // refresh so the Scout sees the current open list.
+      setTaken(true);
+      refresh();
+    }
   };
 
   const handleDecline = () => {
-    setRequest(null);
+    // Drop this check from the local view; the next open check (if any) shows.
+    setOpenChecks((prev) => prev.slice(1));
   };
 
   return (
@@ -171,7 +190,9 @@ export default function ScoutDashboard() {
               <View style={styles.requestCard}>
                 <View style={styles.requestTop}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.requestVenue}>{request.venue}</Text>
+                    <Text style={styles.requestVenue}>
+                      {request.location_label ?? 'Location'}
+                    </Text>
                     <View style={styles.requestDistanceRow}>
                       <Ionicons
                         name="location"
@@ -179,7 +200,7 @@ export default function ScoutDashboard() {
                         color="rgba(255,255,255,0.6)"
                       />
                       <Text style={styles.requestDistance}>
-                        {request.distanceMi} mi · {request.area}
+                        On-demand check · tap to accept
                       </Text>
                     </View>
                   </View>
@@ -194,19 +215,32 @@ export default function ScoutDashboard() {
                 <View style={styles.requestDetails}>
                   <View style={styles.requestDetail}>
                     <Text style={styles.requestDetailLabel}>YOU EARN</Text>
-                    <Text style={styles.requestDetailValue}>${request.payout}.00</Text>
+                    <Text style={styles.requestDetailValue}>
+                      ${payoutForTier(request.tier)}.00
+                    </Text>
                   </View>
                   <View style={styles.requestDetailDivider} />
                   <View style={styles.requestDetail}>
                     <Text style={styles.requestDetailLabel}>DELIVERY</Text>
-                    <Text style={styles.requestDetailValue}>{request.deliveryMin} min</Text>
+                    <Text style={styles.requestDetailValue}>
+                      {request.tier === 'priority' ? '7 min' : '10 min'}
+                    </Text>
                   </View>
                   <View style={styles.requestDetailDivider} />
                   <View style={styles.requestDetail}>
                     <Text style={styles.requestDetailLabel}>CLIP</Text>
-                    <Text style={styles.requestDetailValue}>{request.clipSec}s</Text>
+                    <Text style={styles.requestDetailValue}>15s</Text>
                   </View>
                 </View>
+
+                {taken && (
+                  <View style={styles.takenNote}>
+                    <Ionicons name="alert-circle" size={13} color="#FFCB47" />
+                    <Text style={styles.takenNoteText}>
+                      Another Scout grabbed that one. Showing the latest open checks.
+                    </Text>
+                  </View>
+                )}
 
                 <View style={styles.requestActions}>
                   <TouchableOpacity
@@ -222,7 +256,7 @@ export default function ScoutDashboard() {
                     activeOpacity={0.85}
                   >
                     <Text style={styles.acceptBtnText}>
-                      ACCEPT · EARN ${request.payout}
+                      ACCEPT · EARN ${payoutForTier(request.tier)}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -564,6 +598,27 @@ const styles = StyleSheet.create({
     height: 26,
     backgroundColor: 'rgba(255,255,255,0.1)',
   },
+  takenNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,203,71,0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: 'rgba(255,203,71,0.3)',
+    marginBottom: 12,
+  },
+  takenNoteText: {
+    flex: 1,
+    fontFamily: 'Inter_500Medium',
+    fontSize: 11.5,
+    color: 'rgba(255,255,255,0.75)',
+    letterSpacing: 0.2,
+    lineHeight: 16,
+  },
+
   requestActions: { flexDirection: 'row', gap: 10 },
   declineBtn: {
     flex: 1,
