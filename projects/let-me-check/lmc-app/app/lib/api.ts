@@ -70,6 +70,36 @@ export async function setCurrentRole(role: Role): Promise<void> {
   await logEvent('auth.role_switched', { to: role });
 }
 
+export type IntendedRole = 'seeker' | 'scout' | 'both';
+
+/**
+ * Persist the role the user chose at onboarding (AUTH-03). 'both' enables both
+ * hubs with current_role defaulting to 'seeker'. Updates the is_seeker/is_scout
+ * flags + current_role on the profile and logs the intent.
+ */
+export async function setIntendedRoleFlags(intended: IntendedRole): Promise<void> {
+  const uid = await requireUserId();
+  const isSeeker = intended === 'seeker' || intended === 'both';
+  const isScout = intended === 'scout' || intended === 'both';
+  const currentRole: Role = intended === 'scout' ? 'scout' : 'seeker';
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_seeker: isSeeker, is_scout: isScout, current_role: currentRole })
+    .eq('id', uid);
+  if (error) throw error;
+  await logEvent('profile.role_intent_set', { intended });
+}
+
+/** Derive the onboarding-style intended role from the profile flags. */
+export async function getIntendedRoleFlags(): Promise<IntendedRole | null> {
+  const profile = await getProfile();
+  if (!profile) return null;
+  if (profile.is_seeker && profile.is_scout) return 'both';
+  if (profile.is_scout) return 'scout';
+  if (profile.is_seeker) return 'seeker';
+  return null;
+}
+
 // ── Consent (SAFE-02) ─────────────────────────────────────────────────────────
 
 export async function recordConsent(

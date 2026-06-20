@@ -1,15 +1,16 @@
 // In-memory store for the Scout's session earnings.
-// Increments when a clip is accepted by the verification pipeline.
-// Read by the Scout dashboard so the "Today's Earnings" stays accurate
-// across the full job loop.
+// Increments when a clip is accepted by the verification pipeline; read by the
+// Scout dashboard so "Today's Earnings" stays accurate across the job loop.
 //
-// Prototype only — in production this is replaced by a backend fetch
-// keyed to the Stripe Connect account + today's payout aggregate.
+// Phase 1 starts at zero — the real payout aggregate (keyed to the Stripe Connect
+// account + today's deliveries) is computed server-side in Phase 4. This store is
+// a session-local placeholder until then, so it intentionally does NOT seed fake
+// totals.
 
 import { useEffect, useState } from 'react';
 
-let _earningsToday = 127.0;
-let _clipsDelivered = 12;
+let _earningsToday = 0;
+let _clipsDelivered = 0;
 let _listeners: (() => void)[] = [];
 
 function notify() {
@@ -27,8 +28,8 @@ export function addClipEarning(amount: number): void {
 }
 
 export function resetScoutEarnings(): void {
-  _earningsToday = 127.0;
-  _clipsDelivered = 12;
+  _earningsToday = 0;
+  _clipsDelivered = 0;
   notify();
 }
 

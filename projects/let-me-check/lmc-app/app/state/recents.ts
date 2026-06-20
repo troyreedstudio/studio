@@ -1,16 +1,36 @@
-// Recent checks — most-recent-first. In-memory for the prototype; in production
-// this is the user's check history from the backend. Drives the "RECENT" list on
-// the Seeker home (shows the last 2). A check is recorded when it's confirmed.
+// Recent checks — most-recent-first, persisted in Supabase (recents) via lib/api.
+// Drives the "RECENT" list on the Seeker home (shows the last 2). A check is
+// recorded when it's confirmed. The export surface is byte-compatible with the
+// old in-memory store: reads stay synchronous off a local cache, addRecent
+// persists in the background.
 
 import { useEffect, useState } from 'react';
+import { addRecent as apiAddRecent, getRecents as apiGetRecents } from '../lib/api';
 
 export type RecentCheck = { name: string; city: string; ts: number };
 
 let _recents: RecentCheck[] = [];
 let _listeners: (() => void)[] = [];
+let _hydrated = false;
 
 function notify() {
   _listeners.forEach((fn) => fn());
+}
+
+/** Pull the user's recent checks from Supabase into the local cache. */
+export async function hydrateRecents(): Promise<void> {
+  try {
+    const rows = await apiGetRecents();
+    _recents = rows.map((r) => ({
+      name: r.name,
+      city: r.city ?? '',
+      ts: new Date(r.created_at).getTime(),
+    }));
+    _hydrated = true;
+    notify();
+  } catch {
+    // Signed out / offline / empty — leave the cache as-is.
+  }
 }
 
 /** Record a completed check. Newest first, de-duped by name, capped at 10. */
@@ -21,6 +41,7 @@ export function addRecent(entry: { name: string; city: string }): void {
     ..._recents.filter((r) => r.name !== entry.name),
   ].slice(0, 10);
   notify();
+  void apiAddRecent({ name: entry.name, city: entry.city }).catch(() => {});
 }
 
 export function getRecents(): RecentCheck[] {
@@ -32,6 +53,7 @@ export function useRecents(): RecentCheck[] {
   useEffect(() => {
     const fn = () => force((n) => n + 1);
     _listeners.push(fn);
+    if (!_hydrated) void hydrateRecents();
     return () => {
       _listeners = _listeners.filter((l) => l !== fn);
     };
