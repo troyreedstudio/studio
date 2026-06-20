@@ -34,6 +34,8 @@ yarn-error.*
 .env
 .env.*
 .env*.local
+# ...but keep the placeholder template (no real secrets)
+!.env.example
 
 # typescript
 *.tsbuildinfo
