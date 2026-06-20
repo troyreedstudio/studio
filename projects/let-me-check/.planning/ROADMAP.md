@@ -144,7 +144,7 @@ Today there are **no automated tests** (only `tsc` + manual QA) — fine for a U
 - [ ] 02-02-PLAN.md — [BLOCKING] push migrations 0007-0009 live + confirm Realtime publication + regenerate database.types.ts
 - [x] 02-03-PLAN.md — Client lib: lib/checks.ts (create/list/accept/markDelivered/rate/cancel) + lib/realtime.ts (subscribeToCheck) + Vitest
 - [ ] 02-04-PLAN.md — Seeker wiring: payment->createCheck, finding/waiting->live status, delivery->clip metadata + rateCheck
-- [ ] 02-05-PLAN.md — Scout wiring: dashboard->listOpenChecks/acceptCheck, filming->markDelivered (stub clip), submitted (no earnings)
+- [x] 02-05-PLAN.md — Scout wiring: dashboard->listOpenChecks/acceptCheck, filming->markDelivered (stub clip), submitted (no earnings)
 
 ### Phase 3: Video Pipeline
 **Goal**: Replace the simulated camera with real in-app capture and a resilient pipeline that produces a genuine, audio-free clip the Seeker can actually watch.

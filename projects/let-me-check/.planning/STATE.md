@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 02-03-PLAN.md (lib/checks.ts + lib/realtime.ts, offline checks green)
-last_updated: "2026-06-20T14:08:17.092Z"
+stopped_at: Completed 02-05-PLAN.md (Scout screens wired; on-device walk-through BLOCKED)
+last_updated: "2026-06-20T14:13:39.248Z"
 last_activity: 2026-06-20
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 8
-  completed_plans: 5
-  percent: 63
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 01 P03 | 8 | 3 tasks | 16 files |
 | Phase 02-one-real-check P01 | 25 | 4 tasks | 6 files |
 | Phase 02 P03 | 4m | 3 tasks | 4 files |
+| Phase 02 P05 | 3m | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - [Phase 02-one-real-check]: Added no_scout terminal enum value distinct from cancelled/expired (honest no-Scout outcome)
 - [Phase 02-one-real-check]: clips as a first-class table so Phase-3 Mux columns slot in additively
 - [Phase 02-one-real-check]: is_valid_check_transition compares enum on ::text so 0007 pushes safely before 0008's no_scout enum-add
+- [Phase 02]: Scout dashboard accepts checks via atomic acceptCheck; lost race shows 'taken' + refreshes (no double-booking)
+- [Phase 02]: Scout delivery uses a stub clip (markDelivered) with no earnings credit; real camera is Phase 3, payouts Phase 4
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-20T14:08:17.090Z
-Stopped at: Completed 02-03-PLAN.md (lib/checks.ts + lib/realtime.ts, offline checks green)
+Last session: 2026-06-20T14:13:33.557Z
+Stopped at: Completed 02-05-PLAN.md (Scout screens wired; on-device walk-through BLOCKED)
 Resume file: None
