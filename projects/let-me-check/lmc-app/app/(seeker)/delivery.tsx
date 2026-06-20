@@ -1,17 +1,65 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getCheck, getCheckClip, rateCheck, type CheckRow, type ClipRow } from '../lib/checks';
 
 const TAGS = ['Busy Tonight', 'Short Line', 'Worth It'];
 
+/** "Filmed 3 min ago" / "Filmed just now" from a clip's filmed_at timestamp. */
+function formatFilmedAgo(filmedAt: string | null): string {
+  if (!filmedAt) return 'Filmed moments ago';
+  const then = new Date(filmedAt).getTime();
+  if (Number.isNaN(then)) return 'Filmed moments ago';
+  const mins = Math.max(0, Math.round((Date.now() - then) / 60000));
+  if (mins < 1) return 'Filmed just now';
+  if (mins === 1) return 'Filmed 1 min ago';
+  if (mins < 60) return `Filmed ${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  return hrs === 1 ? 'Filmed 1 hr ago' : `Filmed ${hrs} hrs ago`;
+}
+
 export default function DeliveryScreen() {
   const router = useRouter();
-  const { venue = 'Komodo', city = 'Miami' } = useLocalSearchParams<{
+  const { checkId, venue = 'Komodo', city = 'Miami' } = useLocalSearchParams<{
+    checkId: string;
     venue: string;
     city: string;
   }>();
   const [rating, setRating] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [check, setCheck] = useState<CheckRow | null>(null);
+  const [clip, setClip] = useState<ClipRow | null>(null);
+
+  // Load the real check row + its clip metadata (when/where filmed).
+  useEffect(() => {
+    if (!checkId) return;
+    getCheck(checkId).then(setCheck).catch(() => {});
+    getCheckClip(checkId).then(setClip).catch(() => {});
+  }, [checkId]);
+
+  // Prefer the real check's location label; fall back to the passed venue/city.
+  const locationLabel = check?.location_label || `${venue}, ${city}`;
+  const filmedLine = formatFilmedAgo(clip?.filmed_at ?? null);
+
+  // Persist the rating to the ratings table (CHECK-06). Guard double-submit.
+  const handleRate = async (star: number) => {
+    if (submitting) return;
+    setRating(star);
+    if (!checkId) return;
+    setSubmitting(true);
+    try {
+      await rateCheck(checkId, star);
+    } catch (e) {
+      setRating(0);
+      Alert.alert(
+        "Couldn't save your rating",
+        e instanceof Error ? e.message : 'Please try again.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -30,7 +78,7 @@ export default function DeliveryScreen() {
             <Text style={styles.checkMark}>✓</Text>
           </View>
           <Text style={styles.readyTitle}>YOUR CHECK IS READY</Text>
-          <Text style={styles.venueName}>{venue} · {city}</Text>
+          <Text style={styles.venueName}>{locationLabel}</Text>
         </View>
 
         {/* Video Placeholder */}
@@ -45,7 +93,7 @@ export default function DeliveryScreen() {
           </View>
           <View style={styles.liveTimestamp}>
             <View style={styles.liveBlip} />
-            <Text style={styles.liveTime}>Filmed 2 min ago</Text>
+            <Text style={styles.liveTime}>{filmedLine}</Text>
           </View>
         </View>
 
@@ -71,7 +119,12 @@ export default function DeliveryScreen() {
         <Text style={styles.sectionLabel}>RATE YOUR CHECK</Text>
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((star) => (
-            <TouchableOpacity key={star} onPress={() => setRating(star)} activeOpacity={0.7}>
+            <TouchableOpacity
+              key={star}
+              onPress={() => handleRate(star)}
+              disabled={submitting}
+              activeOpacity={0.7}
+            >
               <Text style={[styles.star, star <= rating && styles.starActive]}>★</Text>
             </TouchableOpacity>
           ))}
