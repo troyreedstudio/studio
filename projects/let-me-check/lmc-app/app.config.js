@@ -20,8 +20,8 @@ module.exports = {
           'Let Me Check uses your location to find nearby Scouts and verified venues.',
         NSCameraUsageDescription:
           'Let Me Check uses your camera to film verification clips.',
-        NSMicrophoneUsageDescription:
-          'Let Me Check uses your microphone for sound in verification clips.',
+        // No microphone usage string: clips are video-only (audio is never
+        // captured — VID-02). vision-camera is configured with the mic disabled.
         NSPhotoLibraryUsageDescription:
           'Let Me Check uses your photo library to save your past check videos.',
         ITSAppUsesNonExemptEncryption: false,
@@ -45,6 +45,9 @@ module.exports = {
       'expo-font',
       'expo-video',
       'expo-secure-store',
+      // Live in-app capture. Mic disabled so audio is never opened/recorded
+      // (VID-02, a hard legal requirement) and no mic permission is requested.
+      ['react-native-vision-camera', { enableMicrophonePermission: false }],
       [
         '@rnmapbox/maps',
         {
