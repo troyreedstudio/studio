@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 02-05-PLAN.md (Scout screens wired; on-device walk-through BLOCKED)
-last_updated: "2026-06-20T14:13:39.248Z"
+stopped_at: Completed 02-04-PLAN.md (Seeker screens wired to real checks; on-device walk-through BLOCKED)
+last_updated: "2026-06-20T14:15:43.306Z"
 last_activity: 2026-06-20
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 8
-  completed_plans: 6
-  percent: 75
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 02-one-real-check P01 | 25 | 4 tasks | 6 files |
 | Phase 02 P03 | 4m | 3 tasks | 4 files |
 | Phase 02 P05 | 3m | 3 tasks | 3 files |
+| Phase 02 P04 | 5m | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,8 @@ Recent decisions affecting current work:
 - [Phase 02-one-real-check]: is_valid_check_transition compares enum on ::text so 0007 pushes safely before 0008's no_scout enum-add
 - [Phase 02]: Scout dashboard accepts checks via atomic acceptCheck; lost race shows 'taken' + refreshes (no double-booking)
 - [Phase 02]: Scout delivery uses a stub clip (markDelivered) with no earnings credit; real camera is Phase 3, payouts Phase 4
+- [Phase 02]: Seeker confirm creates the real check now; Stripe hold is a documented TODO(phase-4) seam, no money in Phase 2
+- [Phase 02]: All seeker navigation off a check is driven by the real status row only; fake countdown + prototype skip link deleted
 
 ### Pending Todos
 
@@ -95,9 +98,10 @@ Carried from research — to resolve at the relevant phase, not now:
 
 - Schema authored offline (migrations 0001-0006 + seed + 3 pgTAP tests), all committed and offline-verified (tsc/vitest/grep). The live run is blocked: no Docker (so `supabase start`/`db reset`/`test db` can't run) and CLI not logged in (so `db push` can't run). Needs Troy's Supabase project ref + access token + anon key. Next: `supabase login` → `supabase link --project-ref <ref>` → `supabase db push` → `supabase gen types typescript --linked > lmc-app/app/lib/database.types.ts`. Reply "pushed" to resume, or paste any error.
 - 01-02 human checkpoint: create Google OAuth client, enable Apple/Google providers in Supabase, run on-device dev build to test sign-in + session-survives-restart
+- 02-04 Task 4 on-device live-status walk-through BLOCKED: needs dev build + live Supabase + two sessions (Seeker+Scout, Plan 05). Run after both 04 and 05 land.
 
 ## Session Continuity
 
-Last session: 2026-06-20T14:13:33.557Z
-Stopped at: Completed 02-05-PLAN.md (Scout screens wired; on-device walk-through BLOCKED)
+Last session: 2026-06-20T14:15:32.473Z
+Stopped at: Completed 02-04-PLAN.md (Seeker screens wired to real checks; on-device walk-through BLOCKED)
 Resume file: None
