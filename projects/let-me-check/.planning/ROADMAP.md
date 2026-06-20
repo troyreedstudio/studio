@@ -53,7 +53,7 @@ The specific services each phase wires in (from the locked, research-validated s
 | 4 · Money | **Stripe PaymentIntents** with *manual capture* (hold at request → capture on delivery → auto-release) · **Stripe Connect Express** (Scout payouts, tax/KYC + 1099, instant payout) |
 | 5 · Dispatch + Geofence | **PostGIS** (geofence `ST_DWithin`) · **Supabase Realtime/Broadcast** (server-driven dispatch pings) · a **durable job runner** (dispatch timeouts + payment-hold-expiry safety) · Mapbox |
 | 6 · Verification + AI | **Google Vision API** (signage/logo detection + GPS cross-check → auto-reject) · **Claude** (AI Verdict summary from frames) · reference-photo confirm · manual-review tooling |
-| 7 · Push, Markets, B2B + NYC Launch | **Expo Push** (notifications both ways) · data-driven market/admin config · partner-venue management · **Resend** (transactional email / receipts) |
+| 7 · Push, Markets, B2B + NYC Launch | **Expo Push** (notifications both ways) · data-driven market/admin config · partner-venue management · **Brevo** (transactional email / receipts — existing account, replaces Resend) |
 
 *Note: `H3` and `ffmpeg-kit` from the original stack were dropped (PostGIS alone covers beta scale; ffmpeg-kit was retired) — see `.planning/research/STACK.md`.*
 
@@ -125,7 +125,10 @@ Today there are **no automated tests** (only `tsc` + manual QA) — fine for a U
   3. Saved places, recents, payment method, and role survive an app restart because they persist in Supabase, not in-memory stores
   4. A check's lifecycle is a server-owned state machine; the client holds no business logic or secrets
   5. Every meaningful action is written to an immutable event log with timestamp + geo + context, and 18+/consent/AUP acceptance is recorded against the account at onboarding
-**Plans**: TBD
+**Plans**: 3 plans (3 waves)
+- [ ] 01-01-PLAN.md — Supabase backend: event-log-first schema, RLS on every table, check state machine, test harness, schema push
+- [ ] 01-02-PLAN.md — Client data+auth layer: SecureStore session, Apple/Google/phone-OTP sign-in, boot gate, typed api wrappers
+- [ ] 01-03-PLAN.md — Persist the 6 stores via Supabase, record consent (SAFE-02), role switch + sign-out, EAS env, on-device verification
 
 ### Phase 2: One Real Check (no money, no dispatch)
 **Goal**: Prove the Postgres-as-state-machine + Realtime spine — a genuine check is created, moves through real states (including failure states), and the Seeker watches it live.
@@ -202,7 +205,7 @@ Phases execute in numeric order: 1 → 2 → (3 ∥ 4) → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation (Auth + Persistence + Event Log) | 0/TBD | Not started | - |
+| 1. Foundation (Auth + Persistence + Event Log) | 0/3 | Not started | - |
 | 2. One Real Check (no money, no dispatch) | 0/TBD | Not started | - |
 | 3. Video Pipeline | 0/TBD | Not started | - |
 | 4. Money (Payments + Payouts + Scout Onboarding) | 0/TBD | Not started | - |
