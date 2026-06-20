@@ -52,7 +52,7 @@ const FileSystemMock = {
   ),
 };
 
-vi.mock('expo-file-system', () => FileSystemMock);
+vi.mock('expo-file-system/legacy', () => FileSystemMock);
 
 beforeEach(() => {
   invokeReturn = { data: null, error: null };
