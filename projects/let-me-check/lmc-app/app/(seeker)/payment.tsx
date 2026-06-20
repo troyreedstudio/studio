@@ -11,12 +11,14 @@ import {
   Animated,
   Easing,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { addRecurring } from '../state/recurring';
 import { usePaymentMethod, type CardBrand, type SavedCard } from '../state/payment-method';
+import { createCheck } from '../lib/checks';
 
 type CardOnFile = SavedCard | null;
 
@@ -207,7 +209,7 @@ export default function PaymentScreen() {
             !card && styles.ctaButtonNoCard,
           ]}
           disabled={processing}
-          onPress={() => {
+          onPress={async () => {
             if (!card) {
               setSheetOpen(true);
               return;
@@ -224,13 +226,32 @@ export default function PaymentScreen() {
                 coord: [-80.1932, 25.7651],
               });
             }
-            setTimeout(() => {
+            // TODO(phase-4): authorize a Stripe hold here (PaymentIntent, manual
+            // capture). Money is out of scope for Phase 2 — we create the real
+            // check now and capture once a Scout accepts.
+            try {
+              const checkId = await createCheck({
+                tier: tier === 'priority' ? 'priority' : 'standard',
+                locationLabel: String(venue),
+              });
               setProcessing(false);
               router.replace({
                 pathname: '/(seeker)/finding',
-                params: { venue, city, tier, time, total },
+                params: {
+                  checkId,
+                  venue: String(venue),
+                  city: String(city),
+                  tier: String(tier),
+                  time: String(time),
+                },
               });
-            }, 1800);
+            } catch (e) {
+              setProcessing(false);
+              Alert.alert(
+                "Couldn't start your check",
+                e instanceof Error ? e.message : 'Please try again in a moment.',
+              );
+            }
           }}
           activeOpacity={0.85}
         >
