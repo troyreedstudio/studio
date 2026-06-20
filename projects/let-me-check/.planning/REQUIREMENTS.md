@@ -6,13 +6,13 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 
 ### Accounts & Auth
 - [ ] **AUTH-01**: A user can sign up / sign in with Apple, Google, or phone + OTP
-- [ ] **AUTH-02**: A user stays signed in across app restarts (persistent session)
-- [ ] **AUTH-03**: One account holds both roles; a user can switch between Seeker and Scout
-- [ ] **AUTH-04**: A user can sign out
+- [x] **AUTH-02**: A user stays signed in across app restarts (persistent session)
+- [x] **AUTH-03**: One account holds both roles; a user can switch between Seeker and Scout
+- [x] **AUTH-04**: A user can sign out
 
 ### Backend & Data
-- [ ] **DATA-01**: App data persists in a real backend (Supabase), replacing in-memory stores
-- [ ] **DATA-02**: A check's lifecycle is a server-owned state machine; the client holds no business logic or secrets
+- [x] **DATA-01**: App data persists in a real backend (Supabase), replacing in-memory stores
+- [x] **DATA-02**: A check's lifecycle is a server-owned state machine; the client holds no business logic or secrets
 - [ ] **DATA-03**: Core entities persist: users, roles, checks, venues/locations, clips, payments, payouts, ratings
 - [ ] **DATA-04**: **Immutable event log from day 1** — every action (request created, Scout pinged/accepted/declined, clip captured/submitted/rejected, cancel, rating, GPS ping, payment auth/capture/refund/payout) logged with timestamp + geo + context. Decided before schemas are drawn. Foundation for later predictive AI (per CTO plan §6).
 
@@ -95,11 +95,11 @@ Every v1 requirement maps to exactly one phase. Coverage: 41/41.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| DATA-01 | Phase 1 | Pending |
-| DATA-02 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
+| DATA-01 | Phase 1 | Complete |
+| DATA-02 | Phase 1 | Complete |
 | DATA-03 | Phase 1 | Pending |
 | DATA-04 | Phase 1 | Pending |
 | SAFE-02 | Phase 1 | Pending |

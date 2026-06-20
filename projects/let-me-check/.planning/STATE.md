@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Plan 01-01 offline-complete (Tasks 0-5 committed); STOPPED at Task 6 live-DB human-action checkpoint
-last_updated: "2026-06-20T10:07:11.182Z"
-last_activity: 2026-06-20 -- Plan 01-01 offline-complete; blocked at live-DB checkpoint
+stopped_at: "Completed 01-02-PLAN.md (Apple/Google auth live, phone deferred); BLOCKED on human checkpoint: Google OAuth client + Supabase provider config + on-device test"
+last_updated: "2026-06-20T11:19:08.318Z"
+last_activity: 2026-06-20
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 1 of 7 (Foundation — Auth + Persistence + Event Log)
-Plan: 1 of 3 (01-01 Supabase backend) — offline tasks 0-5 complete, committed
-Status: BLOCKED at Task 6 (live-DB human-action checkpoint) — awaiting Supabase project + push
-Last activity: 2026-06-20 -- Plan 01-01 schema/tests authored + committed; live push pending
+Plan: 2 of 3 (01-01 Supabase backend) — offline tasks 0-5 complete, committed
+Status: Ready to execute
+Last activity: 2026-06-20
 
 Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-01 schema is pushed live)
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01 P02 | 9 | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,7 @@ Recent decisions affecting current work:
 - Foundation: Server owns every state transition and secret; client holds no business logic (enforced by RLS, not client routing)
 - Money: Capture-on-delivery, not on acceptance (no charge for an undelivered clip; fewer chargebacks)
 - Verification: Full per-clip AI verification (signage auto-reject + AI Verdict) is in V1; only PREDICTIVE AI is deferred to Phase 2+
+- [Phase 01]: Phone-OTP deferred behind PHONE_AUTH_ENABLED flag (Twilio + A2P not live); Apple+Google are the live sign-in methods this wave
 
 ### Pending Todos
 
@@ -81,9 +83,10 @@ Carried from research — to resolve at the relevant phase, not now:
 **ACTIVE (Plan 01-01 Task 6 — blocking checkpoint):**
 
 - Schema authored offline (migrations 0001-0006 + seed + 3 pgTAP tests), all committed and offline-verified (tsc/vitest/grep). The live run is blocked: no Docker (so `supabase start`/`db reset`/`test db` can't run) and CLI not logged in (so `db push` can't run). Needs Troy's Supabase project ref + access token + anon key. Next: `supabase login` → `supabase link --project-ref <ref>` → `supabase db push` → `supabase gen types typescript --linked > lmc-app/app/lib/database.types.ts`. Reply "pushed" to resume, or paste any error.
+- 01-02 human checkpoint: create Google OAuth client, enable Apple/Google providers in Supabase, run on-device dev build to test sign-in + session-survives-restart
 
 ## Session Continuity
 
-Last session: 2026-06-20T10:07:11.179Z
-Stopped at: Plan 01-01 offline-complete (Tasks 0-5 committed); STOPPED at Task 6 live-DB human-action checkpoint
+Last session: 2026-06-20T11:18:50.956Z
+Stopped at: Completed 01-02-PLAN.md (Apple/Google auth live, phone deferred); BLOCKED on human checkpoint: Google OAuth client + Supabase provider config + on-device test
 Resume file: None

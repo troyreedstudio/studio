@@ -126,8 +126,8 @@ Today there are **no automated tests** (only `tsc` + manual QA) — fine for a U
   4. A check's lifecycle is a server-owned state machine; the client holds no business logic or secrets
   5. Every meaningful action is written to an immutable event log with timestamp + geo + context, and 18+/consent/AUP acceptance is recorded against the account at onboarding
 **Plans**: 3 plans (3 waves)
-- [ ] 01-01-PLAN.md — Supabase backend: event-log-first schema, RLS on every table, check state machine, test harness, schema push
-- [ ] 01-02-PLAN.md — Client data+auth layer: SecureStore session, Apple/Google/phone-OTP sign-in, boot gate, typed api wrappers
+- [x] 01-01-PLAN.md — Supabase backend: event-log-first schema, RLS on every table, check state machine, test harness, schema push
+- [x] 01-02-PLAN.md — Client data+auth layer: SecureStore session, Apple/Google/phone-OTP sign-in, boot gate, typed api wrappers
 - [ ] 01-03-PLAN.md — Persist the 6 stores via Supabase, record consent (SAFE-02), role switch + sign-out, EAS env, on-device verification
 
 ### Phase 2: One Real Check (no money, no dispatch)
