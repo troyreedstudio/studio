@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-06-20T17:15:54.732Z"
+stopped_at: Completed 03-03-PLAN.md (lib/clips + markDelivered retired + vision-camera config; on-device + deploy BLOCKED on Waves 2/3)
+last_updated: "2026-06-20T17:17:21.261Z"
 last_activity: 2026-06-20
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
-  percent: 40
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 02 P05 | 3m | 3 tasks | 3 files |
 | Phase 02 P04 | 5m | 3 tasks | 4 files |
 | Phase 03 P02 | 16 | 3 tasks | 6 files |
+| Phase 03 P03 | 17m | 4 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,8 @@ Recent decisions affecting current work:
 - [Phase 02]: All seeker navigation off a check is driven by the real status row only; fake countdown + prototype skip link deleted
 - [Phase 03]: Mux secrets live only in Edge Functions (Deno.env); no helper returns a secret to a caller
 - [Phase 03]: mux-webhook is the SOLE driver of delivered (service role) — client cannot fake delivery
+- [Phase 03]: Client CANNOT mark delivered: markDelivered retired from checks.ts + filming.tsx; webhook owns delivered
+- [Phase 03]: vision-camera pinned to v4.7.x (v5 ships no Expo config plugin)
 
 ### Pending Todos
 
@@ -105,6 +108,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-20T17:15:49.764Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-06-20T17:17:12.906Z
+Stopped at: Completed 03-03-PLAN.md (lib/clips + markDelivered retired + vision-camera config; on-device + deploy BLOCKED on Waves 2/3)
 Resume file: None
