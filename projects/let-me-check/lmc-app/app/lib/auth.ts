@@ -48,7 +48,21 @@ export async function signInWithApple(): Promise<void> {
 
 // ── Google (live) ─────────────────────────────────────────────────────────────
 
+let googleConfigured = false;
+
+/** Configure the native Google SDK once, from EXPO_PUBLIC env (no secrets). */
+function ensureGoogleConfigured(): void {
+  if (googleConfigured) return;
+  GoogleSignin.configure({
+    // The WEB client ID is the audience Supabase verifies the idToken against.
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  });
+  googleConfigured = true;
+}
+
 export async function signInWithGoogle(): Promise<void> {
+  ensureGoogleConfigured();
   await GoogleSignin.hasPlayServices();
   const result = await GoogleSignin.signIn();
   // google-signin v16 nests the token under data.idToken; tolerate both shapes.

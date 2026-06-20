@@ -12,6 +12,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import {
+  signInWithApple,
+  signInWithGoogle,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+  PHONE_AUTH_ENABLED,
+} from '../lib/auth';
 
 type Step = 'method' | 'phone' | 'otp';
 
@@ -20,6 +27,8 @@ export default function SignInScreen() {
   const [step, setStep] = useState<Step>('method');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const goBack = () => {
     if (step === 'method') router.push('/welcome');
@@ -27,8 +36,18 @@ export default function SignInScreen() {
     else setStep('phone');
   };
 
-  const proceedAfterAuth = () => {
-    router.replace('/onboarding/welcome-back');
+  // On success the session gate (BootGate in _layout) routes to the right hub,
+  // so we only need to clear any error here.
+  const runAuth = async (fn: () => Promise<void>) => {
+    setError(null);
+    setBusy(true);
+    try {
+      await fn();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sign in failed. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -70,7 +89,8 @@ export default function SignInScreen() {
                 <View style={styles.methodList}>
                   <TouchableOpacity
                     style={styles.methodBtn}
-                    onPress={proceedAfterAuth}
+                    onPress={() => runAuth(signInWithApple)}
+                    disabled={busy}
                     activeOpacity={0.85}
                   >
                     <Text style={styles.methodIcon}></Text>
@@ -79,22 +99,34 @@ export default function SignInScreen() {
 
                   <TouchableOpacity
                     style={styles.methodBtn}
-                    onPress={proceedAfterAuth}
+                    onPress={() => runAuth(signInWithGoogle)}
+                    disabled={busy}
                     activeOpacity={0.85}
                   >
                     <Text style={[styles.methodIcon, styles.methodIconG]}>G</Text>
                     <Text style={styles.methodLabel}>Continue with Google</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.methodBtn}
-                    onPress={() => setStep('phone')}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.methodIcon}>✆</Text>
-                    <Text style={styles.methodLabel}>Continue with Phone</Text>
-                  </TouchableOpacity>
+                  {PHONE_AUTH_ENABLED ? (
+                    <TouchableOpacity
+                      style={styles.methodBtn}
+                      onPress={() => setStep('phone')}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.methodIcon}>✆</Text>
+                      <Text style={styles.methodLabel}>Continue with Phone</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={[styles.methodBtn, styles.methodBtnDisabled]}>
+                      <Text style={[styles.methodIcon, styles.methodLabelDisabled]}>✆</Text>
+                      <Text style={[styles.methodLabel, styles.methodLabelDisabled]}>
+                        Phone — coming soon
+                      </Text>
+                    </View>
+                  )}
                 </View>
+
+                {error && <Text style={styles.errorText}>{error}</Text>}
 
                 <View style={styles.divider}>
                   <View style={styles.dividerLine} />
@@ -137,9 +169,14 @@ export default function SignInScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.primaryBtn, phone.length < 10 && styles.primaryBtnDisabled]}
-                  disabled={phone.length < 10}
-                  onPress={() => setStep('otp')}
+                  style={[styles.primaryBtn, (phone.length < 10 || busy) && styles.primaryBtnDisabled]}
+                  disabled={phone.length < 10 || busy}
+                  onPress={() =>
+                    runAuth(async () => {
+                      await sendPhoneOtp('+1' + phone.replace(/\D/g, ''));
+                      setStep('otp');
+                    })
+                  }
                   activeOpacity={0.85}
                 >
                   <Text
@@ -151,6 +188,7 @@ export default function SignInScreen() {
                     SEND CODE
                   </Text>
                 </TouchableOpacity>
+                {error && <Text style={styles.errorText}>{error}</Text>}
               </>
             )}
 
@@ -174,9 +212,11 @@ export default function SignInScreen() {
                 />
 
                 <TouchableOpacity
-                  style={[styles.primaryBtn, otp.length < 6 && styles.primaryBtnDisabled]}
-                  disabled={otp.length < 6}
-                  onPress={proceedAfterAuth}
+                  style={[styles.primaryBtn, (otp.length < 6 || busy) && styles.primaryBtnDisabled]}
+                  disabled={otp.length < 6 || busy}
+                  onPress={() =>
+                    runAuth(() => verifyPhoneOtp('+1' + phone.replace(/\D/g, ''), otp))
+                  }
                   activeOpacity={0.85}
                 >
                   <Text
@@ -279,6 +319,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ffffff',
     letterSpacing: 0.3,
+  },
+  methodBtnDisabled: {
+    opacity: 0.45,
+  },
+  methodLabelDisabled: {
+    color: 'rgba(255,255,255,0.5)',
+  },
+  errorText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12.5,
+    color: '#FF6B6B',
+    textAlign: 'center',
+    letterSpacing: 0.2,
+    lineHeight: 18,
+    marginTop: 4,
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
   divider: {
     flexDirection: 'row',

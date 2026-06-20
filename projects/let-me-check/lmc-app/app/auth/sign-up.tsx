@@ -15,6 +15,13 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COUNTRY_DIAL_CODES, type DialCode } from '../data/markets';
+import {
+  signInWithApple,
+  signInWithGoogle,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+  PHONE_AUTH_ENABLED,
+} from '../lib/auth';
 
 type Step = 'method' | 'phone' | 'otp' | 'terms';
 
@@ -75,6 +82,23 @@ export default function SignUpScreen() {
     COUNTRY_DIAL_CODES.find((c) => c.code === 'US') || COUNTRY_DIAL_CODES[0]
   );
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Run a real Supabase sign-in, then hand off to onboarding to collect role +
+  // consent. On success the session exists; the onboarding wizard owns the next
+  // step and BootGate routes to the hub once onboarding completes.
+  const runAuth = async (fn: () => Promise<void>, next: () => void) => {
+    setError(null);
+    setSubmitting(true);
+    try {
+      await fn();
+      next();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sign up failed. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(16)).current;
@@ -178,8 +202,11 @@ export default function SignUpScreen() {
                 <View style={styles.methodList}>
                   <TouchableOpacity
                     style={styles.methodBtn}
+                    disabled={submitting}
                     onPress={() =>
-                      router.push({ pathname: '/onboarding/quick-finish', params: { from: 'apple' } })
+                      runAuth(signInWithApple, () =>
+                        router.push({ pathname: '/onboarding/quick-finish', params: { from: 'apple' } })
+                      )
                     }
                     activeOpacity={0.85}
                   >
@@ -189,8 +216,11 @@ export default function SignUpScreen() {
 
                   <TouchableOpacity
                     style={styles.methodBtn}
+                    disabled={submitting}
                     onPress={() =>
-                      router.push({ pathname: '/onboarding/quick-finish', params: { from: 'google' } })
+                      runAuth(signInWithGoogle, () =>
+                        router.push({ pathname: '/onboarding/quick-finish', params: { from: 'google' } })
+                      )
                     }
                     activeOpacity={0.85}
                   >
@@ -198,15 +228,26 @@ export default function SignUpScreen() {
                     <Text style={styles.methodLabel}>Continue with Google</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.methodBtn}
-                    onPress={() => goNext('phone')}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.methodIcon}>✆</Text>
-                    <Text style={styles.methodLabel}>Continue with Phone</Text>
-                  </TouchableOpacity>
+                  {PHONE_AUTH_ENABLED ? (
+                    <TouchableOpacity
+                      style={styles.methodBtn}
+                      onPress={() => goNext('phone')}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.methodIcon}>✆</Text>
+                      <Text style={styles.methodLabel}>Continue with Phone</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={[styles.methodBtn, styles.methodBtnDisabled]}>
+                      <Text style={[styles.methodIcon, styles.methodLabelDisabled]}>✆</Text>
+                      <Text style={[styles.methodLabel, styles.methodLabelDisabled]}>
+                        Phone — coming soon
+                      </Text>
+                    </View>
+                  )}
                 </View>
+
+                {error && <Text style={styles.errorText}>{error}</Text>}
 
                 <Text style={styles.legal}>
                   By continuing, you agree to our{' '}
@@ -245,9 +286,14 @@ export default function SignUpScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.primaryBtn, phone.length < 7 && styles.primaryBtnDisabled]}
-                  disabled={phone.length < 7}
-                  onPress={() => goNext('otp')}
+                  style={[styles.primaryBtn, (phone.length < 7 || submitting) && styles.primaryBtnDisabled]}
+                  disabled={phone.length < 7 || submitting}
+                  onPress={() =>
+                    runAuth(
+                      () => sendPhoneOtp(country.dial + phone.replace(/\D/g, '')),
+                      () => goNext('otp')
+                    )
+                  }
                   activeOpacity={0.85}
                 >
                   <Text
@@ -259,6 +305,8 @@ export default function SignUpScreen() {
                     SEND CODE
                   </Text>
                 </TouchableOpacity>
+
+                {error && <Text style={styles.errorText}>{error}</Text>}
 
                 <Text style={styles.disclaimer}>
                   Standard SMS rates may apply. We never share your number.
@@ -286,10 +334,13 @@ export default function SignUpScreen() {
                 />
 
                 <TouchableOpacity
-                  style={[styles.primaryBtn, otp.length < 6 && styles.primaryBtnDisabled]}
-                  disabled={otp.length < 6}
+                  style={[styles.primaryBtn, (otp.length < 6 || submitting) && styles.primaryBtnDisabled]}
+                  disabled={otp.length < 6 || submitting}
                   onPress={() =>
-                    router.push({ pathname: '/onboarding/quick-finish', params: { from: 'phone' } })
+                    runAuth(
+                      () => verifyPhoneOtp(country.dial + phone.replace(/\D/g, ''), otp),
+                      () => router.push({ pathname: '/onboarding/quick-finish', params: { from: 'phone' } })
+                    )
                   }
                   activeOpacity={0.85}
                 >
@@ -302,6 +353,8 @@ export default function SignUpScreen() {
                     VERIFY
                   </Text>
                 </TouchableOpacity>
+
+                {error && <Text style={styles.errorText}>{error}</Text>}
 
                 <TouchableOpacity style={styles.linkBtn} activeOpacity={0.7}>
                   <Text style={styles.linkText}>Resend code</Text>
@@ -575,6 +628,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ffffff',
     letterSpacing: 0.3,
+  },
+  methodBtnDisabled: {
+    opacity: 0.45,
+  },
+  methodLabelDisabled: {
+    color: 'rgba(255,255,255,0.5)',
+  },
+  errorText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12.5,
+    color: '#FF6B6B',
+    textAlign: 'center',
+    letterSpacing: 0.2,
+    lineHeight: 18,
+    marginTop: 4,
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
   legal: {
     fontFamily: 'Inter_400Regular',

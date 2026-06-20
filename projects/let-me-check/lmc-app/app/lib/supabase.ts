@@ -1,10 +1,9 @@
 // Single Supabase client for the whole app (AUTH-02).
 //
 // The auth session (refresh token) is a high-value secret, so it is stored via
-// expo-secure-store (iOS Keychain / Android Keystore) — NEVER AsyncStorage/MMKV
-// (those store the token in plaintext). persistSession + autoRefreshToken keep
-// the user signed in across restarts; AppState drives token refresh while the
-// app is foregrounded.
+// expo-secure-store (iOS Keychain / Android Keystore) — never a plaintext
+// key-value store. persistSession + autoRefreshToken keep the user signed in
+// across restarts; AppState drives token refresh while the app is foregrounded.
 //
 // Only the public, RLS-protected anon key lives in the client bundle. The
 // service-role key must never appear here.

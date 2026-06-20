@@ -20,6 +20,7 @@ const apple = {
 
 const google = {
   GoogleSignin: {
+    configure: vi.fn(),
     hasPlayServices: vi.fn(async () => true),
     signIn: vi.fn(async () => ({ data: { idToken: 'google-id-token' } })),
   },

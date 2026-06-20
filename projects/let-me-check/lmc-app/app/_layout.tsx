@@ -1,6 +1,8 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import Mapbox from '@rnmapbox/maps';
+import { useEffect } from 'react';
+import { SessionProvider, useSession, hubRouteForRole } from './lib/session';
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? null);
 
@@ -102,14 +104,40 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <SessionProvider>
       <StatusBar style="light" />
+      <BootGate />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: '#000000' },
         }}
       />
-    </>
+    </SessionProvider>
   );
+}
+
+// Routes a signed-in user to their role hub once the session has loaded.
+// Signed-out users fall through to the normal entry flow (splash, welcome,
+// onboarding, auth). We only redirect INTO a hub from a non-hub group, so we
+// never trap the user or fight their in-app navigation.
+function BootGate() {
+  const { session, profile, loading } = useSession();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (loading) return;
+    if (!session) return; // signed out: entry flow owns routing
+
+    const group = segments[0]; // e.g. '(seeker)', '(scout)', 'auth', 'onboarding'
+    const inHub = group === '(seeker)' || group === '(scout)';
+    const midOnboarding = group === 'onboarding';
+    // Once authed and out of the auth/onboarding flow, land in the right hub.
+    if (!inHub && !midOnboarding) {
+      router.replace(hubRouteForRole(profile?.current_role) as never);
+    }
+  }, [loading, session, profile, segments, router]);
+
+  return null;
 }
