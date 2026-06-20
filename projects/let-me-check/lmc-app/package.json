@@ -6,7 +6,11 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "test:db": "supabase test db"
   },
   "dependencies": {
     "@expo-google-fonts/abril-fatface": "^0.4.1",
@@ -54,8 +58,11 @@
     "react-native-screens": "~4.16.0"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.108.2",
     "@types/react": "~19.1.10",
-    "typescript": "~5.9.2"
+    "@vitest/coverage-v8": "^4.1.9",
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.9"
   },
   "private": true
 }
