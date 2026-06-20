@@ -12,9 +12,9 @@
 // Secrets stay server-side: the device only ever holds a one-time upload URL and
 // a short-lived playback JWT. No Mux token/secret lives in the RN bundle.
 //
-// Fresh-capture (VID-01) is enforced by ABSENCE: this module imports no
-// image-picker / gallery API; the only clip source is the live recorder's path
-// handed in as `localPath`.
+// Fresh-capture (VID-01) is enforced by ABSENCE: this module imports no gallery
+// / photo-library API; the only clip source is the live recorder's path handed
+// in as `localPath`.
 
 // expo-file-system 19 (SDK 54) moved the resumable upload task API to the
 // `/legacy` entry point; createUploadTask + FileSystemUploadType live there.
