@@ -7,7 +7,7 @@
 // Mux (the bytes never touch our server), retry on a weak network, and STOP at
 // "upload PUT returned success". The check is transitioned to `delivered` ONLY
 // by the signature-verified Mux webhook (03-02) — never by this module. There is
-// therefore NO transition_check / p_to:'delivered' call anywhere in this file.
+// therefore no client-side delivered transition (no transition_check call) here.
 //
 // Secrets stay server-side: the device only ever holds a one-time upload URL and
 // a short-lived playback JWT. No Mux token/secret lives in the RN bundle.

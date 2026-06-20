@@ -4,7 +4,7 @@
 // CALL SHAPES, not network. The contract under test:
 //   - every state change routes through a server RPC (transition_check / accept_check)
 //   - NO wrapper ever writes checks.status / scout_id via a direct table UPDATE (DATA-02)
-//   - markDelivered inserts a stub clip BEFORE transitioning to 'delivered'
+//   - the client has NO delivered transition: the webhook (03-02) owns `delivered`
 //
 // A small chainable mock records the calls made to from().insert().select().single(),
 // from().select().eq().order(), from().insert(), and rpc(); the assertions read the
@@ -237,54 +237,6 @@ describe('lib/checks markFilming', () => {
   });
 });
 
-describe('lib/checks markDelivered', () => {
-  it('inserts a stub clip BEFORE transitioning to delivered', async () => {
-    const { markDelivered } = await import('./checks');
-    await markDelivered('check-123', '2026-06-20T12:00:00Z', { lat: 25.79, lng: -80.13 });
-
-    // a clips row was inserted with status stub + filmed_at + coords
-    const clipInsert = rec.inserts.find((i) => i.table === 'clips');
-    expect(clipInsert).toBeTruthy();
-    expect(clipInsert?.values).toMatchObject({
-      check_id: 'check-123',
-      status: 'stub',
-      filmed_at: '2026-06-20T12:00:00Z',
-      filmed_lat: 25.79,
-      filmed_lng: -80.13,
-    });
-
-    // transition to delivered
-    expect(supabaseMock.rpc).toHaveBeenCalledWith('transition_check', {
-      p_check_id: 'check-123',
-      p_to: 'delivered',
-    });
-
-    // ORDER: the clip insert must precede the transition (deliver-needs-clip)
-    expect(rec.order.indexOf('insert:clips')).toBeLessThan(
-      rec.order.indexOf('rpc:transition_check'),
-    );
-  });
-
-  it('works without optional coords', async () => {
-    const { markDelivered } = await import('./checks');
-    await markDelivered('check-123', '2026-06-20T12:00:00Z');
-    const clipInsert = rec.inserts.find((i) => i.table === 'clips');
-    expect(clipInsert?.values).toMatchObject({
-      check_id: 'check-123',
-      status: 'stub',
-      filmed_lat: null,
-      filmed_lng: null,
-    });
-  });
-
-  it('does not transition if the clip insert errors', async () => {
-    insertReturn = { data: null, error: { message: 'clip insert failed' } };
-    const { markDelivered } = await import('./checks');
-    await expect(markDelivered('check-123', '2026-06-20T12:00:00Z')).rejects.toBeTruthy();
-    expect(supabaseMock.rpc).not.toHaveBeenCalled();
-  });
-});
-
 describe('lib/checks rateCheck', () => {
   it('inserts a rating THEN transitions to rated', async () => {
     const { rateCheck } = await import('./checks');
@@ -352,7 +304,6 @@ describe('lib/checks DATA-02 invariant', () => {
     await checks.listOpenChecks();
     await checks.acceptCheck('id');
     await checks.markFilming('id');
-    await checks.markDelivered('id', '2026-06-20T12:00:00Z');
     await checks.rateCheck('id', 3);
     await checks.cancelCheck('id');
     expect(rec.updates.filter((u) => u.table === 'checks')).toHaveLength(0);

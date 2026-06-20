@@ -111,32 +111,13 @@ export async function markFilming(checkId: string): Promise<void> {
   if (error) throw error;
 }
 
-/**
- * CHECK-05 seam: the Scout marks the check delivered. Inserts a STUB clip row
- * BEFORE transitioning to `delivered` — the server's deliver-needs-clip guard
- * (0007) rejects a delivery with no clip. Phase 3 swaps this insert for a real
- * Mux upload (mux_asset_id / playback_id) with no change to the check flow.
- */
-export async function markDelivered(
-  checkId: string,
-  filmedAt: string,
-  loc?: { lat: number; lng: number },
-): Promise<void> {
-  const { error: clipError } = await supabase.from('clips').insert({
-    check_id: checkId,
-    status: 'stub',
-    filmed_at: filmedAt,
-    filmed_lat: loc?.lat ?? null,
-    filmed_lng: loc?.lng ?? null,
-  });
-  if (clipError) throw clipError;
-
-  const { error } = await supabase.rpc('transition_check', {
-    p_check_id: checkId,
-    p_to: 'delivered',
-  });
-  if (error) throw error;
-}
+// CHECK-05 / VID-03 (locked decision): the client CANNOT deliver a check.
+// The former delivery wrapper — which inserted a stub clip then transitioned the
+// check from the device — is RETIRED. Delivery is a server fact: the
+// signature-verified Mux webhook (03-02) is the SOLE driver of the delivered
+// state (filming -> uploaded -> processing -> delivered). The device's job ends at
+// "upload PUT returned success" (lib/clips.ts). There is therefore no client-side
+// delivered transition anywhere in this module.
 
 /**
  * CHECK-06: the owning Seeker rates a delivered check. Persists to `ratings`

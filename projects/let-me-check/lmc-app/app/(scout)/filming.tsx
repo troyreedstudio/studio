@@ -12,7 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { markFilming, markDelivered } from '../lib/checks';
+import { markFilming } from '../lib/checks';
 
 const TROUBLE_REASONS = [
   'Line is gone / venue empty',
@@ -106,19 +106,13 @@ export default function FilmingScreen() {
     setRecording(starting);
   };
 
-  // SUBMIT: mark the check delivered with a STUB clip (no real camera/Mux this
-  // phase) and route to the success screen with the real checkId.
-  // TODO(phase-3): replace the stub clip with a real Mux capture/upload.
+  // SUBMIT: flip into the (currently fake) upload state and route to the success
+  // screen. The client no longer marks the check delivered — that's a server fact
+  // owned by the Mux webhook (03-02). The real recorded-clip upload via lib/clips
+  // (requestUploadUrl -> uploadWithRetry) is wired here in 03-05.
   const handleSubmit = () => {
-    if (!checkId) {
-      setUploading(true);
-      return;
-    }
     setUploading(true);
-    markDelivered(checkId, new Date().toISOString()).catch(() => {
-      // Delivery failed — drop out of the upload animation so the Scout can retry.
-      setUploading(false);
-    });
+    // TODO(03-05): real upload via lib/clips kicks off here; webhook drives delivered
   };
 
   // Upload progression — runs when uploading flips true.
