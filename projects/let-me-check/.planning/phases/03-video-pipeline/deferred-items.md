@@ -15,3 +15,7 @@ app.config.js, scripts/). Logged for a future maintenance pass.
 
 Both are vitest-harness/RN-global issues, not product bugs. The 03-03 lib suites
 (`checks.test.ts`, `clips.test.ts`) are green.
+
+## Deferred (03-05 execution)
+
+- **Pre-existing vitest failures in `app/lib/auth.test.ts` (6) + `app/lib/supabase.test.ts` (3)** — fail on an `expo-modules-core` / `__DEV__` parse error in the vitest environment, NOT caused by 03-05. Confirmed identical failure with this plan's changes stashed. Out of scope (Rule: only auto-fix issues from the current task's changes). `clips.test.ts` (the file this plan touches) passes 10/10.
