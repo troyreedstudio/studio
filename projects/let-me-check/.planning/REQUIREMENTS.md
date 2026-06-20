@@ -17,12 +17,12 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 - [ ] **DATA-04**: **Immutable event log from day 1** — every action (request created, Scout pinged/accepted/declined, clip captured/submitted/rejected, cancel, rating, GPS ping, payment auth/capture/refund/payout) logged with timestamp + geo + context. Decided before schemas are drawn. Foundation for later predictive AI (per CTO plan §6).
 
 ### The Core Check Loop
-- [ ] **CHECK-01**: A Seeker can request a check at a chosen location (tier: Standard/Priority)
-- [ ] **CHECK-02**: The request is dispatched to an eligible nearby Scout
-- [ ] **CHECK-03**: A Scout can accept a request and is guided to film it
+- [x] **CHECK-01**: A Seeker can request a check at a chosen location (tier: Standard/Priority)
+- [x] **CHECK-02**: The request is dispatched to an eligible nearby Scout
+- [x] **CHECK-03**: A Scout can accept a request and is guided to film it
 - [ ] **CHECK-04**: A filmed clip is uploaded, processed, and delivered to the Seeker
-- [ ] **CHECK-05**: A Seeker can watch the delivered clip and see its details (when/where filmed)
-- [ ] **CHECK-06**: A Seeker can rate the delivered check
+- [x] **CHECK-05**: A Seeker can watch the delivered clip and see its details (when/where filmed)
+- [x] **CHECK-06**: A Seeker can rate the delivered check
 
 ### Video Capture & Pipeline
 - [ ] **VID-01**: A Scout films a **live** 15-second clip in-app; **gallery/camera-roll import is blocked** (fresh-capture enforcement)
@@ -46,7 +46,7 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 - [ ] **DISP-01**: Only Scouts inside the location's geofence are pinged for a request
 - [ ] **DISP-02**: A request is claimed atomically — two Scouts can never be assigned the same job (no double-booking)
 - [ ] **DISP-03**: If no Scout accepts within the window, the request times out gracefully (release hold / refund, notify Seeker)
-- [ ] **DISP-04**: The Seeker sees live status (finding → accepted → filming → delivered)
+- [x] **DISP-04**: The Seeker sees live status (finding → accepted → filming → delivered)
 
 ### Verification & Safety (beta-grade)
 - [ ] **VER-01**: Capture is GPS-geofenced and the clip is GPS-stamped (recorded at the right place/time)
@@ -103,12 +103,12 @@ Every v1 requirement maps to exactly one phase. Coverage: 41/41.
 | DATA-03 | Phase 1 | Complete |
 | DATA-04 | Phase 1 | Pending |
 | SAFE-02 | Phase 1 | Complete |
-| CHECK-01 | Phase 2 | Pending |
-| CHECK-02 | Phase 2 | Pending |
-| CHECK-03 | Phase 2 | Pending |
-| CHECK-05 | Phase 2 | Pending |
-| CHECK-06 | Phase 2 | Pending |
-| DISP-04 | Phase 2 | Pending |
+| CHECK-01 | Phase 2 | Complete |
+| CHECK-02 | Phase 2 | Complete |
+| CHECK-03 | Phase 2 | Complete |
+| CHECK-05 | Phase 2 | Complete |
+| CHECK-06 | Phase 2 | Complete |
+| DISP-04 | Phase 2 | Complete |
 | VID-01 | Phase 3 | Pending |
 | VID-02 | Phase 3 | Pending |
 | VID-03 | Phase 3 | Pending |

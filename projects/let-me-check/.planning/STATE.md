@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 01-03-PLAN.md (code-complete; Task 4 on-device verify pending)
-last_updated: "2026-06-20T13:19:35.988Z"
-last_activity: 2026-06-20 -- Phase 2 planning complete
+status: verifying
+stopped_at: Completed 02-01-PLAN.md (migrations 0007-0009 + pgTAP authored; live push is Wave 2)
+last_updated: "2026-06-20T13:27:14.394Z"
+last_activity: 2026-06-20
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 8
-  completed_plans: 3
-  percent: 38
+  completed_plans: 4
+  percent: 50
 ---
 
 # Project State
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 
 Phase: 1 of 7 (Foundation — Auth + Persistence + Event Log)
 Plan: 3 of 3 (01-01 Supabase backend) — offline tasks 0-5 complete, committed
-Status: Ready to execute
-Last activity: 2026-06-20 -- Phase 2 planning complete
+Status: Phase complete — ready for verification
+Last activity: 2026-06-20
 
 Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-01 schema is pushed live)
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 *Updated after each plan completion*
 | Phase 01 P02 | 9 | 3 tasks | 12 files |
 | Phase 01 P03 | 8 | 3 tasks | 16 files |
+| Phase 02-one-real-check P01 | 25 | 4 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Phone-OTP deferred behind PHONE_AUTH_ENABLED flag (Twilio + A2P not live); Apple+Google are the live sign-in methods this wave
 - [Phase 01]: Stores keep synchronous mutator signatures (optimistic cache + background persist) so importing screens need no changes
 - [Phase 01]: EAS env vars pulled via per-profile environment key (no secret literals in eas.json)
+- [Phase 02-one-real-check]: Added no_scout terminal enum value distinct from cancelled/expired (honest no-Scout outcome)
+- [Phase 02-one-real-check]: clips as a first-class table so Phase-3 Mux columns slot in additively
+- [Phase 02-one-real-check]: is_valid_check_transition compares enum on ::text so 0007 pushes safely before 0008's no_scout enum-add
 
 ### Pending Todos
 
@@ -90,6 +94,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-20T12:54:11.001Z
-Stopped at: Completed 01-03-PLAN.md (code-complete; Task 4 on-device verify pending)
+Last session: 2026-06-20T13:27:03.777Z
+Stopped at: Completed 02-01-PLAN.md (migrations 0007-0009 + pgTAP authored; live push is Wave 2)
 Resume file: None

@@ -140,7 +140,7 @@ Today there are **no automated tests** (only `tsc` + manual QA) — fine for a U
   3. A Scout can accept a request (manually routed at this stage) and is guided through to a delivered result
   4. A Seeker can watch the delivered check, see when and where it was filmed, and rate it — and the rating persists
 **Plans**: 5 plans
-- [ ] 02-01-PLAN.md — Server SQL spine: hardened transition_check + accept_check + clips/location/no_scout + Scout RLS + Realtime publication + pgTAP matrix
+- [x] 02-01-PLAN.md — Server SQL spine: hardened transition_check + accept_check + clips/location/no_scout + Scout RLS + Realtime publication + pgTAP matrix
 - [ ] 02-02-PLAN.md — [BLOCKING] push migrations 0007-0009 live + confirm Realtime publication + regenerate database.types.ts
 - [ ] 02-03-PLAN.md — Client lib: lib/checks.ts (create/list/accept/markDelivered/rate/cancel) + lib/realtime.ts (subscribeToCheck) + Vitest
 - [ ] 02-04-PLAN.md — Seeker wiring: payment->createCheck, finding/waiting->live status, delivery->clip metadata + rateCheck
