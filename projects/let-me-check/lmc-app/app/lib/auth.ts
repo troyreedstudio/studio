@@ -17,8 +17,8 @@
 
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import Constants from 'expo-constants';
 import { supabase } from './supabase';
+import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from './config';
 import { logEvent, setCurrentRole, type Role } from './api';
 
 /**
@@ -51,19 +51,15 @@ export async function signInWithApple(): Promise<void> {
 
 let googleConfigured = false;
 
-const gextra = (Constants.expoConfig?.extra ?? {}) as {
-  googleWebClientId?: string;
-  googleIosClientId?: string;
-};
-
-/** Configure the native Google SDK once. Client IDs come from the manifest
- *  (release-safe, since Release builds don't inline .env) with an env fallback. */
+/** Configure the native Google SDK once. Client IDs come from lib/config (bundled
+ *  public values) — expo-constants `extra` is null on-device and .env isn't inlined
+ *  in Release, so neither is reliable; the bundled module always is. */
 function ensureGoogleConfigured(): void {
   if (googleConfigured) return;
   GoogleSignin.configure({
     // The WEB client ID is the audience Supabase verifies the idToken against.
-    webClientId: gextra.googleWebClientId ?? process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    iosClientId: gextra.googleIosClientId ?? process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
   });
   googleConfigured = true;
 }

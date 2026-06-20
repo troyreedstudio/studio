@@ -63,6 +63,9 @@ module.exports = {
             'com.googleusercontent.apps.676403846721-denqiskp74ddp8s5ich1rpqdqhfkr5sq',
         },
       ],
+      // Durable Podfile `use_modular_headers!` so prebuild can't wipe the Google
+      // Sign-In modular-headers fix (AppCheckCore/GoogleUtilities/RecaptchaInterop).
+      './plugins/withModularHeaders',
     ],
     extra: {
       router: {},

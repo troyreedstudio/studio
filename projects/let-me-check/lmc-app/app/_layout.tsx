@@ -1,12 +1,14 @@
+import './lib/hermes-fix'; // MUST be first: unmasks the device-release Hermes crash + logs fatals
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import Mapbox from '@rnmapbox/maps';
 import { useEffect } from 'react';
 import { SessionProvider, useSession, hubRouteForRole } from './lib/session';
+import { MAPBOX_TOKEN } from './lib/config';
 
-// TODO(device-release): also surface this token via app.config extra (like Supabase/
-// Google) so Release builds have it — Release does not inline .env. Works in dev/Simulator.
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? null);
+// Token comes from the always-bundled config module (Release builds do NOT inline
+// .env, and ExponentConstants is unreliable on device-release — see config.ts).
+Mapbox.setAccessToken(MAPBOX_TOKEN);
 
 import { useFonts, PlayfairDisplay_400Regular, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
 import { Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
