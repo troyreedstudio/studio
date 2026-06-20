@@ -44,7 +44,10 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          location_label: string | null
           market_id: string | null
+          requested_lat: number | null
+          requested_lng: number | null
           scout_id: string | null
           seeker_id: string
           status: Database["public"]["Enums"]["check_status"]
@@ -56,7 +59,10 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          location_label?: string | null
           market_id?: string | null
+          requested_lat?: number | null
+          requested_lng?: number | null
           scout_id?: string | null
           seeker_id: string
           status?: Database["public"]["Enums"]["check_status"]
@@ -68,7 +74,10 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          location_label?: string | null
           market_id?: string | null
+          requested_lat?: number | null
+          requested_lng?: number | null
           scout_id?: string | null
           seeker_id?: string
           status?: Database["public"]["Enums"]["check_status"]
@@ -89,6 +98,44 @@ export type Database = {
             columns: ["venue_id"]
             isOneToOne: false
             referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clips: {
+        Row: {
+          check_id: string
+          created_at: string
+          filmed_at: string | null
+          filmed_lat: number | null
+          filmed_lng: number | null
+          id: string
+          status: string
+        }
+        Insert: {
+          check_id: string
+          created_at?: string
+          filmed_at?: string | null
+          filmed_lat?: number | null
+          filmed_lng?: number | null
+          id?: string
+          status?: string
+        }
+        Update: {
+          check_id?: string
+          created_at?: string
+          filmed_at?: string | null
+          filmed_lat?: number | null
+          filmed_lng?: number | null
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clips_check_id_fkey"
+            columns: ["check_id"]
+            isOneToOne: false
+            referencedRelation: "checks"
             referencedColumns: ["id"]
           },
         ]
@@ -565,6 +612,10 @@ export type Database = {
         Returns: unknown
       }
       _st_within: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      accept_check: {
+        Args: { p_check_id: string }
+        Returns: Database["public"]["Enums"]["check_status"]
+      }
       addauth: { Args: { "": string }; Returns: boolean }
       addgeometrycolumn:
         | {
@@ -735,6 +786,13 @@ export type Database = {
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
       gettransactionid: { Args: never; Returns: unknown }
+      is_valid_check_transition: {
+        Args: {
+          p_from: Database["public"]["Enums"]["check_status"]
+          p_to: Database["public"]["Enums"]["check_status"]
+        }
+        Returns: boolean
+      }
       log_event: {
         Args: {
           p_context?: Json
@@ -1399,6 +1457,7 @@ export type Database = {
         | "rated"
         | "cancelled"
         | "expired"
+        | "no_scout"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -1549,6 +1608,7 @@ export const Constants = {
         "rated",
         "cancelled",
         "expired",
+        "no_scout",
       ],
     },
   },
