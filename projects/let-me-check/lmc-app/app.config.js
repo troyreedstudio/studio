@@ -44,6 +44,7 @@ module.exports = {
       'expo-router',
       'expo-font',
       'expo-video',
+      'expo-secure-store',
       [
         '@rnmapbox/maps',
         {
