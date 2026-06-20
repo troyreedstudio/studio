@@ -3,22 +3,38 @@
     "version": ">= 7.0.0",
     "appVersionSource": "remote"
   },
+  "_env_setup": {
+    "why": "EXPO_PUBLIC_* values resolve to null at build time unless registered as EAS-managed environment variables (local .env only covers `expo start`). A missing value silently ships a build that cannot reach the backend — this is the Mapbox blank-map class of bug.",
+    "required_for_all_build_profiles": [
+      "EXPO_PUBLIC_SUPABASE_URL",
+      "EXPO_PUBLIC_SUPABASE_ANON_KEY",
+      "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID",
+      "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID",
+      "EXPO_PUBLIC_MAPBOX_TOKEN",
+      "MAPBOX_DOWNLOAD_TOKEN"
+    ],
+    "how_to_register": "Run `eas env:create --name EXPO_PUBLIC_SUPABASE_URL --value <url> --visibility plaintext --environment development,preview,production` (repeat per variable), or set them in the EAS Dashboard > Project > Environment Variables. Use the SAME values as lmc-app/.env. Only the Supabase anon key (RLS-protected) and the public Mapbox pk.* token are safe to ship; the MAPBOX_DOWNLOAD_TOKEN (sk.*) is build-only and must stay secret.",
+    "note": "EAS-managed env vars are auto-injected into every build, so they are intentionally NOT duplicated as literals here (that would leak/override). The `environment` key per profile selects which EAS env set is pulled in."
+  },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "environment": "development",
       "ios": {
         "simulator": true
       }
     },
     "preview": {
       "distribution": "internal",
+      "environment": "preview",
       "ios": {
         "simulator": false
       }
     },
     "production": {
       "autoIncrement": true,
+      "environment": "production",
       "ios": {
         "simulator": false
       }
