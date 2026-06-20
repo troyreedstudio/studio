@@ -42,6 +42,31 @@ async function getMux(): Promise<MuxClient> {
 }
 
 /**
+ * Live Mux client for the entrypoints that pass it into a handler ({ mux }).
+ * The handlers call mux.video.uploads.create / mux.jwt.signPlaybackId directly so
+ * they stay unit-testable with an injected mock. Never returned to a CALLER —
+ * only used inside an Edge Function. Use signingKeyOpts() to supply the JWT key.
+ */
+export async function getMuxClient(): Promise<MuxClient> {
+  return await getMux();
+}
+
+/** The signed-playback JWT options (1h), including the signing key from env. */
+export function signingKeyOpts(): {
+  type: "video";
+  expiration: string;
+  keyId: string;
+  keySecret: string;
+} {
+  return {
+    type: "video",
+    expiration: "1h",
+    keyId: requireEnv("MUX_SIGNING_KEY_ID"),
+    keySecret: requireEnv("MUX_SIGNING_PRIVATE_KEY"),
+  };
+}
+
+/**
  * Verify the Mux webhook signature BEFORE the body is trusted. Throws on a
  * missing / forged `mux-signature` header. Returns nothing — never a secret.
  */
