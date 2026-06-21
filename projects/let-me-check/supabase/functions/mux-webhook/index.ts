@@ -23,6 +23,7 @@ interface MuxEvent {
   type: string;
   data: {
     id?: string;
+    upload_id?: string;  // the Mux direct-upload id that produced this asset
     passthrough?: string;
     duration?: number;
     playback_ids?: Array<{ id: string; policy: string }>;
@@ -60,6 +61,10 @@ export async function handleMuxWebhook(
 
   const checkId = evt.data?.passthrough;
   const assetId = evt.data?.id;
+  // upload_id ties the asset back to the specific clip row inserted by mux-upload-url
+  // (mux_upload_id column). On re-dispatch a check can have multiple clip rows; using
+  // mux_upload_id rather than check_id ensures we only touch the row for THIS asset.
+  const uploadId = evt.data?.upload_id;
   // Pick the SIGNED playback id (the asset is created playback_policy: ['signed']).
   // deno-fmt-ignore — kept on one line so the policy === 'signed' guard is explicit.
   const playbackId = evt.data?.playback_ids?.find((p) => p.policy === 'signed')?.id;
@@ -68,10 +73,14 @@ export async function handleMuxWebhook(
   // 4. Branch on event type — only ready/errored act; everything else is ignored.
   if (evt.type === "video.asset.errored") {
     if (checkId) {
-      await deps.svc.from("clips").update({ status: "errored" }).eq(
-        "check_id",
-        checkId,
-      );
+      // Target the specific clip by upload_id when available (re-dispatch safety);
+      // fall back to check_id if upload_id absent (e.g. legacy events).
+      const errQuery = deps.svc.from("clips").update({ status: "errored" });
+      if (uploadId) {
+        await errQuery.eq("mux_upload_id", uploadId);
+      } else {
+        await errQuery.eq("check_id", checkId);
+      }
     }
     return new Response("errored noted", { status: 200 });
   }
@@ -84,34 +93,54 @@ export async function handleMuxWebhook(
     return new Response("missing passthrough", { status: 400 });
   }
 
-  // 5. IDEMPOTENT: if this clip is already 'ready', a duplicate event is a no-op.
-  const { data: existing } = await deps.svc.from("clips").select("status").eq(
-    "check_id",
-    checkId,
-  ).maybeSingle();
+  // 5. IDEMPOTENT: if the specific clip is already 'ready', a duplicate event is a no-op.
+  // Use mux_upload_id to target the exact row (re-dispatch: multiple rows per check_id).
+  // Fall back to check_id match when upload_id absent (legacy/test events).
+  let existingQuery = deps.svc.from("clips").select("status");
+  existingQuery = uploadId
+    ? existingQuery.eq("mux_upload_id", uploadId)
+    : existingQuery.eq("check_id", checkId).order("created_at", { ascending: false }).limit(1);
+  const { data: existing } = await existingQuery.maybeSingle();
   if (existing?.status === "ready") {
     return new Response("ok (dup)", { status: 200 });
   }
 
   // 6. Finalize the clip row (service role bypasses RLS).
-  await deps.svc.from("clips").update({
+  // Target by mux_upload_id (the specific clip for this asset) when available;
+  // fall back to check_id for legacy events. This prevents a re-dispatch scenario
+  // from accidentally flipping a previously-rejected clip back to 'ready'.
+  const finalizeQuery = deps.svc.from("clips").update({
     mux_asset_id: assetId,
     mux_playback_id: playbackId,
     mux_playback_policy: "signed",
     duration_secs: duration,
     status: "ready",
-  }).eq("check_id", checkId);
+  });
+  if (uploadId) {
+    await finalizeQuery.eq("mux_upload_id", uploadId);
+  } else {
+    await finalizeQuery.eq("check_id", checkId);
+  }
 
   // 6b. GPS VERIFICATION GATE (Phase 5, D-04/D-05, VER-01). MUST run BEFORE delivered:
   //     a rejected clip is re-dispatched and NEVER delivered or captured.
   //     On passed:false -> reset_check_for_redispatch (re-dispatch), return gps_rejected.
   //     On passed:true or unverifiable (missing GPS) -> fall through to deliver normally.
-  const verify = await deps.svc.functions.invoke('verify-clip', { body: { checkId } });
-  if (verify?.data?.passed === false) {
+  //     Network/invoke error from verify-clip -> treat as unverifiable (soft-pass);
+  //     consistent with "can't reject what we can't verify" policy (verify-clip design).
+  let verifyResult: { data?: { passed?: boolean } | null } = {};
+  try {
+    verifyResult = await deps.svc.functions.invoke('verify-clip', { body: { checkId } });
+  } catch (_verifyErr) {
+    // verify-clip invoke failed (network, cold-start, etc.) — treat as unverifiable.
+    // The clip is NOT rejected: we fall through to deliver rather than silently blocking.
+    verifyResult = { data: null };
+  }
+  if (verifyResult?.data?.passed === false) {
     await deps.svc.rpc('reset_check_for_redispatch', { p_check_id: checkId });
     return new Response('gps_rejected', { status: 200 });
   }
-  // (verify-clip pass path, or unverifiable pass-through, falls through to deliver.)
+  // (verify-clip pass path, unverifiable, or invoke-error pass-through -> deliver.)
 
   // 7. Drive the check forward as the SERVICE ROLE (auth.uid() NULL). 0010's
   //    service-actor branch authorizes uploaded/processing/delivered.

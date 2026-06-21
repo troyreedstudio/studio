@@ -36,7 +36,7 @@ function mockMux() {
 // Mock the service client: `assignedScout` controls whether the caller is the
 // check's assigned scout (the authz gate).
 function mockSvc(opts: { assignedScout: string | null } = { assignedScout: "scout-1" }) {
-  const updates: Array<Record<string, unknown>> = [];
+  const inserts: Array<Record<string, unknown>> = [];
   const svc = {
     from(_table: string) {
       return {
@@ -54,21 +54,21 @@ function mockSvc(opts: { assignedScout: string | null } = { assignedScout: "scou
             },
           };
         },
-        update(values: Record<string, unknown>) {
-          updates.push(values);
-          return { eq() {
-            return Promise.resolve({ data: null, error: null });
-          } };
+        // Phase 5 fix: mux-upload-url now INSERTs the clip row (was UPDATE).
+        // The INSERT creates the row so the Mux webhook can find it via check_id.
+        insert(values: Record<string, unknown>) {
+          inserts.push(values);
+          return Promise.resolve({ data: null, error: null });
         },
       };
     },
   };
-  return { svc, updates };
+  return { svc, inserts };
 }
 
 Deno.test("mints a SIGNED upload with passthrough=checkId for the assigned scout", async () => {
   const { mux, created } = mockMux();
-  const { svc, updates } = mockSvc({ assignedScout: "scout-1" });
+  const { svc, inserts } = mockSvc({ assignedScout: "scout-1" });
   const res = await handleUploadUrl(
     { checkId: "check_abc", callerId: "scout-1" },
     { mux, svc },
@@ -81,9 +81,11 @@ Deno.test("mints a SIGNED upload with passthrough=checkId for the assigned scout
   assertEquals(settings.playback_policy, ["signed"]);
   // webhook correlation key
   assertEquals(settings.passthrough, "check_abc");
-  // the pending clip row records the upload id for the webhook lookup
-  const recorded = updates.find((u) => u.mux_upload_id === "upload_999");
-  assert(recorded, "expected the clip row to record mux_upload_id");
+  // Phase 5 fix: the clip row is now INSERTed (not updated) so it exists when the webhook fires
+  const recorded = inserts.find((u) => u.mux_upload_id === "upload_999");
+  assert(recorded, "expected the clip row to be inserted with mux_upload_id");
+  assertEquals(recorded?.check_id, "check_abc");
+  assertEquals(recorded?.status, "pending");
 });
 
 Deno.test("denies a caller who is NOT the assigned scout", async () => {

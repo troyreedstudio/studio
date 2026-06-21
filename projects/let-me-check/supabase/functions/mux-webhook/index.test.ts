@@ -88,10 +88,15 @@ function mockSvc(opts: { clipStatus?: string | null; verifyClipPassed?: boolean 
   return { svc, calls };
 }
 
+// upload_id is included so the webhook targets the specific clip row via
+// mux_upload_id (re-dispatch safety — avoids the fallback .order().limit() path
+// which would require a more complex mock chain). Mux includes upload_id in all
+// real video.asset.ready events when the asset came from a direct upload.
 const READY_EVENT = JSON.stringify({
   type: "video.asset.ready",
   data: {
     id: "asset_123",
+    upload_id: "upload_999",
     passthrough: "check_abc",
     duration: 15.0,
     playback_ids: [
@@ -288,7 +293,9 @@ Deno.test("capture invoke failure does NOT prevent 200 response (fault-tolerant 
   });
   // Delivered transition must still succeed despite capture error
   assertEquals(res.status, 200);
-  assertEquals(calls.invokes[0], "stripe-capture");
+  // Phase 5: verify-clip is now invoked first (step 6b) then stripe-capture (step 8).
+  // Both reject in this mock; both are caught. Assert stripe-capture was attempted.
+  assert(calls.invokes.includes("stripe-capture"), "stripe-capture was invoked");
   const tos = calls.rpcs
     .filter((r) => r.fn === "transition_check")
     // deno-lint-ignore no-explicit-any

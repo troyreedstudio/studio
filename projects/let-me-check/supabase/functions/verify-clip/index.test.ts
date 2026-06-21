@@ -52,11 +52,17 @@ function mockSvc(opts: MockOpts = {}) {
                     limit(_n: number) {
                       return {
                         single() {
+                          // Use explicit undefined-check so callers can pass null
+                          // to simulate missing GPS (null ?? default substitutes
+                          // the default for null, defeating the null-GPS test path).
+                          const lat = opts.filmedLat !== undefined ? opts.filmedLat : 25.7617;
+                          const lng = opts.filmedLng !== undefined ? opts.filmedLng : -80.1918;
+                          const acc = opts.filmedAccuracyM !== undefined ? opts.filmedAccuracyM : 5;
                           return Promise.resolve({
                             data: {
-                              filmed_lat: opts.filmedLat ?? 25.7617,
-                              filmed_lng: opts.filmedLng ?? -80.1918,
-                              filmed_accuracy_m: opts.filmedAccuracyM ?? 5,
+                              filmed_lat: lat,
+                              filmed_lng: lng,
+                              filmed_accuracy_m: acc,
                             },
                             error: null,
                           });

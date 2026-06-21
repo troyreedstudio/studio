@@ -57,7 +57,9 @@ export async function handlePlaybackToken(
 }
 
 // Live entrypoint: resolve the caller from their bearer, then run the core handler.
-Deno.serve(async (req: Request) => {
+// import.meta.main guard prevents Deno.serve from binding a port when this module
+// is imported by tests (same pattern as mux-webhook, verify-clip, stripe-capture).
+if (import.meta.main) Deno.serve(async (req: Request) => {
   const authed = authedClient(req);
   const { data: userData } = await authed.auth.getUser();
   const callerId = userData?.user?.id ?? null;

@@ -73,18 +73,37 @@ export async function handleUploadUrl(
   if (isFiniteNum(filmed_lng)) gpsUpdate.filmed_lng = filmed_lng;
   if (isFiniteNum(filmed_accuracy_m)) gpsUpdate.filmed_accuracy_m = filmed_accuracy_m;
 
-  // Record the upload id on the clip row -> 'pending' so the webhook can find it.
-  // Persist filmed GPS in the same update (single round-trip).
+  // UPSERT the clip row so it exists when the Mux webhook fires. Phase 3/4 had the
+  // Scout client inserting a stub clips row before calling this function; that stub
+  // path was retired when the real upload pipeline landed. Without an INSERT here
+  // the clips table stays empty: the subsequent UPDATE was a silent no-op (0 rows
+  // matched), verify-clip logged gps_unverifiable (no row), the delivered transition
+  // threw "cannot deliver without a ready clip", and the check was stuck in processing.
+  //
+  // ON CONFLICT(check_id): a re-dispatched check reuses the same check_id. The
+  // previous (rejected) clip row has status='rejected'; re-submitting should create a
+  // SECOND clip row rather than overwriting the rejected one, so per-Pitfall-5 in
+  // 05-RESEARCH.md and the reset_check_for_redispatch pattern each submission gets its
+  // own row. We therefore use INSERT without ON CONFLICT so each mux-upload-url call
+  // appends a fresh row. The service role bypasses RLS (serviceClient), so no policy
+  // check is needed here. verify-clip reads the LATEST row (order created_at desc).
   await deps.svc
     .from("clips")
-    .update({ mux_upload_id: upload.id, status: "pending", ...gpsUpdate })
-    .eq("check_id", checkId);
+    .insert({
+      check_id: checkId,
+      mux_upload_id: upload.id,
+      status: "pending",
+      filmed_at: new Date().toISOString(),
+      ...gpsUpdate,
+    });
 
   return Response.json({ uploadUrl: upload.url, uploadId: upload.id });
 }
 
 // Live entrypoint: resolve the caller from their bearer, then run the core handler.
-Deno.serve(async (req: Request) => {
+// import.meta.main guard prevents Deno.serve from binding a port when this module
+// is imported by tests (same pattern as mux-webhook, verify-clip, stripe-capture).
+if (import.meta.main) Deno.serve(async (req: Request) => {
   const authed = authedClient(req);
   const { data: userData } = await authed.auth.getUser();
   const callerId = userData?.user?.id ?? null;
