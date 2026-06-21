@@ -114,6 +114,7 @@ Recent decisions affecting current work:
 ### Roadmap Evolution
 
 - Phase 4 added (2026-06-21): Payments — Stripe Connect Express, card hold at request + capture-on-delivery, Scout payouts, refunds/disputes, instant-payout (2% fee), tax/KYC via Connect onboarding. Buildable in Stripe test mode; real money gated on US entity + EIN at launch. Currency/market-aware.
+- Phase 5 added (2026-06-21): Verification moat + dispatch — geofenced dispatch (only Scouts inside a ~30-50m fence pinged; atomic accept, no double-assignment), reference-photo confirm before filming, GPS-stamped clips auto-rejected off-fence, AI signage detection auto-reject, 20-min Scout cooldown per venue. Replaces interim manual dispatch.
 
 ### Pending Todos
 

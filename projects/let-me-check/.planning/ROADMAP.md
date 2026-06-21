@@ -30,3 +30,13 @@ Plans:
 - [x] 04-05-PLAN.md — [BLOCKING] live deploy: wire capture trigger into mux-webhook + db push 0011 + Stripe test secrets + deploy 5 functions + register webhook + regen types
 - [x] 04-06-PLAN.md — Wire UI: StripeProvider (New Arch off) + real PaymentSheet hold-then-createCheck in payment.tsx + real Connect onboarding + go-online gate in scout/payout.tsx + on-device smoke test
 - [x] 04-07-PLAN.md — Reason-coded reviewed refunds: stripe-refund (no reverse_transfer, D-08) + _shared/refund-rules.ts (auto-approve first / review repeats) + delivery.tsx report-a-problem picker (D-06/D-07/PAY-04/PAY-05)
+
+### Phase 5: Verification moat + dispatch — geofenced dispatch (only Scouts inside a ~30-50m venue fence are pinged; atomic accept, no double-assignment), reference-photo confirm before filming, GPS-stamped clips auto-rejected if off-fence, AI signage detection auto-reject on the clip, 20-min Scout cooldown per venue; replaces the interim manual dispatch
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 4
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 5 to break down)
