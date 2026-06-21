@@ -8,39 +8,38 @@
 // The `dispatch_radius_m` query runs server-side (SECURITY DEFINER RPC) —
 // clients never read other Scouts' raw locations.
 //
-// WKT note: PostGIS `geography(point,4326)` upserts via the Supabase JS client
-// accept WKT strings. LONGITUDE comes FIRST in POINT(lng lat) — the opposite of
-// how expo-location returns { latitude, longitude } (RESEARCH Pitfall 1 / A1).
+// IMPLEMENTATION NOTE (migration 0013 / A1 fallback):
+// The original client-side WKT upsert ('POINT(lng lat)' via .from().upsert())
+// failed silently on the live Supabase project — PostgREST has no assignment cast
+// from text → geography(point,4326), so scout_locations stayed EMPTY and
+// geofenced dispatch had nothing to match. The error was swallowed by the
+// dashboard.tsx `.catch(()=>{})`.
 //
-// Fallback note (A1): if the live Supabase project rejects WKT upserts on a
-// geography column, replace this with a SECURITY DEFINER RPC
-// `upsert_scout_location(p_lat, p_lng)` that casts internally. That is a cheap
-// one-function migration — no client type changes needed.
+// Fix: SECURITY DEFINER RPCs that receive plain lat/lng doubles and cast
+// internally via ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326). supabase.rpc()
+// works correctly on Hermes — only supabase.functions.invoke had the hang on
+// device (Research A1). See migration 0013 for the full SQL + comments.
+//
+// LONGITUDE FIRST in ST_MakePoint (Pitfall 1) is now enforced server-side.
+// The client still passes (lat, lng) in the natural expo-location order; the
+// RPC handles the flip.
 //
 // This module has NO business logic: it writes scout_locations only. State
 // transitions (dispatching, accept, etc.) stay in checks.ts / the server RPCs.
 
 import { supabase } from './supabase';
 
-// `scout_locations` was added in migration 0012 (Phase 5). The generated
-// database.types.ts predates that migration (types regen is a Wave-4 live step).
-// Cast the client to `any` at the table boundary to unblock tsc until types are
-// regenerated after `supabase db push` + `supabase gen types typescript --linked`.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
-
-/** Resolve the current authed user id, or throw if signed out (mirrors checks.ts). */
-async function requireUserId(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error('Not authenticated');
-  return data.user.id;
-}
-
 /**
  * SCOUT-03: upsert the Scout's current location into `scout_locations` while
  * online. Call this on every watchPositionAsync tick (every ~30 s or 20 m move).
  *
- * WKT puts LONGITUDE first: `POINT(${lng} ${lat})` — not lat/lng (Pitfall 1).
+ * Delegates to the `upsert_scout_location` SECURITY DEFINER RPC (migration 0013)
+ * which casts the plain doubles to geography(point,4326) server-side — avoiding
+ * the PostgREST text→geography cast failure that the original WKT client upsert hit.
+ *
+ * The RPC enforces: auth.uid() == scout_id, LONGITUDE first in ST_MakePoint,
+ * NaN/out-of-range coord rejection. No client-supplied scout_id is accepted.
+ *
  * Optional `accuracyM` (from pos.coords.accuracy) is stored alongside the coord
  * so `verify-clip` can distinguish a genuine on-site fix from a low-quality
  * reading (Research Pitfall 3).
@@ -50,38 +49,25 @@ export async function upsertScoutLocation(
   lng: number,
   accuracyM?: number,
 ): Promise<void> {
-  const uid = await requireUserId();
-  const payload: Record<string, unknown> = {
-    scout_id: uid,
-    // LONGITUDE first in WKT (Pitfall 1 — matches ST_MakePoint(lng, lat) on the DB).
-    coord: `POINT(${lng} ${lat})`,
-    is_online: true,
-    updated_at: new Date().toISOString(),
-  };
-  if (accuracyM !== undefined) {
-    payload.accuracy_m = accuracyM;
-  }
-  const { error } = await db
-    .from('scout_locations')
-    .upsert(payload, { onConflict: 'scout_id' });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).rpc('upsert_scout_location', {
+    p_lat: lat,
+    p_lng: lng,
+    p_accuracy: accuracyM ?? null,
+  });
   if (error) throw error;
 }
 
 /**
- * SCOUT-03: flip the Scout offline. Upserts `is_online: false` for the current
- * user WITHOUT updating `coord` — we keep the last known coord intact in the DB
- * so that if the Scout quickly comes back online their location is still known
- * (next watchPositionAsync tick will refresh it anyway).
+ * SCOUT-03: flip the Scout offline. Calls the `set_scout_offline` SECURITY
+ * DEFINER RPC which sets is_online=false WITHOUT updating coord — the last known
+ * position is preserved so that a quick come-back-online cycle doesn't need to
+ * wait for a new GPS fix before the dispatch RPC can see the Scout.
  *
  * Also called on screen unmount so background location watching stops cleanly.
  */
 export async function setScoutOffline(): Promise<void> {
-  const uid = await requireUserId();
-  const { error } = await db
-    .from('scout_locations')
-    .upsert(
-      { scout_id: uid, is_online: false, updated_at: new Date().toISOString() },
-      { onConflict: 'scout_id' },
-    );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).rpc('set_scout_offline', {});
   if (error) throw error;
 }
