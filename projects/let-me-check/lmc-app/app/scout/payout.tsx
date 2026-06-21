@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-type Speed = 'standard' | 'instant';
+import * as WebBrowser from 'expo-web-browser';
+import { startConnectOnboarding, getConnectStatus } from '../lib/payments';
+import type { PayoutSpeed } from '../lib/payments';
 
 const WHAT_STRIPE_NEEDS = [
   {
@@ -46,19 +47,67 @@ const TRUST_BULLETS = [
 
 export default function ScoutPayoutScreen() {
   const router = useRouter();
-  const [speed, setSpeed] = useState<Speed>('standard');
+  const [speed, setSpeed] = useState<PayoutSpeed>('standard');
   const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
-  const handleOpenStripe = () => {
-    Alert.alert(
-      'Open Stripe Connect',
-      `In production this hands off to Stripe's hosted onboarding (about 5 minutes). After Stripe confirms, you return here automatically.\n\nFor the prototype, we'll skip to the next step.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Continue', onPress: () => router.push('/scout/rules') },
-      ],
-    );
+  // Opens the Stripe Connect hosted onboarding URL.
+  // Passes the chosen payout speed through — this is the D-05 sole write path.
+  // After the browser returns, checks live eligibility from the server (SCOUT-01).
+  // Never trusts the deep-link return: eligibility comes from accounts.retrieve (Pitfall 5).
+  const handleOpenStripe = async () => {
+    if (!authorized) return;
+    setLoading(true);
+    try {
+      // D-05: payout speed is passed to stripe-connect-onboard which persists it
+      // to scout_stripe_accounts.payout_speed (RLS bars a direct client write).
+      const { url } = await startConnectOnboarding(speed);
+      setLoading(false);
+
+      // Open the Stripe hosted onboarding in an in-app browser session.
+      // lmc:// is the return scheme registered in app.config.js.
+      await WebBrowser.openAuthSessionAsync(url, 'lmc://');
+
+      // After the browser closes, verify eligibility from the server — never
+      // trust the deep-link return alone (T-04-28 / Pitfall 5 / SCOUT-01).
+      setVerifying(true);
+      const status = await getConnectStatus();
+      setVerifying(false);
+
+      if (status.eligible) {
+        // Both charges_enabled && payouts_enabled confirmed by the server.
+        router.push('/scout/rules');
+      } else {
+        Alert.alert(
+          'Stripe is still verifying your details',
+          'This usually takes a few minutes. Once Stripe confirms, you can go online and start earning.',
+          [
+            {
+              text: 'Try again',
+              onPress: handleOpenStripe,
+            },
+            { text: 'Later', style: 'cancel' },
+          ],
+        );
+      }
+    } catch (e) {
+      setLoading(false);
+      setVerifying(false);
+      Alert.alert(
+        'Something went wrong',
+        e instanceof Error ? e.message : 'Please try again in a moment.',
+      );
+    }
   };
+
+  const btnLabel = verifying
+    ? 'CHECKING STATUS…'
+    : loading
+    ? 'OPENING STRIPE…'
+    : authorized
+    ? 'OPEN STRIPE CONNECT'
+    : 'AUTHORIZE TO CONTINUE';
 
   return (
     <View style={styles.bg}>
@@ -115,7 +164,7 @@ export default function ScoutPayoutScreen() {
             <View style={styles.earnCell}>
               <Text style={styles.earnAmount}>$3</Text>
               <Text style={styles.earnLabel}>No-fault pay</Text>
-              <Text style={styles.earnWhy}>Couldn’t film for a valid reason, GPS verified</Text>
+              <Text style={styles.earnWhy}>Couldn't film for a valid reason, GPS verified</Text>
             </View>
             <View style={styles.earnCell}>
               <Text style={[styles.earnAmount, { color: '#FFCB47' }]}>$80–$200</Text>
@@ -203,7 +252,7 @@ export default function ScoutPayoutScreen() {
             ))}
           </View>
 
-          {/* AUTHORIZE */}
+          {/* AUTHORIZE — Scout Code consent (SCOUT-02) */}
           <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
             AUTHORIZE
           </Text>
@@ -221,8 +270,8 @@ export default function ScoutPayoutScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.primaryBtn, !authorized && styles.primaryBtnDisabled]}
-            disabled={!authorized}
+            style={[styles.primaryBtn, (!authorized || loading || verifying) && styles.primaryBtnDisabled]}
+            disabled={!authorized || loading || verifying}
             onPress={handleOpenStripe}
             activeOpacity={0.85}
           >
@@ -230,12 +279,12 @@ export default function ScoutPayoutScreen() {
               <Ionicons
                 name="open-outline"
                 size={16}
-                color={authorized ? '#000' : 'rgba(255,255,255,0.35)'}
+                color={(authorized && !loading && !verifying) ? '#000' : 'rgba(255,255,255,0.35)'}
               />
               <Text
-                style={[styles.primaryBtnText, !authorized && styles.primaryBtnTextDisabled]}
+                style={[styles.primaryBtnText, (!authorized || loading || verifying) && styles.primaryBtnTextDisabled]}
               >
-                {authorized ? 'OPEN STRIPE CONNECT' : 'AUTHORIZE TO CONTINUE'}
+                {btnLabel}
               </Text>
             </View>
           </TouchableOpacity>
