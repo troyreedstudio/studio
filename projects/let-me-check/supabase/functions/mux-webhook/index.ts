@@ -105,10 +105,25 @@ export async function handleMuxWebhook(
   await deps.svc.rpc('transition_check', { p_check_id: checkId, p_to: 'delivered' });
   // deno-fmt-ignore-end
 
+  // 8. Trigger capture-on-delivery (D-03). This is fault-tolerant: a capture hiccup
+  //    MUST NOT undo the delivered transition (clip already delivered; stripe-capture's
+  //    D-09 branch handles capture failure by still paying the Scout). Service-role
+  //    invoke so no Seeker token is ever near the capture path (T-04-12).
+  try {
+    await deps.svc.functions.invoke('stripe-capture', { body: { checkId } });
+  } catch (_captureErr) {
+    // Capture failure is logged inside stripe-capture (D-09 path). Do not surface
+    // the error here — the Seeker already has their clip.
+  }
+
   return new Response("ok", { status: 200 });
 }
 
 // Live entrypoint: wire the real signature verifier + service-role client.
-Deno.serve((req: Request) =>
-  handleMuxWebhook(req, { verify: verifyMuxSignature, svc: serviceClient() })
-);
+// import.meta.main guard so `deno test --allow-env` can import this module
+// without trying to bind a network port (same pattern as all Phase 4 functions).
+if (import.meta.main) {
+  Deno.serve((req: Request) =>
+    handleMuxWebhook(req, { verify: verifyMuxSignature, svc: serviceClient() })
+  );
+}

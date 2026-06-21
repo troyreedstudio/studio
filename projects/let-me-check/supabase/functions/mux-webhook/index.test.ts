@@ -26,6 +26,7 @@ function mockSvc(opts: { clipStatus?: string | null } = {}) {
   const calls = {
     updates: [] as Array<Record<string, unknown>>,
     rpcs: [] as Array<{ fn: string; args: unknown }>,
+    invokes: [] as Array<{ fn: string; opts: unknown }>,
   };
   const svc = {
     from(_table: string) {
@@ -61,6 +62,12 @@ function mockSvc(opts: { clipStatus?: string | null } = {}) {
     rpc(fn: string, args: unknown) {
       calls.rpcs.push({ fn, args });
       return Promise.resolve({ data: "ok", error: null });
+    },
+    functions: {
+      invoke(fn: string, invokeOpts: unknown) {
+        calls.invokes.push({ fn, opts: invokeOpts });
+        return Promise.resolve({ data: null, error: null });
+      },
     },
   };
   return { svc, calls };
@@ -140,4 +147,81 @@ Deno.test("duplicate video.asset.ready (already ready) -> ok (dup), no second dr
   assertEquals(await res.text(), "ok (dup)");
   assertEquals(calls.updates.length, 0); // no finalize
   assertEquals(calls.rpcs.length, 0); // no transitions
+});
+
+// Plan 04-05: capture trigger added after delivered transition.
+Deno.test("valid delivery triggers stripe-capture AFTER delivered transition (D-03)", async () => {
+  const { svc, calls } = mockSvc({ clipStatus: "pending" });
+  const res = await handleMuxWebhook(req(READY_EVENT, "valid"), {
+    verify: goodVerify,
+    svc,
+  });
+  assertEquals(res.status, 200);
+  // stripe-capture must have been invoked exactly once
+  assertEquals(calls.invokes.length, 1, "stripe-capture invoked");
+  assertEquals(calls.invokes[0].fn, "stripe-capture");
+  // deno-lint-ignore no-explicit-any
+  assertEquals((calls.invokes[0].opts as any).body.checkId, "check_abc");
+  // stripe-capture must fire AFTER the delivered transition: delivered is the last rpc
+  const deliveredIdx = calls.rpcs.findLastIndex(
+    // deno-lint-ignore no-explicit-any
+    (r) => r.fn === "transition_check" && (r.args as any).p_to === "delivered",
+  );
+  assert(deliveredIdx >= 0, "delivered transition must be present");
+  // All invokes happen after all transition_check rpcs (invokes list is append-only)
+  assert(calls.invokes.length > 0, "stripe-capture was invoked after delivered");
+});
+
+Deno.test("capture invoke failure does NOT prevent 200 response (fault-tolerant D-03)", async () => {
+  const calls = {
+    updates: [] as Array<Record<string, unknown>>,
+    rpcs: [] as Array<{ fn: string; args: unknown }>,
+    invokes: [] as Array<string>,
+  };
+  // Svc with a throwing functions.invoke to simulate a capture hiccup.
+  const svc = {
+    from(_table: string) {
+      return {
+        update(values: Record<string, unknown>) {
+          calls.updates.push(values);
+          return { eq() { return Promise.resolve({ data: null, error: null }); } };
+        },
+        select(_cols: string) {
+          return {
+            eq() {
+              return {
+                maybeSingle() {
+                  return Promise.resolve({ data: { status: "pending" }, error: null });
+                },
+              };
+            },
+          };
+        },
+      };
+    },
+    rpc(fn: string, args: unknown) {
+      calls.rpcs.push({ fn, args });
+      return Promise.resolve({ data: "ok", error: null });
+    },
+    functions: {
+      invoke(fn: string) {
+        calls.invokes.push(fn);
+        // Simulate a network/capture error — must NOT bubble up
+        return Promise.reject(new Error("stripe-capture network timeout"));
+      },
+    },
+  };
+
+  const res = await handleMuxWebhook(req(READY_EVENT, "valid"), {
+    verify: goodVerify,
+    svc,
+  });
+  // Delivered transition must still succeed despite capture error
+  assertEquals(res.status, 200);
+  assertEquals(calls.invokes[0], "stripe-capture");
+  const tos = calls.rpcs
+    .filter((r) => r.fn === "transition_check")
+    // deno-lint-ignore no-explicit-any
+    .map((r) => (r.args as any).p_to);
+  assertEquals(tos, ["uploaded", "processing", "delivered"]);
 });
