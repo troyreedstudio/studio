@@ -31,15 +31,15 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 - [x] **VID-04**: Clips are transcoded and streamed via CDN (Mux); Seeker playback is smooth
 
 ### Payments & Payouts
-- [ ] **PAY-01**: A Seeker's card is **authorized (held)** when they confirm a request
-- [ ] **PAY-02**: The Seeker is **charged on delivery**; if no Scout / no delivery, the hold is released (no charge)
-- [ ] **PAY-03**: A Scout is paid out via **Stripe Connect Express**, with an instant-payout option
-- [ ] **PAY-04**: A Scout **keeps their pay when a passing clip is refunded** to the Seeker (LMC funds the refund)
-- [ ] **PAY-05**: A Seeker can be refunded; disputes/chargebacks are handled (and absorbed by the platform, not the Scout)
+- [x] **PAY-01**: A Seeker's card is **authorized (held)** when they confirm a request
+- [x] **PAY-02**: The Seeker is **charged on delivery**; if no Scout / no delivery, the hold is released (no charge)
+- [x] **PAY-03**: A Scout is paid out via **Stripe Connect Express**, with an instant-payout option
+- [x] **PAY-04**: A Scout **keeps their pay when a passing clip is refunded** to the Seeker (LMC funds the refund)
+- [x] **PAY-05**: A Seeker can be refunded; disputes/chargebacks are handled (and absorbed by the platform, not the Scout)
 
 ### Scout Onboarding (ultra-low friction)
-- [ ] **SCOUT-01**: A Scout completes payout setup via Stripe Connect Express (the **only** identity = legally-required tax + Stripe KYC; **no background check, no separate ID/selfie step**)
-- [ ] **SCOUT-02**: A Scout agrees to the Scout Code (consent + acceptable-use)
+- [x] **SCOUT-01**: A Scout completes payout setup via Stripe Connect Express (the **only** identity = legally-required tax + Stripe KYC; **no background check, no separate ID/selfie step**)
+- [x] **SCOUT-02**: A Scout agrees to the Scout Code (consent + acceptable-use)
 - [ ] **SCOUT-03**: A Scout can go online / set availability and receive nearby jobs
 
 ### Real-Time Dispatch & Geo
@@ -114,13 +114,13 @@ Every v1 requirement maps to exactly one phase. Coverage: 41/41.
 | VID-03 | Phase 3 | Complete |
 | VID-04 | Phase 3 | Complete |
 | CHECK-04 | Phase 3 | Complete |
-| PAY-01 | Phase 4 | Pending |
-| PAY-02 | Phase 4 | Pending |
-| PAY-03 | Phase 4 | Pending |
-| PAY-04 | Phase 4 | Pending |
-| PAY-05 | Phase 4 | Pending |
-| SCOUT-01 | Phase 4 | Pending |
-| SCOUT-02 | Phase 4 | Pending |
+| PAY-01 | Phase 4 | Complete |
+| PAY-02 | Phase 4 | Complete |
+| PAY-03 | Phase 4 | Complete |
+| PAY-04 | Phase 4 | Complete |
+| PAY-05 | Phase 4 | Complete |
+| SCOUT-01 | Phase 4 | Complete |
+| SCOUT-02 | Phase 4 | Complete |
 | DISP-01 | Phase 5 | Pending |
 | DISP-02 | Phase 5 | Pending |
 | DISP-03 | Phase 5 | Pending |

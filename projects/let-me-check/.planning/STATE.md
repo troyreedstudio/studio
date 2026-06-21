@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-03-PLAN.md (lib/clips + markDelivered retired + vision-camera config; on-device + deploy BLOCKED on Waves 2/3)
-last_updated: "2026-06-20T17:17:21.261Z"
-last_activity: 2026-06-20
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-06-21T05:22:37.630Z"
+last_activity: 2026-06-21
 progress:
-  total_phases: 1
+  total_phases: 2
   completed_phases: 0
-  total_plans: 5
-  completed_plans: 3
-  percent: 60
+  total_plans: 12
+  completed_plans: 5
+  percent: 42
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-19)
 
 **Core value:** A Seeker can pay for, and reliably receive, a genuine, recent, location-true 15-second clip of a real place — fast.
-**Current focus:** Phase 1 — Foundation (Auth + Persistence + Event Log)
+**Current focus:** Phase 4 — Payments
 
 ## Current Position
 
-Phase: 1 of 7 (Foundation — Auth + Persistence + Event Log)
-Plan: 3 of 3 (01-01 Supabase backend) — offline tasks 0-5 complete, committed
-Status: Phase complete — ready for verification
-Last activity: 2026-06-20
+Phase: 4 (Payments) — EXECUTING
+Plan: 2 of 7
+Status: Ready to execute
+Last activity: 2026-06-21
 
 Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-01 schema is pushed live)
 
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 02 P04 | 5m | 3 tasks | 4 files |
 | Phase 03 P02 | 16 | 3 tasks | 6 files |
 | Phase 03 P03 | 17m | 4 tasks | 9 files |
+| Phase 04-payments P01 | 5 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,12 @@ Recent decisions affecting current work:
 - [Phase 03]: mux-webhook is the SOLE driver of delivered (service role) — client cannot fake delivery
 - [Phase 03]: Client CANNOT mark delivered: markDelivered retired from checks.ts + filming.tsx; webhook owns delivered
 - [Phase 03]: vision-camera pinned to v4.7.x (v5 ships no Expo config plugin)
+- [Phase 04-payments]: Stripe secrets live only in Deno.env (_shared/stripe.ts); verifyStripeSignature mirrors mux.ts pattern (v1-only, 300s replay, native Web Crypto)
+- [Phase 04-payments]: payments/refund_requests/scout_stripe_accounts have no client INSERT/UPDATE/DELETE policy — service role writes only; currency column NOT NULL with no default (enforces market config supply)
+
+### Roadmap Evolution
+
+- Phase 4 added (2026-06-21): Payments — Stripe Connect Express, card hold at request + capture-on-delivery, Scout payouts, refunds/disputes, instant-payout (2% fee), tax/KYC via Connect onboarding. Buildable in Stripe test mode; real money gated on US entity + EIN at launch. Currency/market-aware.
 
 ### Pending Todos
 
@@ -108,6 +115,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-20T17:17:12.906Z
-Stopped at: Completed 03-03-PLAN.md (lib/clips + markDelivered retired + vision-camera config; on-device + deploy BLOCKED on Waves 2/3)
+Last session: 2026-06-21T05:22:37.628Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None

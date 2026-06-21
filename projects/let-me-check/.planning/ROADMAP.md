@@ -20,10 +20,10 @@
 **Goal:** Wire real money into the existing check loop in Stripe TEST mode: the Seeker's card is authorized + held when they confirm a request (a decline blocks the booking, Uber-style), the hold is captured on delivery and the Scout is paid via a separate, never-reversed Stripe Connect Express transfer, refunds are reason-coded + reviewed (the Scout always keeps a valid clip's pay), and Scout onboarding/KYC happens entirely inside Stripe.
 **Requirements**: PAY-01, PAY-02, PAY-03, PAY-04, PAY-05, SCOUT-01, SCOUT-02
 **Depends on:** Phase 3
-**Plans:** 7 plans (4 waves)
+**Plans:** 1/7 plans executed
 
 Plans:
-- [ ] 04-01-PLAN.md — Payments data spine (migration 0011: payments/refund_requests/scout_stripe_accounts + RLS) + secret-holding _shared/stripe.ts (native-Web-Crypto webhook verify) + pgTAP
+- [x] 04-01-PLAN.md — Payments data spine (migration 0011: payments/refund_requests/scout_stripe_accounts + RLS) + secret-holding _shared/stripe.ts (native-Web-Crypto webhook verify) + pgTAP
 - [ ] 04-02-PLAN.md — Auth-and-hold front gate: stripe-create-payment-intent (manual capture) + _shared/pricing.ts + client lib/payments.ts contract (D-01/D-02)
 - [ ] 04-03-PLAN.md — Money movement: stripe-capture (capture + separate Transfer + D-09 fallback) + stripe-webhook (sig-verified disputes/account.updated/hold-release) (D-03/D-04/PAY-05)
 - [ ] 04-04-PLAN.md — Scout onboarding: stripe-connect-onboard (Express account + account_link + Scout Code consent) + stripe-connect-status (charges_enabled/payouts_enabled go-online gate) (SCOUT-01/02)
