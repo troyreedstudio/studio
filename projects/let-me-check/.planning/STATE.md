@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "05-06 live deploy: 0012+0012b live, 4 Edge Functions deployed, Vision key set, types regen. ONLY on-device geo walk-through (Task 3) remains UNVERIFIED"
-last_updated: "2026-06-21T13:25:00.000Z"
+stopped_at: "06-01 complete: 0014 migration + pgTAP + 3 RED Wave-0 scaffolds committed"
+last_updated: "2026-06-21T17:36:33.328Z"
 last_activity: 2026-06-21
 progress:
-  total_phases: 3
-  completed_phases: 1
-  total_plans: 18
-  completed_plans: 16
-  percent: 89
+  total_phases: 4
+  completed_phases: 2
+  total_plans: 23
+  completed_plans: 18
+  percent: 78
 ---
 
 # Project State
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-19)
 
 **Core value:** A Seeker can pay for, and reliably receive, a genuine, recent, location-true 15-second clip of a real place — fast.
-**Current focus:** Phase 5 — Verification moat + dispatch
+**Current focus:** Phase 6 — Privacy + anti-fraud hardening
 
 ## Current Position
 
-Phase: 5 (Verification moat + dispatch) — EXECUTING
-Plan: 6 of 6
+Phase: 6 (Privacy + anti-fraud hardening) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -72,6 +72,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P03 | 219 | 3 tasks | 4 files |
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P04 | 246 | 2 tasks | 4 files |
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P05 | 7m | 3 tasks | 9 files |
+| Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P01 | 5m | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -129,6 +130,8 @@ Recent decisions affecting current work:
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-05]: as-any casts on scout_locations/list_open_checks_for_scout/is_in_no_film_zone — Phase-5 tables/RPCs not in database.types.ts; regen is Wave-4 live step after db push
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-05]: setScoutOffline upserts is_online=false WITHOUT coord — preserves last known coord in DB for rapid re-online
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-05]: SAFE-01 client-side guard in createCheck via is_in_no_film_zone RPC; authoritative enforcement is server-side PostGIS polygon; follow-up can move fully server-side
+- [Phase 06]: blur_enabled DEFAULT FALSE (D-07 dormant gate — activate per-market when on-device blur confirmed)
+- [Phase 06]: blur_review entry edge is filming->blur_review (gate fires before uploaded/processing chain, while check is still in filming)
 
 ### Roadmap Evolution
 
@@ -160,6 +163,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T13:25:00.000Z
-Stopped at: 05-06 live deploy complete (migrations + functions + Vision key + types); on-device geo walk-through (Task 3) still UNVERIFIED
+Last session: 2026-06-21T17:36:33.326Z
+Stopped at: 06-01 complete: 0014 migration + pgTAP + 3 RED Wave-0 scaffolds committed
 Resume file: None
