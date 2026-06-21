@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "06-01 complete: 0014 migration + pgTAP + 3 RED Wave-0 scaffolds committed"
-last_updated: "2026-06-21T17:36:33.328Z"
+stopped_at: "06-02 complete: face-blur-check + fraud-eval + fraud-signals committed (16 tests green)"
+last_updated: "2026-06-21T17:43:58.137Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 23
-  completed_plans: 18
-  percent: 78
+  completed_plans: 19
+  percent: 83
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 6 (Privacy + anti-fraud hardening) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -73,6 +73,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P04 | 246 | 2 tasks | 4 files |
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P05 | 7m | 3 tasks | 9 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P01 | 5m | 3 tasks | 5 files |
+| Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P02 | 4m | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -132,6 +133,9 @@ Recent decisions affecting current work:
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-05]: SAFE-01 client-side guard in createCheck via is_in_no_film_zone RPC; authoritative enforcement is server-side PostGIS polygon; follow-up can move fully server-side
 - [Phase 06]: blur_enabled DEFAULT FALSE (D-07 dormant gate — activate per-market when on-device blur confirmed)
 - [Phase 06]: blur_review entry edge is filming->blur_review (gate fires before uploaded/processing chain, while check is still in filming)
+- [Phase 06]: blur_check_failed -> action=pass (fail-open): only confirmed faces trigger hold, not infra errors (D-03)
+- [Phase 06]: TELEPORT_MPS_THRESHOLD=55.5 m/s (200 km/h); fraud score weights v1: teleport=60, accuracy_is_exact=25, simulated=50 capped at 100
+- [Phase 06]: fraud-eval auto-reject enforcement explicitly deferred (D-04 flag-only launch); strictness=hold/reject only flags, never transitions check state
 
 ### Roadmap Evolution
 
@@ -163,6 +167,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T17:36:33.326Z
-Stopped at: 06-01 complete: 0014 migration + pgTAP + 3 RED Wave-0 scaffolds committed
+Last session: 2026-06-21T17:43:58.134Z
+Stopped at: 06-02 complete: face-blur-check + fraud-eval + fraud-signals committed (16 tests green)
 Resume file: None
