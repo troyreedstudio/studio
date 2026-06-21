@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-05-PLAN.md
-last_updated: "2026-06-21T06:16:06.861Z"
+stopped_at: "04-06 checkpoint: on-device Stripe smoke test pending (PaymentSheet + Connect onboarding require EAS build)"
+last_updated: "2026-06-21T06:24:01.347Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 12
-  completed_plans: 9
-  percent: 75
+  completed_plans: 10
+  percent: 83
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 4 (Payments) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -65,6 +65,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 04 P03 | 7 | 2 tasks | 4 files |
 | Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P04 | 4m | 2 tasks | 4 files |
 | Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P05 | 35 | 4 tasks | 3 files |
+| Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P06 | 15 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,8 @@ Recent decisions affecting current work:
 - [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: Capture-on-delivery wired into mux-webhook (fault-tolerant service-role invoke of stripe-capture, D-03)
 - [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: Phase 4 live in Stripe TEST mode: 0011 applied, 6 Edge Functions deployed, webhook registered with whsec, forged event 401
 - [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: Webhooks deployed --no-verify-jwt; user/service functions keep Supabase JWT; stripe-refund deferred to Plan 07 (its code is a Plan 07 deliverable)
+- [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: STRIPE_PUBLISHABLE_KEY in config.ts with hardcoded pk_test fallback — same release-safe pattern as SUPABASE_URL/MAPBOX_TOKEN, never via expo-constants
+- [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: New Architecture stays OFF: @stripe/stripe-react-native 0.50.3 lacks New Arch support
 
 ### Roadmap Evolution
 
@@ -131,6 +134,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T06:15:59.314Z
-Stopped at: Completed 04-05-PLAN.md
+Last session: 2026-06-21T06:24:01.346Z
+Stopped at: 04-06 checkpoint: on-device Stripe smoke test pending (PaymentSheet + Connect onboarding require EAS build)
 Resume file: None
