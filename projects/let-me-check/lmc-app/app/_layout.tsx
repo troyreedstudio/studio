@@ -4,7 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import Mapbox from '@rnmapbox/maps';
 import { useEffect } from 'react';
 import { SessionProvider, useSession, hubRouteForRole } from './lib/session';
-import { MAPBOX_TOKEN } from './lib/config';
+import { MAPBOX_TOKEN, STRIPE_PUBLISHABLE_KEY } from './lib/config';
+import { StripeProvider } from '@stripe/stripe-react-native';
 
 // Token comes from the always-bundled config module (Release builds do NOT inline
 // .env, and ExponentConstants is unreliable on device-release — see config.ts).
@@ -108,16 +109,22 @@ export default function RootLayout() {
   }
 
   return (
-    <SessionProvider>
-      <StatusBar style="light" />
-      <BootGate />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#000000' },
-        }}
-      />
-    </SessionProvider>
+    <StripeProvider
+      publishableKey={STRIPE_PUBLISHABLE_KEY}
+      merchantIdentifier="merchant.com.blackmalibuinc.letmecheck"
+      urlScheme="lmc"
+    >
+      <SessionProvider>
+        <StatusBar style="light" />
+        <BootGate />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: '#000000' },
+          }}
+        />
+      </SessionProvider>
+    </StripeProvider>
   );
 }
 

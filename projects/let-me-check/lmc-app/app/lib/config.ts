@@ -37,3 +37,10 @@ export const GOOGLE_IOS_CLIENT_ID =
 export const MAPBOX_TOKEN =
   process.env.EXPO_PUBLIC_MAPBOX_TOKEN ??
   'pk.eyJ1IjoibGV0bWVjaGVjayIsImEiOiJjbXBvN2k3cGQwMHZtMnZzZG8yaDZwZ2UwIn0.zAh2Xt_hERJW2Z_yihiWzA';
+
+// Stripe PUBLISHABLE key — public by design (never put the secret key here).
+// Hardcoded as a fallback so release builds work without .env or expo-constants.
+// EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY in .env overrides this for dev server.
+export const STRIPE_PUBLISHABLE_KEY =
+  process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ??
+  'pk_test_51TkdlePlOqOhCKIqky9Zlvs2NvN62pA7gSEhjauZr9HNgdo07l79JPeniCe1IwcbhbrtyWuxHWtkkRcraaF3ehT500SOpsOCmG';

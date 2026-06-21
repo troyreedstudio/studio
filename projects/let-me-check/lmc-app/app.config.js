@@ -66,7 +66,11 @@ module.exports = {
       // Durable Podfile `use_modular_headers!` so prebuild can't wipe the Google
       // Sign-In modular-headers fix (AppCheckCore/GoogleUtilities/RecaptchaInterop).
       './plugins/withModularHeaders',
+      // Stripe React Native — New Architecture must stay OFF (0.50.x lacks New Arch support).
+      ['@stripe/stripe-react-native', { merchantIdentifier: 'merchant.com.blackmalibuinc.letmecheck', enableGooglePay: true }],
     ],
+    // newArchEnabled is intentionally absent (defaults false). Do NOT set it to true:
+    // @stripe/stripe-react-native 0.50.x does not support New Architecture.
     extra: {
       router: {},
       eas: {
