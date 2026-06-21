@@ -43,20 +43,20 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 - [ ] **SCOUT-03**: A Scout can go online / set availability and receive nearby jobs
 
 ### Real-Time Dispatch & Geo
-- [ ] **DISP-01**: Only Scouts inside the location's geofence are pinged for a request
-- [ ] **DISP-02**: A request is claimed atomically — two Scouts can never be assigned the same job (no double-booking)
+- [x] **DISP-01**: Only Scouts inside the location's geofence are pinged for a request
+- [x] **DISP-02**: A request is claimed atomically — two Scouts can never be assigned the same job (no double-booking)
 - [ ] **DISP-03**: If no Scout accepts within the window, the request times out gracefully (release hold / refund, notify Seeker)
 - [x] **DISP-04**: The Seeker sees live status (finding → accepted → filming → delivered)
 
 ### Verification & Safety (beta-grade)
-- [ ] **VER-01**: Capture is GPS-geofenced and the clip is GPS-stamped (recorded at the right place/time)
+- [x] **VER-01**: Capture is GPS-geofenced and the clip is GPS-stamped (recorded at the right place/time)
 - [ ] **VER-02**: A Scout confirms a reference photo of the target before filming
 - [ ] **VER-03**: A Scout has a cooldown per location (anti-spam / anti-farming)
 - [ ] **VER-04**: A manual-review path exists for flagged/disputed clips
 - [ ] **VER-05**: **Location integrity is hardened for V1** — maximize GPS accuracy and **detect/reject spoofed GPS** (location accuracy is a core quality bar, not a fast-follow)
 - [ ] **VER-06**: **AI signage/place detection on every clip (V1)** — managed vision API (Google Vision, ~$1/mo) detects the venue's sign/logo + cross-checks GPS, and **auto-rejects wrong/faked clips** (the "last line of defence"); ambiguous cases fall to manual review (VER-04)
 - [ ] **VER-07**: **AI clip auto-summary ("AI Verdict", V1)** — a qualitative one-line read of the clip ("short line · medium energy"); deliberately **NOT precise headcounts** (crowd-counting from video is deferred — unreliable off-the-shelf)
-- [ ] **SAFE-01**: No-film zones are auto-blocked (hospitals, schools, courts, police, private residences)
+- [x] **SAFE-01**: No-film zones are auto-blocked (hospitals, schools, courts, police, private residences)
 - [x] **SAFE-02**: 18+ + consent gates and acceptable-use are enforced at onboarding and use
 
 ### Notifications
@@ -121,14 +121,14 @@ Every v1 requirement maps to exactly one phase. Coverage: 41/41.
 | PAY-05 | Phase 4 | Complete |
 | SCOUT-01 | Phase 4 | Complete |
 | SCOUT-02 | Phase 4 | Complete |
-| DISP-01 | Phase 5 | Pending |
-| DISP-02 | Phase 5 | Pending |
+| DISP-01 | Phase 5 | Complete |
+| DISP-02 | Phase 5 | Complete |
 | DISP-03 | Phase 5 | Pending |
 | SCOUT-03 | Phase 5 | Pending |
-| VER-01 | Phase 5 | Pending |
+| VER-01 | Phase 5 | Complete |
 | VER-03 | Phase 5 | Pending |
 | VER-05 | Phase 5 | Pending |
-| SAFE-01 | Phase 5 | Pending |
+| SAFE-01 | Phase 5 | Complete |
 | VER-02 | Phase 6 | Pending |
 | VER-04 | Phase 6 | Pending |
 | VER-06 | Phase 6 | Pending |

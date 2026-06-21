@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 04-07-PLAN.md — stripe-refund deployed, 10/10 tests green, delivery.tsx reason picker wired
-last_updated: "2026-06-21T06:34:05.600Z"
+status: executing
+stopped_at: "Completed 05-01: dispatch verification spine migration + pgTAP spatial test"
+last_updated: "2026-06-21T12:21:14.451Z"
 last_activity: 2026-06-21
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 1
-  total_plans: 12
-  completed_plans: 11
-  percent: 92
+  total_plans: 18
+  completed_plans: 12
+  percent: 67
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-19)
 
 **Core value:** A Seeker can pay for, and reliably receive, a genuine, recent, location-true 15-second clip of a real place — fast.
-**Current focus:** Phase 4 — Payments
+**Current focus:** Phase 5 — Verification moat + dispatch
 
 ## Current Position
 
-Phase: 4 (Payments) — EXECUTING
-Plan: 7 of 7
-Status: Phase complete — ready for verification
+Phase: 5 (Verification moat + dispatch) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
 Last activity: 2026-06-21
 
 Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-01 schema is pushed live)
@@ -67,6 +67,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P05 | 35 | 4 tasks | 3 files |
 | Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P06 | 15 | 3 tasks | 6 files |
 | Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P07 | 6 | 3 tasks | 5 files |
+| Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P01 | 3m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,9 @@ Recent decisions affecting current work:
 - [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: STRIPE_PUBLISHABLE_KEY in config.ts with hardcoded pk_test fallback — same release-safe pattern as SUPABASE_URL/MAPBOX_TOKEN, never via expo-constants
 - [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: New Architecture stays OFF: @stripe/stripe-react-native 0.50.3 lacks New Arch support
 - [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: stripe-refund Edge Function deployed with verify_jwt=true; refunds.create NEVER sets reverse_transfer (D-08: Scout keeps pay); evaluateRefund pure rule gates auto-approve vs manual-review
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-01]: market_config holds TWO DISTINCT distances (dispatch_radius_m=1500 wide vs film_fence_max_m=30 tight) — never conflate
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-01]: transition_check dispatching branch relaxed with v_uid is not null so service role can drive re-dispatch without breaking human-seeker invariant
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-01]: reset_check_for_redispatch is the sole deliberate exception to accept_check being the only scout_id writer — it CLEARS, accept SETS
 
 ### Roadmap Evolution
 
@@ -137,6 +141,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T06:34:05.598Z
-Stopped at: Completed 04-07-PLAN.md — stripe-refund deployed, 10/10 tests green, delivery.tsx reason picker wired
+Last session: 2026-06-21T12:21:14.449Z
+Stopped at: Completed 05-01: dispatch verification spine migration + pgTAP spatial test
 Resume file: None
