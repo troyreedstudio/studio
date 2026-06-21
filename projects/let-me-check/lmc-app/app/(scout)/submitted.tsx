@@ -28,7 +28,7 @@ import { subscribeToCheck } from '../lib/realtime';
 // regardless of reality. They masked upload failures 3× and falsely claimed
 // "payment cleared" seconds after submission. Stage advances only happen when
 // real server state arrives (Realtime — future phase).
-type Stage = 'processing' | 'delivered' | 'accepted';
+type Stage = 'processing' | 'delivered' | 'accepted' | 'rejected';
 
 export default function SubmittedScreen() {
   const router = useRouter();
@@ -61,6 +61,12 @@ export default function SubmittedScreen() {
     const apply = (status?: string) => {
       if (status === 'delivered') setStage('delivered');
       else if (status === 'rated') setStage('accepted');
+      // After THIS Scout submitted, a flip back to dispatching (or a terminal
+      // no_scout/cancelled) means their clip was rejected at the verify gate
+      // (e.g. filmed off-fence) and the job was re-opened. Tell them clearly.
+      else if (status === 'dispatching' || status === 'no_scout' || status === 'cancelled') {
+        setStage('rejected');
+      }
     };
     getCheck(checkId).then((c) => apply(c?.status)).catch(() => {});
     const unsub = subscribeToCheck(
@@ -82,6 +88,55 @@ export default function SubmittedScreen() {
       Animated.timing(toastAnim, { toValue: 1, duration: 320, useNativeDriver: true }),
     ]).start();
   }, [stage, toastAnim]);
+
+  // REJECTED: the verify gate couldn't confirm the clip (e.g. filmed off-fence).
+  // Tell the Scout clearly + kindly — no payout for this clip, but no penalty.
+  if (stage === 'rejected') {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe}>
+          <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+            <Animated.View style={[styles.body, { opacity: fade }]}>
+              <View style={[styles.heroCheckRing, { borderColor: '#FFCB47' }]}>
+                <View style={[styles.heroCheckInner, { backgroundColor: '#FFCB47' }]}>
+                  <Ionicons name="alert" size={28} color="#000" />
+                </View>
+              </View>
+              <Text style={styles.title}>This clip couldn’t be verified</Text>
+              <Text style={styles.subtitle}>
+                We couldn’t confirm this clip was filmed at {venue} — it looks like it was
+                recorded too far from the location. Because we can’t verify it, it can’t be
+                delivered, and there’s no payout for this one.
+              </Text>
+              <View style={styles.rejectionNote}>
+                <Ionicons name="information-circle" size={14} color="#FFCB47" />
+                <Text style={styles.rejectionNoteText}>
+                  No worries — you haven’t lost anything. Just make sure you’re at the venue
+                  before you start filming.
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={{
+                  marginTop: 28,
+                  backgroundColor: '#fff',
+                  borderRadius: 14,
+                  paddingVertical: 16,
+                  alignItems: 'center',
+                  alignSelf: 'stretch',
+                }}
+                onPress={() => router.replace('/(scout)/dashboard')}
+                activeOpacity={0.85}
+              >
+                <Text style={{ color: '#000', fontSize: 16, fontWeight: '700' }}>
+                  Back to dashboard
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

@@ -17,7 +17,7 @@ import {
   useCameraPermission,
 } from 'react-native-vision-camera';
 import * as Location from 'expo-location';
-import { markFilming } from '../lib/checks';
+import { markFilming, getCheck } from '../lib/checks';
 import { useClipUpload } from '../lib/clips';
 import { CameraViewfinder } from './_filming-viewfinder';
 import { styles } from './_filming-styles';
@@ -28,6 +28,24 @@ const TROUBLE_REASONS = [
   "Can’t safely enter the area",
   'Venue closed / not operating',
 ];
+
+// Pre-flight film-fence (metres). Matches the server film_fence_max_m (30m). The
+// Scout can't start recording until their live GPS is within this of the venue —
+// so they never waste a take filming off-location. The server verify-clip gate
+// remains the authoritative reject (defence in depth vs spoofing — Phase 6).
+const FILM_FENCE_M = 30;
+
+// Haversine distance in metres between two lat/lng points (client pre-flight only).
+function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
 
 export default function FilmingScreen() {
   const router = useRouter();
@@ -59,6 +77,46 @@ export default function FilmingScreen() {
   useEffect(() => {
     if (!hasPermission) requestPermission().catch(() => {});
   }, [hasPermission, requestPermission]);
+
+  // Pre-flight proximity gate: the venue location (from the check) + the Scout's
+  // LIVE distance to it. Recording is blocked until distance <= FILM_FENCE_M.
+  const [venuePt, setVenuePt] = useState<{ lat: number; lng: number } | null>(null);
+  const [distanceM, setDistanceM] = useState<number | null>(null);
+
+  // Fetch the venue location for this check (requested_lat/lng set at creation).
+  useEffect(() => {
+    if (!checkId) return;
+    getCheck(checkId)
+      .then((c) => {
+        if (c?.requested_lat != null && c?.requested_lng != null) {
+          setVenuePt({ lat: c.requested_lat, lng: c.requested_lng });
+        }
+      })
+      .catch(() => {});
+  }, [checkId]);
+
+  // Watch the Scout's live position and compute distance to the venue.
+  useEffect(() => {
+    if (!venuePt) return;
+    let sub: Location.LocationSubscription | null = null;
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      sub = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.High, distanceInterval: 5 },
+        (pos) => {
+          setDistanceM(
+            distanceMeters(pos.coords.latitude, pos.coords.longitude, venuePt.lat, venuePt.lng),
+          );
+        },
+      );
+    })().catch(() => {});
+    return () => sub?.remove();
+  }, [venuePt]);
+
+  // In range when we have no venue/fix yet (don't block on missing data) OR the
+  // live distance is within the fence. Only a known, too-far distance blocks.
+  const outOfRange = venuePt != null && distanceM != null && distanceM > FILM_FENCE_M;
 
   const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
   const [recording, setRecording] = useState(false);
@@ -164,6 +222,9 @@ export default function FilmingScreen() {
   // Toggle record. On the FIRST capture start, move the check 'assigned ->
   // filming' (drives the Seeker's "filming" step). Fires once via filmingMarked.
   const handleToggleRecord = () => {
+    // Pre-flight gate: can't start a take while out of range (the Seeker's
+    // guarantee is on-location footage). Server verify-clip is the backstop.
+    if (!recording && outOfRange) return;
     const starting = !recording;
     if (starting) {
       stampGps();
@@ -475,9 +536,10 @@ export default function FilmingScreen() {
           ) : (
             <View style={styles.recordWrap}>
               <TouchableOpacity
-                style={styles.recordBtn}
+                style={[styles.recordBtn, outOfRange && { opacity: 0.35 }]}
                 onPress={handleToggleRecord}
                 activeOpacity={0.85}
+                disabled={outOfRange}
               >
                 {!recording && (
                   <Animated.View
@@ -501,9 +563,11 @@ export default function FilmingScreen() {
                   </View>
                 </View>
               </TouchableOpacity>
-              <Text style={styles.recordHint}>
+              <Text style={[styles.recordHint, outOfRange && { color: '#FFCB47' }]}>
                 {recording
                   ? `Recording… ${recordSecs}s of 15s`
+                  : outOfRange
+                  ? `You’re ~${Math.round(distanceM ?? 0)}m from ${venue}. Get within ${FILM_FENCE_M}m to film.`
                   : takesCount > 0
                   ? `Tap to start take ${takesCount + 1} of ${MAX_TAKES}`
                   : 'Tap to start filming'}
