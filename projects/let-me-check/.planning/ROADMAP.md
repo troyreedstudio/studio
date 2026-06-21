@@ -27,6 +27,6 @@ Plans:
 - [x] 04-02-PLAN.md — Auth-and-hold front gate: stripe-create-payment-intent (manual capture) + _shared/pricing.ts + client lib/payments.ts contract (D-01/D-02)
 - [x] 04-03-PLAN.md — Money movement: stripe-capture (capture + separate Transfer + D-09 fallback) + stripe-webhook (sig-verified disputes/account.updated/hold-release) (D-03/D-04/PAY-05)
 - [x] 04-04-PLAN.md — Scout onboarding: stripe-connect-onboard (Express account + account_link + Scout Code consent) + stripe-connect-status (charges_enabled/payouts_enabled go-online gate) (SCOUT-01/02)
-- [ ] 04-05-PLAN.md — [BLOCKING] live deploy: wire capture trigger into mux-webhook + db push 0011 + Stripe test secrets + deploy 5 functions + register webhook + regen types
+- [x] 04-05-PLAN.md — [BLOCKING] live deploy: wire capture trigger into mux-webhook + db push 0011 + Stripe test secrets + deploy 5 functions + register webhook + regen types
 - [ ] 04-06-PLAN.md — Wire UI: StripeProvider (New Arch off) + real PaymentSheet hold-then-createCheck in payment.tsx + real Connect onboarding + go-online gate in scout/payout.tsx + on-device smoke test
 - [ ] 04-07-PLAN.md — Reason-coded reviewed refunds: stripe-refund (no reverse_transfer, D-08) + _shared/refund-rules.ts (auto-approve first / review repeats) + delivery.tsx report-a-problem picker (D-06/D-07/PAY-04/PAY-05)

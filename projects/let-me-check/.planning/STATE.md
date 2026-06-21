@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-04-PLAN.md
-last_updated: "2026-06-21T05:44:52.411Z"
+stopped_at: Completed 04-05-PLAN.md
+last_updated: "2026-06-21T06:16:06.861Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 12
-  completed_plans: 8
-  percent: 67
+  completed_plans: 9
+  percent: 75
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 4 (Payments) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -64,6 +64,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 04-payments P02 | 4m | 3 tasks | 4 files |
 | Phase 04 P03 | 7 | 2 tasks | 4 files |
 | Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P04 | 4m | 2 tasks | 4 files |
+| Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P05 | 35 | 4 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,9 @@ Recent decisions affecting current work:
 - [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: stripe-connect-onboard is the SOLE write path for payout_speed (D-05); RLS bars client writes to scout_stripe_accounts
 - [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: go-online eligibility = live charges_enabled && payouts_enabled from accounts.retrieve (never from deep-link return — Pitfall 5, T-04-19)
 - [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: accepted_scout_code_at stamped server-side when stripe-connect-onboard called — AUTHORIZE checkbox in payout.tsx is consent (SCOUT-02)
+- [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: Capture-on-delivery wired into mux-webhook (fault-tolerant service-role invoke of stripe-capture, D-03)
+- [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: Phase 4 live in Stripe TEST mode: 0011 applied, 6 Edge Functions deployed, webhook registered with whsec, forged event 401
+- [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: Webhooks deployed --no-verify-jwt; user/service functions keep Supabase JWT; stripe-refund deferred to Plan 07 (its code is a Plan 07 deliverable)
 
 ### Roadmap Evolution
 
@@ -127,6 +131,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T05:44:52.409Z
-Stopped at: Completed 04-04-PLAN.md
+Last session: 2026-06-21T06:15:59.314Z
+Stopped at: Completed 04-05-PLAN.md
 Resume file: None
