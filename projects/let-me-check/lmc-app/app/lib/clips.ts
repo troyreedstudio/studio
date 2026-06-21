@@ -43,6 +43,7 @@
 import { useCallback, useRef, useState } from 'react';
 import {
   uploadAsync,
+  getInfoAsync,
   FileSystemUploadType,
 } from 'expo-file-system/legacy';
 import { supabase } from './supabase';
@@ -170,16 +171,30 @@ export async function uploadClip(
     }, 800);
   }
 
+  // [LMC-UP] diagnostics: confirm the recorded file exists + size before the PUT,
+  // and log the exact outcome (status / error / hang) so device logs reveal the cause.
+  try {
+    const info = await getInfoAsync(uri, { size: true } as never);
+    console.log(`[LMC-UP] file uri=${uri} exists=${(info as { exists?: boolean }).exists} size=${(info as { size?: number }).size}`);
+  } catch (e) {
+    console.error(`[LMC-UP] getInfoAsync failed: ${e instanceof Error ? e.message : e}`);
+  }
+  console.log(`[LMC-UP] PUT start → ${uploadUrl.slice(0, 70)}…`);
+
   try {
     const res = await uploadAsync(uploadUrl, uri, {
       httpMethod: 'PUT',
       uploadType: FileSystemUploadType.BINARY_CONTENT,
     });
+    console.log(`[LMC-UP] PUT returned status=${res?.status ?? 'undefined'} body=${(res?.body ?? '').slice(0, 120)}`);
     if (!res || res.status >= 300) {
       throw new Error(`uploadClip: upload failed (status ${res?.status ?? 'unknown'})`);
     }
     // Signal completion before clearing the timer.
     onProgress?.(1);
+  } catch (e) {
+    console.error(`[LMC-UP] PUT threw: ${e instanceof Error ? e.message : e}`);
+    throw e;
   } finally {
     if (progressTimer !== null) clearInterval(progressTimer);
   }
