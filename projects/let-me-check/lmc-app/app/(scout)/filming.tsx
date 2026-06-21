@@ -355,6 +355,37 @@ export default function FilmingScreen() {
             <Text style={styles.venueAddress}>Brickell · Miami · 0.3 mi</Text>
           </View>
 
+          {/* Pre-flight proximity banner — prominent, live amber→green. Shows the
+              Scout how far they are and counts down as they approach; flips green
+              and unlocks the record button when they're within the film-fence. */}
+          {venuePt != null && distanceM != null && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                backgroundColor: outOfRange ? 'rgba(255,203,71,0.16)' : 'rgba(0,255,127,0.14)',
+                borderColor: outOfRange ? '#FFCB47' : '#00FF7F',
+                borderWidth: 1,
+                borderRadius: 14,
+                paddingVertical: 14,
+                paddingHorizontal: 14,
+                marginTop: 16,
+              }}
+            >
+              <Ionicons
+                name={outOfRange ? 'walk' : 'checkmark-circle'}
+                size={22}
+                color={outOfRange ? '#FFCB47' : '#00FF7F'}
+              />
+              <Text style={{ flex: 1, color: '#fff', fontSize: 14, fontWeight: '700', lineHeight: 19 }}>
+                {outOfRange
+                  ? `Outside filming range — you’re ~${Math.round(distanceM)} m from the venue. Move within ${FILM_FENCE_M} m to start recording.`
+                  : `In filming range — tap the record button to film.`}
+              </Text>
+            </View>
+          )}
+
           {/* Trouble Here */}
           {troubleReason ? (
             <View style={[styles.troubleBase, styles.troubleReported]}>
@@ -567,7 +598,7 @@ export default function FilmingScreen() {
                 {recording
                   ? `Recording… ${recordSecs}s of 15s`
                   : outOfRange
-                  ? `Too far to film — you’re ~${Math.round(distanceM ?? 0)} m away. Get within ${FILM_FENCE_M} m of the venue.`
+                  ? 'Record unlocks inside filming range'
                   : takesCount > 0
                   ? `Tap to start take ${takesCount + 1} of ${MAX_TAKES}`
                   : 'Tap to start filming'}
