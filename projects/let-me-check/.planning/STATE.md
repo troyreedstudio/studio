@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-06-21T05:30:27.370Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-06-21T05:37:29.490Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 12
-  completed_plans: 6
-  percent: 50
+  completed_plans: 7
+  percent: 58
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 4 (Payments) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 03 P03 | 17m | 4 tasks | 9 files |
 | Phase 04-payments P01 | 5 | 3 tasks | 4 files |
 | Phase 04-payments P02 | 4m | 3 tasks | 4 files |
+| Phase 04 P03 | 7 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 04-payments]: transfer_group deferred to stripe-capture edge (check id not available at PI creation time)
 - [Phase 04-payments]: import.meta.main guard on Deno.serve so tests pass with --allow-env only
 - [Phase 04-payments]: payments.ts is interface-first: requestRefund/startConnectOnboarding/getConnectStatus delivered as typed contracts before their Edge Functions ship
+- [Phase 04-payments]: stripe-capture uses separate charges+transfers (never destination charges); source_transaction on normal path; D-09 funds Transfer from platform balance without source_transaction
+- [Phase 04-payments]: stripe-webhook mirrors mux-webhook exactly: raw body -> verify -> JSON.parse; import.meta.main guard on Deno.serve; disputes never reverse Transfer (D-08)
 
 ### Roadmap Evolution
 
@@ -120,6 +123,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T05:30:27.368Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-06-21T05:37:29.488Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None
