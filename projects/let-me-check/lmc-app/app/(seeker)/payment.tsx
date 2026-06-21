@@ -4,53 +4,25 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Modal,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  Animated,
-  Easing,
-  ScrollView,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useStripe } from '@stripe/stripe-react-native';
 import { addRecurring } from '../state/recurring';
-import { usePaymentMethod, type CardBrand, type SavedCard } from '../state/payment-method';
+import { usePaymentMethod } from '../state/payment-method';
+import { createPaymentHold } from '../lib/payments';
 import { createCheck } from '../lib/checks';
-
-type CardOnFile = SavedCard | null;
-
-function formatCardNumber(v: string): string {
-  const digits = v.replace(/\D/g, '').slice(0, 19);
-  return digits.replace(/(.{4})/g, '$1 ').trim();
-}
-
-function formatExpiry(v: string): string {
-  const digits = v.replace(/\D/g, '').slice(0, 4);
-  if (digits.length < 3) return digits;
-  return `${digits.slice(0, 2)} / ${digits.slice(2)}`;
-}
-
-function detectBrand(cardNumber: string): CardBrand | null {
-  const d = cardNumber.replace(/\D/g, '');
-  if (!d) return null;
-  if (d.startsWith('4')) return 'Visa';
-  if (/^5[1-5]/.test(d) || /^2[2-7]/.test(d)) return 'Mastercard';
-  if (/^3[47]/.test(d)) return 'Amex';
-  return 'Visa';
-}
 
 export default function PaymentScreen() {
   const router = useRouter();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [processing, setProcessing] = useState(false);
   const [recurring, setRecurring] = useState(false);
   const [recurringFreq, setRecurringFreq] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [recurringTime, setRecurringTime] = useState('08:00');
   const payment = usePaymentMethod();
-  const card: CardOnFile = payment.card;
-  const [sheetOpen, setSheetOpen] = useState(false);
   const {
     venue = 'Komodo',
     city = 'Miami',
@@ -68,6 +40,86 @@ export default function PaymentScreen() {
   const isPriority = tier === 'priority';
   const fee = isPriority ? '$2.00' : '$1.50';
   const total = isPriority ? '$22.00' : '$16.50';
+
+  // Opens the Stripe PaymentSheet, authorizes a hold, then creates the check.
+  // A declined / cancelled card blocks the booking (D-02, Uber-style).
+  const handleConfirm = async () => {
+    setProcessing(true);
+
+    if (recurring) {
+      addRecurring({
+        id: `${venue}-${Date.now()}`,
+        venueName: String(venue),
+        address: String(city),
+        freq: recurringFreq,
+        time: recurringTime,
+        marketId: 'mia',
+        coord: [-80.1932, 25.7651],
+      });
+    }
+
+    try {
+      // Step 1: Authorize a hold server-side (D-01). Throws on card/network error.
+      const hold = await createPaymentHold(tier === 'priority' ? 'priority' : 'standard');
+
+      // Step 2: Init the Stripe PaymentSheet with the hold's client secret.
+      const { error: initErr } = await initPaymentSheet({
+        merchantDisplayName: 'Let Me Check',
+        paymentIntentClientSecret: hold.clientSecret,
+        customerId: hold.customerId,
+        customerEphemeralKeySecret: hold.ephemeralKey,
+        applePay: { merchantCountryCode: 'US' },
+        googlePay: { merchantCountryCode: 'US', testEnv: __DEV__ },
+        allowsDelayedPaymentMethods: false,
+      });
+
+      if (initErr) {
+        setProcessing(false);
+        Alert.alert("Couldn't set up payment", initErr.message ?? 'Please try again.');
+        return;
+      }
+
+      // Step 3: Present the real Stripe PaymentSheet (Apple Pay / Google Pay / card).
+      const { error: payErr } = await presentPaymentSheet();
+
+      if (payErr) {
+        // Card declined, cancelled, or invalid — block the booking (D-02).
+        setProcessing(false);
+        if (payErr.code !== 'Canceled') {
+          Alert.alert(
+            "Card couldn't be authorized",
+            payErr.message ?? 'Please update your payment method and try again.',
+            [{ text: 'Try Again', style: 'default' }],
+          );
+        }
+        return;
+      }
+
+      // Step 4: Hold succeeded — now create the check (D-01 order enforced).
+      const checkId = await createCheck({
+        tier: tier === 'priority' ? 'priority' : 'standard',
+        locationLabel: String(venue),
+      });
+
+      setProcessing(false);
+      router.replace({
+        pathname: '/(seeker)/finding',
+        params: {
+          checkId,
+          venue: String(venue),
+          city: String(city),
+          tier: String(tier),
+          time: String(time),
+        },
+      });
+    } catch (e) {
+      setProcessing(false);
+      Alert.alert(
+        "Couldn't start your check",
+        e instanceof Error ? e.message : 'Please try again in a moment.',
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -178,17 +230,20 @@ export default function PaymentScreen() {
         </View>
       </View>
 
-      {/* Payment Method */}
+      {/* Payment Method — tapping opens Stripe PaymentSheet directly */}
       <TouchableOpacity
         style={styles.paymentMethod}
         activeOpacity={0.85}
-        onPress={() => setSheetOpen(true)}
+        onPress={handleConfirm}
+        disabled={processing}
       >
-        {card ? (
+        {payment.card ? (
           <>
             <Text style={styles.paymentMethodLabel}>
-              {card.brand === 'ApplePay' ? ' ' : '💳  '}
-              {card.brand === 'ApplePay' ? 'Apple Pay' : `${card.brand} •••• ${card.last4}`}
+              {payment.card.brand === 'ApplePay' ? ' ' : '💳  '}
+              {payment.card.brand === 'ApplePay'
+                ? 'Apple Pay'
+                : `${payment.card.brand} •••• ${payment.card.last4}`}
             </Text>
             <Text style={styles.changeText}>Change</Text>
           </>
@@ -206,448 +261,24 @@ export default function PaymentScreen() {
           style={[
             styles.ctaButton,
             processing && styles.ctaButtonProcessing,
-            !card && styles.ctaButtonNoCard,
           ]}
           disabled={processing}
-          onPress={async () => {
-            if (!card) {
-              setSheetOpen(true);
-              return;
-            }
-            setProcessing(true);
-            if (recurring) {
-              addRecurring({
-                id: `${venue}-${Date.now()}`,
-                venueName: String(venue),
-                address: String(city),
-                freq: recurringFreq,
-                time: recurringTime,
-                marketId: 'mia',
-                coord: [-80.1932, 25.7651],
-              });
-            }
-            // TODO(phase-4): authorize a Stripe hold here (PaymentIntent, manual
-            // capture). Money is out of scope for Phase 2 — we create the real
-            // check now and capture once a Scout accepts.
-            try {
-              const checkId = await createCheck({
-                tier: tier === 'priority' ? 'priority' : 'standard',
-                locationLabel: String(venue),
-              });
-              setProcessing(false);
-              router.replace({
-                pathname: '/(seeker)/finding',
-                params: {
-                  checkId,
-                  venue: String(venue),
-                  city: String(city),
-                  tier: String(tier),
-                  time: String(time),
-                },
-              });
-            } catch (e) {
-              setProcessing(false);
-              Alert.alert(
-                "Couldn't start your check",
-                e instanceof Error ? e.message : 'Please try again in a moment.',
-              );
-            }
-          }}
+          onPress={handleConfirm}
           activeOpacity={0.85}
         >
-          <Text style={[styles.ctaButtonText, !card && styles.ctaButtonTextNoCard]}>
-            {processing ? 'AUTHORIZING…' : !card ? 'ADD CARD TO CONTINUE' : 'CONFIRM & FIND MY SCOUT'}
+          <Text style={styles.ctaButtonText}>
+            {processing ? 'AUTHORIZING…' : 'CONFIRM & FIND MY SCOUT'}
           </Text>
         </TouchableOpacity>
         <Text style={styles.disclaimer}>
-          {processing ? 'Authorizing with Stripe…' : 'You’re only charged once a Scout accepts.'}
+          {processing
+            ? 'Authorizing with Stripe…'
+            : 'Your card is held now and only charged once your clip is delivered.'}
         </Text>
       </View>
-
-      <PaymentSheet
-        visible={sheetOpen}
-        total={total}
-        onClose={() => setSheetOpen(false)}
-        onSaved={(c) => {
-          payment.save(c.brand, c.last4);
-          setSheetOpen(false);
-        }}
-      />
     </SafeAreaView>
   );
 }
-
-// =========================
-// Stripe-style Payment Sheet
-// =========================
-function PaymentSheet({
-  visible,
-  total,
-  onClose,
-  onSaved,
-}: {
-  visible: boolean;
-  total: string;
-  onClose: () => void;
-  onSaved: (c: { brand: CardBrand; last4: string }) => void;
-}) {
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvc, setCvc] = useState('');
-  const [zip, setZip] = useState('');
-  const [saveCard, setSaveCard] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (visible) {
-      setCardNumber('');
-      setExpiry('');
-      setCvc('');
-      setZip('');
-      Animated.timing(slideAnim, {
-        toValue: 1,
-        duration: 280,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    } else {
-      slideAnim.setValue(0);
-    }
-  }, [visible, slideAnim]);
-
-  const digits = cardNumber.replace(/\D/g, '');
-  const brand = detectBrand(cardNumber);
-  const cardOk = digits.length >= 15 && expiry.replace(/\D/g, '').length === 4 && cvc.length >= 3 && zip.length >= 5;
-
-  const handleApplePay = () => {
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      onSaved({ brand: 'ApplePay', last4: '' });
-    }, 700);
-  };
-
-  const handleSaveCard = () => {
-    if (!cardOk) return;
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      onSaved({ brand: brand || 'Visa', last4: digits.slice(-4) });
-    }, 900);
-  };
-
-  const translateY = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [600, 0],
-  });
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={sheetStyles.backdrop}>
-        <TouchableOpacity style={sheetStyles.backdropTap} activeOpacity={1} onPress={onClose} />
-        <Animated.View style={[sheetStyles.sheet, { transform: [{ translateY }] }]}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          >
-            <View style={sheetStyles.handle} />
-            <View style={sheetStyles.topRow}>
-              <Text style={sheetStyles.sheetTitle}>Payment</Text>
-              <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close" size={22} color="rgba(255,255,255,0.7)" />
-              </TouchableOpacity>
-            </View>
-            <Text style={sheetStyles.totalLine}>
-              Pay <Text style={sheetStyles.totalAmount}>{total}</Text> to Let Me Check
-            </Text>
-
-            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              {/* Apple Pay */}
-              <TouchableOpacity
-                style={[sheetStyles.applePayBtn, submitting && sheetStyles.btnDim]}
-                activeOpacity={0.85}
-                onPress={handleApplePay}
-                disabled={submitting}
-              >
-                <Ionicons name="logo-apple" size={16} color="#fff" />
-                <Text style={sheetStyles.applePayText}>Pay</Text>
-              </TouchableOpacity>
-
-              <View style={sheetStyles.divider}>
-                <View style={sheetStyles.dividerLine} />
-                <Text style={sheetStyles.dividerText}>OR PAY WITH CARD</Text>
-                <View style={sheetStyles.dividerLine} />
-              </View>
-
-              {/* Card Number */}
-              <View style={sheetStyles.cardField}>
-                <Text style={sheetStyles.fieldLabel}>CARD NUMBER</Text>
-                <View style={sheetStyles.inputRow}>
-                  <TextInput
-                    style={sheetStyles.input}
-                    value={cardNumber}
-                    onChangeText={(v) => setCardNumber(formatCardNumber(v))}
-                    placeholder="1234 1234 1234 1234"
-                    placeholderTextColor="rgba(255,255,255,0.25)"
-                    keyboardType="number-pad"
-                    maxLength={23}
-                  />
-                  {brand && digits.length >= 4 && (
-                    <View style={sheetStyles.brandBadge}>
-                      <Text style={sheetStyles.brandBadgeText}>{brand}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-
-              {/* Exp + CVC */}
-              <View style={sheetStyles.rowSplit}>
-                <View style={[sheetStyles.cardField, { flex: 1, marginRight: 8 }]}>
-                  <Text style={sheetStyles.fieldLabel}>EXP</Text>
-                  <TextInput
-                    style={sheetStyles.input}
-                    value={expiry}
-                    onChangeText={(v) => setExpiry(formatExpiry(v))}
-                    placeholder="MM / YY"
-                    placeholderTextColor="rgba(255,255,255,0.25)"
-                    keyboardType="number-pad"
-                    maxLength={7}
-                  />
-                </View>
-                <View style={[sheetStyles.cardField, { flex: 1, marginLeft: 8 }]}>
-                  <Text style={sheetStyles.fieldLabel}>CVC</Text>
-                  <TextInput
-                    style={sheetStyles.input}
-                    value={cvc}
-                    onChangeText={(v) => setCvc(v.replace(/\D/g, '').slice(0, 4))}
-                    placeholder="CVC"
-                    placeholderTextColor="rgba(255,255,255,0.25)"
-                    keyboardType="number-pad"
-                    maxLength={4}
-                  />
-                </View>
-              </View>
-
-              {/* ZIP */}
-              <View style={sheetStyles.cardField}>
-                <Text style={sheetStyles.fieldLabel}>ZIP / POSTAL CODE</Text>
-                <TextInput
-                  style={sheetStyles.input}
-                  value={zip}
-                  onChangeText={(v) => setZip(v.replace(/[^0-9A-Za-z\s-]/g, '').slice(0, 10))}
-                  placeholder="33139"
-                  placeholderTextColor="rgba(255,255,255,0.25)"
-                  keyboardType="default"
-                  maxLength={10}
-                />
-              </View>
-
-              {/* Save toggle */}
-              <TouchableOpacity
-                style={sheetStyles.saveRow}
-                activeOpacity={0.75}
-                onPress={() => setSaveCard((v) => !v)}
-              >
-                <View style={[sheetStyles.checkbox, saveCard && sheetStyles.checkboxOn]}>
-                  {saveCard && <Ionicons name="checkmark" size={12} color="#000" />}
-                </View>
-                <Text style={sheetStyles.saveText}>Save card for future checks</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[sheetStyles.payBtn, (!cardOk || submitting) && sheetStyles.btnDim]}
-                disabled={!cardOk || submitting}
-                onPress={handleSaveCard}
-                activeOpacity={0.9}
-              >
-                <Text style={sheetStyles.payBtnText}>
-                  {submitting ? 'PROCESSING…' : !cardOk ? 'ENTER CARD DETAILS' : `SAVE & PAY ${total}`}
-                </Text>
-              </TouchableOpacity>
-
-              <View style={sheetStyles.trustRow}>
-                <Ionicons name="lock-closed" size={11} color="rgba(255,255,255,0.45)" />
-                <Text style={sheetStyles.trustText}>Powered by Stripe · 256-bit encryption</Text>
-              </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-}
-
-const sheetStyles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  backdropTap: { ...StyleSheet.absoluteFillObject },
-  sheet: {
-    backgroundColor: '#0a0a0a',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 22,
-    paddingTop: 10,
-    paddingBottom: 32,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-    maxHeight: '88%',
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginBottom: 14,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  sheetTitle: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 18,
-    color: '#fff',
-    letterSpacing: 0.2,
-  },
-  totalLine: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
-    letterSpacing: 0.2,
-    marginBottom: 18,
-  },
-  totalAmount: {
-    fontFamily: 'Inter_700Bold',
-    color: '#fff',
-  },
-
-  applePayBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginBottom: 16,
-  },
-  applePayText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 16,
-    color: '#000',
-    letterSpacing: 0.5,
-  },
-
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
-  dividerText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
-    letterSpacing: 1.6,
-  },
-
-  cardField: { marginBottom: 12 },
-  fieldLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.55)',
-    letterSpacing: 1.5,
-    marginBottom: 6,
-  },
-  inputRow: { position: 'relative' },
-  input: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 15,
-    color: '#fff',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    letterSpacing: 0.5,
-  },
-  brandBadge: {
-    position: 'absolute',
-    right: 10,
-    top: 9,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  brandBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: '#fff',
-    letterSpacing: 0.6,
-  },
-
-  rowSplit: { flexDirection: 'row' },
-
-  saveRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 14,
-  },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxOn: { backgroundColor: '#fff', borderColor: '#fff' },
-  saveText: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
-    letterSpacing: 0.2,
-  },
-
-  payBtn: {
-    backgroundColor: '#00FF7F',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 6,
-    marginBottom: 12,
-  },
-  btnDim: { opacity: 0.4 },
-  payBtnText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 13,
-    color: '#000',
-    letterSpacing: 2,
-  },
-
-  trustRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 5,
-    paddingBottom: 4,
-  },
-  trustText: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.45)',
-    letterSpacing: 0.3,
-  },
-});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', paddingHorizontal: 20 },
@@ -775,29 +406,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     letterSpacing: 0.2,
-  },
-  shareBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.45)',
-  },
-  shareBadgeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#00FF7F',
-  },
-  shareBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 8,
-    color: '#00FF7F',
-    letterSpacing: 1,
   },
   shareSub: {
     fontFamily: 'Inter_400Regular',
@@ -948,17 +556,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#cccccc',
     opacity: 0.85,
   },
-  ctaButtonNoCard: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-  },
   ctaButtonText: {
     fontFamily: 'Inter_700Bold',
     color: '#000',
     fontSize: 13,
     letterSpacing: 2.5,
-  },
-  ctaButtonTextNoCard: {
-    color: '#fff',
   },
   disclaimer: {
     fontFamily: 'Inter_500Medium',
