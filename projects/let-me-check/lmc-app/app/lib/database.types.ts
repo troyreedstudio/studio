@@ -41,6 +41,7 @@ export type Database = {
     Tables: {
       checks: {
         Row: {
+          coord: unknown
           created_at: string
           currency: string
           id: string
@@ -57,6 +58,7 @@ export type Database = {
           venue_id: string | null
         }
         Insert: {
+          coord?: unknown
           created_at?: string
           currency?: string
           id?: string
@@ -73,6 +75,7 @@ export type Database = {
           venue_id?: string | null
         }
         Update: {
+          coord?: unknown
           created_at?: string
           currency?: string
           id?: string
@@ -110,42 +113,51 @@ export type Database = {
           check_id: string
           created_at: string
           duration_secs: number | null
+          filmed_accuracy_m: number | null
           filmed_at: string | null
           filmed_lat: number | null
           filmed_lng: number | null
+          gps_verified: boolean | null
           id: string
           mux_asset_id: string | null
           mux_playback_id: string | null
           mux_playback_policy: string | null
           mux_upload_id: string | null
+          signage_confirmed: boolean | null
           status: string
         }
         Insert: {
           check_id: string
           created_at?: string
           duration_secs?: number | null
+          filmed_accuracy_m?: number | null
           filmed_at?: string | null
           filmed_lat?: number | null
           filmed_lng?: number | null
+          gps_verified?: boolean | null
           id?: string
           mux_asset_id?: string | null
           mux_playback_id?: string | null
           mux_playback_policy?: string | null
           mux_upload_id?: string | null
+          signage_confirmed?: boolean | null
           status?: string
         }
         Update: {
           check_id?: string
           created_at?: string
           duration_secs?: number | null
+          filmed_accuracy_m?: number | null
           filmed_at?: string | null
           filmed_lat?: number | null
           filmed_lng?: number | null
+          gps_verified?: boolean | null
           id?: string
           mux_asset_id?: string | null
           mux_playback_id?: string | null
           mux_playback_policy?: string | null
           mux_upload_id?: string | null
+          signage_confirmed?: boolean | null
           status?: string
         }
         Relationships: [
@@ -218,6 +230,41 @@ export type Database = {
         }
         Relationships: []
       }
+      market_config: {
+        Row: {
+          dispatch_radius_m: number
+          dispatch_timeout_s: number
+          film_fence_m: number
+          film_fence_max_m: number
+          market_id: string
+          signage_min_conf: number
+        }
+        Insert: {
+          dispatch_radius_m?: number
+          dispatch_timeout_s?: number
+          film_fence_m?: number
+          film_fence_max_m?: number
+          market_id: string
+          signage_min_conf?: number
+        }
+        Update: {
+          dispatch_radius_m?: number
+          dispatch_timeout_s?: number
+          film_fence_m?: number
+          film_fence_max_m?: number
+          market_id?: string
+          signage_min_conf?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_config_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: true
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       markets: {
         Row: {
           center: unknown
@@ -247,6 +294,38 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      no_film_zones: {
+        Row: {
+          area: unknown
+          category: string
+          id: string
+          market_id: string | null
+          name: string
+        }
+        Insert: {
+          area: unknown
+          category: string
+          id?: string
+          market_id?: string | null
+          name: string
+        }
+        Update: {
+          area?: unknown
+          category?: string
+          id?: string
+          market_id?: string | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "no_film_zones_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "markets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_methods: {
         Row: {
@@ -539,6 +618,27 @@ export type Database = {
         }
         Relationships: []
       }
+      scout_locations: {
+        Row: {
+          coord: unknown
+          is_online: boolean
+          scout_id: string
+          updated_at: string
+        }
+        Insert: {
+          coord: unknown
+          is_online?: boolean
+          scout_id: string
+          updated_at?: string
+        }
+        Update: {
+          coord?: unknown
+          is_online?: boolean
+          scout_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       scout_stripe_accounts: {
         Row: {
           accepted_scout_code_at: string | null
@@ -809,6 +909,10 @@ export type Database = {
             Returns: string
           }
       disablelongtransactions: { Args: never; Returns: string }
+      distance_m: {
+        Args: { p_geog: unknown; p_lat: number; p_lng: number }
+        Returns: number
+      }
       dropgeometrycolumn:
         | {
             Args: {
@@ -841,6 +945,7 @@ export type Database = {
         | { Args: { table_name: string }; Returns: string }
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      expire_stale_dispatching: { Args: never; Returns: number }
       geometry: { Args: { "": string }; Returns: unknown }
       geometry_above: {
         Args: { geom1: unknown; geom2: unknown }
@@ -940,12 +1045,42 @@ export type Database = {
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
       gettransactionid: { Args: never; Returns: unknown }
+      is_in_no_film_zone: {
+        Args: { p_lat: number; p_lng: number }
+        Returns: boolean
+      }
       is_valid_check_transition: {
         Args: {
           p_from: Database["public"]["Enums"]["check_status"]
           p_to: Database["public"]["Enums"]["check_status"]
         }
         Returns: boolean
+      }
+      list_open_checks_for_scout: {
+        Args: { p_scout_lat: number; p_scout_lng: number }
+        Returns: {
+          coord: unknown
+          created_at: string
+          currency: string
+          id: string
+          location_label: string | null
+          market_id: string | null
+          requested_lat: number | null
+          requested_lng: number | null
+          scout_id: string | null
+          seeker_id: string
+          status: Database["public"]["Enums"]["check_status"]
+          stripe_payment_intent_id: string | null
+          tier: string
+          updated_at: string
+          venue_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "checks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       log_event: {
         Args: {
@@ -997,6 +1132,10 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      reset_check_for_redispatch: {
+        Args: { p_check_id: string }
+        Returns: Database["public"]["Enums"]["check_status"]
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
