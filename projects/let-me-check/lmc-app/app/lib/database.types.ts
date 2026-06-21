@@ -51,6 +51,7 @@ export type Database = {
           scout_id: string | null
           seeker_id: string
           status: Database["public"]["Enums"]["check_status"]
+          stripe_payment_intent_id: string | null
           tier: string
           updated_at: string
           venue_id: string | null
@@ -66,6 +67,7 @@ export type Database = {
           scout_id?: string | null
           seeker_id: string
           status?: Database["public"]["Enums"]["check_status"]
+          stripe_payment_intent_id?: string | null
           tier?: string
           updated_at?: string
           venue_id?: string | null
@@ -81,6 +83,7 @@ export type Database = {
           scout_id?: string | null
           seeker_id?: string
           status?: Database["public"]["Enums"]["check_status"]
+          stripe_payment_intent_id?: string | null
           tier?: string
           updated_at?: string
           venue_id?: string | null
@@ -269,8 +272,59 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount_total: number
+          check_id: string
+          created_at: string
+          currency: string
+          id: string
+          scout_amount: number
+          status: string
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_transfer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_total: number
+          check_id: string
+          created_at?: string
+          currency: string
+          id?: string
+          scout_amount: number
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_total?: number
+          check_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          scout_amount?: number
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_check_id_fkey"
+            columns: ["check_id"]
+            isOneToOne: true
+            referencedRelation: "checks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          blocked_from_booking: boolean
           created_at: string
           current_role: string
           display_name: string | null
@@ -278,9 +332,11 @@ export type Database = {
           is_scout: boolean
           is_seeker: boolean
           phone: string | null
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
+          blocked_from_booking?: boolean
           created_at?: string
           current_role?: string
           display_name?: string | null
@@ -288,9 +344,11 @@ export type Database = {
           is_scout?: boolean
           is_seeker?: boolean
           phone?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
+          blocked_from_booking?: boolean
           created_at?: string
           current_role?: string
           display_name?: string | null
@@ -298,6 +356,7 @@ export type Database = {
           is_scout?: boolean
           is_seeker?: boolean
           phone?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -397,6 +456,53 @@ export type Database = {
         }
         Relationships: []
       }
+      refund_requests: {
+        Row: {
+          auto_approved: boolean
+          check_id: string
+          created_at: string
+          id: string
+          reason_code: string
+          reason_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          seeker_id: string
+          stripe_refund_id: string | null
+        }
+        Insert: {
+          auto_approved?: boolean
+          check_id: string
+          created_at?: string
+          id?: string
+          reason_code: string
+          reason_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          seeker_id: string
+          stripe_refund_id?: string | null
+        }
+        Update: {
+          auto_approved?: boolean
+          check_id?: string
+          created_at?: string
+          id?: string
+          reason_code?: string
+          reason_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          seeker_id?: string
+          stripe_refund_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_check_id_fkey"
+            columns: ["check_id"]
+            isOneToOne: false
+            referencedRelation: "checks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_places: {
         Row: {
           address: string | null
@@ -430,6 +536,39 @@ export type Database = {
           place_key?: string
           saved_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      scout_stripe_accounts: {
+        Row: {
+          accepted_scout_code_at: string | null
+          charges_enabled: boolean
+          created_at: string
+          payout_speed: string
+          payouts_enabled: boolean
+          scout_id: string
+          stripe_account_id: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_scout_code_at?: string | null
+          charges_enabled?: boolean
+          created_at?: string
+          payout_speed?: string
+          payouts_enabled?: boolean
+          scout_id: string
+          stripe_account_id: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_scout_code_at?: string | null
+          charges_enabled?: boolean
+          created_at?: string
+          payout_speed?: string
+          payouts_enabled?: boolean
+          scout_id?: string
+          stripe_account_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
