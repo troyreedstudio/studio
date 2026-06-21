@@ -110,6 +110,7 @@ export type Database = {
       }
       clips: {
         Row: {
+          blur_status: string | null
           check_id: string
           created_at: string
           duration_secs: number | null
@@ -117,6 +118,9 @@ export type Database = {
           filmed_at: string | null
           filmed_lat: number | null
           filmed_lng: number | null
+          fraud_flag: boolean | null
+          fraud_score: number | null
+          fraud_signals: Json | null
           gps_verified: boolean | null
           id: string
           mux_asset_id: string | null
@@ -127,6 +131,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          blur_status?: string | null
           check_id: string
           created_at?: string
           duration_secs?: number | null
@@ -134,6 +139,9 @@ export type Database = {
           filmed_at?: string | null
           filmed_lat?: number | null
           filmed_lng?: number | null
+          fraud_flag?: boolean | null
+          fraud_score?: number | null
+          fraud_signals?: Json | null
           gps_verified?: boolean | null
           id?: string
           mux_asset_id?: string | null
@@ -144,6 +152,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          blur_status?: string | null
           check_id?: string
           created_at?: string
           duration_secs?: number | null
@@ -151,6 +160,9 @@ export type Database = {
           filmed_at?: string | null
           filmed_lat?: number | null
           filmed_lng?: number | null
+          fraud_flag?: boolean | null
+          fraud_score?: number | null
+          fraud_signals?: Json | null
           gps_verified?: boolean | null
           id?: string
           mux_asset_id?: string | null
@@ -232,26 +244,32 @@ export type Database = {
       }
       market_config: {
         Row: {
+          blur_enabled: boolean
           dispatch_radius_m: number
           dispatch_timeout_s: number
           film_fence_m: number
           film_fence_max_m: number
+          fraud_strictness: string
           market_id: string
           signage_min_conf: number
         }
         Insert: {
+          blur_enabled?: boolean
           dispatch_radius_m?: number
           dispatch_timeout_s?: number
           film_fence_m?: number
           film_fence_max_m?: number
+          fraud_strictness?: string
           market_id: string
           signage_min_conf?: number
         }
         Update: {
+          blur_enabled?: boolean
           dispatch_radius_m?: number
           dispatch_timeout_s?: number
           film_fence_m?: number
           film_fence_max_m?: number
+          fraud_strictness?: string
           market_id?: string
           signage_min_conf?: number
         }
@@ -620,18 +638,21 @@ export type Database = {
       }
       scout_locations: {
         Row: {
+          accuracy_m: number | null
           coord: unknown
           is_online: boolean
           scout_id: string
           updated_at: string
         }
         Insert: {
+          accuracy_m?: number | null
           coord: unknown
           is_online?: boolean
           scout_id: string
           updated_at?: string
         }
         Update: {
+          accuracy_m?: number | null
           coord?: unknown
           is_online?: boolean
           scout_id?: string
@@ -1136,6 +1157,7 @@ export type Database = {
         Args: { p_check_id: string }
         Returns: Database["public"]["Enums"]["check_status"]
       }
+      set_scout_offline: { Args: never; Returns: undefined }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
@@ -1736,6 +1758,10 @@ export type Database = {
         }
         Returns: string
       }
+      upsert_scout_location: {
+        Args: { p_accuracy?: number; p_lat: number; p_lng: number }
+        Returns: undefined
+      }
     }
     Enums: {
       check_status:
@@ -1751,6 +1777,7 @@ export type Database = {
         | "cancelled"
         | "expired"
         | "no_scout"
+        | "blur_review"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -1902,6 +1929,7 @@ export const Constants = {
         "cancelled",
         "expired",
         "no_scout",
+        "blur_review",
       ],
     },
   },
