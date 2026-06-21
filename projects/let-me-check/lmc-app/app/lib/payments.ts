@@ -3,7 +3,7 @@
 //
 // This module is the ONLY place the UI touches the payments Edge Functions.
 // It holds NO business logic — the server owns all pricing, validation, and
-// state transitions. These are pure typed invoke-wrappers (mirrors clips.ts).
+// state transitions. These are typed Edge Function wrappers (mirrors clips.ts).
 //
 // Calling order in the Seeker booking flow (D-01/D-02):
 //   1. createPaymentHold(tier)  — authorizes a card hold server-side
@@ -12,8 +12,82 @@
 //
 // If createPaymentHold throws (card declined, unknown tier, network error),
 // the booking is blocked and the Seeker is re-prompted — no check is created.
+//
+// NOTE: Edge Functions are called via plain fetch() rather than
+// supabase.functions.invoke(). The invoke() wrapper's generator-based async
+// internals (tslib.__awaiter) can hang indefinitely on Hermes/Release builds,
+// leaving the Promise unresolved with no error surfaced. A direct authenticated
+// fetch with an explicit AbortController timeout guarantees the call always
+// resolves or rejects within 30 seconds.
 
 import { supabase } from './supabase';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
+
+// ── Shared Edge Function fetch helper ─────────────────────────────────────────
+
+/**
+ * Authenticated fetch to a Supabase Edge Function. Uses plain fetch() with an
+ * explicit 30-second AbortController timeout instead of supabase.functions.invoke
+ * to avoid a Hermes/Release build hang in the tslib.__awaiter Promise chain.
+ *
+ * Throws on:
+ *   - Network failure (FetchError)
+ *   - Timeout after 30 seconds
+ *   - Non-2xx HTTP status (message includes status + body)
+ *   - Missing or invalid JSON response
+ */
+async function invokeEdgeFunction(
+  functionName: string,
+  body: unknown,
+): Promise<unknown> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData?.session?.access_token ?? SUPABASE_ANON_KEY;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `${SUPABASE_URL}/functions/v1/${functionName}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      },
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      controller.signal.aborted
+        ? `invokeEdgeFunction(${functionName}): timed out after 30s`
+        : `invokeEdgeFunction(${functionName}): network error — ${msg}`,
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!response.ok) {
+    let detail = '';
+    try { detail = await response.text(); } catch { /* ignore */ }
+    throw new Error(
+      `invokeEdgeFunction(${functionName}): HTTP ${response.status}${detail ? ` — ${detail}` : ''}`,
+    );
+  }
+
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`invokeEdgeFunction(${functionName}): invalid JSON in response`);
+  }
+  return data;
+}
 
 // ── Shared tier type ───────────────────────────────────────────────────────────
 // Must match the server-side Tier in _shared/pricing.ts and the checks.tier
@@ -47,8 +121,7 @@ export type PaymentHold = {
  * the client cannot influence the charged amount (T-04-06).
  */
 export async function createPaymentHold(tier: Tier): Promise<PaymentHold> {
-  const { data, error } = await supabase.functions.invoke('stripe-create-payment-intent', { body: { tier } });
-  if (error) throw error;
+  const data = await invokeEdgeFunction('stripe-create-payment-intent', { tier }) as Record<string, unknown>;
   if (
     !data?.clientSecret ||
     !data?.customerId ||
@@ -58,10 +131,10 @@ export async function createPaymentHold(tier: Tier): Promise<PaymentHold> {
     throw new Error('createPaymentHold: incomplete response from Edge Function');
   }
   return {
-    clientSecret: data.clientSecret,
-    customerId: data.customerId,
-    ephemeralKey: data.ephemeralKey,
-    paymentIntentId: data.paymentIntentId,
+    clientSecret: data.clientSecret as string,
+    customerId: data.customerId as string,
+    ephemeralKey: data.ephemeralKey as string,
+    paymentIntentId: data.paymentIntentId as string,
   };
 }
 
@@ -92,14 +165,11 @@ export async function requestRefund(
   reasonCode: RefundReason,
   note?: string,
 ): Promise<{ status: 'refunded' | 'under_review' }> {
-  const { data, error } = await supabase.functions.invoke('stripe-refund', {
-    body: { checkId, reasonCode, note },
-  });
-  if (error) throw error;
+  const data = await invokeEdgeFunction('stripe-refund', { checkId, reasonCode, note }) as Record<string, unknown>;
   if (!data?.status) {
     throw new Error('requestRefund: missing status in response');
   }
-  return { status: data.status };
+  return { status: data.status as 'refunded' | 'under_review' };
 }
 
 // ── startConnectOnboarding ────────────────────────────────────────────────────
@@ -125,15 +195,11 @@ export type PayoutSpeed = 'standard' | 'instant';
 export async function startConnectOnboarding(
   payoutSpeed?: PayoutSpeed,
 ): Promise<{ url: string }> {
-  const { data, error } = await supabase.functions.invoke(
-    'stripe-connect-onboard',
-    { body: { payoutSpeed } },
-  );
-  if (error) throw error;
+  const data = await invokeEdgeFunction('stripe-connect-onboard', { payoutSpeed }) as Record<string, unknown>;
   if (!data?.url) {
     throw new Error('startConnectOnboarding: missing url in response');
   }
-  return { url: data.url };
+  return { url: data.url as string };
 }
 
 // ── getConnectStatus ──────────────────────────────────────────────────────────
@@ -150,15 +216,11 @@ export async function getConnectStatus(): Promise<{
   payoutsEnabled: boolean;
   payoutSpeed: PayoutSpeed;
 }> {
-  const { data, error } = await supabase.functions.invoke(
-    'stripe-connect-status',
-    { body: {} },
-  );
-  if (error) throw error;
+  const data = await invokeEdgeFunction('stripe-connect-status', {}) as Record<string, unknown>;
   return {
-    eligible: data?.eligible ?? false,
-    chargesEnabled: data?.chargesEnabled ?? false,
-    payoutsEnabled: data?.payoutsEnabled ?? false,
-    payoutSpeed: data?.payoutSpeed ?? 'standard',
+    eligible: (data?.eligible as boolean) ?? false,
+    chargesEnabled: (data?.chargesEnabled as boolean) ?? false,
+    payoutsEnabled: (data?.payoutsEnabled as boolean) ?? false,
+    payoutSpeed: (data?.payoutSpeed as PayoutSpeed) ?? 'standard',
   };
 }

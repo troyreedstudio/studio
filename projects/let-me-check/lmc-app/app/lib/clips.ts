@@ -21,6 +21,63 @@
 import { useCallback, useRef, useState } from 'react';
 import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
+
+// ── Shared Edge Function fetch helper ─────────────────────────────────────────
+// Plain fetch() with explicit 30s timeout, bypassing supabase.functions.invoke
+// whose tslib.__awaiter generator chain can hang indefinitely on Hermes/Release.
+async function invokeEdgeFunction(
+  functionName: string,
+  body: unknown,
+): Promise<unknown> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData?.session?.access_token ?? SUPABASE_ANON_KEY;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `${SUPABASE_URL}/functions/v1/${functionName}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      },
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      controller.signal.aborted
+        ? `invokeEdgeFunction(${functionName}): timed out after 30s`
+        : `invokeEdgeFunction(${functionName}): network error — ${msg}`,
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!response.ok) {
+    let detail = '';
+    try { detail = await response.text(); } catch { /* ignore */ }
+    throw new Error(
+      `invokeEdgeFunction(${functionName}): HTTP ${response.status}${detail ? ` — ${detail}` : ''}`,
+    );
+  }
+
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`invokeEdgeFunction(${functionName}): invalid JSON in response`);
+  }
+  return data;
+}
 
 /**
  * VID-03/04: mint a single-use Mux direct-upload URL for this check via the
@@ -30,14 +87,11 @@ import { supabase } from './supabase';
 export async function requestUploadUrl(
   checkId: string,
 ): Promise<{ uploadUrl: string; uploadId: string }> {
-  const { data, error } = await supabase.functions.invoke('mux-upload-url', {
-    body: { checkId },
-  });
-  if (error) throw error;
+  const data = await invokeEdgeFunction('mux-upload-url', { checkId }) as Record<string, unknown>;
   if (!data?.uploadUrl || !data?.uploadId) {
     throw new Error('requestUploadUrl: missing uploadUrl/uploadId in response');
   }
-  return { uploadUrl: data.uploadUrl, uploadId: data.uploadId };
+  return { uploadUrl: data.uploadUrl as string, uploadId: data.uploadId as string };
 }
 
 /**
@@ -105,12 +159,9 @@ export async function uploadWithRetry(
  * the stream stays private to the buying Seeker. Throws on error.
  */
 export async function getPlaybackToken(checkId: string): Promise<string> {
-  const { data, error } = await supabase.functions.invoke('mux-playback-token', {
-    body: { checkId },
-  });
-  if (error) throw error;
+  const data = await invokeEdgeFunction('mux-playback-token', { checkId }) as Record<string, unknown>;
   if (!data?.token) throw new Error('getPlaybackToken: missing token in response');
-  return data.token;
+  return data.token as string;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
