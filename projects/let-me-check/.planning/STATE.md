@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 06-04-PLAN.md — 0014 live, 4 functions deployed, types regen, dormant invariant confirmed
-last_updated: "2026-06-21T18:01:42.913Z"
+status: verifying
+stopped_at: Completed 06-05-PLAN.md Tasks 1+2 — native blur stack installed, BlurViewfinder scaffold created, tsc clean, BLUR_NATIVE_ENABLED=false; Task 3 EAS build deferred to orchestrator
+last_updated: "2026-06-21T18:13:34.025Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 23
-  completed_plans: 21
-  percent: 91
+  completed_plans: 22
+  percent: 96
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 
 Phase: 6 (Privacy + anti-fraud hardening) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-21
 
 Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-01 schema is pushed live)
@@ -76,6 +76,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P02 | 4m | 3 tasks | 3 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P03 | 6m | 3 tasks | 6 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P04 | 12 | 3 tasks | 2 files |
+| Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P05 | 20 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -142,6 +143,9 @@ Recent decisions affecting current work:
 - [Phase 06]: fraud-eval is fire-and-forget advisory AFTER stripe-capture (step 8b) — never blocks delivery at launch (D-04 flag-only)
 - [Phase 06]: ADD CONSTRAINT IF NOT EXISTS replaced with DO block guard on pg_constraint — Supabase db push rejects PG15+ syntax even on PG17
 - [Phase 06]: mux-webhook redeployed verify_jwt=false confirmed; face-blur-check + fraud-eval verify_jwt=true (service-to-service); dormant invariant: 0 markets blur_enabled=true, all 102 fraud_strictness=flag
+- [Phase 06]: react-native-vision-camera-face-detector pinned to v1.10.2 (v2.x requires vision-camera v5+; we are on v4.7.x)
+- [Phase 06]: react-native-vision-camera-skia has no v4 version (all v5.x — A3 false); blur overlay uses plain Skia Canvas positioned absolutely over Camera
+- [Phase 06]: BLUR_NATIVE_ENABLED=false default; babel.config.js worklets-core plugin required before enabling; Task 3 EAS build deferred to orchestrator
 
 ### Roadmap Evolution
 
@@ -173,6 +177,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T18:01:42.911Z
-Stopped at: Completed 06-04-PLAN.md — 0014 live, 4 functions deployed, types regen, dormant invariant confirmed
+Last session: 2026-06-21T18:13:34.023Z
+Stopped at: Completed 06-05-PLAN.md Tasks 1+2 — native blur stack installed, BlurViewfinder scaffold created, tsc clean, BLUR_NATIVE_ENABLED=false; Task 3 EAS build deferred to orchestrator
 Resume file: None
