@@ -567,7 +567,7 @@ export default function FilmingScreen() {
                 {recording
                   ? `Recording… ${recordSecs}s of 15s`
                   : outOfRange
-                  ? `You’re ~${Math.round(distanceM ?? 0)}m from ${venue}. Get within ${FILM_FENCE_M}m to film.`
+                  ? `Too far to film — you’re ~${Math.round(distanceM ?? 0)} m away. Get within ${FILM_FENCE_M} m of the venue.`
                   : takesCount > 0
                   ? `Tap to start take ${takesCount + 1} of ${MAX_TAKES}`
                   : 'Tap to start filming'}
