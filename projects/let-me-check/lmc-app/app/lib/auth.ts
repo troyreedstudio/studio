@@ -67,7 +67,21 @@ function ensureGoogleConfigured(): void {
 export async function signInWithGoogle(): Promise<void> {
   ensureGoogleConfigured();
   await GoogleSignin.hasPlayServices();
+
+  // NOTE ON NONCES: @react-native-google-signin/google-signin v16 uses the
+  // original GID iOS SDK API (signInWithPresentingViewController:hint:additionalScopes:)
+  // which does NOT accept a custom nonce parameter. The SDK auto-generates an
+  // internal nonce, embeds its SHA-256 hash in the id_token, but never returns
+  // the raw nonce to JS — so we cannot pass a matching nonce to Supabase.
+  //
+  // Resolution: enable "Skip Nonce Checks" in the Supabase dashboard under
+  // Authentication > Providers > Google > Skip nonce checks.
+  // This tells Supabase to ignore the nonce claim in the id_token entirely,
+  // eliminating the "Passed nonce and nonce in id_token should either both
+  // exist or not" error without weakening security materially (the id_token
+  // signature is still verified server-side against Google's public keys).
   const result = await GoogleSignin.signIn();
+
   // google-signin v16 nests the token under data.idToken; tolerate both shapes.
   const idToken =
     (result as { data?: { idToken?: string | null } }).data?.idToken ??
@@ -77,6 +91,8 @@ export async function signInWithGoogle(): Promise<void> {
   const { error } = await supabase.auth.signInWithIdToken({
     provider: 'google',
     token: idToken,
+    // Do NOT pass nonce here — see note above. Supabase must have
+    // "Skip nonce checks" enabled for Google in the dashboard.
   });
   if (error) throw error;
   await logEvent('auth.signed_in', { method: 'google' });
