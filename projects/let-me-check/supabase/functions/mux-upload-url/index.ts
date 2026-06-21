@@ -23,6 +23,13 @@ type Svc = any;
  * persisted on the clips row alongside mux_upload_id + status='pending' so that
  * verify-clip has real coordinates to work with (T-05-24: validated as finite
  * numbers before writing; non-finite values are silently dropped).
+ *
+ * Phase 6 (FRAUD-03): accepts optional fraud_signals bag from the Scout client.
+ * This is client-supplied provenance — the fraud VERDICT (fraud_flag/fraud_score)
+ * is computed server-side by fraud-eval (T-06-07); the raw bag is never trusted
+ * as a verdict. Validation (V5): only persist when it is a plain object (typeof
+ * === 'object' && !Array.isArray && !== null); any other shape is silently dropped
+ * (mirrors the isFiniteNum GPS validation pattern).
  */
 export async function handleUploadUrl(
   input: {
@@ -31,10 +38,11 @@ export async function handleUploadUrl(
     filmed_lat?: number;
     filmed_lng?: number;
     filmed_accuracy_m?: number;
+    fraud_signals?: Record<string, unknown>;
   },
   deps: { mux: Mux; svc: Svc },
 ): Promise<Response> {
-  const { checkId, callerId, filmed_lat, filmed_lng, filmed_accuracy_m } = input;
+  const { checkId, callerId, filmed_lat, filmed_lng, filmed_accuracy_m, fraud_signals } = input;
   if (!callerId) return new Response("not authenticated", { status: 401 });
   if (!checkId) return new Response("missing checkId", { status: 400 });
 
@@ -73,6 +81,18 @@ export async function handleUploadUrl(
   if (isFiniteNum(filmed_lng)) gpsUpdate.filmed_lng = filmed_lng;
   if (isFiniteNum(filmed_accuracy_m)) gpsUpdate.filmed_accuracy_m = filmed_accuracy_m;
 
+  // Validate fraud_signals server-side (V5, T-06-07). Only persist when it is a
+  // plain object (not an array, not null, not a primitive). This mirrors the
+  // isFiniteNum GPS validation: non-objects are silently dropped so fraud-eval
+  // treats them as missing-bag (degrades to zero-score, no false flags).
+  // IMPORTANT: this is RECORDED CLIENT-SUPPLIED PROVENANCE — the verdict
+  // (fraud_flag/fraud_score) is computed server-side by fraud-eval; the raw bag
+  // is NEVER trusted as a verdict (T-06-07 — client cannot suppress the server verdict).
+  const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+    typeof v === 'object' && v !== null && !Array.isArray(v);
+  const fraudSignalsUpdate: Record<string, unknown> = {};
+  if (isPlainObject(fraud_signals)) fraudSignalsUpdate.fraud_signals = fraud_signals;
+
   // UPSERT the clip row so it exists when the Mux webhook fires. Phase 3/4 had the
   // Scout client inserting a stub clips row before calling this function; that stub
   // path was retired when the real upload pipeline landed. Without an INSERT here
@@ -87,7 +107,8 @@ export async function handleUploadUrl(
   // own row. We therefore use INSERT without ON CONFLICT so each mux-upload-url call
   // appends a fresh row. The service role bypasses RLS (serviceClient), so no policy
   // check is needed here. verify-clip reads the LATEST row (order created_at desc).
-  await deps.svc
+  // deno-lint-ignore no-explicit-any
+  await (deps.svc as any)
     .from("clips")
     .insert({
       check_id: checkId,
@@ -95,6 +116,7 @@ export async function handleUploadUrl(
       status: "pending",
       filmed_at: new Date().toISOString(),
       ...gpsUpdate,
+      ...fraudSignalsUpdate,
     });
 
   return Response.json({ uploadUrl: upload.url, uploadId: upload.id });
@@ -111,18 +133,22 @@ if (import.meta.main) Deno.serve(async (req: Request) => {
   let filmed_lat: number | undefined;
   let filmed_lng: number | undefined;
   let filmed_accuracy_m: number | undefined;
+  let fraud_signals: Record<string, unknown> | undefined;
   try {
     const body = await req.json();
     checkId = body.checkId ?? "";
     filmed_lat = body.filmed_lat;
     filmed_lng = body.filmed_lng;
     filmed_accuracy_m = body.filmed_accuracy_m;
+    // Accept fraud_signals bag from the Scout client (Phase 6, FRAUD-03).
+    // handleUploadUrl validates the shape before persisting.
+    fraud_signals = body.fraud_signals;
   } catch (_e) {
     return new Response("bad body", { status: 400 });
   }
   const mux = await getMuxClient();
   return handleUploadUrl(
-    { checkId, callerId, filmed_lat, filmed_lng, filmed_accuracy_m },
+    { checkId, callerId, filmed_lat, filmed_lng, filmed_accuracy_m, fraud_signals },
     { mux, svc: serviceClient() },
   );
 });
