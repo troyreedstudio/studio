@@ -40,12 +40,12 @@ Scope: turn the working UI prototype into a real product, sequenced core-loop-fi
 ### Scout Onboarding (ultra-low friction)
 - [x] **SCOUT-01**: A Scout completes payout setup via Stripe Connect Express (the **only** identity = legally-required tax + Stripe KYC; **no background check, no separate ID/selfie step**)
 - [x] **SCOUT-02**: A Scout agrees to the Scout Code (consent + acceptable-use)
-- [ ] **SCOUT-03**: A Scout can go online / set availability and receive nearby jobs
+- [x] **SCOUT-03**: A Scout can go online / set availability and receive nearby jobs
 
 ### Real-Time Dispatch & Geo
 - [x] **DISP-01**: Only Scouts inside the location's geofence are pinged for a request
 - [x] **DISP-02**: A request is claimed atomically — two Scouts can never be assigned the same job (no double-booking)
-- [ ] **DISP-03**: If no Scout accepts within the window, the request times out gracefully (release hold / refund, notify Seeker)
+- [x] **DISP-03**: If no Scout accepts within the window, the request times out gracefully (release hold / refund, notify Seeker)
 - [x] **DISP-04**: The Seeker sees live status (finding → accepted → filming → delivered)
 
 ### Verification & Safety (beta-grade)
@@ -123,8 +123,8 @@ Every v1 requirement maps to exactly one phase. Coverage: 41/41.
 | SCOUT-02 | Phase 4 | Complete |
 | DISP-01 | Phase 5 | Complete |
 | DISP-02 | Phase 5 | Complete |
-| DISP-03 | Phase 5 | Pending |
-| SCOUT-03 | Phase 5 | Pending |
+| DISP-03 | Phase 5 | Complete |
+| SCOUT-03 | Phase 5 | Complete |
 | VER-01 | Phase 5 | Complete |
 | VER-03 | Phase 5 | Pending |
 | VER-05 | Phase 5 | Pending |

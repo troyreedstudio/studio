@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 05-01: dispatch verification spine migration + pgTAP spatial test"
-last_updated: "2026-06-21T12:21:14.451Z"
+stopped_at: "Completed 05-02: geo-filtered dispatch RPC + accept_check v3 + timeout sweeper"
+last_updated: "2026-06-21T12:28:11.167Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 18
-  completed_plans: 12
-  percent: 67
+  completed_plans: 13
+  percent: 72
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 5 (Verification moat + dispatch) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -68,6 +68,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P06 | 15 | 3 tasks | 6 files |
 | Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P07 | 6 | 3 tasks | 5 files |
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P01 | 3m | 2 tasks | 2 files |
+| Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P02 | 4m | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -114,6 +115,9 @@ Recent decisions affecting current work:
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-01]: market_config holds TWO DISTINCT distances (dispatch_radius_m=1500 wide vs film_fence_max_m=30 tight) — never conflate
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-01]: transition_check dispatching branch relaxed with v_uid is not null so service role can drive re-dispatch without breaking human-seeker invariant
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-01]: reset_check_for_redispatch is the sole deliberate exception to accept_check being the only scout_id writer — it CLEARS, accept SETS
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-02]: list_open_checks_for_scout SECURITY DEFINER RPC falls back from checks.coord to venues.coord — legacy rows never block dispatch
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-02]: accept_check geo gate skips when checks.coord is null — honest Scout never hard-blocked by missing geometry on legacy row
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-02]: expire_stale_dispatching pg_cron schedule wrapped in exception-swallowing DO block — migration is safe on free-tier plans without pg_cron
 
 ### Roadmap Evolution
 
@@ -141,6 +145,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T12:21:14.449Z
-Stopped at: Completed 05-01: dispatch verification spine migration + pgTAP spatial test
+Last session: 2026-06-21T12:28:11.164Z
+Stopped at: Completed 05-02: geo-filtered dispatch RPC + accept_check v3 + timeout sweeper
 Resume file: None

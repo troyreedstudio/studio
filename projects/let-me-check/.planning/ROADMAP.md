@@ -36,11 +36,11 @@ Plans:
 **Goal:** Replace interim manual dispatch with real geofenced dispatch (only Scouts within a tunable ~1.5 km radius see a check; atomic first-accept; one active job per Scout) and add the on-submit GPS verification gate that auto-rejects any clip filmed more than 30 m from the venue BEFORE it can be delivered or charged (re-dispatch instead), plus advisory-only AI signage detection that never blocks delivery. Reference-photo and cooldown are dropped per D-07/D-08.
 **Requirements**: DISP-01, DISP-02, DISP-03, SCOUT-03, VER-01, SAFE-01
 **Depends on:** Phase 4
-**Plans:** 1/6 plans executed
+**Plans:** 2/6 plans executed
 
 Plans:
 - [x] 05-01-PLAN.md — SQL spine (0012): scout_locations, market_config (tunable dispatch radius + film-fence), no_film_zones, checks.coord, clip advisory cols, distance_m, re-dispatch edges + reset RPC, RLS + pgTAP (lng/lat order, 30 m boundary)
-- [ ] 05-02-PLAN.md — Dispatch RPCs (0012b): geo-filtered list_open_checks_for_scout + accept_check v3 (geo-eligibility + one-active-job) + pgTAP
+- [x] 05-02-PLAN.md — Dispatch RPCs (0012b): geo-filtered list_open_checks_for_scout + accept_check v3 (geo-eligibility + one-active-job) + pgTAP
 - [ ] 05-03-PLAN.md — GPS auto-reject: verify-clip Edge Function + mux-webhook gate BEFORE delivered (off-fence -> re-dispatch, no charge) + Deno tests
 - [ ] 05-04-PLAN.md — Advisory signage: signage-check (Google Vision REST, advisory-only, never gates) + fire-and-forget mux-webhook hook + Deno tests
 - [ ] 05-05-PLAN.md — Client wiring: scout-location + dispatch helpers, dashboard foreground watch + geo-filtered list, createCheck coord, filmed GPS through mux-upload-url
