@@ -85,24 +85,6 @@ module.exports = {
     // expo prebuild writes it into ios/Podfile.properties.json and pod install
     // picks up install_modules_dependencies(s) (TurboModule deps) instead of
     // the Old Arch React-Core branch.
-    //
-    // Phase 6 Category B — on-device blur native stack:
-    // Three new native packages were added (06-05-PLAN.md Task 1):
-    //   - react-native-worklets-core@1.6.3  (frame processor worklet runtime)
-    //   - react-native-vision-camera-face-detector@1.10.2  (MLKit face detector; v1.x for v4.7.x compat — v2.x requires vision-camera v5+)
-    //   - @shopify/react-native-skia@2.6.6  (Skia Canvas blur overlay; expo-suggested was 2.2.12 but 2.6.6 pinned per RESEARCH)
-    //   - NOTE: react-native-vision-camera-skia has NO v4-compatible version (all versions are v5.x).
-    //     The blur overlay falls back to a plain Skia <Canvas> positioned over the viewfinder.
-    //   - NOTE: babel.config.js not yet created. The worklets-core babel plugin
-    //     ("react-native-worklets-core/plugin") must be added to babel.config.js
-    //     before BLUR_NATIVE_ENABLED is flipped true — otherwise 'worklet' directives
-    //     in _filming-blur-overlay.tsx will not be compiled for the runtime.
-    // New-Arch compatibility is UNVERIFIED for this exact combo on Expo 54 / RN 0.83.2
-    // (06-RESEARCH A1-A3). Prior New-Arch bites: createUploadTask + google-signin.
-    // BLUR_NATIVE_ENABLED defaults false. Do NOT enable until:
-    //   (1) The EAS dev build boots cleanly (Category B — orchestrator runs overnight).
-    //   (2) Troy confirms faces are blurred in the filming viewfinder (Category C).
-    //   (3) blur_enabled = true is set in market_config (server gate, Plan 04).
     extra: {
       router: {},
       eas: {
