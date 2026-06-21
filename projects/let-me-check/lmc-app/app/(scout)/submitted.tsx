@@ -86,28 +86,28 @@ export default function SubmittedScreen() {
               </View>
             </View>
 
-            <Text style={styles.title}>Clip submitted</Text>
+            <Text style={styles.title}>Clip sent</Text>
             <Text style={styles.subtitle}>
-              Your 15-second check for {venue} is now in the verification pipeline.
+              Your 15-second clip of {venue} is on its way to the Seeker.
             </Text>
 
             {/* Status timeline */}
-            <Text style={styles.sectionLabel}>STATUS</Text>
+            <Text style={styles.sectionLabel}>PROGRESS</Text>
             <View style={styles.timeline}>
               <TimelineRow
-                label="Uploaded to LMC"
-                detail="Encrypted clip received"
+                label="Clip received"
+                detail="We've got your footage"
                 state="done"
                 isFirst
               />
               <TimelineRow
-                label="Uploaded — processing"
-                detail="Clip uploaded · Mux is preparing your video"
+                label="Getting it ready"
+                detail="Preparing your clip to send — takes a moment"
                 state={stage === 'processing' ? 'active' : 'done'}
               />
               <TimelineRow
-                label="Delivered to Seeker"
-                detail="Seeker can watch once processing finishes"
+                label="Sent to the Seeker"
+                detail="They can watch it as soon as it's ready"
                 state={
                   stage === 'processing'
                     ? 'pending'
@@ -117,8 +117,8 @@ export default function SubmittedScreen() {
                 }
               />
               <TimelineRow
-                label="Payment cleared"
-                detail={`$${payout} will land in your account on next payout cycle`}
+                label="You get paid"
+                detail={`$${payout} clears once the Seeker accepts the clip`}
                 state={stage === 'accepted' ? 'done' : 'pending'}
                 isLast
               />
