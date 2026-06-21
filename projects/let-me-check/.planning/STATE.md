@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 05-04: signage-check advisory Edge Function + mux-webhook step 9 fire-and-forget"
-last_updated: "2026-06-21T12:41:20.080Z"
+stopped_at: "Completed 05-05: client wiring — scout-location foreground watch, geo-filtered dispatch, filmed GPS seam, SAFE-01"
+last_updated: "2026-06-21T12:52:32.962Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 18
-  completed_plans: 15
-  percent: 83
+  completed_plans: 16
+  percent: 89
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 5 (Verification moat + dispatch) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -71,6 +71,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P02 | 4m | 3 tasks | 2 files |
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P03 | 219 | 3 tasks | 4 files |
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P04 | 246 | 2 tasks | 4 files |
+| Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P05 | 7m | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,9 @@ Recent decisions affecting current work:
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-03]: mockSvc verifyClipPassed defaults to undefined (gate no-op) so all 5 pre-existing mux-webhook tests stay green
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-04]: signage-check is advisory-only by construction — transition_check structurally absent (grep gate); degrades to signage_confirmed=null on missing key/error (D-06)
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-04]: Google Vision called via REST fetch (NOT npm:@google-cloud/vision which times out in Deno); Mux thumbnail fetched server-side as base64 via RS256 JWT to avoid signed-URL 401 from Vision (Pitfall 2/7)
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-05]: as-any casts on scout_locations/list_open_checks_for_scout/is_in_no_film_zone — Phase-5 tables/RPCs not in database.types.ts; regen is Wave-4 live step after db push
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-05]: setScoutOffline upserts is_online=false WITHOUT coord — preserves last known coord in DB for rapid re-online
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-05]: SAFE-01 client-side guard in createCheck via is_in_no_film_zone RPC; authoritative enforcement is server-side PostGIS polygon; follow-up can move fully server-side
 
 ### Roadmap Evolution
 
@@ -152,6 +156,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T12:41:20.077Z
-Stopped at: Completed 05-04: signage-check advisory Edge Function + mux-webhook step 9 fire-and-forget
+Last session: 2026-06-21T12:52:24.008Z
+Stopped at: Completed 05-05: client wiring — scout-location foreground watch, geo-filtered dispatch, filmed GPS seam, SAFE-01
 Resume file: None
