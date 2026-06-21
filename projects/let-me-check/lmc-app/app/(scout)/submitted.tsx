@@ -12,6 +12,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useScoutEarnings } from '../state/scout-earnings';
+import { getCheck } from '../lib/checks';
+import { subscribeToCheck } from '../lib/realtime';
 
 // Stage reflects the REAL server-owned state of the clip after upload.
 //
@@ -30,7 +32,7 @@ type Stage = 'processing' | 'delivered' | 'accepted';
 
 export default function SubmittedScreen() {
   const router = useRouter();
-  const { venue = 'Komodo', payout = '10' } = useLocalSearchParams<{
+  const { checkId, venue = 'Komodo', payout = '10' } = useLocalSearchParams<{
     checkId?: string;
     venue?: string;
     payout?: string;
@@ -50,6 +52,24 @@ export default function SubmittedScreen() {
     // Fade in the screen — no fake stage timer.
     Animated.timing(fade, { toValue: 1, duration: 500, useNativeDriver: true }).start();
   }, [fade]);
+
+  // Advance the stage from REAL server state (not a fake timer). Initial fetch
+  // then subscribe to the check row via Realtime: delivered -> 'delivered',
+  // rated -> 'accepted'. Webhook owns those transitions; we just reflect them.
+  useEffect(() => {
+    if (!checkId) return;
+    const apply = (status?: string) => {
+      if (status === 'delivered') setStage('delivered');
+      else if (status === 'rated') setStage('accepted');
+    };
+    getCheck(checkId).then((c) => apply(c?.status)).catch(() => {});
+    const unsub = subscribeToCheck(
+      checkId,
+      (c) => apply(c?.status),
+      () => getCheck(checkId).then((c) => apply(c?.status)).catch(() => {}),
+    );
+    return unsub;
+  }, [checkId]);
 
   // When the check reads as delivered/accepted, slide up the confirmation toast.
   // TODO(phase-4): credit the Scout payout on capture/delivery here (real money,
