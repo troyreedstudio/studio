@@ -26,7 +26,13 @@ import { verifyMuxSignature } from "../_shared/mux.ts";
 //   - default: undefined (passed:true via null data fallback -> gate is a no-op for existing tests)
 //   - true: verify-clip returns { data: { passed: true } } -> falls through to deliver
 //   - false: verify-clip returns { data: { passed: false } } -> gps_rejected, no deliver
-function mockSvc(opts: { clipStatus?: string | null; verifyClipPassed?: boolean } = {}) {
+// Phase 6 (06-03): added `blurAction` option so the blur gate is configurable.
+//   - default: undefined -> face-blur-check returns { data: null } (gate pass-through, BLUR-05 fail-open)
+//   - 'pass' -> face-blur-check returns { data: { action: 'pass' } } -> fall through to deliver
+//   - 'hold' -> face-blur-check returns { data: { action: 'hold' } } -> blur_held (BLUR-04)
+// Phase 6 (06-03): added `blurCheckThrows` option to test error fail-open (BLUR-05).
+//   - true -> face-blur-check invoke rejects -> treated as unverifiable (fail-open, deliver proceeds)
+function mockSvc(opts: { clipStatus?: string | null; verifyClipPassed?: boolean; blurAction?: 'pass' | 'hold'; blurCheckThrows?: boolean } = {}) {
   const calls = {
     updates: [] as Array<Record<string, unknown>>,
     rpcs: [] as Array<{ fn: string; args: unknown }>,
@@ -79,6 +85,21 @@ function mockSvc(opts: { clipStatus?: string | null; verifyClipPassed?: boolean 
           // true      -> { data: { passed: true } }
           // false     -> { data: { passed: false } } (triggers re-dispatch path)
           const data = passed === undefined ? null : { passed };
+          return Promise.resolve({ data, error: null });
+        }
+        // Phase 6 blur gate: if fn is 'face-blur-check', return the configured action.
+        // When blurAction is undefined (existing tests + verifyClipPassed tests), return
+        // null data so blur?.data?.action === 'hold' is falsy -> gate passes through.
+        // blurCheckThrows simulates an invoke error for the BLUR-05 fail-open test.
+        if (fn === "face-blur-check") {
+          if (opts.blurCheckThrows) {
+            return Promise.reject(new Error("face-blur-check network error"));
+          }
+          const action = opts.blurAction;
+          // undefined -> { data: null } (gate is a no-op; existing tests unaffected)
+          // 'pass'    -> { data: { action: 'pass' } }
+          // 'hold'    -> { data: { action: 'hold' } } (triggers blur_review path, BLUR-04)
+          const data = action === undefined ? null : { action };
           return Promise.resolve({ data, error: null });
         }
         return Promise.resolve({ data: null, error: null });
@@ -301,4 +322,89 @@ Deno.test("capture invoke failure does NOT prevent 200 response (fault-tolerant 
     // deno-lint-ignore no-explicit-any
     .map((r) => (r.args as any).p_to);
   assertEquals(tos, ["uploaded", "processing", "delivered"]);
+});
+
+// ─── Phase 6 blur gate tests (06-03) ─────────────────────────────────────────
+
+// BLUR-04: when face-blur-check returns action='hold', the check transitions to
+// blur_review and is NOT delivered and stripe-capture is NOT invoked.
+// The privacy invariant: no clip with detected faces is delivered when blur_enabled.
+// D-03/D-07: blur gate fires BEFORE uploaded/processing/delivered (step 6c).
+Deno.test("BLUR-04: blur hold -> blur_review transition; NO delivered; stripe-capture NOT invoked", async () => {
+  const { svc, calls } = mockSvc({ clipStatus: "pending", blurAction: "hold" });
+  const res = await handleMuxWebhook(req(READY_EVENT, "valid"), {
+    verify: goodVerify,
+    svc,
+  });
+  // Response body must be 'blur_held' — not 'ok'
+  assertEquals(res.status, 200);
+  assertEquals(await res.text(), "blur_held", "response body is blur_held on face hold");
+  // transition_check(blur_review) must have been called exactly once
+  const blurReviewRpc = calls.rpcs.find(
+    // deno-lint-ignore no-explicit-any
+    (r) => r.fn === "transition_check" && (r.args as any).p_to === "blur_review",
+  );
+  assert(blurReviewRpc !== undefined, "transition_check(blur_review) was called");
+  // deno-lint-ignore no-explicit-any
+  assertEquals((blurReviewRpc!.args as any).p_check_id, "check_abc", "correct checkId to blur_review");
+  // NO delivered transition must have occurred (D-03: no unblurred clip delivered)
+  const deliveredTransition = calls.rpcs.find(
+    // deno-lint-ignore no-explicit-any
+    (r) => r.fn === "transition_check" && (r.args as any).p_to === "delivered",
+  );
+  assert(deliveredTransition === undefined, "NO delivered transition on blur hold");
+  // stripe-capture must NEVER have been invoked (Seeker not charged for held clip)
+  const captureInvoke = calls.invokes.find((i) => i.fn === "stripe-capture");
+  assert(captureInvoke === undefined, "stripe-capture NEVER invoked on blur hold (Seeker not charged)");
+});
+
+// BLUR-05: when face-blur-check THROWS (network error, cold-start, etc.),
+// delivery proceeds as normal (fail-open). Consistent with verify-clip/signage
+// "can't reject what we can't verify" policy. blur_enabled=false at launch
+// makes face-blur-check return 'pass' so this is a structural safety net.
+Deno.test("BLUR-05: face-blur-check throws -> fail-open, delivery proceeds + stripe-capture invoked", async () => {
+  const { svc, calls } = mockSvc({ clipStatus: "pending", blurCheckThrows: true });
+  const res = await handleMuxWebhook(req(READY_EVENT, "valid"), {
+    verify: goodVerify,
+    svc,
+  });
+  assertEquals(res.status, 200);
+  assertEquals(await res.text(), "ok", "response body is ok (fail-open) when blur-check throws");
+  // Full delivered transition must still have occurred
+  const tos = calls.rpcs
+    .filter((r) => r.fn === "transition_check")
+    // deno-lint-ignore no-explicit-any
+    .map((r) => (r.args as any).p_to);
+  assertEquals(tos, ["uploaded", "processing", "delivered"], "full transition order on blur-check error (fail-open)");
+  // stripe-capture must still fire
+  const captureInvoke = calls.invokes.find((i) => i.fn === "stripe-capture");
+  assert(captureInvoke !== undefined, "stripe-capture invoked on blur-check error (fail-open)");
+  // NO blur_review transition must have occurred
+  const blurReviewRpc = calls.rpcs.find(
+    // deno-lint-ignore no-explicit-any
+    (r) => r.fn === "transition_check" && (r.args as any).p_to === "blur_review",
+  );
+  assert(blurReviewRpc === undefined, "NO blur_review on blur-check error (fail-open, BLUR-05)");
+});
+
+// Phase 6: fraud-eval is invoked fire-and-forget AFTER delivered on the pass path.
+// A fraud-eval failure must NOT prevent a 200/delivered (D-04 flag-only, advisory only).
+Deno.test("fraud-eval is invoked after delivered; its failure does NOT prevent 200/delivered (D-04 fire-and-forget)", async () => {
+  const { svc, calls } = mockSvc({ clipStatus: "pending" });
+  const res = await handleMuxWebhook(req(READY_EVENT, "valid"), {
+    verify: goodVerify,
+    svc,
+  });
+  assertEquals(res.status, 200);
+  // fraud-eval must have been invoked (advisory, fire-and-forget)
+  const fraudInvoke = calls.invokes.find((i) => i.fn === "fraud-eval");
+  assert(fraudInvoke !== undefined, "fraud-eval was invoked on the delivered path");
+  // deno-lint-ignore no-explicit-any
+  assertEquals((fraudInvoke!.opts as any).body.checkId, "check_abc", "correct checkId to fraud-eval");
+  // The delivered transition must still be present (fraud-eval never blocks)
+  const deliveredRpc = calls.rpcs.find(
+    // deno-lint-ignore no-explicit-any
+    (r) => r.fn === "transition_check" && (r.args as any).p_to === "delivered",
+  );
+  assert(deliveredRpc !== undefined, "delivered transition present despite fraud-eval (advisory only)");
 });

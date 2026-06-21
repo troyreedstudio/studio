@@ -142,6 +142,37 @@ export async function handleMuxWebhook(
   }
   // (verify-clip pass path, unverifiable, or invoke-error pass-through -> deliver.)
 
+  // 6c. BLUR GATE (Phase 6, D-03/D-07, BLUR-04/BLUR-05). Runs AFTER the GPS gate
+  //     and BEFORE the uploaded/processing/delivered chain (step 7). The check is
+  //     STILL in `filming` at this point — step 7 has not run yet — so the legal
+  //     edge is filming -> blur_review (defined in migration 0014, Plan 06-01).
+  //
+  //     When blur_enabled=false (the launch default, D-07), face-blur-check returns
+  //     action='pass' immediately (zero Vision calls, zero cost). This gate is a
+  //     structural no-op at launch: it exists so that activating blur per-market
+  //     (setting blur_enabled=true in market_config) immediately takes effect with
+  //     no further code changes.
+  //
+  //     Fail-open (BLUR-05): any invoke error is caught and treated as 'pass'.
+  //     Consistent with verify-clip/signage "can't reject what we can't verify"
+  //     policy. Only a CONFIRMED face detection (action==='hold') holds the clip.
+  let blurResult: { data?: { action?: string } | null } = {};
+  try {
+    blurResult = await deps.svc.functions.invoke('face-blur-check', { body: { checkId } });
+  } catch (_blurErr) {
+    // face-blur-check invoke failed (network, cold-start, etc.) — fail-open (BLUR-05).
+    // The clip is NOT held: we fall through to deliver rather than blocking silently.
+    blurResult = { data: null };
+  }
+  if (blurResult?.data?.action === 'hold') {
+    // Legal edge: filming -> blur_review (migration 0014). transition_check enforces
+    // actor-authz (0012). The Seeker is NOT charged, the Scout is NOT paid for a
+    // held clip (stripe-capture never fires on this path — privacy invariant D-03/D-07).
+    await deps.svc.rpc('transition_check', { p_check_id: checkId, p_to: 'blur_review' });
+    return new Response('blur_held', { status: 200 });
+  }
+  // blur_enabled=false -> action='pass', or error fall-through -> deliver normally.
+
   // 7. Drive the check forward as the SERVICE ROLE (auth.uid() NULL). 0010's
   //    service-actor branch authorizes uploaded/processing/delivered.
   // deno-fmt-ignore-start — one call per line so rpc('transition_check' is greppable.
@@ -160,6 +191,12 @@ export async function handleMuxWebhook(
     // Capture failure is logged inside stripe-capture (D-09 path). Do not surface
     // the error here — the Seeker already has their clip.
   }
+
+  // 8b. Fraud-eval advisory (Phase 6, D-04 flag-only). Fire-and-forget AFTER delivered.
+  //     A fraud flag NEVER blocks delivery at launch. fraud-eval writes fraud_flag +
+  //     fraud_score to the clips row; a human reviewer acts on flagged clips.
+  //     Swallows all errors — a fraud-eval failure must never undo a completed delivery.
+  try { await deps.svc.functions.invoke('fraud-eval', { body: { checkId } }); } catch (_e) { /* advisory only — D-04 */ }
 
   // 9. Signage advisory (D-06) — fire-and-forget AFTER delivered. NEVER gates delivery.
   //    Runs only on the GPS-passed path (gps_rejected returned earlier). Only writes
