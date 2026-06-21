@@ -15,6 +15,16 @@ module.exports = {
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'Com.BlackMalibuinc.letmecheck',
+      // Explicitly declare New Architecture ON so expo prebuild writes
+      // "newArchEnabled":"true" into ios/Podfile.properties.json, which makes
+      // the RNGoogleSignin podspec take the `install_modules_dependencies(s)`
+      // TurboModule branch instead of the Old Arch React-Core branch.
+      // Without this, a clean prebuild after the stripe 0.67.0 bump (which
+      // activated stripe-react-native/NewArch) would leave RNGoogleSignin on
+      // Old Arch native bridges — causing GoogleSignin.configure() / signIn()
+      // to silently no-op on device. stripe-react-native 0.67.0 fully supports
+      // New Architecture, so enabling it here does not break Stripe.
+      newArchEnabled: true,
       infoPlist: {
         NSLocationWhenInUseUsageDescription:
           'Let Me Check uses your location to find nearby Scouts and verified venues.',
@@ -68,8 +78,13 @@ module.exports = {
       './plugins/withModularHeaders',
       ['@stripe/stripe-react-native', { merchantIdentifier: 'merchant.com.blackmalibuinc.letmecheck', enableGooglePay: true }],
     ],
-    // New Architecture is ON by default in RN 0.81 (no newArchEnabled key needed).
+    // New Architecture is explicitly ON (ios.newArchEnabled:true above).
     // stripe-react-native 0.67.0 fully supports New Architecture.
+    // @react-native-google-signin/google-signin 16.x supports New Architecture
+    // via its RCT_NEW_ARCH_ENABLED ifdef — requires newArchEnabled:true here so
+    // expo prebuild writes it into ios/Podfile.properties.json and pod install
+    // picks up install_modules_dependencies(s) (TurboModule deps) instead of
+    // the Old Arch React-Core branch.
     extra: {
       router: {},
       eas: {
