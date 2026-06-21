@@ -386,59 +386,6 @@ export default function FilmingScreen() {
             </View>
           )}
 
-          {/* Trouble Here */}
-          {troubleReason ? (
-            <View style={[styles.troubleBase, styles.troubleReported]}>
-              <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.troubleTitle}>REPORTED · SEEKER REFUNDED</Text>
-                <Text style={styles.troubleSub}>
-                  {troubleReason} · You’ll still be paid for travel.
-                </Text>
-              </View>
-            </View>
-          ) : !troubleOpen ? (
-            <TouchableOpacity
-              style={[styles.troubleBase, styles.troubleClosed]}
-              activeOpacity={0.85}
-              onPress={() => setTroubleOpen(true)}
-            >
-              <Ionicons name="warning" size={16} color="#FFCB47" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.troubleTitle}>TROUBLE HERE — REPORT VENUE</Text>
-                <Text style={styles.troubleSub}>
-                  Tap if you can’t safely complete this check. Seeker auto-refunded.
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ) : (
-            <View style={[styles.troubleBase, styles.troubleExpanded]}>
-              <View style={styles.troubleHeader}>
-                <Text style={styles.troubleHeaderLabel}>WHAT’S THE ISSUE?</Text>
-                <TouchableOpacity
-                  onPress={() => setTroubleOpen(false)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="close" size={16} color="rgba(255,255,255,0.6)" />
-                </TouchableOpacity>
-              </View>
-              {TROUBLE_REASONS.map((r) => (
-                <TouchableOpacity
-                  key={r}
-                  style={styles.troubleReasonRow}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setTroubleReason(r);
-                    setTroubleOpen(false);
-                  }}
-                >
-                  <Text style={styles.troubleReasonText}>{r}</Text>
-                  <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
           {/* Delivery countdown */}
           <View style={styles.countdownCard}>
             <Text style={styles.countdownLabel}>DELIVERY DEADLINE</Text>
@@ -610,6 +557,60 @@ export default function FilmingScreen() {
           <Text style={styles.earnNote}>
             You’ll earn ${payout} on delivery once the video is accepted
           </Text>
+
+          {/* Trouble Here — secondary fallback, moved below the primary record
+              flow so it never competes with the proximity / record instruction. */}
+          {troubleReason ? (
+            <View style={[styles.troubleBase, styles.troubleReported]}>
+              <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.troubleTitle}>REPORTED · SEEKER REFUNDED</Text>
+                <Text style={styles.troubleSub}>
+                  {troubleReason} · You’ll still be paid for travel.
+                </Text>
+              </View>
+            </View>
+          ) : !troubleOpen ? (
+            <TouchableOpacity
+              style={[styles.troubleBase, styles.troubleClosed]}
+              activeOpacity={0.85}
+              onPress={() => setTroubleOpen(true)}
+            >
+              <Ionicons name="warning" size={16} color="#FFCB47" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.troubleTitle}>TROUBLE HERE — REPORT VENUE</Text>
+                <Text style={styles.troubleSub}>
+                  Tap if you can’t safely complete this check. Seeker auto-refunded.
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={[styles.troubleBase, styles.troubleExpanded]}>
+              <View style={styles.troubleHeader}>
+                <Text style={styles.troubleHeaderLabel}>WHAT’S THE ISSUE?</Text>
+                <TouchableOpacity
+                  onPress={() => setTroubleOpen(false)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="close" size={16} color="rgba(255,255,255,0.6)" />
+                </TouchableOpacity>
+              </View>
+              {TROUBLE_REASONS.map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={styles.troubleReasonRow}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setTroubleReason(r);
+                    setTroubleOpen(false);
+                  }}
+                >
+                  <Text style={styles.troubleReasonText}>{r}</Text>
+                  <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
 
