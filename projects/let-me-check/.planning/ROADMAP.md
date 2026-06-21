@@ -56,6 +56,6 @@ Plans:
 Plans:
 - [x] 06-01-PLAN.md — SQL spine (0014): clips blur_status/fraud_signals/fraud_flag/fraud_score + market_config blur_enabled(FALSE)/fraud_strictness('flag') + blur_review enum/edges + pgTAP + RED Deno/Vitest scaffolds [Category A]
 - [x] 06-02-PLAN.md — Edge brains: face-blur-check (Vision FACE_DETECTION detect+hold, D-01/02/03) + fraud-eval (teleport heuristic + flag, D-04/05) + client fraud-signals.ts (FRAUD-03) [Category A]
-- [ ] 06-03-PLAN.md — Wire the gate: mux-webhook blur gate (hold->blur_review, BLUR-04/05) + fraud-eval fire-and-forget + fraud_signals persisted filming.tsx->clips.ts->mux-upload-url [Category A]
+- [x] 06-03-PLAN.md — Wire the gate: mux-webhook blur gate (hold->blur_review, BLUR-04/05) + fraud-eval fire-and-forget + fraud_signals persisted filming.tsx->clips.ts->mux-upload-url [Category A]
 - [ ] 06-04-PLAN.md — [BLOCKING] live deploy: db push 0014 + live pgTAP + deploy face-blur-check/fraud-eval + redeploy mux-webhook/mux-upload-url + confirm blur_enabled=false + regen types [Category A]
 - [ ] 06-05-PLAN.md — [Category B] on-device blur scaffold: install worklets-core+face-detector+Skia behind BLUR_NATIVE_ENABLED(false) + SkiaCamera blur overlay + [DEVICE BUILD] compiles+boots gate (visual blur = Troy AM)

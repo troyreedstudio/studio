@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "06-02 complete: face-blur-check + fraud-eval + fraud-signals committed (16 tests green)"
-last_updated: "2026-06-21T17:43:58.137Z"
+stopped_at: Completed 06-03-PLAN.md — blur gate + fraud-eval wired into mux-webhook; fraud_signals persisted end-to-end
+last_updated: "2026-06-21T17:53:01.095Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 23
-  completed_plans: 19
-  percent: 83
+  completed_plans: 20
+  percent: 87
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 6 (Privacy + anti-fraud hardening) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -74,6 +74,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P05 | 7m | 3 tasks | 9 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P01 | 5m | 3 tasks | 5 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P02 | 4m | 3 tasks | 3 files |
+| Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P03 | 6m | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,8 @@ Recent decisions affecting current work:
 - [Phase 06]: blur_check_failed -> action=pass (fail-open): only confirmed faces trigger hold, not infra errors (D-03)
 - [Phase 06]: TELEPORT_MPS_THRESHOLD=55.5 m/s (200 km/h); fraud score weights v1: teleport=60, accuracy_is_exact=25, simulated=50 capped at 100
 - [Phase 06]: fraud-eval auto-reject enforcement explicitly deferred (D-04 flag-only launch); strictness=hold/reject only flags, never transitions check state
+- [Phase 06]: blur gate (step 6c) fires filming->blur_review BEFORE uploaded/processing/delivered — face-blur-check fail-open on error (BLUR-05)
+- [Phase 06]: fraud-eval is fire-and-forget advisory AFTER stripe-capture (step 8b) — never blocks delivery at launch (D-04 flag-only)
 
 ### Roadmap Evolution
 
@@ -167,6 +170,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T17:43:58.134Z
-Stopped at: 06-02 complete: face-blur-check + fraud-eval + fraud-signals committed (16 tests green)
+Last session: 2026-06-21T17:53:01.093Z
+Stopped at: Completed 06-03-PLAN.md — blur gate + fraud-eval wired into mux-webhook; fraud_signals persisted end-to-end
 Resume file: None
