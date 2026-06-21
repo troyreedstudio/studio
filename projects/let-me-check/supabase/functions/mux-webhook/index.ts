@@ -132,6 +132,12 @@ export async function handleMuxWebhook(
     // the error here — the Seeker already has their clip.
   }
 
+  // 9. Signage advisory (D-06) — fire-and-forget AFTER delivered. NEVER gates delivery.
+  //    Runs only on the GPS-passed path (gps_rejected returned earlier). Only writes
+  //    clips.signage_confirmed. No transition_check, no reset_check_for_redispatch.
+  //    Swallows all errors — a signage failure must never affect a completed delivery.
+  try { await deps.svc.functions.invoke('signage-check', { body: { checkId } }); } catch (_e) { /* advisory only */ }
+
   return new Response("ok", { status: 200 });
 }
 
