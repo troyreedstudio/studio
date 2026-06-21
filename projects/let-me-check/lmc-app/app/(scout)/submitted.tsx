@@ -13,13 +13,20 @@ import { useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useScoutEarnings } from '../state/scout-earnings';
 
-type Stage = 'verifying' | 'delivered' | 'accepted';
-
-const STAGE_LABELS: Record<Stage, string> = {
-  verifying: 'Verifying clip',
-  delivered: 'Delivered to Seeker',
-  accepted: 'Seeker accepted · payment cleared',
-};
+// Stage reflects the REAL server-owned state of the clip after upload.
+//
+// 'processing' — upload PUT returned 2xx (the only state we can be in on
+//                arrival here; filming.tsx only routes here on ok===true).
+//                Mux is transcoding. The Seeker cannot watch yet.
+// 'delivered'  — Mux asset.ready webhook fired → check transitioned to
+//                delivered. Wired via Supabase Realtime in a future phase.
+// 'accepted'   — Seeker watched + rated. Also webhook/server-owned.
+//
+// REMOVED: the fake 2.2s/4.4s timers that auto-advanced through all stages
+// regardless of reality. They masked upload failures 3× and falsely claimed
+// "payment cleared" seconds after submission. Stage advances only happen when
+// real server state arrives (Realtime — future phase).
+type Stage = 'processing' | 'delivered' | 'accepted';
 
 export default function SubmittedScreen() {
   const router = useRouter();
@@ -29,7 +36,10 @@ export default function SubmittedScreen() {
     payout?: string;
   }>();
 
-  const [stage, setStage] = useState<Stage>('verifying');
+  // Start at 'processing' — the upload PUT succeeded (filming.tsx only routes
+  // here after clipUpload.submit() returns true). Future: subscribe to
+  // Supabase Realtime on checks row and advance stage when status flips.
+  const [stage, setStage] = useState<Stage>('processing');
   const fade = useRef(new Animated.Value(0)).current;
   const toastAnim = useRef(new Animated.Value(0)).current;
   // Read-only: the existing running balance is shown in the cleared toast.
@@ -37,18 +47,15 @@ export default function SubmittedScreen() {
   const earnings = useScoutEarnings();
 
   useEffect(() => {
+    // Fade in the screen — no fake stage timer.
     Animated.timing(fade, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-    const t1 = setTimeout(() => setStage('delivered'), 2200);
-    const t2 = setTimeout(() => setStage('accepted'), 4400);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
   }, [fade]);
 
   // When the check reads as delivered/accepted, slide up the confirmation toast.
   // TODO(phase-4): credit the Scout payout on capture/delivery here (real money,
   // server-owned). This phase reflects delivery only — no earnings mutation.
+  // TODO(realtime): subscribe to checks row, advance stage to 'delivered' /
+  // 'accepted' when Supabase Realtime pushes the real status change.
   useEffect(() => {
     if (stage !== 'accepted') return;
     Animated.sequence([
@@ -95,14 +102,14 @@ export default function SubmittedScreen() {
               />
               <TimelineRow
                 label="Uploaded — processing"
-                detail="Clip uploaded · preparing your video"
-                state={stage === 'verifying' ? 'active' : 'done'}
+                detail="Clip uploaded · Mux is preparing your video"
+                state={stage === 'processing' ? 'active' : 'done'}
               />
               <TimelineRow
                 label="Delivered to Seeker"
                 detail="Seeker can watch once processing finishes"
                 state={
-                  stage === 'verifying'
+                  stage === 'processing'
                     ? 'pending'
                     : stage === 'delivered'
                     ? 'active'

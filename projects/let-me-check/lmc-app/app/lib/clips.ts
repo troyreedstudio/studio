@@ -16,10 +16,35 @@
 // / photo-library API; the only clip source is the live recorder's path handed
 // in as `localPath`.
 
-// expo-file-system 19 (SDK 54) moved the resumable upload task API to the
-// `/legacy` entry point; createUploadTask + FileSystemUploadType live there.
+// expo-file-system 19 (SDK 54) upload architecture under New Arch (RN 0.83):
+//
+// The NEW default export (expo-file-system, no /legacy) does NOT provide an
+// upload API — File.createUploadTask() does not exist in v19.0.23.
+//
+// The LEGACY export (expo-file-system/legacy) has two upload paths:
+//   A) createUploadTask + task.uploadAsync() — uses ExponentFileSystem
+//      .uploadTaskStartAsync + addListener (EventEmitter). The EventEmitter
+//      subscription fires progress events via the old NativeEventEmitter bridge
+//      which does NOT reliably deliver events under New Arch bridgeless mode.
+//      This is why the task silently no-ops: the task starts (mux_upload_id is
+//      written) but the progress callback / completion never fires, leaving the
+//      upload in limbo with no bytes reaching Mux.
+//
+//   B) uploadAsync() — a single direct async call to
+//      ExponentFileSystem.uploadAsync (no EventEmitter, no task UUID, no
+//      subscription). Because it is a single JSI promise-based native call it
+//      works correctly under New Arch. No progress events, but the PUT completes
+//      and resolves/rejects properly.
+//
+// Fix: replace createUploadTask + task.uploadAsync() with the simpler
+// legacy uploadAsync(). Progress is approximated with a timer-based ramp
+// so the UI stays responsive during the upload. The retry wrapper and the
+// contract (non-2xx throws, never marks delivered) are unchanged.
 import { useCallback, useRef, useState } from 'react';
-import * as FileSystem from 'expo-file-system/legacy';
+import {
+  uploadAsync,
+  FileSystemUploadType,
+} from 'expo-file-system/legacy';
 import { supabase } from './supabase';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
 
@@ -108,30 +133,55 @@ export async function requestUploadUrl(
 
 /**
  * VID-03: PUT the locally recorded clip straight to the Mux upload URL using
- * expo-file-system's resumable upload task (Mux's official RN method). Throws on
- * any HTTP >= 300. Does NOT transition the check — the webhook owns `delivered`.
+ * the legacy `uploadAsync` helper (NOT the task-based `createUploadTask`).
+ * Throws on any HTTP >= 300. Does NOT transition the check — the webhook owns
+ * `delivered`.
+ *
+ * Why uploadAsync instead of createUploadTask:
+ * Under New Architecture (RN 0.83 bridgeless), `createUploadTask` silently
+ * no-ops because it relies on `ExponentFileSystem.addListener` (NativeEventEmitter)
+ * to deliver progress and completion events — and that event bridge does not
+ * fire under New Arch. The upload task is created and started but its completion
+ * callback never arrives, leaving the PUT in limbo (no bytes reach Mux).
+ *
+ * `uploadAsync` is a single JSI promise-based native call with no EventEmitter
+ * subscription. It correctly resolves/rejects under New Arch. The trade-off is
+ * no real-time progress bytes; we approximate progress with a timer ramp so the
+ * UI stays honest and responsive while the PUT is in flight.
  */
 export async function uploadClip(
   localPath: string,
   uploadUrl: string,
   onProgress?: (fraction: number) => void,
 ): Promise<void> {
-  const task = FileSystem.createUploadTask(
-    uploadUrl,
-    localPath,
-    {
-      httpMethod: 'PUT',
-      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-    },
-    (p) => {
-      const total = p.totalBytesExpectedToSend || 0;
-      if (onProgress && total > 0) onProgress(p.totalBytesSent / total);
-    },
-  );
+  // Normalise path: vision-camera returns a bare absolute path on iOS (e.g.
+  // /private/var/...). uploadAsync expects a file:// URI on both platforms.
+  const uri = localPath.startsWith('file://') ? localPath : `file://${localPath}`;
 
-  const res = await task.uploadAsync();
-  if (!res || res.status >= 300) {
-    throw new Error(`uploadClip: upload failed (status ${res?.status ?? 'unknown'})`);
+  // Timer-based progress ramp: ramps from 0 → 0.9 over ~30s while the single
+  // promise-based PUT is in flight. Cleared on completion so it never overshoots.
+  let progressTimer: ReturnType<typeof setInterval> | null = null;
+  if (onProgress) {
+    let ramp = 0;
+    progressTimer = setInterval(() => {
+      // Asymptotic approach: each tick adds half the remaining gap to 0.9.
+      ramp = ramp + (0.9 - ramp) * 0.08;
+      onProgress(ramp);
+    }, 800);
+  }
+
+  try {
+    const res = await uploadAsync(uploadUrl, uri, {
+      httpMethod: 'PUT',
+      uploadType: FileSystemUploadType.BINARY_CONTENT,
+    });
+    if (!res || res.status >= 300) {
+      throw new Error(`uploadClip: upload failed (status ${res?.status ?? 'unknown'})`);
+    }
+    // Signal completion before clearing the timer.
+    onProgress?.(1);
+  } finally {
+    if (progressTimer !== null) clearInterval(progressTimer);
   }
   // Intentionally returns here. DO NOT mark delivered — the webhook owns it (VID-03).
 }
