@@ -22,6 +22,13 @@
 
 import { supabase } from './supabase';
 
+// `scout_locations` was added in migration 0012 (Phase 5). The generated
+// database.types.ts predates that migration (types regen is a Wave-4 live step).
+// Cast the client to `any` at the table boundary to unblock tsc until types are
+// regenerated after `supabase db push` + `supabase gen types typescript --linked`.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
+
 /** Resolve the current authed user id, or throw if signed out (mirrors checks.ts). */
 async function requireUserId(): Promise<string> {
   const { data, error } = await supabase.auth.getUser();
@@ -54,7 +61,7 @@ export async function upsertScoutLocation(
   if (accuracyM !== undefined) {
     payload.accuracy_m = accuracyM;
   }
-  const { error } = await supabase
+  const { error } = await db
     .from('scout_locations')
     .upsert(payload, { onConflict: 'scout_id' });
   if (error) throw error;
@@ -70,7 +77,7 @@ export async function upsertScoutLocation(
  */
 export async function setScoutOffline(): Promise<void> {
   const uid = await requireUserId();
-  const { error } = await supabase
+  const { error } = await db
     .from('scout_locations')
     .upsert(
       { scout_id: uid, is_online: false, updated_at: new Date().toISOString() },

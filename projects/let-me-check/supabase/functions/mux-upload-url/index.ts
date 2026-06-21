@@ -17,12 +17,24 @@ type Svc = any;
  * Core mint logic, decoupled from Deno.serve so it is unit-testable with an injected
  * mux client + service client (mocked offline). `callerId` is the already-resolved
  * authenticated user id; the entrypoint resolves it from the bearer token.
+ *
+ * Phase 5 (VER-01): accepts optional filmed GPS (filmed_lat, filmed_lng,
+ * filmed_accuracy_m) from the Scout client. When present and finite, these are
+ * persisted on the clips row alongside mux_upload_id + status='pending' so that
+ * verify-clip has real coordinates to work with (T-05-24: validated as finite
+ * numbers before writing; non-finite values are silently dropped).
  */
 export async function handleUploadUrl(
-  input: { checkId: string; callerId: string | null },
+  input: {
+    checkId: string;
+    callerId: string | null;
+    filmed_lat?: number;
+    filmed_lng?: number;
+    filmed_accuracy_m?: number;
+  },
   deps: { mux: Mux; svc: Svc },
 ): Promise<Response> {
-  const { checkId, callerId } = input;
+  const { checkId, callerId, filmed_lat, filmed_lng, filmed_accuracy_m } = input;
   if (!callerId) return new Response("not authenticated", { status: 401 });
   if (!checkId) return new Response("missing checkId", { status: 400 });
 
@@ -50,10 +62,22 @@ export async function handleUploadUrl(
     },
   });
 
+  // Validate filmed GPS values server-side (T-05-24). Only persist finite numbers;
+  // silently drop NaN / Infinity / null so verify-clip treats missing GPS as
+  // "unverifiable" rather than as a spoofed zero-coord (verify-clip pattern).
+  const isFiniteNum = (v: unknown): v is number =>
+    typeof v === "number" && Number.isFinite(v);
+
+  const gpsUpdate: Record<string, unknown> = {};
+  if (isFiniteNum(filmed_lat)) gpsUpdate.filmed_lat = filmed_lat;
+  if (isFiniteNum(filmed_lng)) gpsUpdate.filmed_lng = filmed_lng;
+  if (isFiniteNum(filmed_accuracy_m)) gpsUpdate.filmed_accuracy_m = filmed_accuracy_m;
+
   // Record the upload id on the clip row -> 'pending' so the webhook can find it.
+  // Persist filmed GPS in the same update (single round-trip).
   await deps.svc
     .from("clips")
-    .update({ mux_upload_id: upload.id, status: 'pending' })
+    .update({ mux_upload_id: upload.id, status: "pending", ...gpsUpdate })
     .eq("check_id", checkId);
 
   return Response.json({ uploadUrl: upload.url, uploadId: upload.id });
@@ -65,11 +89,21 @@ Deno.serve(async (req: Request) => {
   const { data: userData } = await authed.auth.getUser();
   const callerId = userData?.user?.id ?? null;
   let checkId = "";
+  let filmed_lat: number | undefined;
+  let filmed_lng: number | undefined;
+  let filmed_accuracy_m: number | undefined;
   try {
-    ({ checkId } = await req.json());
+    const body = await req.json();
+    checkId = body.checkId ?? "";
+    filmed_lat = body.filmed_lat;
+    filmed_lng = body.filmed_lng;
+    filmed_accuracy_m = body.filmed_accuracy_m;
   } catch (_e) {
     return new Response("bad body", { status: 400 });
   }
   const mux = await getMuxClient();
-  return handleUploadUrl({ checkId, callerId }, { mux, svc: serviceClient() });
+  return handleUploadUrl(
+    { checkId, callerId, filmed_lat, filmed_lng, filmed_accuracy_m },
+    { mux, svc: serviceClient() },
+  );
 });

@@ -83,11 +83,23 @@ async function invokeEdgeFunction(
  * VID-03/04: mint a single-use Mux direct-upload URL for this check via the
  * server-owned `mux-upload-url` Edge Function (which holds the Mux secret and
  * sets passthrough=checkId + signed playback policy). Throws on error.
+ *
+ * Phase 5: accepts an optional `gps` param. When present, the filmed GPS
+ * (lat/lng/accuracyM) is sent to the Edge Function which persists it on the
+ * clips row (filmed_lat, filmed_lng, filmed_accuracy_m) so verify-clip has
+ * real data to work with (VER-01). This closes the Phase-3 seam where
+ * capturedGps.current was accepted by submit() but then silently ignored.
  */
 export async function requestUploadUrl(
   checkId: string,
+  gps?: { lat: number; lng: number; accuracyM?: number },
 ): Promise<{ uploadUrl: string; uploadId: string }> {
-  const data = await invokeEdgeFunction('mux-upload-url', { checkId }) as Record<string, unknown>;
+  const data = await invokeEdgeFunction('mux-upload-url', {
+    checkId,
+    filmed_lat: gps?.lat,
+    filmed_lng: gps?.lng,
+    filmed_accuracy_m: gps?.accuracyM,
+  }) as Record<string, unknown>;
   if (!data?.uploadUrl || !data?.uploadId) {
     throw new Error('requestUploadUrl: missing uploadUrl/uploadId in response');
   }
@@ -220,14 +232,17 @@ export function useClipUpload(): UseClipUpload {
   }, []);
 
   const submit = useCallback(
-    async (checkId: string, localPath: string, _gps?: ClipUploadGps): Promise<boolean> => {
+    async (checkId: string, localPath: string, gps?: ClipUploadGps): Promise<boolean> => {
       if (inFlight.current) return false;
       inFlight.current = true;
       setStatus('uploading');
       setProgress(0);
       setError(null);
       try {
-        const { uploadUrl } = await requestUploadUrl(checkId);
+        // Phase 5: forward filmed GPS to mux-upload-url so it persists
+        // filmed_lat/lng/accuracy on the clips row for verify-clip (VER-01).
+        const gpsArg = gps ? { lat: gps.lat, lng: gps.lng } : undefined;
+        const { uploadUrl } = await requestUploadUrl(checkId, gpsArg);
         await uploadWithRetry(localPath, uploadUrl, 4, (f) => setProgress(f));
         // Upload PUT returned success. We STOP here — the webhook drives the
         // check to delivered. The screen shows "processing" until Realtime flips.

@@ -26,7 +26,10 @@ export async function listOpenChecksForScout(
   lat: number,
   lng: number,
 ): Promise<CheckRow[]> {
-  const { data, error } = await supabase.rpc('list_open_checks_for_scout', {
+  // list_open_checks_for_scout is from migration 0012b (Phase 5); not yet in
+  // database.types.ts (regen is a Wave-4 live step). Cast to any to unblock tsc.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc('list_open_checks_for_scout', {
     p_scout_lat: lat,
     p_scout_lng: lng,
   });

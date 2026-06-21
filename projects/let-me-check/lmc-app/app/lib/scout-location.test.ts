@@ -110,10 +110,11 @@ describe('scout-location upsertScoutLocation', () => {
   });
 
   it('throws when not authenticated (getUser returns no user)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabaseMock.auth.getUser.mockResolvedValueOnce({
       data: { user: null },
       error: null,
-    });
+    } as any);
     const { upsertScoutLocation } = await import('./scout-location');
     await expect(upsertScoutLocation(25.775, -80.1918)).rejects.toThrow('Not authenticated');
   });

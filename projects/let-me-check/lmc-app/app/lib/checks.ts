@@ -41,9 +41,52 @@ export type CreateCheckInput = {
  * row (RLS allows insert-as-requested) then makes it discoverable to Scouts by
  * transitioning to `dispatching` (manual dispatch this phase — CHECK-02). Returns
  * the new check id.
+ *
+ * Phase 5 additions:
+ *   - SAFE-01: blocks coords inside a no_film_zone (hospitals, schools, courts,
+ *     police, residences). Client-side guard; the authoritative server enforcement
+ *     is the `is_in_no_film_zone` helper (Plan 01). A follow-up can move this
+ *     check fully server-side into a createCheck RPC if the client guard is
+ *     insufficient. (Noted in 05-05-SUMMARY.md.)
+ *   - coord: populates `checks.coord geography(point,4326)` (lng FIRST — Pitfall 1)
+ *     so dispatch (DISP-01 / list_open_checks_for_scout) and verify-clip (VER-01)
+ *     have a spatial index-assisted geometry to work with. requested_lat/lng
+ *     remain the source of truth; coord is derived from them.
+ *     If the live push rejects the WKT geography insert, the 0012 backfill +
+ *     a follow-up trigger cover it — requested_lat/lng are preserved. (SUMMARY note.)
  */
 export async function createCheck(input: CreateCheckInput): Promise<string> {
   const uid = await requireUserId();
+
+  // SAFE-01: block requests whose coords fall inside a no_film_zone.
+  // This is the client-side guard; the authoritative check is the server-side
+  // PostGIS polygon query in `is_in_no_film_zone` (migration 0012).
+  if (input.lat !== undefined && input.lng !== undefined) {
+    // is_in_no_film_zone is from migration 0012 (Phase 5); not yet in the
+    // generated database.types.ts (regen is a Wave-4 live step). Cast to any.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: blocked } = await (supabase as any).rpc('is_in_no_film_zone', {
+      p_lat: input.lat,
+      p_lng: input.lng,
+    });
+    if (blocked === true) {
+      throw new Error(
+        'This location is a no-film zone and cannot be checked.',
+      );
+    }
+  }
+
+  // Build the insert payload. When lat + lng are present, also write `coord`
+  // as WKT with LONGITUDE first (PostGIS convention, Pitfall 1). This powers
+  // dispatch (DISP-01) + verify-clip (VER-01) with a spatial index.
+  const coordWkt =
+    input.lat !== undefined && input.lng !== undefined
+      ? `POINT(${input.lng} ${input.lat})`
+      : null;
+
+  // `coord` (geography column from 0012) is not yet in database.types.ts —
+  // regen is a Wave-4 live step. Cast insert payload to any to unblock tsc.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await supabase
     .from('checks')
     .insert({
@@ -53,10 +96,13 @@ export async function createCheck(input: CreateCheckInput): Promise<string> {
       location_label: input.locationLabel,
       requested_lat: input.lat ?? null,
       requested_lng: input.lng ?? null,
+      // coord powers dispatch (DISP-01) + verify-clip (VER-01). lng first.
+      ...(coordWkt ? { coord: coordWkt } : {}),
       venue_id: input.venueId ?? null,
       market_id: input.marketId ?? null,
       currency: input.currency ?? 'USD',
-    })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
     .select('id')
     .single();
   if (error) throw error;
