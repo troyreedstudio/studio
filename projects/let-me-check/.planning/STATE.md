@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 05-02: geo-filtered dispatch RPC + accept_check v3 + timeout sweeper"
-last_updated: "2026-06-21T12:28:11.167Z"
+stopped_at: "Completed 05-03: verify-clip GPS fence gate wired into mux-webhook before delivered"
+last_updated: "2026-06-21T12:34:20.047Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 18
-  completed_plans: 13
-  percent: 72
+  completed_plans: 14
+  percent: 78
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 5 (Verification moat + dispatch) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -69,6 +69,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P07 | 6 | 3 tasks | 5 files |
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P01 | 3m | 2 tasks | 2 files |
 | Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P02 | 4m | 3 tasks | 2 files |
+| Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in P03 | 219 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,9 @@ Recent decisions affecting current work:
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-02]: list_open_checks_for_scout SECURITY DEFINER RPC falls back from checks.coord to venues.coord — legacy rows never block dispatch
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-02]: accept_check geo gate skips when checks.coord is null — honest Scout never hard-blocked by missing geometry on legacy row
 - [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-02]: expire_stale_dispatching pg_cron schedule wrapped in exception-swallowing DO block — migration is safe on free-tier plans without pg_cron
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-03]: verify-clip returns { passed, distance_m } but does NOT call reset_check_for_redispatch — mux-webhook orchestrates that so the gate is exactly between step 6 (finalize) and step 7 (delivered)
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-03]: missing/NaN filmed GPS logged as check.gps_unverifiable and passes (honest-Scout-friendly); gps_verified left null, never set to true on missing-GPS path
+- [Phase 05-verification-moat-dispatch-geofenced-dispatch-only-scouts-in]: [Phase 05-03]: mockSvc verifyClipPassed defaults to undefined (gate no-op) so all 5 pre-existing mux-webhook tests stay green
 
 ### Roadmap Evolution
 
@@ -145,6 +149,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T12:28:11.164Z
-Stopped at: Completed 05-02: geo-filtered dispatch RPC + accept_check v3 + timeout sweeper
+Last session: 2026-06-21T12:34:20.044Z
+Stopped at: Completed 05-03: verify-clip GPS fence gate wired into mux-webhook before delivered
 Resume file: None
