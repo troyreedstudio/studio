@@ -172,11 +172,11 @@ Deno.test("valid delivery triggers stripe-capture AFTER delivered transition (D-
     svc,
   });
   assertEquals(res.status, 200);
-  // stripe-capture must have been invoked exactly once
-  assertEquals(calls.invokes.length, 1, "stripe-capture invoked");
-  assertEquals(calls.invokes[0].fn, "stripe-capture");
+  // stripe-capture must have been invoked (invokes may also include verify-clip + signage-check)
+  const captureInvoke = calls.invokes.find((i) => i.fn === "stripe-capture");
+  assert(captureInvoke !== undefined, "stripe-capture invoked");
   // deno-lint-ignore no-explicit-any
-  assertEquals((calls.invokes[0].opts as any).body.checkId, "check_abc");
+  assertEquals((captureInvoke!.opts as any).body.checkId, "check_abc");
   // stripe-capture must fire AFTER the delivered transition: delivered is the last rpc
   const deliveredIdx = calls.rpcs.findLastIndex(
     // deno-lint-ignore no-explicit-any
