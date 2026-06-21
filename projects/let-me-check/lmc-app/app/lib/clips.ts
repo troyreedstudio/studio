@@ -115,16 +115,24 @@ async function invokeEdgeFunction(
  * clips row (filmed_lat, filmed_lng, filmed_accuracy_m) so verify-clip has
  * real data to work with (VER-01). This closes the Phase-3 seam where
  * capturedGps.current was accepted by submit() but then silently ignored.
+ *
+ * Phase 6 (FRAUD-03): accepts an optional `fraudSignals` param. When present,
+ * the fraud signal bag (collected at Record-press via collectFraudSignals) is
+ * forwarded to mux-upload-url which persists it on the clips row as
+ * clips.fraud_signals (jsonb). Best-effort: a missing/null bag is harmless —
+ * fraud-eval degrades to zero-score on missing data (no false flags).
  */
 export async function requestUploadUrl(
   checkId: string,
   gps?: { lat: number; lng: number; accuracyM?: number },
+  fraudSignals?: Record<string, unknown>,
 ): Promise<{ uploadUrl: string; uploadId: string }> {
   const data = await invokeEdgeFunction('mux-upload-url', {
     checkId,
     filmed_lat: gps?.lat,
     filmed_lng: gps?.lng,
     filmed_accuracy_m: gps?.accuracyM,
+    ...(fraudSignals != null ? { fraud_signals: fraudSignals } : {}),
   }) as Record<string, unknown>;
   if (!data?.uploadUrl || !data?.uploadId) {
     throw new Error('requestUploadUrl: missing uploadUrl/uploadId in response');
@@ -269,8 +277,11 @@ export type UseClipUpload = {
    * upload PUT succeeded (status -> 'processing'); resolves false on failure
    * (status -> 'error') so the Scout can retake/retry. Never throws to the
    * caller and never marks the check delivered.
+   *
+   * Phase 6 (FRAUD-03): optional fraudSignals bag collected at Record-press via
+   * collectFraudSignals(). Best-effort: null/undefined is harmless.
    */
-  submit: (checkId: string, localPath: string, gps?: ClipUploadGps) => Promise<boolean>;
+  submit: (checkId: string, localPath: string, gps?: ClipUploadGps, fraudSignals?: Record<string, unknown>) => Promise<boolean>;
   /** Reset back to idle (e.g. before a retry). */
   reset: () => void;
 };
@@ -297,7 +308,7 @@ export function useClipUpload(): UseClipUpload {
   }, []);
 
   const submit = useCallback(
-    async (checkId: string, localPath: string, gps?: ClipUploadGps): Promise<boolean> => {
+    async (checkId: string, localPath: string, gps?: ClipUploadGps, fraudSignals?: Record<string, unknown>): Promise<boolean> => {
       if (inFlight.current) return false;
       inFlight.current = true;
       setStatus('uploading');
@@ -309,7 +320,10 @@ export function useClipUpload(): UseClipUpload {
         const gpsArg = gps
           ? { lat: gps.lat, lng: gps.lng, accuracyM: gps.accuracyM }
           : undefined;
-        const { uploadUrl } = await requestUploadUrl(checkId, gpsArg);
+        // Phase 6 (FRAUD-03): forward fraud signal bag to mux-upload-url so it
+        // persists fraud_signals on the clips row for fraud-eval. Best-effort:
+        // undefined is harmless (fraud-eval degrades to zero-score on missing bag).
+        const { uploadUrl } = await requestUploadUrl(checkId, gpsArg, fraudSignals ?? undefined);
         await uploadWithRetry(localPath, uploadUrl, 4, (f) => setProgress(f));
         // Upload PUT returned success. We STOP here — the webhook drives the
         // check to delivered. The screen shows "processing" until Realtime flips.

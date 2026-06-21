@@ -1,26 +1,24 @@
 // Unit tests for the device-side clip upload/playback seam (VID-03/VID-04).
 //
-// Vitest runs in node; both the Supabase client and expo-file-system are fully
-// mocked, so these tests assert CALL SHAPES + retry/backoff behaviour, not the
-// network. The contract under test:
-//   - requestUploadUrl(checkId)  -> invokes the 'mux-upload-url' Edge Function
-//   - getPlaybackToken(checkId)  -> invokes the 'mux-playback-token' Edge Function
-//   - uploadClip uses FileSystem.createUploadTask (PUT) and throws on HTTP >= 300
+// Vitest runs in node; fetch, supabase.auth, and expo-file-system/legacy are
+// fully mocked so these tests assert CALL SHAPES + retry/backoff behaviour,
+// not the network. The contract under test:
+//   - requestUploadUrl(checkId, gps?, fraudSignals?) -> calls invokeEdgeFunction
+//     which calls fetch('mux-upload-url') — asserts the body shape
+//   - getPlaybackToken(checkId) -> calls invokeEdgeFunction('mux-playback-token')
+//   - uploadClip uses uploadAsync (PUT) and throws on HTTP >= 300
 //   - uploadWithRetry retries a failing upload and throws after `max` attempts
 //   - the module NEVER transitions a check to delivered (the webhook owns it)
+//   - Phase 6 (FRAUD-03): requestUploadUrl forwards fraud_signals in the body
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// ── Supabase Edge Function mock ───────────────────────────────────────────────
-let invokeReturn: { data: unknown; error: unknown } = { data: null, error: null };
-const invokeCalls: Array<{ fn: string; args: unknown }> = [];
-
+// ── Supabase auth mock (for invokeEdgeFunction session lookup) ────────────────
 const supabaseMock = {
-  functions: {
-    invoke: vi.fn(async (fn: string, args: unknown) => {
-      invokeCalls.push({ fn, args });
-      return invokeReturn;
-    }),
+  auth: {
+    getSession: vi.fn(async () => ({
+      data: { session: { access_token: 'test-token' } },
+    })),
   },
   // Present so a stray rpc() call would be observable; the contract is it's NEVER used.
   rpc: vi.fn(async () => ({ data: null, error: null })),
@@ -28,39 +26,64 @@ const supabaseMock = {
 
 vi.mock('./supabase', () => ({ supabase: supabaseMock }));
 
-// ── expo-file-system mock ─────────────────────────────────────────────────────
-// createUploadTask(url, path, opts, cb) returns a task whose uploadAsync resolves
-// to the configured response. uploadResponses lets a test fail-then-succeed.
+// ── Config mock ───────────────────────────────────────────────────────────────
+vi.mock('./config', () => ({
+  SUPABASE_URL: 'https://test.supabase.co',
+  SUPABASE_ANON_KEY: 'test-anon-key',
+}));
+
+// ── Global fetch mock ─────────────────────────────────────────────────────────
+// invokeEdgeFunction uses plain fetch (not supabase.functions.invoke).
+// Each test configures fetchResponses to control what fetch returns.
+type FetchResponse = { ok: boolean; status: number; body: unknown };
+let fetchResponses: Array<FetchResponse | Error> = [];
+let fetchCallCount = 0;
+const fetchCalls: Array<{ url: string; init: RequestInit }> = [];
+
+vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit) => {
+  fetchCalls.push({ url, init });
+  const next = fetchResponses[fetchCallCount] ?? { ok: true, status: 200, body: {} };
+  fetchCallCount += 1;
+  if (next instanceof Error) throw next;
+  const body = next.body;
+  return {
+    ok: next.ok,
+    status: next.status,
+    text: async () => JSON.stringify(body),
+    json: async () => body,
+  };
+}));
+
+// ── expo-file-system/legacy mock (uploadAsync API — Phase 5 refactor) ────────
+// clips.ts uses uploadAsync (not createUploadTask). uploadResponses lets a test
+// fail-then-succeed to verify the retry loop.
 let uploadResponses: Array<{ status: number } | Error> = [];
 let uploadCallCount = 0;
-const createUploadTaskCalls: Array<{ url: string; path: string; opts: unknown }> = [];
 
 const FileSystemMock = {
   FileSystemUploadType: { BINARY_CONTENT: 'BINARY_CONTENT' },
-  createUploadTask: vi.fn(
-    (url: string, path: string, opts: unknown, _cb?: (p: unknown) => void) => {
-      createUploadTaskCalls.push({ url, path, opts });
-      return {
-        uploadAsync: async () => {
-          const next = uploadResponses[uploadCallCount] ?? { status: 200 };
-          uploadCallCount += 1;
-          if (next instanceof Error) throw next;
-          return next;
-        },
-      };
-    },
-  ),
+  uploadAsync: vi.fn(async (_url: string, _path: string, _opts: unknown) => {
+    const next = uploadResponses[uploadCallCount] ?? { status: 200 };
+    uploadCallCount += 1;
+    if (next instanceof Error) throw next;
+    return next;
+  }),
+  getInfoAsync: vi.fn(async () => ({ exists: true, size: 1024 })),
 };
 
 vi.mock('expo-file-system/legacy', () => FileSystemMock);
 
 beforeEach(() => {
-  invokeReturn = { data: null, error: null };
-  invokeCalls.length = 0;
-  createUploadTaskCalls.length = 0;
+  fetchResponses = [];
+  fetchCallCount = 0;
+  fetchCalls.length = 0;
   uploadResponses = [];
   uploadCallCount = 0;
   vi.clearAllMocks();
+  // Reset auth mock after clearAllMocks
+  supabaseMock.auth.getSession.mockResolvedValue({
+    data: { session: { access_token: 'test-token' } },
+  });
   // No real timers: make setTimeout resolve immediately so backoff doesn't stall.
   vi.spyOn(global, 'setTimeout').mockImplementation(((fn: () => void) => {
     fn();
@@ -69,56 +92,85 @@ beforeEach(() => {
 });
 
 describe('lib/clips requestUploadUrl', () => {
-  it("invokes the 'mux-upload-url' function with the checkId and returns the URL + id", async () => {
-    invokeReturn = { data: { uploadUrl: 'https://mux/up/abc', uploadId: 'up_abc' }, error: null };
+  it("calls mux-upload-url via fetch with the checkId and returns the URL + id", async () => {
+    fetchResponses = [{ ok: true, status: 200, body: { uploadUrl: 'https://mux/up/abc', uploadId: 'up_abc' } }];
     const { requestUploadUrl } = await import('./clips');
     const out = await requestUploadUrl('check-123');
 
     expect(out).toEqual({ uploadUrl: 'https://mux/up/abc', uploadId: 'up_abc' });
-    expect(supabaseMock.functions.invoke).toHaveBeenCalledWith('mux-upload-url', {
-      body: { checkId: 'check-123' },
-    });
+    expect(fetchCalls).toHaveLength(1);
+    expect(fetchCalls[0].url).toContain('mux-upload-url');
+    const sentBody = JSON.parse(fetchCalls[0].init.body as string);
+    expect(sentBody.checkId).toBe('check-123');
   });
 
-  it('throws when the function returns an error', async () => {
-    invokeReturn = { data: null, error: { message: 'no upload url' } };
+  it('throws when the function returns a non-OK response', async () => {
+    fetchResponses = [{ ok: false, status: 403, body: 'forbidden' }];
     const { requestUploadUrl } = await import('./clips');
-    await expect(requestUploadUrl('check-123')).rejects.toBeTruthy();
+    await expect(requestUploadUrl('check-123')).rejects.toThrow();
+  });
+
+  it('forwards gps fields in the request body (Phase 5, VER-01)', async () => {
+    fetchResponses = [{ ok: true, status: 200, body: { uploadUrl: 'u', uploadId: 'i' } }];
+    const { requestUploadUrl } = await import('./clips');
+    await requestUploadUrl('check-123', { lat: 25.77, lng: -80.19, accuracyM: 12 });
+
+    const sentBody = JSON.parse(fetchCalls[0].init.body as string);
+    expect(sentBody.filmed_lat).toBe(25.77);
+    expect(sentBody.filmed_lng).toBe(-80.19);
+    expect(sentBody.filmed_accuracy_m).toBe(12);
+  });
+
+  it('forwards fraud_signals in the request body when provided (Phase 6, FRAUD-03)', async () => {
+    fetchResponses = [{ ok: true, status: 200, body: { uploadUrl: 'u', uploadId: 'i' } }];
+    const { requestUploadUrl } = await import('./clips');
+    const signals = { accuracy_is_exact: false, location_accuracy_m: 12, collection_ts: '2026-01-01T00:00:00Z', is_simulated_by_software: null };
+    await requestUploadUrl('check-123', undefined, signals as Record<string, unknown>);
+
+    const sentBody = JSON.parse(fetchCalls[0].init.body as string);
+    expect(sentBody.fraud_signals).toEqual(signals);
+  });
+
+  it('omits fraud_signals from the body when not provided (no spurious null)', async () => {
+    fetchResponses = [{ ok: true, status: 200, body: { uploadUrl: 'u', uploadId: 'i' } }];
+    const { requestUploadUrl } = await import('./clips');
+    await requestUploadUrl('check-123');
+
+    const sentBody = JSON.parse(fetchCalls[0].init.body as string);
+    expect(sentBody).not.toHaveProperty('fraud_signals');
   });
 });
 
 describe('lib/clips getPlaybackToken', () => {
-  it("invokes the 'mux-playback-token' function and returns the token string", async () => {
-    invokeReturn = { data: { token: 'jwt.tok.en' }, error: null };
+  it("calls mux-playback-token via fetch and returns the token string", async () => {
+    fetchResponses = [{ ok: true, status: 200, body: { token: 'jwt.tok.en' } }];
     const { getPlaybackToken } = await import('./clips');
     const token = await getPlaybackToken('check-123');
 
     expect(token).toBe('jwt.tok.en');
-    expect(supabaseMock.functions.invoke).toHaveBeenCalledWith('mux-playback-token', {
-      body: { checkId: 'check-123' },
-    });
+    expect(fetchCalls[0].url).toContain('mux-playback-token');
+    const sentBody = JSON.parse(fetchCalls[0].init.body as string);
+    expect(sentBody.checkId).toBe('check-123');
   });
 
-  it('throws when the function returns an error', async () => {
-    invokeReturn = { data: null, error: { message: 'not the owner' } };
+  it('throws when the function returns a non-OK response', async () => {
+    fetchResponses = [{ ok: false, status: 403, body: 'not the owner' }];
     const { getPlaybackToken } = await import('./clips');
-    await expect(getPlaybackToken('check-123')).rejects.toBeTruthy();
+    await expect(getPlaybackToken('check-123')).rejects.toThrow();
   });
 });
 
 describe('lib/clips uploadClip', () => {
-  it('PUTs the local file via createUploadTask and resolves on a 2xx', async () => {
+  it('PUTs the local file via uploadAsync and resolves on a 2xx', async () => {
     uploadResponses = [{ status: 200 }];
     const { uploadClip } = await import('./clips');
     await expect(uploadClip('/tmp/clip.mov', 'https://mux/up/abc')).resolves.toBeUndefined();
 
-    expect(createUploadTaskCalls).toHaveLength(1);
-    expect(createUploadTaskCalls[0].url).toBe('https://mux/up/abc');
-    expect(createUploadTaskCalls[0].path).toBe('/tmp/clip.mov');
-    expect(createUploadTaskCalls[0].opts).toMatchObject({
-      httpMethod: 'PUT',
-      uploadType: 'BINARY_CONTENT',
-    });
+    expect(FileSystemMock.uploadAsync).toHaveBeenCalledWith(
+      'https://mux/up/abc',
+      'file:///tmp/clip.mov',
+      expect.objectContaining({ httpMethod: 'PUT', uploadType: 'BINARY_CONTENT' }),
+    );
   });
 
   it('throws when the upload responds with status >= 300', async () => {
@@ -127,13 +179,13 @@ describe('lib/clips uploadClip', () => {
     await expect(uploadClip('/tmp/clip.mov', 'https://mux/up/abc')).rejects.toThrow();
   });
 
-  it('reports progress through the onProgress callback', async () => {
+  it('accepts an onProgress callback without throwing', async () => {
     uploadResponses = [{ status: 200 }];
     const { uploadClip } = await import('./clips');
     const onProgress = vi.fn();
-    await uploadClip('/tmp/clip.mov', 'https://mux/up/abc', onProgress);
-    // the progress callback handle was wired into createUploadTask
-    expect(FileSystemMock.createUploadTask).toHaveBeenCalled();
+    await expect(uploadClip('/tmp/clip.mov', 'https://mux/up/abc', onProgress)).resolves.toBeUndefined();
+    // Progress callback is called (at minimum with 1 at completion)
+    expect(onProgress).toHaveBeenCalledWith(1);
   });
 });
 
@@ -161,12 +213,14 @@ describe('lib/clips uploadWithRetry', () => {
 
 describe('lib/clips VID-03 invariant', () => {
   it('NEVER calls supabase.rpc (no client-side transition_check / delivered)', async () => {
-    invokeReturn = { data: { uploadUrl: 'u', uploadId: 'i' }, error: null };
+    fetchResponses = [
+      { ok: true, status: 200, body: { uploadUrl: 'u', uploadId: 'i' } },
+      { ok: true, status: 200, body: { token: 't' } },
+    ];
     uploadResponses = [{ status: 200 }];
     const clips = await import('./clips');
     await clips.requestUploadUrl('id');
     await clips.uploadWithRetry('/tmp/clip.mov', 'u');
-    invokeReturn = { data: { token: 't' }, error: null };
     await clips.getPlaybackToken('id');
     expect(supabaseMock.rpc).not.toHaveBeenCalled();
   });

@@ -1,3 +1,4 @@
+// TODO(phase-7): extract the HUD/steps/trouble UI out of filming.tsx — file is >500 lines; refactor BEFORE any further Phase-7 edits.
 import {
   View,
   Text,
@@ -19,6 +20,7 @@ import {
 import * as Location from 'expo-location';
 import { markFilming, getCheck } from '../lib/checks';
 import { useClipUpload } from '../lib/clips';
+import { collectFraudSignals, FraudSignals } from '../lib/fraud-signals';
 import { CameraViewfinder } from './_filming-viewfinder';
 import { styles } from './_filming-styles';
 
@@ -67,6 +69,9 @@ export default function FilmingScreen() {
   // mux-upload-url so verify-clip has real distance + accuracy data (VER-01).
   const [capturedPath, setCapturedPath] = useState<string | null>(null);
   const capturedGps = useRef<{ lat: number; lng: number; accuracyM?: number } | null>(null);
+  // Phase 6 (FRAUD-03): fraud signal bag collected at GPS-stamp time (Record press).
+  // Best-effort: null if GPS or collectFraudSignals fails — fraud-eval degrades gracefully.
+  const capturedFraud = useRef<FraudSignals | null>(null);
 
   // Real camera (vision-camera). Audio is never opened (audio={false} in the
   // viewfinder, VID-02). Back device, permission requested on mount. The camera
@@ -214,6 +219,9 @@ export default function FilmingScreen() {
         lng: pos.coords.longitude,
         accuracyM: pos.coords.accuracy ?? undefined,
       };
+      // Phase 6 (FRAUD-03): collect the fraud signal bag at the same GPS-stamp
+      // instant. Best-effort: never blocks recording if this throws.
+      capturedFraud.current = collectFraudSignals(pos.coords.accuracy ?? undefined);
     } catch {
       // best-effort — never block recording on GPS failure
     }
@@ -270,7 +278,8 @@ export default function FilmingScreen() {
       Alert.alert('No clip captured', 'That take didn’t record. Please film the clip again.');
       return;
     }
-    const ok = await clipUpload.submit(checkId, capturedPath, capturedGps.current);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ok = await clipUpload.submit(checkId, capturedPath, capturedGps.current, capturedFraud.current as any ?? undefined);
     if (ok) {
       router.replace({
         pathname: '/(scout)/submitted',
