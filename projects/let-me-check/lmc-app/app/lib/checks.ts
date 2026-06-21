@@ -151,6 +151,24 @@ export async function cancelCheck(checkId: string): Promise<void> {
 }
 
 /**
+ * End a still-unmatched check as `no_scout` when no Scout accepts within the
+ * dispatch window. INTERIM: until Phase 5's server-side dispatch+expiry engine
+ * lands, the owning Seeker drives this terminal transition (the migration 0010
+ * transition rule explicitly authorizes the seeker as a test-trigger this phase).
+ * Safe to call optimistically: the DB rejects it if the check already advanced
+ * past `dispatching` (e.g. a Scout assigned first), so we swallow that race.
+ */
+export async function expireUnmatchedCheck(checkId: string): Promise<void> {
+  const { error } = await supabase.rpc('transition_check', {
+    p_check_id: checkId,
+    p_to: 'no_scout',
+  });
+  // A lost race (Scout assigned just before the timeout) is an expected no-op,
+  // not an error to surface — the Realtime row will route the Seeker correctly.
+  if (error && !/transition|assigned|only the/i.test(error.message)) throw error;
+}
+
+/**
  * Read the delivered clip metadata for a check (when/where filmed). Consumed by
  * the Seeker delivery screen (Wave 4). Returns null until a clip exists. RLS
  * (0009) confines clips to the check's seeker or assigned scout.

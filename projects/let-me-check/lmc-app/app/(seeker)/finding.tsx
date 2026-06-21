@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getCheck, cancelCheck, type CheckRow } from '../lib/checks';
+import { getCheck, cancelCheck, expireUnmatchedCheck, type CheckRow } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
 
 // MATCHING / DISPATCH PHASE — the "finding a Scout" wait (status 'dispatching').
@@ -103,6 +103,27 @@ export default function FindingScreen() {
         break;
     }
   }, [check, params.venue, params.city, params.tier, params.time, router, matchFade]);
+
+  // INTERIM dispatch timeout (replaced by Phase 5's server-side dispatch+expiry).
+  // While the check is still searching, end it as `no_scout` once the dispatch
+  // window elapses so the Seeker is never stranded on a forever-"searching"
+  // screen when no Scout accepts. Anchored to created_at (not mount) so
+  // backgrounding or a remount can't reset the clock; the status-routing effect
+  // above then carries the Seeker to the no-scouts screen.
+  useEffect(() => {
+    if (!check) return;
+    const searching = check.status === 'requested' || check.status === 'dispatching';
+    if (!searching) return;
+    const DISPATCH_WINDOW_MS = 90_000; // ~90s to find a Scout (tunable)
+    const remaining = Math.max(
+      0,
+      DISPATCH_WINDOW_MS - (Date.now() - new Date(check.created_at).getTime()),
+    );
+    const t = setTimeout(() => {
+      expireUnmatchedCheck(check.id).catch(() => {});
+    }, remaining);
+    return () => clearTimeout(t);
+  }, [check]);
 
   // Pulsing radar rings
   useEffect(() => {

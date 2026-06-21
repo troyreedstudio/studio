@@ -6,6 +6,7 @@ import {
   ScrollView,
   Animated,
   Easing,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
@@ -40,6 +41,9 @@ export default function FilmingScreen() {
   const totalSeconds = isPriority ? 420 : 600;
   // Guard so 'assigned -> filming' fires exactly once (the first capture start).
   const filmingMarked = useRef(false);
+  // True between the Scout tapping Record and the camera reporting it's ready —
+  // startRecording() only fires once the camera is initialized (onInitialized).
+  const pendingStart = useRef(false);
   // The ONLY clip source is the live recorder's path (fresh-capture, VID-01),
   // set by onRecordingFinished; the GPS stamp rides along (not verified, Ph 5).
   const [capturedPath, setCapturedPath] = useState<string | null>(null);
@@ -120,9 +124,14 @@ export default function FilmingScreen() {
   // Begin a live recording on the back camera. The ONLY clip source is
   // onRecordingFinished's path — there is no gallery/import path (VID-01).
   const startRecording = () => {
+    console.log(`[LMC-CAM] startRecording called, camera.current=${!!camera.current}`);
     camera.current?.startRecording({
-      onRecordingFinished: (v) => setCapturedPath(v.path),
-      onRecordingError: () => {
+      onRecordingFinished: (v) => {
+        console.log(`[LMC-CAM] onRecordingFinished path=${v.path} dur=${v.duration}`);
+        setCapturedPath(v.path);
+      },
+      onRecordingError: (e) => {
+        console.error(`[LMC-CAM] onRecordingError ${e?.message ?? e}`);
         setRecording(false);
         setCapturedPath(null);
       },
@@ -147,7 +156,13 @@ export default function FilmingScreen() {
     const starting = !recording;
     if (starting) {
       stampGps();
-      startRecording();
+      // Defer the actual recorder start until the camera reports it is active and
+      // ready (handleCameraInitialized). Calling startRecording() before the
+      // camera is awake produced no file — the silent-Submit bug.
+      pendingStart.current = true;
+    } else {
+      // Manual stop before the 15s cap — stop the real recorder too.
+      camera.current?.stopRecording().catch(() => {});
     }
     if (starting && checkId && !filmingMarked.current) {
       filmingMarked.current = true;
@@ -159,13 +174,30 @@ export default function FilmingScreen() {
     setRecording(starting);
   };
 
+  // Fired by the Camera once it is active and ready. This is the ONLY place
+  // startRecording() runs, so the recorder is guaranteed awake before we record.
+  const handleCameraInitialized = () => {
+    console.log(`[LMC-CAM] onInitialized (pendingStart=${pendingStart.current})`);
+    if (pendingStart.current) {
+      pendingStart.current = false;
+      startRecording();
+    }
+  };
+
   // SUBMIT: run the REAL upload through the lib helper. The client never marks
   // delivered — the Mux webhook owns it (VID-03). On success (upload PUT landed,
   // check "processing") route to the success screen; the Seeker's Realtime watch
   // flips to delivered when the webhook fires. On failure, stay so the Scout can
   // retry.
   const handleSubmit = async () => {
-    if (!capturedPath || !checkId) return;
+    if (!checkId) return;
+    if (!capturedPath) {
+      // No file was captured (e.g. the recorder never produced one). Tell the
+      // Scout instead of silently doing nothing, and let them retake.
+      console.error('[LMC-CAM] submit blocked: capturedPath is null');
+      Alert.alert('No clip captured', 'That take didn’t record. Please film the clip again.');
+      return;
+    }
     const ok = await clipUpload.submit(checkId, capturedPath, capturedGps.current);
     if (ok) {
       router.replace({
@@ -367,8 +399,8 @@ export default function FilmingScreen() {
               <View style={styles.uploadHeader}>
                 <Text style={styles.uploadStageLabel}>
                   {clipUpload.status === 'processing'
-                    ? 'PROCESSING ON MUX'
-                    : 'UPLOADING TO MUX'}
+                    ? 'PROCESSING'
+                    : 'UPLOADING CLIP'}
                 </Text>
                 <Text style={styles.uploadPct}>{uploadPct}%</Text>
               </View>
@@ -377,7 +409,7 @@ export default function FilmingScreen() {
               </View>
               <Text style={styles.uploadSub}>
                 {clipUpload.status === 'processing'
-                  ? 'Upload complete. Mux is finishing the clip — the Seeker gets it when it’s ready.'
+                  ? 'Upload complete. We’re finishing your clip — the Seeker gets it when it’s ready.'
                   : 'Encrypted upload in progress. Don’t close the app.'}
               </Text>
             </View>
@@ -493,6 +525,7 @@ export default function FilmingScreen() {
         cameraRef={camera}
         device={device}
         hasPermission={hasPermission}
+        onCameraInitialized={handleCameraInitialized}
       />
     </View>
   );

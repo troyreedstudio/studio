@@ -94,13 +94,13 @@ export default function SubmittedScreen() {
                 isFirst
               />
               <TimelineRow
-                label="Uploaded — processing on Mux"
-                detail="Clip uploaded · Mux is transcoding the stream"
+                label="Uploaded — processing"
+                detail="Clip uploaded · preparing your video"
                 state={stage === 'verifying' ? 'active' : 'done'}
               />
               <TimelineRow
                 label="Delivered to Seeker"
-                detail="Seeker can stream once Mux finishes (webhook-driven)"
+                detail="Seeker can watch once processing finishes"
                 state={
                   stage === 'verifying'
                     ? 'pending'

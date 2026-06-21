@@ -27,6 +27,7 @@ export function CameraViewfinder({
   cameraRef,
   device,
   hasPermission,
+  onCameraInitialized,
 }: {
   visible: boolean;
   recordSecs: number;
@@ -36,6 +37,7 @@ export function CameraViewfinder({
   cameraRef: React.RefObject<Camera | null>;
   device: CameraDevice | undefined;
   hasPermission: boolean;
+  onCameraInitialized?: () => void;
 }) {
   const blink = useRef(new Animated.Value(1)).current;
 
@@ -73,6 +75,7 @@ export function CameraViewfinder({
             isActive={visible}
             video={true}
             audio={false}
+            onInitialized={onCameraInitialized}
           />
         ) : (
           // No camera available (e.g. simulator) — keep the dark chrome usable.
