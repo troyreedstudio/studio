@@ -107,11 +107,22 @@ alter table public.market_config
   add column if not exists blur_enabled boolean not null default false,
   add column if not exists fraud_strictness text not null default 'flag';
 
--- CHECK constraint on fraud_strictness (inline; ADD CONSTRAINT ... IF NOT EXISTS
--- requires PG 9.6+ and is idempotent here as new column starts with only valid data).
-alter table public.market_config
-  add constraint if not exists market_config_fraud_strictness_check
-    check (fraud_strictness in ('off', 'flag', 'hold', 'reject'));
+-- CHECK constraint on fraud_strictness (idempotent via DO block check on pg_constraint;
+-- ADD CONSTRAINT IF NOT EXISTS is PG15+ syntax but Supabase db push rejects it, so we
+-- use the conditional DO block pattern from Phase-5 pg_cron migration).
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'market_config_fraud_strictness_check'
+      and conrelid = 'public.market_config'::regclass
+  ) then
+    alter table public.market_config
+      add constraint market_config_fraud_strictness_check
+        check (fraud_strictness in ('off', 'flag', 'hold', 'reject'));
+  end if;
+end
+$$;
 
 comment on column public.market_config.blur_enabled is
   'Phase 6 / D-07: LAUNCH POSTURE — DEFAULT FALSE (gate dormant). '
