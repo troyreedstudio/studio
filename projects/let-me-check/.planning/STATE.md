@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-06-21T05:37:29.490Z"
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-06-21T05:44:52.411Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 12
-  completed_plans: 7
-  percent: 58
+  completed_plans: 8
+  percent: 67
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 4 (Payments) — EXECUTING
-Plan: 4 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 04-payments P01 | 5 | 3 tasks | 4 files |
 | Phase 04-payments P02 | 4m | 3 tasks | 4 files |
 | Phase 04 P03 | 7 | 2 tasks | 4 files |
+| Phase 04-payments-stripe-connect-express-card-hold-at-request-capture P04 | 4m | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,9 @@ Recent decisions affecting current work:
 - [Phase 04-payments]: payments.ts is interface-first: requestRefund/startConnectOnboarding/getConnectStatus delivered as typed contracts before their Edge Functions ship
 - [Phase 04-payments]: stripe-capture uses separate charges+transfers (never destination charges); source_transaction on normal path; D-09 funds Transfer from platform balance without source_transaction
 - [Phase 04-payments]: stripe-webhook mirrors mux-webhook exactly: raw body -> verify -> JSON.parse; import.meta.main guard on Deno.serve; disputes never reverse Transfer (D-08)
+- [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: stripe-connect-onboard is the SOLE write path for payout_speed (D-05); RLS bars client writes to scout_stripe_accounts
+- [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: go-online eligibility = live charges_enabled && payouts_enabled from accounts.retrieve (never from deep-link return — Pitfall 5, T-04-19)
+- [Phase 04-payments-stripe-connect-express-card-hold-at-request-capture]: accepted_scout_code_at stamped server-side when stripe-connect-onboard called — AUTHORIZE checkbox in payout.tsx is consent (SCOUT-02)
 
 ### Roadmap Evolution
 
@@ -123,6 +127,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T05:37:29.488Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-06-21T05:44:52.409Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
