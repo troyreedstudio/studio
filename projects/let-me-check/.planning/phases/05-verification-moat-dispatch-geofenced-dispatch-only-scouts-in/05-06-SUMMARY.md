@@ -21,19 +21,19 @@ decisions:
   - "pg_cron NOT available on this Supabase tier; expire_stale_dispatching() function is live but must be invoked by a Supabase Edge Function cron schedule (not pg_cron). Document for ops."
   - "All four Edge Functions deployed --no-verify-jwt: verify-clip + signage-check (service-role-invoked from mux-webhook) + mux-webhook + mux-upload-url (webhooks)"
   - "pgTAP test db blocked: supabase test db requires local Docker/Postgres; no Docker running. Tests verified offline in earlier plans; live schema correctness confirmed by table/function presence queries"
-  - "signage-check deployed but GOOGLE_VISION_API_KEY not yet set; degrades gracefully to signage_confirmed=null (no error)"
+  - "GOOGLE_VISION_API_KEY secret set (provided by Troy) + signage-check redeployed --no-verify-jwt to pick it up; signage advisory now live"
 metrics:
-  duration: "~20 min"
+  duration: "~25 min"
   completed: "2026-06-21"
-  tasks: "1 of 3 (Task 2 complete; Task 1 + Task 3 are human checkpoints)"
+  tasks: "2 of 3 (Task 1 + Task 2 complete; Task 3 on-device walk-through still UNVERIFIED)"
   files_created: 0
   files_modified: 2
-status: BLOCKED_AT_HUMAN_CHECKPOINT
+status: BLOCKED_AT_ON_DEVICE_CHECKPOINT
 ---
 
 # Phase 5 Plan 06: Live Deploy — Migrations + Edge Functions + Types Regen (Partial)
 
-**One-liner:** 0012 + 0012b pushed live (after seeding markets + fixing timestamp filename), all 4 Phase-5 Edge Functions deployed --no-verify-jwt, database.types.ts regenerated with scout_locations/market_config/no_film_zones/signage_confirmed; tsc clean; blocked at Google Vision key checkpoint.
+**One-liner:** 0012 + 0012b pushed live (after seeding markets + fixing timestamp filename), all 4 Phase-5 Edge Functions deployed --no-verify-jwt, GOOGLE_VISION_API_KEY secret set + signage-check redeployed, database.types.ts regenerated with scout_locations/market_config/no_film_zones/signage_confirmed; tsc clean; only remaining item is the on-device geo walk-through (Task 3, UNVERIFIED).
 
 ## What Was Built (Task 2 — COMPLETE)
 
@@ -98,19 +98,23 @@ This Supabase tier does not have `pg_cron`. The migration's DO block swallows th
 
 `tsc --noEmit`: 0 errors.
 
+### Vision key set + signage-check redeployed (Task 1 — COMPLETE)
+
+- `GOOGLE_VISION_API_KEY` provided by Troy (restricted to Cloud Vision API) and set via `supabase secrets set GOOGLE_VISION_API_KEY=... --project-ref cawqasszfbzvbtunamda`. The key is stored only as a Supabase secret — never written to any committed file.
+- `signage-check` redeployed `--no-verify-jwt` so it picks up the secret. Signage advisory (D-06) is now fully live: it reads the venue sign and records `signage_confirmed` true/false, never gating delivery.
+- Confirmed: `supabase secrets list` shows `GOOGLE_VISION_API_KEY` (the listed value is a hashed digest, not the plaintext key); `supabase functions list` shows signage-check deployed.
+
 ### Commit
 
 - `55f6817` — feat(05-06): push 0012+0012b live, deploy Phase-5 Edge Functions, regen types
+- (docs commit) — note Vision key set + signage-check redeployed
 
-## Blocked: Human Checkpoints Pending
+## Blocked: One Human Checkpoint Remaining
 
-### Task 1: Google Vision API key (BLOCKING)
+### Task 3: On-device geo walk-through (BLOCKING — UNVERIFIED)
 
-signage-check is deployed but `GOOGLE_VISION_API_KEY` secret is not set. Until it is, `signage-check` returns `signage_confirmed=null` gracefully — delivery is never blocked.
-
-### Task 3: On-device geo walk-through (BLOCKING)
-
-Real GPS, real devices, two sessions. Cannot be automated.
+Real GPS, real devices, two sessions. Cannot be automated. This is the ONLY open item.
+The on-device truth (nearby Scout gets job / far Scout doesn't, off-fence clip auto-rejected + re-dispatched with no charge, on-site clip delivers, signage advisory recorded but never blocks, event_log captures every event) is **NOT yet verified**. The orchestrator drives this via a device rebuild. Do not mark the plan's on-device must_have as satisfied until Troy replies "approved".
 
 ## Deviations from Plan
 

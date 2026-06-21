@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 05-05: client wiring — scout-location foreground watch, geo-filtered dispatch, filmed GPS seam, SAFE-01"
-last_updated: "2026-06-21T12:52:32.962Z"
+stopped_at: "05-06 live deploy: 0012+0012b live, 4 Edge Functions deployed, Vision key set, types regen. ONLY on-device geo walk-through (Task 3) remains UNVERIFIED"
+last_updated: "2026-06-21T13:25:00.000Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 3
@@ -148,14 +148,18 @@ Carried from research — to resolve at the relevant phase, not now:
 - Phases flagged for deeper research at planning time: Phase 5 (atomic dispatch / double-assignment concurrency), Phase 6 (anti-fraud / iOS mock-location detection), Phase 4 (capture-timing + chargeback + Connect onboarding edges)
 - Repo housekeeping before next commit: gitignore .claude-flow/.swarm/.mcp.json/*.db/SECURITY_*.json; drop unused react-native-maps; avoid retired ffmpeg-kit; fix RN version note
 
-**ACTIVE (Plan 01-01 Task 6 — blocking checkpoint):**
+**ACTIVE (Plan 05-06 — on-device walk-through, the ONLY open Phase-5 item):**
 
-- Schema authored offline (migrations 0001-0006 + seed + 3 pgTAP tests), all committed and offline-verified (tsc/vitest/grep). The live run is blocked: no Docker (so `supabase start`/`db reset`/`test db` can't run) and CLI not logged in (so `db push` can't run). Needs Troy's Supabase project ref + access token + anon key. Next: `supabase login` → `supabase link --project-ref <ref>` → `supabase db push` → `supabase gen types typescript --linked > lmc-app/app/lib/database.types.ts`. Reply "pushed" to resume, or paste any error.
+- 05-06 autonomous deploy DONE: 0012 + 20260621000002 (was 0012b) live; markets seeded (102 rows); 4 Edge Functions deployed --no-verify-jwt (verify-clip, signage-check, mux-webhook, mux-upload-url); GOOGLE_VISION_API_KEY secret set; database.types.ts regenerated; tsc clean. pg_cron unavailable on this tier — expire_stale_dispatching() needs a Supabase Edge cron schedule before launch (one-time ops task).
+- 05-06 Task 3 on-device geo walk-through STILL UNVERIFIED (human-verify): needs an EAS dev build + two sessions (Seeker + Scout) with real GPS. Must confirm: nearby Scout gets job / far Scout doesn't; off-fence clip auto-rejected + re-dispatched, Seeker not charged; on-site clip delivers; signage advisory recorded but never blocks; event_log captures every dispatch/verification event. Reply "approved" when all five pass. Do NOT mark Phase 5 complete until this passes.
+
+**Carried-over (older checkpoints — confirm still relevant):**
+
 - 01-02 human checkpoint: create Google OAuth client, enable Apple/Google providers in Supabase, run on-device dev build to test sign-in + session-survives-restart
-- 02-04 Task 4 on-device live-status walk-through BLOCKED: needs dev build + live Supabase + two sessions (Seeker+Scout, Plan 05). Run after both 04 and 05 land.
+- 02-04 Task 4 on-device live-status walk-through: now folds into the 05-06 on-device walk-through (live Supabase + two sessions are both ready).
 
 ## Session Continuity
 
-Last session: 2026-06-21T12:52:24.008Z
-Stopped at: Completed 05-05: client wiring — scout-location foreground watch, geo-filtered dispatch, filmed GPS seam, SAFE-01
+Last session: 2026-06-21T13:25:00.000Z
+Stopped at: 05-06 live deploy complete (migrations + functions + Vision key + types); on-device geo walk-through (Task 3) still UNVERIFIED
 Resume file: None
