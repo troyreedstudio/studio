@@ -45,3 +45,13 @@ Plans:
 - [x] 05-04-PLAN.md — Advisory signage: signage-check (Google Vision REST, advisory-only, never gates) + fire-and-forget mux-webhook hook + Deno tests
 - [x] 05-05-PLAN.md — Client wiring: scout-location + dispatch helpers, dashboard foreground watch + geo-filtered list, createCheck coord, filmed GPS through mux-upload-url
 - [ ] 05-06-PLAN.md — [BLOCKING] live deploy: db push 0012/0012b + live pgTAP + deploy functions + Google Vision key checkpoint + regen types + on-device geo walk-through
+
+### Phase 6: Privacy + anti-fraud hardening — on-device face/plate blur before upload (privacy-by-default), mock-GPS / location-spoofing detection to protect the geofence moat, and on-device AI frame processors for signage/blur; make the verification tamper-resistant + legally safe for public filming
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 5
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 6 to break down)
