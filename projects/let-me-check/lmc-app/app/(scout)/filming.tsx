@@ -45,9 +45,10 @@ export default function FilmingScreen() {
   // startRecording() only fires once the camera is initialized (onInitialized).
   const pendingStart = useRef(false);
   // The ONLY clip source is the live recorder's path (fresh-capture, VID-01),
-  // set by onRecordingFinished; the GPS stamp rides along (not verified, Ph 5).
+  // set by onRecordingFinished; the GPS stamp (incl. accuracy) is forwarded to
+  // mux-upload-url so verify-clip has real distance + accuracy data (VER-01).
   const [capturedPath, setCapturedPath] = useState<string | null>(null);
-  const capturedGps = useRef<{ lat: number; lng: number } | null>(null);
+  const capturedGps = useRef<{ lat: number; lng: number; accuracyM?: number } | null>(null);
 
   // Real camera (vision-camera). Audio is never opened (audio={false} in the
   // viewfinder, VID-02). Back device, permission requested on mount. The camera
@@ -138,15 +139,25 @@ export default function FilmingScreen() {
     });
   };
 
-  // GPS stamp at record time (provenance only — not verified, that's Phase 5).
+  // GPS stamp at record time. Phase 5: uses Accuracy.Highest (Pitfall 3 — maximize
+  // fix quality so the 30 m film-fence check in verify-clip has the best possible
+  // coordinate) and captures accuracyM alongside lat/lng so verify-clip can
+  // distinguish a genuine on-site fix from a low-accuracy reading. Best-effort:
+  // never blocks recording on a GPS failure.
   const stampGps = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
-      const pos = await Location.getCurrentPositionAsync({});
-      capturedGps.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+      });
+      capturedGps.current = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracyM: pos.coords.accuracy ?? undefined,
+      };
     } catch {
-      // best-effort
+      // best-effort — never block recording on GPS failure
     }
   };
 

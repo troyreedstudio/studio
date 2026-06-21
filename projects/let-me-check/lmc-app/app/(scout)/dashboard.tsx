@@ -8,10 +8,13 @@ import {
   Switch,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { useScoutEarnings } from '../state/scout-earnings';
-import { listOpenChecks, acceptCheck, type CheckRow } from '../lib/checks';
+import { acceptCheck, type CheckRow } from '../lib/checks';
+import { upsertScoutLocation, setScoutOffline } from '../lib/scout-location';
+import { listOpenChecksForScout } from '../lib/dispatch';
 
 // Display-only payout label derived from the check tier. NO money is written
 // here — earnings are credited in Phase 4. Real pricing: standard $8, priority $12.
@@ -25,29 +28,99 @@ export default function ScoutDashboard() {
   const [online, setOnline] = useState(true);
   const [openChecks, setOpenChecks] = useState<CheckRow[]>([]);
   const [taken, setTaken] = useState(false);
+  const [locationDenied, setLocationDenied] = useState(false);
+
+  // Last known Scout coord — written by the watchPositionAsync callback and read
+  // by refresh() to pass to the geo-filtered RPC. Null until first GPS fix.
+  const lastCoord = useRef<{ lat: number; lng: number } | null>(null);
+  // Holds the expo-location subscription so we can .remove() it on going offline
+  // or screen unmount (T-05-25: foreground-only, stops cleanly when not online).
+  const locationSub = useRef<Location.LocationSubscription | null>(null);
 
   // The first open check is what the Scout sees in the incoming-request card.
   const request = openChecks[0] ?? null;
 
-  // Pull the real open-check list (status='dispatching', RLS-scoped). Only fetch
-  // when online — going offline clears the list.
+  // Pull geo-filtered open checks. Uses listOpenChecksForScout (DISP-01) when a
+  // coord is known; shows empty when location is unknown (not yet fixed).
   const refresh = useCallback(async () => {
     try {
-      const checks = await listOpenChecks();
-      setOpenChecks(checks);
+      if (lastCoord.current) {
+        const checks = await listOpenChecksForScout(
+          lastCoord.current.lat,
+          lastCoord.current.lng,
+        );
+        setOpenChecks(checks);
+      } else {
+        // No GPS fix yet — show empty; watchPositionAsync will call refresh
+        // as soon as the first fix arrives.
+        setOpenChecks([]);
+      }
     } catch {
       setOpenChecks([]);
     }
   }, []);
 
-  // Fetch on mount + whenever the Scout goes online; clear when offline.
+  // Start / stop the foreground location watch when the online toggle changes.
+  // SCOUT-03: while online the Scout's location is upserted to scout_locations
+  // every ~30 s (timeInterval) or after 20 m of movement (distanceInterval).
+  // The geo-filtered refresh() runs on each tick so the job list stays current.
   useEffect(() => {
+    let cancelled = false;
+
+    const startWatch = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationDenied(true);
+        return;
+      }
+      setLocationDenied(false);
+
+      const sub = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 30_000,   // re-emit every 30 s while stationary
+          distanceInterval: 20,   // or after 20 m of movement
+        },
+        async (pos) => {
+          if (cancelled) return;
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          lastCoord.current = { lat, lng };
+          // Upsert Scout's live location so the dispatch RPC can find them.
+          upsertScoutLocation(lat, lng, pos.coords.accuracy ?? undefined).catch(
+            () => {},
+          );
+          // Refresh the geo-filtered job list on each location tick.
+          refresh();
+        },
+      );
+
+      if (cancelled) {
+        sub.remove();
+      } else {
+        locationSub.current = sub;
+      }
+    };
+
     if (online) {
-      refresh();
+      startWatch();
     } else {
+      // Going offline: stop the watch, clear the list, mark offline in DB.
+      locationSub.current?.remove();
+      locationSub.current = null;
       setOpenChecks([]);
+      setScoutOffline().catch(() => {});
     }
-  }, [online, refresh]);
+
+    return () => {
+      cancelled = true;
+      locationSub.current?.remove();
+      locationSub.current = null;
+      // Mark offline in DB when the screen unmounts while online.
+      if (online) setScoutOffline().catch(() => {});
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
 
   // Refresh when the dashboard regains focus (e.g. returning from filming).
   useFocusEffect(
@@ -265,11 +338,19 @@ export default function ScoutDashboard() {
           ) : online ? (
             <View style={styles.emptyCard}>
               <View style={styles.emptyIconWrap}>
-                <Ionicons name="radio-outline" size={22} color="#00FF7F" />
+                {locationDenied ? (
+                  <Ionicons name="location-outline" size={22} color="#FFCB47" />
+                ) : (
+                  <Ionicons name="radio-outline" size={22} color="#00FF7F" />
+                )}
               </View>
-              <Text style={styles.emptyTitle}>Listening for requests</Text>
+              <Text style={styles.emptyTitle}>
+                {locationDenied ? "Location needed" : "Listening for requests"}
+              </Text>
               <Text style={styles.emptyWhy}>
-                You’ll be pinged the moment a check is requested in your area.
+                {locationDenied
+                  ? "Allow location access in Settings to receive nearby jobs."
+                  : "You’ll be pinged the moment a check is requested in your area."}
               </Text>
             </View>
           ) : (

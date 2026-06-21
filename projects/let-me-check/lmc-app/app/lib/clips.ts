@@ -190,7 +190,7 @@ export async function getPlaybackToken(checkId: string): Promise<string> {
 
 export type ClipUploadStatus = 'idle' | 'uploading' | 'processing' | 'error';
 
-export type ClipUploadGps = { lat: number; lng: number } | null;
+export type ClipUploadGps = { lat: number; lng: number; accuracyM?: number } | null;
 
 export type UseClipUpload = {
   /** 0..1 upload fraction (drives the screen's progress bar). */
@@ -239,9 +239,11 @@ export function useClipUpload(): UseClipUpload {
       setProgress(0);
       setError(null);
       try {
-        // Phase 5: forward filmed GPS to mux-upload-url so it persists
-        // filmed_lat/lng/accuracy on the clips row for verify-clip (VER-01).
-        const gpsArg = gps ? { lat: gps.lat, lng: gps.lng } : undefined;
+        // Phase 5: forward filmed GPS (incl. accuracy) to mux-upload-url so it
+        // persists filmed_lat/lng/accuracy_m on the clips row for verify-clip (VER-01).
+        const gpsArg = gps
+          ? { lat: gps.lat, lng: gps.lng, accuracyM: gps.accuracyM }
+          : undefined;
         const { uploadUrl } = await requestUploadUrl(checkId, gpsArg);
         await uploadWithRetry(localPath, uploadUrl, 4, (f) => setProgress(f));
         // Upload PUT returned success. We STOP here — the webhook drives the
