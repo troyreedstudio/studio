@@ -48,10 +48,14 @@ Plans:
 
 ### Phase 6: Privacy + anti-fraud hardening — on-device face/plate blur before upload (privacy-by-default), mock-GPS / location-spoofing detection to protect the geofence moat, and on-device AI frame processors for signage/blur; make the verification tamper-resistant + legally safe for public filming
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Make the verification moat tamper-resistant and legally safe for public filming WITHOUT changing what users see at launch. Ship the privacy + anti-fraud machinery dormant: a server-side "detect faces + hold-for-review" blur gate (Google Vision, reusing the Phase-5 pattern) that guarantees no clip is ever delivered with unblurred faces once enabled (D-03/D-07); a fraud-signal engine that records + flags location-spoofing signals layered on the Phase-5 GPS fence, flag-only at launch (D-04/D-05); and a scaffolded on-device blur path (vision-camera + face-detector + Skia) behind a feature flag, compiled + boot-verified but not activated until a device build + Troy's visual check confirm it. Both feature flags (server blur_enabled, client BLUR_NATIVE_ENABLED) ship FALSE.
+**Requirements**: BLUR-01, BLUR-02, BLUR-03, BLUR-04, BLUR-05, FRAUD-01, FRAUD-02, FRAUD-03, SCH-01, BLUR-NATIVE-01
 **Depends on:** Phase 5
-**Plans:** 0 plans
+**Plans:** 5 plans (5 waves)
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 6 to break down)
+- [ ] 06-01-PLAN.md — SQL spine (0014): clips blur_status/fraud_signals/fraud_flag/fraud_score + market_config blur_enabled(FALSE)/fraud_strictness('flag') + blur_review enum/edges + pgTAP + RED Deno/Vitest scaffolds [Category A]
+- [ ] 06-02-PLAN.md — Edge brains: face-blur-check (Vision FACE_DETECTION detect+hold, D-01/02/03) + fraud-eval (teleport heuristic + flag, D-04/05) + client fraud-signals.ts (FRAUD-03) [Category A]
+- [ ] 06-03-PLAN.md — Wire the gate: mux-webhook blur gate (hold->blur_review, BLUR-04/05) + fraud-eval fire-and-forget + fraud_signals persisted filming.tsx->clips.ts->mux-upload-url [Category A]
+- [ ] 06-04-PLAN.md — [BLOCKING] live deploy: db push 0014 + live pgTAP + deploy face-blur-check/fraud-eval + redeploy mux-webhook/mux-upload-url + confirm blur_enabled=false + regen types [Category A]
+- [ ] 06-05-PLAN.md — [Category B] on-device blur scaffold: install worklets-core+face-detector+Skia behind BLUR_NATIVE_ENABLED(false) + SkiaCamera blur overlay + [DEVICE BUILD] compiles+boots gate (visual blur = Troy AM)
