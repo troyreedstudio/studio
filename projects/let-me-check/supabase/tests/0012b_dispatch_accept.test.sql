@@ -8,6 +8,7 @@
 --   DISP-02: accept_check by a Scout outside the dispatch radius raises geo-ineligible
 --   D-03:    a Scout who already has an active job cannot accept a second (one-active-job)
 --   Race:    first-wins claim preserved; second Scout raises 'already taken'; scout_id unchanged
+--   DISP-03: expire_stale_dispatching sweeps stale checks to no_scout; leaves fresh checks alone
 --
 -- Fixtures use the Miami (mia) market created by 0003.sql.
 -- Radii come from market_config.dispatch_radius_m seeded by 0012 (default 1500 m).
@@ -18,7 +19,7 @@
 --   scout-FAR:  lat +0.01797 → ~1,998 m (outside 1500 m)
 
 begin;
-select plan(7);
+select plan(9);
 
 -- ============================================================================
 -- Fixtures: users (seeker + 4 scouts)
@@ -188,6 +189,48 @@ select is(
    where id = 'b0000000-0000-0000-0000-000000000001'),
   'a0000000-0000-0000-0000-000000000004',
   'Race: scout_id remains RACE1 (the winner) after the losing accept'
+);
+
+-- ============================================================================
+-- DISP-03 Test 8: expire_stale_dispatching sweeps a stale check to no_scout
+-- ============================================================================
+-- Insert a dispatching check with updated_at = 20 minutes ago (past the 600 s timeout)
+insert into public.checks (id, seeker_id, venue_id, market_id, status, coord, updated_at)
+values ('c0000000-0000-0000-0000-000000000001',
+        'a0000000-0000-0000-0000-000000000001',
+        'tst-v-geo', 'mia', 'dispatching',
+        ST_SetSRID(ST_MakePoint(-80.1918, 25.7617), 4326)::geography,
+        now() - interval '20 minutes')
+  on conflict (id) do nothing;
+
+-- Invoke sweeper as service role (auth.uid() is null — matches the system actor gate)
+reset role;
+perform public.expire_stale_dispatching();
+
+select is(
+  (select status::text from public.checks where id = 'c0000000-0000-0000-0000-000000000001'),
+  'no_scout',
+  'DISP-03: expire_stale_dispatching transitions a stale (20 min old) dispatching check to no_scout'
+);
+
+-- ============================================================================
+-- DISP-03 Test 9: expire_stale_dispatching leaves a fresh dispatching check untouched
+-- ============================================================================
+-- Insert a fresh dispatching check (updated_at = now, well within the 600 s timeout)
+insert into public.checks (id, seeker_id, venue_id, market_id, status, coord)
+values ('c0000000-0000-0000-0000-000000000002',
+        'a0000000-0000-0000-0000-000000000001',
+        'tst-v-geo', 'mia', 'dispatching',
+        ST_SetSRID(ST_MakePoint(-80.1918, 25.7617), 4326)::geography)
+  on conflict (id) do nothing;
+
+-- Run sweeper again — should leave the fresh check alone
+perform public.expire_stale_dispatching();
+
+select is(
+  (select status::text from public.checks where id = 'c0000000-0000-0000-0000-000000000002'),
+  'dispatching',
+  'DISP-03: expire_stale_dispatching leaves a fresh dispatching check untouched'
 );
 
 select * from finish();
