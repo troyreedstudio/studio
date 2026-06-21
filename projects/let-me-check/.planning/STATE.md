@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-03-PLAN.md — blur gate + fraud-eval wired into mux-webhook; fraud_signals persisted end-to-end
-last_updated: "2026-06-21T17:53:01.095Z"
+stopped_at: Completed 06-04-PLAN.md — 0014 live, 4 functions deployed, types regen, dormant invariant confirmed
+last_updated: "2026-06-21T18:01:42.913Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 23
-  completed_plans: 20
-  percent: 87
+  completed_plans: 21
+  percent: 91
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 6 (Privacy + anti-fraud hardening) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -75,6 +75,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P01 | 5m | 3 tasks | 5 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P02 | 4m | 3 tasks | 3 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P03 | 6m | 3 tasks | 6 files |
+| Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P04 | 12 | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,8 @@ Recent decisions affecting current work:
 - [Phase 06]: fraud-eval auto-reject enforcement explicitly deferred (D-04 flag-only launch); strictness=hold/reject only flags, never transitions check state
 - [Phase 06]: blur gate (step 6c) fires filming->blur_review BEFORE uploaded/processing/delivered — face-blur-check fail-open on error (BLUR-05)
 - [Phase 06]: fraud-eval is fire-and-forget advisory AFTER stripe-capture (step 8b) — never blocks delivery at launch (D-04 flag-only)
+- [Phase 06]: ADD CONSTRAINT IF NOT EXISTS replaced with DO block guard on pg_constraint — Supabase db push rejects PG15+ syntax even on PG17
+- [Phase 06]: mux-webhook redeployed verify_jwt=false confirmed; face-blur-check + fraud-eval verify_jwt=true (service-to-service); dormant invariant: 0 markets blur_enabled=true, all 102 fraud_strictness=flag
 
 ### Roadmap Evolution
 
@@ -170,6 +173,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T17:53:01.093Z
-Stopped at: Completed 06-03-PLAN.md — blur gate + fraud-eval wired into mux-webhook; fraud_signals persisted end-to-end
+Last session: 2026-06-21T18:01:42.911Z
+Stopped at: Completed 06-04-PLAN.md — 0014 live, 4 functions deployed, types regen, dormant invariant confirmed
 Resume file: None
