@@ -436,22 +436,19 @@ What iOS ACTUALLY lets you detect on a non-jailbroken device:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **D-03: hold-on-failure vs soft-flag**
-   - What we know: Current docs (`FILMING-POLICY.md` + `SCOUT-CONDUCT.md`) say "blur applied before upload; if blur fails, soft-flag for review." CONTEXT.md default is stricter: hold the clip.
-   - What's unclear: Which does Troy want for launch?
-   - Recommendation: Start with `blur_enabled = false` (feature-flagged off). When enabled, use **hold** (D-03 default). This is the privacy-safe choice and avoids any legal exposure from delivering unblurred faces. Document it as Troy's decision to confirm.
+1. **D-03: hold-on-failure vs soft-flag** — (RESOLVED) Implemented as the CONTEXT default: **hold** (privacy-safe). Ships dormant via `blur_enabled = false` so the hold path is inactive at launch. Troy confirms in the AM (Category C); current docs (FILMING-POLICY/SCOUT-CONDUCT) say "soft-flag" — Troy reconciles docs-vs-hold then.
+   - What we know: Current docs say "blur applied before upload; if blur fails, soft-flag for review." CONTEXT.md default is stricter: hold the clip.
+   - Resolution: Plan 01 adds the `filming -> blur_review` hold path; Plan 03 holds on faces-detected; blur_enabled=false ships it dormant (Plan 04). Default = hold; Troy confirms AM.
 
-2. **On-device blur: when to turn on?**
-   - What we know: Category B work (packages + EAS build) can be scaffolded overnight but cannot be verified.
-   - What's unclear: Does Troy want to attempt Category B now or defer on-device blur to a separate phase?
-   - Recommendation: Scaffold Category B (install packages, write the TypeScript interface, wrap in `BLUR_NATIVE_ENABLED = false`) in this phase. Schedule a separate "EAS dev build + visual check" human task. Do NOT mark Phase 6 complete until that human task is done.
+2. **On-device blur: when to turn on?** — (RESOLVED) Scaffold Category B now behind `BLUR_NATIVE_ENABLED = false`; the orchestrator runs an EAS dev build overnight as the compile+boot gate (Plan 05 Task 3). Visual blur correctness + the enable decision are Troy's AM call (Category C). Default = scaffold-but-dormant.
+   - What we know: Category B (packages + EAS build) can be scaffolded overnight but visual correctness cannot be verified without Troy.
+   - Resolution: Plan 05 installs the stack + overlay behind the flag; the device build is orchestrator-run; enabling is deferred to Troy AM.
 
-3. **`blur_review` state in the check state machine**
-   - What we know: `check_status` enum has specific valid values. Adding `blur_review` requires a migration + updating `is_valid_check_transition`.
-   - What's unclear: What transitions are valid to/from `blur_review`? Likely: `uploaded/processing -> blur_review -> delivered` (ops manual approve) AND `blur_review -> rejected` (ops manual reject).
-   - Recommendation: Planner decides the full transition graph; research confirms it's safe to add the enum value + new edges additively.
+3. **`blur_review` state in the check state machine** — (RESOLVED) Transition graph fixed: ENTRY `filming -> blur_review` (the blur gate fires while the check is still in `filming`, BEFORE the webhook's uploaded/processing/delivered chain — mirroring the Phase-5 GPS reject `filming -> dispatching`); EXITS `blur_review -> delivered` (ops approve) / `dispatching` (re-dispatch) / `cancelled`. NOTE: `rejected` is a clips.status, NOT a check_status, so there is NO `blur_review -> rejected` edge (the earlier draft was wrong). Plan 01 Task 1 implements this; pgTAP pins `is_valid_check_transition('filming','blur_review')=true` and `('processing','blur_review')=false`.
+   - What we know: Adding `blur_review` requires the enum value + an is_valid_check_transition edge update (Pitfall 4 ordering).
+   - Resolution: enum-add before function-replace in 0014; entry from `filming` (not processing/uploaded); existing-values-only exits.
 
 ---
 
