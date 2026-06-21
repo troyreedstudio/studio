@@ -5,6 +5,11 @@
 // the clip row, and drives the check filming -> uploaded -> processing -> delivered
 // via transition_check as the SERVICE ROLE (auth.uid() NULL -> 0010 system actor).
 //
+// Phase 5 (D-04/D-05, VER-01): GPS VERIFICATION GATE added between step 6 (finalize
+// clip) and step 7 (delivered transition). A clip beyond the film-fence hard max (30 m)
+// is auto-rejected: check re-dispatches via reset_check_for_redispatch, stripe-capture
+// never fires (Seeker not charged, Scout not paid). A rejected clip NEVER becomes delivered.
+//
 // A dropped client network can therefore NEVER fake delivery: "ready" is a Mux fact.
 // The Seeker's existing Realtime subscription flips the screen on the `delivered`
 // UPDATE — no push here (Phase 7). See 03-RESEARCH.md Pattern 4 + Pitfalls 3/4.
@@ -96,6 +101,17 @@ export async function handleMuxWebhook(
     duration_secs: duration,
     status: "ready",
   }).eq("check_id", checkId);
+
+  // 6b. GPS VERIFICATION GATE (Phase 5, D-04/D-05, VER-01). MUST run BEFORE delivered:
+  //     a rejected clip is re-dispatched and NEVER delivered or captured.
+  //     On passed:false -> reset_check_for_redispatch (re-dispatch), return gps_rejected.
+  //     On passed:true or unverifiable (missing GPS) -> fall through to deliver normally.
+  const verify = await deps.svc.functions.invoke('verify-clip', { body: { checkId } });
+  if (verify?.data?.passed === false) {
+    await deps.svc.rpc('reset_check_for_redispatch', { p_check_id: checkId });
+    return new Response('gps_rejected', { status: 200 });
+  }
+  // (verify-clip pass path, or unverifiable pass-through, falls through to deliver.)
 
   // 7. Drive the check forward as the SERVICE ROLE (auth.uid() NULL). 0010's
   //    service-actor branch authorizes uploaded/processing/delivered.

@@ -22,7 +22,11 @@ import { handleMuxWebhook } from "./index.ts";
 import { verifyMuxSignature } from "../_shared/mux.ts";
 
 // A tiny mock of the supabase-js fluent service client recording every call.
-function mockSvc(opts: { clipStatus?: string | null } = {}) {
+// Phase 5 (05-03): added `verifyClipPassed` option so the GPS gate is configurable.
+//   - default: undefined (passed:true via null data fallback -> gate is a no-op for existing tests)
+//   - true: verify-clip returns { data: { passed: true } } -> falls through to deliver
+//   - false: verify-clip returns { data: { passed: false } } -> gps_rejected, no deliver
+function mockSvc(opts: { clipStatus?: string | null; verifyClipPassed?: boolean } = {}) {
   const calls = {
     updates: [] as Array<Record<string, unknown>>,
     rpcs: [] as Array<{ fn: string; args: unknown }>,
@@ -66,6 +70,17 @@ function mockSvc(opts: { clipStatus?: string | null } = {}) {
     functions: {
       invoke(fn: string, invokeOpts: unknown) {
         calls.invokes.push({ fn, opts: invokeOpts });
+        // Phase 5 GPS gate: if fn is 'verify-clip', return the configured passed value.
+        // When verifyClipPassed is undefined (existing tests), return null data so
+        // verify?.data?.passed === false is falsy -> gate passes through unchanged.
+        if (fn === "verify-clip") {
+          const passed = opts.verifyClipPassed;
+          // undefined -> { data: null } (gate is a no-op; existing tests unaffected)
+          // true      -> { data: { passed: true } }
+          // false     -> { data: { passed: false } } (triggers re-dispatch path)
+          const data = passed === undefined ? null : { passed };
+          return Promise.resolve({ data, error: null });
+        }
         return Promise.resolve({ data: null, error: null });
       },
     },
@@ -171,6 +186,61 @@ Deno.test("valid delivery triggers stripe-capture AFTER delivered transition (D-
   // All invokes happen after all transition_check rpcs (invokes list is append-only)
   assert(calls.invokes.length > 0, "stripe-capture was invoked after delivered");
 });
+
+// ─── Phase 5 GPS gate tests (05-03) ──────────────────────────────────────────
+
+Deno.test("GPS pass -> still delivers + captures (verify-clip passed:true, existing behaviour preserved)", async () => {
+  const { svc, calls } = mockSvc({ clipStatus: "pending", verifyClipPassed: true });
+  const res = await handleMuxWebhook(req(READY_EVENT, "valid"), {
+    verify: goodVerify,
+    svc,
+  });
+  assertEquals(res.status, 200);
+  // verify-clip must have been invoked exactly once
+  const verifyInvoke = calls.invokes.find((i) => i.fn === "verify-clip");
+  assert(verifyInvoke !== undefined, "verify-clip was invoked");
+  // deno-lint-ignore no-explicit-any
+  assertEquals((verifyInvoke!.opts as any).body.checkId, "check_abc");
+  // GPS passed -> transitions must still include delivered
+  const tos = calls.rpcs
+    .filter((r) => r.fn === "transition_check")
+    // deno-lint-ignore no-explicit-any
+    .map((r) => (r.args as any).p_to);
+  assertEquals(tos, ["uploaded", "processing", "delivered"], "full transition order preserved on GPS pass");
+  // stripe-capture must still fire after delivered
+  const captureInvoke = calls.invokes.find((i) => i.fn === "stripe-capture");
+  assert(captureInvoke !== undefined, "stripe-capture invoked after GPS pass");
+  // reset_check_for_redispatch must NOT have been called on the pass path
+  const resetRpc = calls.rpcs.find((r) => r.fn === "reset_check_for_redispatch");
+  assert(resetRpc === undefined, "reset_check_for_redispatch NOT called on GPS pass");
+});
+
+Deno.test("GPS reject -> re-dispatch, NO deliver, NO capture (verify-clip passed:false)", async () => {
+  const { svc, calls } = mockSvc({ clipStatus: "pending", verifyClipPassed: false });
+  const res = await handleMuxWebhook(req(READY_EVENT, "valid"), {
+    verify: goodVerify,
+    svc,
+  });
+  // Response body must be 'gps_rejected' — not 'ok'
+  assertEquals(res.status, 200);
+  assertEquals(await res.text(), "gps_rejected", "response body is gps_rejected on GPS fail");
+  // reset_check_for_redispatch must have been called once
+  const resetRpc = calls.rpcs.find((r) => r.fn === "reset_check_for_redispatch");
+  assert(resetRpc !== undefined, "reset_check_for_redispatch was rpc'd on GPS reject");
+  // deno-lint-ignore no-explicit-any
+  assertEquals((resetRpc!.args as any).p_check_id, "check_abc", "correct checkId passed to reset rpc");
+  // NO transition_check with p_to='delivered' must have occurred
+  const deliveredTransition = calls.rpcs.find(
+    // deno-lint-ignore no-explicit-any
+    (r) => r.fn === "transition_check" && (r.args as any).p_to === "delivered",
+  );
+  assert(deliveredTransition === undefined, "NO delivered transition on GPS reject");
+  // stripe-capture must NEVER have been invoked (Seeker not charged)
+  const captureInvoke = calls.invokes.find((i) => i.fn === "stripe-capture");
+  assert(captureInvoke === undefined, "stripe-capture NEVER invoked on GPS reject (Seeker not charged)");
+});
+
+// ─── Original fault-tolerant capture test (unchanged) ────────────────────────
 
 Deno.test("capture invoke failure does NOT prevent 200 response (fault-tolerant D-03)", async () => {
   const calls = {
