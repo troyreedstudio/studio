@@ -42,6 +42,6 @@ Plans:
 - [x] 05-01-PLAN.md — SQL spine (0012): scout_locations, market_config (tunable dispatch radius + film-fence), no_film_zones, checks.coord, clip advisory cols, distance_m, re-dispatch edges + reset RPC, RLS + pgTAP (lng/lat order, 30 m boundary)
 - [x] 05-02-PLAN.md — Dispatch RPCs (0012b): geo-filtered list_open_checks_for_scout + accept_check v3 (geo-eligibility + one-active-job) + pgTAP
 - [x] 05-03-PLAN.md — GPS auto-reject: verify-clip Edge Function + mux-webhook gate BEFORE delivered (off-fence -> re-dispatch, no charge) + Deno tests
-- [ ] 05-04-PLAN.md — Advisory signage: signage-check (Google Vision REST, advisory-only, never gates) + fire-and-forget mux-webhook hook + Deno tests
+- [x] 05-04-PLAN.md — Advisory signage: signage-check (Google Vision REST, advisory-only, never gates) + fire-and-forget mux-webhook hook + Deno tests
 - [ ] 05-05-PLAN.md — Client wiring: scout-location + dispatch helpers, dashboard foreground watch + geo-filtered list, createCheck coord, filmed GPS through mux-upload-url
 - [ ] 05-06-PLAN.md — [BLOCKING] live deploy: db push 0012/0012b + live pgTAP + deploy functions + Google Vision key checkpoint + regen types + on-device geo walk-through
