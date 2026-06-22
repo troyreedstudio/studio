@@ -182,7 +182,7 @@ export default function DeliveryScreen() {
 
         <View style={[styles.videoBox, { height: HERO_VIDEO_H }]}>
           {videoSrc ? (
-            <VideoView player={player} style={StyleSheet.absoluteFillObject} contentFit="contain" allowsFullscreen nativeControls />
+            <VideoView player={player} style={StyleSheet.absoluteFillObject} contentFit="cover" allowsFullscreen nativeControls />
           ) : (
             <View style={styles.processingWrap}>
               <Ionicons name="hourglass-outline" size={28} color="rgba(255,255,255,0.6)" />
@@ -190,10 +190,11 @@ export default function DeliveryScreen() {
             </View>
           )}
           <View style={styles.videoBadge}><Text style={styles.videoBadgeText}>HD · 15s</Text></View>
-          <View style={styles.liveTimestamp}>
-            <View style={styles.liveBlip} />
-            <Text style={styles.liveTime}>{filmedLine}</Text>
-          </View>
+        </View>
+        {/* Filmed-ago moved BELOW the player so it never covers the footage. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10, marginBottom: 8 }}>
+          <View style={styles.liveBlip} />
+          <Text style={styles.liveTime}>{filmedLine}</Text>
         </View>
 
         <Text style={styles.sectionLabel}>RATE YOUR CHECK</Text>
