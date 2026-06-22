@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 09-01-PLAN.md (migration 0017 + RED pgTAP)
-last_updated: "2026-06-22T12:38:57.006Z"
+stopped_at: Completed 09-02-PLAN.md (real badge + scout identity + fake removal)
+last_updated: "2026-06-22T12:43:06.953Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 4
   total_plans: 42
-  completed_plans: 31
-  percent: 74
+  completed_plans: 32
+  percent: 76
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 9 (Verified badge + scout identity + reconnects) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-22
 
@@ -86,6 +86,7 @@ Progress: [█████████░] 91% (30 of 33 plans complete)
 | Phase 08 P03 | 1 | 3 tasks | 7 files |
 | Phase 08 P05 | 1 | 3 tasks | 7 files |
 | Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P01 | 2 | 2 tasks | 2 files |
+| Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P02 | 5 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -180,6 +181,8 @@ Recent decisions affecting current work:
 - [Phase 08]: Face-blur mask is now a soft feathered OVAL (not a square censor box); privacy coverage unchanged
 - [Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r]: get_check_scout_public inlines clip_count — never calls scout_earnings_totals (IDOR self-trap when auth.uid=Seeker != Scout)
 - [Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r]: No RLS widening in 0017: profiles_update_own (0005) row-level policy covers new notification_prefs/preferred_cities columns automatically
+- [Phase 09]: Badge strictly clip.gps_verified === true; null/false never renders badge (D-01)
+- [Phase 09]: scoutMeta line hidden entirely when avg_rating and clip_count both null (fresh Scout, no phantom row)
 
 ### Roadmap Evolution
 
@@ -211,6 +214,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T12:38:57.003Z
-Stopped at: Completed 09-01-PLAN.md (migration 0017 + RED pgTAP)
+Last session: 2026-06-22T12:43:06.950Z
+Stopped at: Completed 09-02-PLAN.md (real badge + scout identity + fake removal)
 Resume file: None
