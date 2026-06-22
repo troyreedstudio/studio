@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 06-05-PLAN.md Tasks 1+2 — native blur stack installed, BlurViewfinder scaffold created, tsc clean, BLUR_NATIVE_ENABLED=false; Task 3 EAS build deferred to orchestrator
-last_updated: "2026-06-21T18:13:34.025Z"
-last_activity: 2026-06-21
+status: executing
+stopped_at: Completed 07-01-PLAN.md — migration 0015 (deadline_at + expire_stale_filming + BLOCKER-1 edges) + RED pgTAP scaffolds; not pushed live (Plan 04)
+last_updated: "2026-06-22T08:43:17.974Z"
+last_activity: 2026-06-22
 progress:
-  total_phases: 4
+  total_phases: 9
   completed_phases: 3
-  total_plans: 23
-  completed_plans: 22
-  percent: 96
+  total_plans: 33
+  completed_plans: 23
+  percent: 70
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-19)
 
 **Core value:** A Seeker can pay for, and reliably receive, a genuine, recent, location-true 15-second clip of a real place — fast.
-**Current focus:** Phase 6 — Privacy + anti-fraud hardening
+**Current focus:** Phase 7 — SLA + money integrity
 
 ## Current Position
 
-Phase: 6 (Privacy + anti-fraud hardening) — EXECUTING
-Plan: 5 of 5
-Status: Phase complete — ready for verification
-Last activity: 2026-06-21
+Phase: 7 (SLA + money integrity) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-06-22
 
 Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-01 schema is pushed live)
 
@@ -77,6 +77,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P03 | 6m | 3 tasks | 6 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P04 | 12 | 3 tasks | 2 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P05 | 20 | 2 tasks | 6 files |
+| Phase 07 P01 | 15 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -146,6 +147,9 @@ Recent decisions affecting current work:
 - [Phase 06]: react-native-vision-camera-face-detector pinned to v1.10.2 (v2.x requires vision-camera v5+; we are on v4.7.x)
 - [Phase 06]: react-native-vision-camera-skia has no v4 version (all v5.x — A3 false); blur overlay uses plain Skia Canvas positioned absolutely over Camera
 - [Phase 06]: BLUR_NATIVE_ENABLED=false default; babel.config.js worklets-core plugin required before enabling; Task 3 EAS build deferred to orchestrator
+- [Phase 07]: deadline_at derived server-side in accept_check from checks.tier — client cannot influence it (T-07-01, D-01)
+- [Phase 07]: assigned->no_scout and filming->no_scout edges added to is_valid_check_transition (BLOCKER-1 fix for expire_stale_filming + Plan 02 trouble-report)
+- [Phase 07]: dispatch_timeout_s updated to 300 s (5-min unclaimed window, D-02)
 
 ### Roadmap Evolution
 
@@ -177,6 +181,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-21T18:13:34.023Z
-Stopped at: Completed 06-05-PLAN.md Tasks 1+2 — native blur stack installed, BlurViewfinder scaffold created, tsc clean, BLUR_NATIVE_ENABLED=false; Task 3 EAS build deferred to orchestrator
+Last session: 2026-06-22T08:43:17.971Z
+Stopped at: Completed 07-01-PLAN.md — migration 0015 (deadline_at + expire_stale_filming + BLOCKER-1 edges) + RED pgTAP scaffolds; not pushed live (Plan 04)
 Resume file: None
