@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 11-01-PLAN.md — delete_my_account RPC + delete-account Edge Function + RED tests authored and committed
-last_updated: "2026-06-22T14:17:35.568Z"
+stopped_at: Completed 11-02-PLAN.md — dead button removal + dev artifact cleanup
+last_updated: "2026-06-22T14:23:15.309Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 47
-  completed_plans: 40
-  percent: 85
+  completed_plans: 41
+  percent: 87
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 11 (Apple submission readiness) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-06-22
 
@@ -95,6 +95,7 @@ Progress: [█████████░] 91% (30 of 33 plans complete)
 | Phase 10-push-notifications P04 | 4 | 1 tasks | 1 files |
 | Phase 10-push-notifications P05 | 25 | 3 tasks | 3 files |
 | Phase 11 P01 | 5m | 3 tasks | 4 files |
+| Phase 11-apple-submission-readiness P02 | 196 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -208,6 +209,9 @@ Recent decisions affecting current work:
 - [Phase 11]: delete_my_account uses DELETED sentinel (00000000-...) for checks.seeker_id anonymization (NOT NULL constraint prevents SET NULL); sentinel idempotent-inserted
 - [Phase 11]: filming->cancelled via direct UPDATE checks in delete_my_account (NOT transition_check — invalid edge would raise + rollback)
 - [Phase 11]: event_log.actor_id NULLed via SET LOCAL session_replication_role=replica to bypass event_log_no_update BEFORE-UPDATE trigger; DEFAULT restored immediately
+- [Phase 11]: Hide growth screens by removing nav entry points only; screen files (membership.tsx, invite.tsx) preserved for fast-follow (D-01)
+- [Phase 11]: Voice mic gated with __DEV__ ternary in search.tsx so fake voice search never renders in Release builds
+- [Phase 11]: Dev blur block fully deleted (not __DEV__-gated) because SHOW_BLUR_TEST was force-true in Release — full deletion safer than gating
 
 ### Roadmap Evolution
 
@@ -239,6 +243,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T14:17:35.566Z
-Stopped at: Completed 11-01-PLAN.md — delete_my_account RPC + delete-account Edge Function + RED tests authored and committed
+Last session: 2026-06-22T14:23:15.306Z
+Stopped at: Completed 11-02-PLAN.md — dead button removal + dev artifact cleanup
 Resume file: None
