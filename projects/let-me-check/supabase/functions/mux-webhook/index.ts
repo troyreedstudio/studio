@@ -204,6 +204,12 @@ export async function handleMuxWebhook(
   //    Swallows all errors — a signage failure must never affect a completed delivery.
   try { await deps.svc.functions.invoke('signage-check', { body: { checkId } }); } catch (_e) { /* advisory only */ }
 
+  // 8c. Seeker delivery push (Phase 10, D-03/PUSH). Fire-and-forget AFTER delivered.
+  //     send-push resolves the seeker server-side from checkId (IDOR-safe, T-10-15) and
+  //     respects notification_prefs. A push failure NEVER undoes a completed delivery
+  //     (mirrors 8b — advisory only, T-10-14).
+  try { await deps.svc.functions.invoke('send-push', { body: { checkId, event: 'video-ready' } }); } catch (_e) { /* advisory only — D-03, push never blocks delivery */ }
+
   return new Response("ok", { status: 200 });
 }
 
