@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 09-04-PLAN.md (0017 live, pgTAP 6/6 green, types regen, tsc clean — Phase 9 complete)
-last_updated: "2026-06-22T12:57:39.693Z"
+status: executing
+stopped_at: Completed 10-01-PLAN.md (expo-notifications installed, migration 0018 authored, RED pgTAP committed)
+last_updated: "2026-06-22T13:06:19.617Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 42
-  completed_plans: 34
-  percent: 81
+  completed_plans: 35
+  percent: 83
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-19)
 
 **Core value:** A Seeker can pay for, and reliably receive, a genuine, recent, location-true 15-second clip of a real place — fast.
-**Current focus:** Phase 9 — Verified badge + scout identity + reconnects
+**Current focus:** Phase 10 — Push notifications
 
 ## Current Position
 
-Phase: 9 (Verified badge + scout identity + reconnects) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
+Phase: 10 (Push notifications) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
 Last activity: 2026-06-22
 
 Progress: [█████████░] 91% (30 of 33 plans complete)
@@ -89,6 +89,7 @@ Progress: [█████████░] 91% (30 of 33 plans complete)
 | Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P02 | 5 | 2 tasks | 1 files |
 | Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P03 | 4m | 3 tasks | 3 files |
 | Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P04 | 12 | 2 tasks | 1 files |
+| Phase 10-push-notifications P01 | 8 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -190,6 +191,8 @@ Recent decisions affecting current work:
 - [Phase 09]: avg rating computed client-side from own ratings rows (ratings_select_own RLS) — no extra RPC needed
 - [Phase 09]: pgTAP run via raw SQL through supabase db query --linked (Docker unavailable); all 6 assertions from 0017_phase9_reconnects.test.sql verified against live DB
 - [Phase 09]: 0017 required --include-all flag (inserted before 20260621000002 in remote history); safe because migration is additive + idempotent
+- [Phase 10-push-notifications]: GUC names are EXACTLY app.settings.supabase_url and app.settings.service_role_key (.settings. namespace) — Wave 4 (10-05) ALTER DATABASE must use these same names
+- [Phase 10-push-notifications]: dispatching trigger guarded on pg_net availability (DO block); fallback = Supabase Dashboard Webhooks
 
 ### Roadmap Evolution
 
@@ -221,6 +224,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T12:57:39.691Z
-Stopped at: Completed 09-04-PLAN.md (0017 live, pgTAP 6/6 green, types regen, tsc clean — Phase 9 complete)
+Last session: 2026-06-22T13:06:19.614Z
+Stopped at: Completed 10-01-PLAN.md (expo-notifications installed, migration 0018 authored, RED pgTAP committed)
 Resume file: None
