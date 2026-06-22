@@ -69,9 +69,29 @@ const FileSystemMock = {
     return next;
   }),
   getInfoAsync: vi.fn(async () => ({ exists: true, size: 1024 })),
+  // 08-05: submit() deletes the raw capture after a successful blurred upload.
+  deleteAsync: vi.fn(async () => undefined),
 };
 
 vi.mock('expo-file-system/legacy', () => FileSystemMock);
+
+// ── Blur mocks (08-05) ────────────────────────────────────────────────────────
+// clips.ts now imports blurFacesWithFallback + BLUR_POST_RECORD_ENABLED. Mock the
+// app wrapper so the native lmc-blur module (which references RN's __DEV__) never
+// loads under vitest, and mock the flag. These suites assert the FLAG-OFF path
+// (today's working upload, unchanged), so the flag defaults FALSE here. The
+// blurMock is exposed via blurState so a test can flip the flag/result if needed.
+const blurState = {
+  enabled: false,
+  result: { outputPath: 'file:///tmp/blurred.mp4', facesBlurred: 1, status: 'blurred' as const },
+};
+const blurFacesWithFallbackMock = vi.fn(async (_inputPath: string) => blurState.result);
+vi.mock('./blur-native', () => ({
+  blurFacesWithFallback: (inputPath: string) => blurFacesWithFallbackMock(inputPath),
+}));
+vi.mock('./blur-config', () => ({
+  get BLUR_POST_RECORD_ENABLED() { return blurState.enabled; },
+}));
 
 beforeEach(() => {
   fetchResponses = [];
@@ -79,6 +99,9 @@ beforeEach(() => {
   fetchCalls.length = 0;
   uploadResponses = [];
   uploadCallCount = 0;
+  // 08-05: reset the blur flag/result to the default (flag OFF, blurred result).
+  blurState.enabled = false;
+  blurState.result = { outputPath: 'file:///tmp/blurred.mp4', facesBlurred: 1, status: 'blurred' };
   vi.clearAllMocks();
   // Reset auth mock after clearAllMocks
   supabaseMock.auth.getSession.mockResolvedValue({

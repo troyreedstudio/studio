@@ -34,3 +34,23 @@ export const BLUR_POST_RECORD_RADIUS = 70;
 
 /** Default post-record blur style. Gaussian is strongest; pixelate is the cheaper fallback. */
 export const BLUR_POST_RECORD_MODE: PostRecordBlurMode = 'gaussian';
+
+/**
+ * MASTER SWITCH for the POST-RECORD blur path in the upload flow (Plan 08-05).
+ *
+ * When TRUE, clipUpload.submit() blurs the recorded clip on-device BEFORE upload
+ * and uploads the BLURRED file (raw never leaves the device on the happy path);
+ * a blur failure routes to the privacy-safe fallback (retry -> pixelate ->
+ * dormant server-side detect-and-hold) and NEVER uploads the sharp clip as a
+ * normal delivery. When FALSE, submit() is byte-for-byte today's working upload
+ * (an incomplete blur path can never block the live upload — D-04 / T-08-16).
+ *
+ * This is the NEW post-record flag — SEPARATE from the abandoned live-viewfinder
+ * BLUR_NATIVE_ENABLED scaffold (D-02, removed). It gates ONLY the submit() seam.
+ *
+ * DEFAULT: TRUE for the beta — Troy wants every delivered clip auto-blurred.
+ * On-device blur is NON-NEGOTIABLE for the beta (08-CONTEXT). The flag stays so
+ * the path can be flipped off instantly if a device issue surfaces, without a
+ * code change to the upload orchestration.
+ */
+export const BLUR_POST_RECORD_ENABLED = true;

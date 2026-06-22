@@ -44,10 +44,17 @@ import { useCallback, useRef, useState } from 'react';
 import {
   uploadAsync,
   getInfoAsync,
+  deleteAsync,
   FileSystemUploadType,
 } from 'expo-file-system/legacy';
 import { supabase } from './supabase';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
+// STEP 5 (08-05): the post-record on-device blur step + its master flag. The blur
+// runs INSIDE submit() between "have the file" and "upload the file" when the flag
+// is ON, so the BLURRED file is what uploads (raw never leaves the device on the
+// happy path). blurFacesWithFallback implements the ordered retry->pixelate chain.
+import { blurFacesWithFallback } from './blur-native';
+import { BLUR_POST_RECORD_ENABLED } from './blur-config';
 
 // ── Shared Edge Function fetch helper ─────────────────────────────────────────
 // Plain fetch() with explicit 30s timeout, bypassing supabase.functions.invoke
@@ -261,7 +268,10 @@ export async function getPlaybackToken(checkId: string): Promise<string> {
 // signature-verified Mux webhook (03-02). The screen's job ends at 'processing'.
 // ────────────────────────────────────────────────────────────────────────────
 
-export type ClipUploadStatus = 'idle' | 'uploading' | 'processing' | 'error';
+// 'securing' (08-05) is the brief pre-upload state while the on-device face blur
+// runs (flag ON only). It transitions to 'uploading' once blur resolves. Flag OFF
+// never sets it, so the screen looks exactly as today.
+export type ClipUploadStatus = 'idle' | 'securing' | 'uploading' | 'processing' | 'error';
 
 export type ClipUploadGps = { lat: number; lng: number; accuracyM?: number } | null;
 
@@ -311,9 +321,50 @@ export function useClipUpload(): UseClipUpload {
     async (checkId: string, localPath: string, gps?: ClipUploadGps, fraudSignals?: Record<string, unknown>): Promise<boolean> => {
       if (inFlight.current) return false;
       inFlight.current = true;
-      setStatus('uploading');
       setProgress(0);
       setError(null);
+
+      // ── STEP 5 (08-05): POST-RECORD on-device face blur, flag-gated ──────────
+      // When BLUR_POST_RECORD_ENABLED is ON, blur the clip on-device BEFORE upload
+      // so the BLURRED file is what uploads (raw never leaves the device on the
+      // happy path — D-04). When OFF, this whole block is skipped and submit()
+      // behaves byte-for-byte as before (an incomplete blur path can never block
+      // the working upload — T-08-16). 'rawToDelete' is the original capture we
+      // remove ONLY after a successful blurred upload (Pitfall 6 / T-08-15).
+      let pathToUpload = localPath;
+      let rawToDelete: string | null = null;
+
+      if (BLUR_POST_RECORD_ENABLED) {
+        setStatus('securing');
+        const result = await blurFacesWithFallback(localPath);
+        if (result.status === 'blurred') {
+          // Blurred file is what uploads; schedule the raw for deletion on success.
+          pathToUpload = result.outputPath;
+          rawToDelete = localPath;
+        } else if (result.status === 'no_faces') {
+          // Nothing to blur — the original is already safe to deliver.
+          pathToUpload = localPath;
+        } else {
+          // 'failed' AFTER retry->pixelate (blur-native.ts). NEVER upload the sharp
+          // file as a normal delivery (Pitfall 5 / T-08-14). We refuse the clip on
+          // the client AND record the blur_failed marker so the server hold gate is
+          // the last-resort net. The Scout is shown an error so they can retake;
+          // submit resolves false (no normal delivery of an unblurred face — D-07).
+          setStatus('error');
+          setError('We could not secure your clip. Please retake and submit again.');
+          // Best-effort: tell the server this submission failed on-device blur so
+          // the dormant detect-and-hold net can hold any clip that does reach Mux.
+          await requestUploadUrl(
+            checkId,
+            gps ? { lat: gps.lat, lng: gps.lng, accuracyM: gps.accuracyM } : undefined,
+            { ...(fraudSignals ?? {}), blur_failed: true },
+          ).catch(() => { /* best-effort signal; never deliver the raw regardless */ });
+          inFlight.current = false;
+          return false;
+        }
+      }
+
+      setStatus('uploading');
       try {
         // Phase 5: forward filmed GPS (incl. accuracy) to mux-upload-url so it
         // persists filmed_lat/lng/accuracy_m on the clips row for verify-clip (VER-01).
@@ -324,11 +375,21 @@ export function useClipUpload(): UseClipUpload {
         // persists fraud_signals on the clips row for fraud-eval. Best-effort:
         // undefined is harmless (fraud-eval degrades to zero-score on missing bag).
         const { uploadUrl } = await requestUploadUrl(checkId, gpsArg, fraudSignals ?? undefined);
-        await uploadWithRetry(localPath, uploadUrl, 4, (f) => setProgress(f));
+        await uploadWithRetry(pathToUpload, uploadUrl, 4, (f) => setProgress(f));
         // Upload PUT returned success. We STOP here — the webhook drives the
         // check to delivered. The screen shows "processing" until Realtime flips.
         setProgress(1);
         setStatus('processing');
+        // Pitfall 6 (T-08-15): delete the RAW capture only AFTER the blurred upload
+        // succeeded, so no unblurred copy lingers in tmp. Never delete on 'failed'
+        // (the fallback/retry still needs it). Best-effort: a delete failure does
+        // not undo a good delivery.
+        if (rawToDelete) {
+          await deleteAsync(
+            rawToDelete.startsWith('file://') ? rawToDelete : `file://${rawToDelete}`,
+            { idempotent: true },
+          ).catch(() => { /* best-effort cleanup; upload already succeeded */ });
+        }
         inFlight.current = false;
         return true;
       } catch (e) {

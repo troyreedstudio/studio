@@ -8,6 +8,7 @@ import {
   Animated,
   Easing,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
@@ -45,6 +46,10 @@ const TROUBLE_REASONS = [
 // so they never waste a take filming off-location. The server verify-clip gate
 // remains the authoritative reject (defence in depth vs spoofing — Phase 6).
 const FILM_FENCE_M = 30;
+
+// TEMP (Step-3 visual gate): show the on-device blur test button in Release too,
+// since Troy tests on Release builds where __DEV__ is false. REMOVE in Plan 05/06.
+const SHOW_BLUR_TEST = true;
 
 // Haversine distance in metres between two lat/lng points (client pre-flight only).
 function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -154,7 +159,14 @@ export default function FilmingScreen() {
   // Real upload orchestration (extracted to lib/clips). Drives the progress UI
   // from progress/status; never marks the check delivered — webhook owns that.
   const clipUpload = useClipUpload();
-  const uploading = clipUpload.status === 'uploading' || clipUpload.status === 'processing';
+  // 'securing' (08-05) = the brief on-device face-blur step before upload (flag ON
+  // only). We treat it like the upload/processing states so the record button is
+  // swapped for the progress UI the whole time the clip is being secured + sent.
+  const securing = clipUpload.status === 'securing';
+  const uploading =
+    securing ||
+    clipUpload.status === 'uploading' ||
+    clipUpload.status === 'processing';
   const uploadPct = Math.round(clipUpload.progress * 100);
   const haloPulse = useRef(new Animated.Value(1)).current;
 
@@ -367,7 +379,9 @@ export default function FilmingScreen() {
     { label: 'Arrived at venue' },
     { label: recording ? `Filming ${recordSecs}s / 15s` : recordSecs >= 15 ? 'Captured 15s clip' : 'Capture 15s clip' },
     {
-      label: uploading
+      label: securing
+        ? 'Securing clip'
+        : uploading
         ? clipUpload.status === 'processing'
           ? 'Processing'
           : 'Uploading'
@@ -514,18 +528,30 @@ export default function FilmingScreen() {
             <View style={styles.uploadWrap}>
               <View style={styles.uploadHeader}>
                 <Text style={styles.uploadStageLabel}>
-                  {clipUpload.status === 'processing'
+                  {securing
+                    ? 'SECURING CLIP'
+                    : clipUpload.status === 'processing'
                     ? 'PROCESSING'
                     : 'UPLOADING CLIP'}
                 </Text>
-                <Text style={styles.uploadPct}>{uploadPct}%</Text>
+                {/* While securing, the blur is on-device with no byte progress;
+                    show a spinner instead of a misleading 0%. */}
+                {securing ? (
+                  <ActivityIndicator size="small" color="#22c55e" />
+                ) : (
+                  <Text style={styles.uploadPct}>{uploadPct}%</Text>
+                )}
               </View>
-              <View style={styles.uploadTrack}>
-                <View style={[styles.uploadFill, { width: `${uploadPct}%` }]} />
-              </View>
+              {!securing && (
+                <View style={styles.uploadTrack}>
+                  <View style={[styles.uploadFill, { width: `${uploadPct}%` }]} />
+                </View>
+              )}
               <Text style={styles.uploadSub}>
-                {clipUpload.status === 'processing'
-                  ? 'Upload complete. We’re finishing your clip — the Seeker gets it when it’s ready.'
+                {securing
+                  ? 'Securing your clip… blurring faces on your device before upload.'
+                  : clipUpload.status === 'processing'
+                  ? 'Upload complete. We’re finishing your clip, the Seeker gets it when it’s ready.'
                   : 'Encrypted upload in progress. Don’t close the app.'}
               </Text>
             </View>
@@ -580,7 +606,7 @@ export default function FilmingScreen() {
               {/* DEV-ONLY (08-03 Step-3 gate) — REMOVE in Plan 05/06.
                   Runs the post-record face blur on this clip and plays the
                   BLURRED output so Troy can confirm faces are obscured. */}
-              {__DEV__ && (
+              {SHOW_BLUR_TEST && (
                 <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: '#1e1e1e', paddingTop: 12 }}>
                   <Text style={{ color: '#888', fontSize: 11, marginBottom: 8 }}>
                     DEV: on-device blur test (not part of upload)
