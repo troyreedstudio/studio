@@ -191,12 +191,13 @@ export async function rateCheck(checkId: string, stars: number): Promise<void> {
     throw new Error('rateCheck: stars must be an integer between 1 and 5');
   }
   const uid = await requireUserId();
-  // UPSERT (not insert): a Seeker may change their rating / tap again. A bare
-  // insert hits the (check_id, seeker_id) unique constraint and throws
-  // "couldn't save your rating" on the second tap. onConflict updates the stars.
+  // There is NO unique constraint on (check_id, seeker_id), so upsert/onConflict
+  // can't be used. Delete-then-insert makes re-rating idempotent (one rating row
+  // per seeker per check) without a migration.
+  await supabase.from('ratings').delete().eq('check_id', checkId).eq('seeker_id', uid);
   const { error: rateError } = await supabase
     .from('ratings')
-    .upsert({ check_id: checkId, seeker_id: uid, stars }, { onConflict: 'check_id,seeker_id' });
+    .insert({ check_id: checkId, seeker_id: uid, stars });
   if (rateError) throw rateError;
 
   // Move delivered -> rated. On a RE-rate the check is already 'rated', so this
