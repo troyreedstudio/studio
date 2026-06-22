@@ -59,3 +59,53 @@ Plans:
 - [x] 06-03-PLAN.md — Wire the gate: mux-webhook blur gate (hold->blur_review, BLUR-04/05) + fraud-eval fire-and-forget + fraud_signals persisted filming.tsx->clips.ts->mux-upload-url [Category A]
 - [x] 06-04-PLAN.md — [BLOCKING] live deploy: db push 0014 + live pgTAP + deploy face-blur-check/fraud-eval + redeploy mux-webhook/mux-upload-url + confirm blur_enabled=false + regen types [Category A]
 - [x] 06-05-PLAN.md — [Category B] on-device blur scaffold: install worklets-core+face-detector+Skia behind BLUR_NATIVE_ENABLED(false) + SkiaCamera blur overlay + [DEVICE BUILD] compiles+boots gate (visual blur = Troy AM)
+
+### Phase 7: SLA + money integrity — real server-driven delivery deadlines (deadline_at on checks), Edge-cron enforcement of expiry + auto-refund on late/failed delivery, client countdowns that read the real deadline (not cosmetic resettable timers), wire Trouble-Here to the real refund, and real Scout earnings + payout/withdraw via Stripe Connect (replace fake earnings numbers)
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 7 to break down)
+
+### Phase 8: On-device face blur — custom Expo native module: post-record blur of faces in the recorded clip before upload (iOS AVFoundation+Vision+CoreImage, Android MediaCodec+MLKit), avoiding the worklets-core/New-Arch crash class; server-side detect-and-hold kept as dormant last-resort net
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 7
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 8 to break down)
+
+### Phase 9: Verified badge + Scout identity + quick-win reconnects — surface real gps_verified + real Scout name/rating on delivery; reconnect saved places, recurring checks, payment-method cards, notification prefs, profile stats to existing backend; remove fake AI-verdict/crowd copy
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 9 to break down)
+
+### Phase 10: Push notifications — Expo Push + device-tokens table, notify Scouts of nearby jobs + Seekers on delivery, wire notification preference toggles
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 9
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 10 to break down)
+
+### Phase 11: Apple submission readiness — hide unfinished growth screens, privacy policy URL, account deletion, demo reviewer account, App Privacy labels + metadata + screenshots, stability pass, TestFlight + App Store submit
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 10
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 11 to break down)

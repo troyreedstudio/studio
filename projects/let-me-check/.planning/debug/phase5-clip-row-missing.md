@@ -1,5 +1,5 @@
 ---
-status: fixing
+status: resolved
 trigger: "Phase-5 regression: check stuck in processing, clips table empty, gps_unverifiable event logged"
 created: 2026-06-21T00:00:00Z
 updated: 2026-06-21T00:00:00Z
