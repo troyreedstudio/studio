@@ -27,6 +27,14 @@ import { CameraViewfinder } from './_filming-viewfinder';
 import { BLUR_NATIVE_ENABLED } from '../lib/blur-config';
 import { BlurViewfinder } from './_filming-blur-overlay';
 import { styles } from './_filming-styles';
+// ---- DEV-ONLY (08-03 Step-3 device gate) — REMOVE in Plan 05/06 wiring. ----
+// Lets Troy run the post-record blur on the just-recorded clip and play the
+// BLURRED output in-app, to confirm faces are obscured BEFORE the upload flow is
+// wired. Gated by __DEV__ so it never ships. See <dev-trigger> in 08-03 SUMMARY.
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { blurFaces } from '../lib/blur-native';
+import type { BlurResult, BlurMode } from '../lib/blur-native';
+// ---------------------------------------------------------------------------
 
 const TROUBLE_REASONS = [
   'Line is gone / venue empty',
@@ -304,6 +312,42 @@ export default function FilmingScreen() {
     }
   };
 
+  // ---- DEV-ONLY (08-03 Step-3 device gate) — REMOVE in Plan 05/06. ----------
+  // Runs blurFaces on the captured clip and plays the BLURRED output so Troy can
+  // confirm the face is obscured. NOT part of the real upload flow.
+  const [devBlurBusy, setDevBlurBusy] = useState(false);
+  const [devBlurResult, setDevBlurResult] = useState<BlurResult | null>(null);
+  const devPlayer = useVideoPlayer(devBlurResult?.outputPath ?? null, (p) => {
+    p.loop = true;
+    p.play();
+  });
+
+  const runDevBlur = async (mode: BlurMode) => {
+    if (!capturedPath) {
+      Alert.alert('No clip', 'Record a clip first, then run the blur test.');
+      return;
+    }
+    setDevBlurBusy(true);
+    setDevBlurResult(null);
+    try {
+      const res = await blurFaces(capturedPath, { mode });
+      console.log(
+        `[LMC-BLUR DEV] mode=${mode} status=${res.status} faces=${res.facesBlurred} out=${res.outputPath}`,
+      );
+      setDevBlurResult(res);
+      Alert.alert(
+        `Blur: ${res.status}`,
+        `mode: ${mode}\nfaces: ${res.facesBlurred}\n${res.status === 'blurred' ? 'Playing the blurred clip below — check your face is hidden.' : res.status === 'no_faces' ? 'No faces found; original returned untouched.' : 'FAILED — fallback would run in the real flow.'}`,
+      );
+    } catch (e) {
+      console.error('[LMC-BLUR DEV] threw', e);
+      Alert.alert('Blur test threw', String(e));
+    } finally {
+      setDevBlurBusy(false);
+    }
+  };
+  // ---------------------------------------------------------------------------
+
   const pad = (n: number) => String(n).padStart(2, '0');
   const timeLeft = `${pad(Math.floor(secondsLeft / 60))}:${pad(secondsLeft % 60)}`;
 
@@ -535,6 +579,54 @@ export default function FilmingScreen() {
                   <Text style={styles.submitBtnText}>SUBMIT CLIP</Text>
                 </TouchableOpacity>
               </View>
+
+              {/* DEV-ONLY (08-03 Step-3 gate) — REMOVE in Plan 05/06.
+                  Runs the post-record face blur on this clip and plays the
+                  BLURRED output so Troy can confirm faces are obscured. */}
+              {__DEV__ && (
+                <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: '#1e1e1e', paddingTop: 12 }}>
+                  <Text style={{ color: '#888', fontSize: 11, marginBottom: 8 }}>
+                    DEV: on-device blur test (not part of upload)
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity
+                      style={{ flex: 1, backgroundColor: '#0d1a0d', borderColor: '#22c55e', borderWidth: 1, borderRadius: 10, paddingVertical: 10, alignItems: 'center', opacity: devBlurBusy ? 0.5 : 1 }}
+                      activeOpacity={0.85}
+                      disabled={devBlurBusy}
+                      onPress={() => runDevBlur('gaussian')}
+                    >
+                      <Text style={{ color: '#22c55e', fontSize: 12, fontWeight: '700' }}>
+                        {devBlurBusy ? 'BLURRING…' : 'BLUR (GAUSSIAN)'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ flex: 1, backgroundColor: '#1a160d', borderColor: '#f59e0b', borderWidth: 1, borderRadius: 10, paddingVertical: 10, alignItems: 'center', opacity: devBlurBusy ? 0.5 : 1 }}
+                      activeOpacity={0.85}
+                      disabled={devBlurBusy}
+                      onPress={() => runDevBlur('pixelate')}
+                    >
+                      <Text style={{ color: '#f59e0b', fontSize: 12, fontWeight: '700' }}>
+                        {devBlurBusy ? 'BLURRING…' : 'BLUR (PIXELATE)'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {devBlurResult && (
+                    <View style={{ marginTop: 12 }}>
+                      <Text style={{ color: '#888', fontSize: 11, marginBottom: 6 }}>
+                        status: {devBlurResult.status} · faces: {devBlurResult.facesBlurred}
+                      </Text>
+                      {devBlurResult.status === 'blurred' && (
+                        <VideoView
+                          player={devPlayer}
+                          style={{ width: '100%', aspectRatio: 9 / 16, borderRadius: 12, backgroundColor: '#000' }}
+                          contentFit="contain"
+                          nativeControls
+                        />
+                      )}
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
           ) : (
             <View style={styles.recordWrap}>
