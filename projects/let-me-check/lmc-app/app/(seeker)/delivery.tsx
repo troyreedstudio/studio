@@ -7,8 +7,6 @@ import { getCheck, getCheckClip, rateCheck, type CheckRow, type ClipRow } from '
 import { getPlaybackToken } from '../lib/clips';
 import { requestRefund, type RefundReason } from '../lib/payments';
 
-const TAGS = ['Busy Tonight', 'Short Line', 'Worth It'];
-
 const REFUND_REASONS: { code: RefundReason; label: string }[] = [
   { code: 'blurry', label: 'Too blurry to use' },
   { code: 'wrong_location', label: 'Wrong location' },
@@ -168,16 +166,6 @@ export default function DeliveryScreen() {
           </View>
         </View>
 
-        <View style={styles.aiVerdictRow}>
-          <View style={styles.aiBadge}><Text style={styles.aiBadgeText}>✦ AI VERDICT</Text></View>
-          <Text style={styles.aiVerdictText}>Short line · ~30 inside · medium energy</Text>
-        </View>
-
-        <Text style={styles.sectionLabel}>CROWD REPORT</Text>
-        <View style={styles.tagRow}>
-          {TAGS.map((tag) => <View key={tag} style={styles.tag}><Text style={styles.tagText}>{tag}</Text></View>)}
-        </View>
-
         <Text style={styles.sectionLabel}>RATE YOUR CHECK</Text>
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((star) => (
@@ -234,14 +222,7 @@ const styles = StyleSheet.create({
   liveTimestamp: { position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 5 },
   liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#00FF7F' },
   liveTime: { fontFamily: 'Inter_600SemiBold', color: '#00FF7F', fontSize: 10.5, letterSpacing: 0.4 },
-  aiVerdictRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,133,51,0.08)', borderWidth: 1, borderColor: 'rgba(255,133,51,0.3)', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, marginTop: 12, marginBottom: 22, gap: 10 },
-  aiBadge: { backgroundColor: '#00FF7F', borderRadius: 100, paddingHorizontal: 8, paddingVertical: 3 },
-  aiBadgeText: { fontFamily: 'Inter_700Bold', fontSize: 9, color: '#000', letterSpacing: 1 },
-  aiVerdictText: { flex: 1, fontFamily: 'Inter_500Medium', fontSize: 12.5, color: '#fff', letterSpacing: 0.3 },
   sectionLabel: { fontFamily: 'Inter_700Bold', fontSize: 11, color: '#00FF7F', letterSpacing: 3, marginBottom: 12, marginTop: 6, textTransform: 'uppercase' },
-  tagRow: { flexDirection: 'row', gap: 8, marginBottom: 22, flexWrap: 'wrap' },
-  tag: { backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: 100, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: 'rgba(34,197,94,0.35)' },
-  tagText: { fontFamily: 'Inter_600SemiBold', color: '#00FF7F', fontSize: 12, letterSpacing: 0.4 },
   starsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   star: { fontSize: 36, color: '#222' },
   starActive: { color: '#FFCB47' },
