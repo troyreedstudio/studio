@@ -82,7 +82,7 @@ Plans:
 **Plans:** 6 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Step 1: scaffold the local lmc-blur Expo module (no-op) + lock the BlurResult contract; [DEVICE] empty module links + app boots
+- [x] 08-01-PLAN.md — Step 1: scaffold the local lmc-blur Expo module (no-op) + lock the BlurResult contract; [DEVICE] empty module links + app boots
 - [ ] 08-02-PLAN.md — Steps 2+3: AVFoundation re-encode (export links) + Vision face detection (count only, no blur yet); [DEVICE] re-encode plays audio-free + face count plausible
 - [ ] 08-03-PLAN.md — Step 3: Core Image blur composited to detected face rects; [DEVICE] Troy confirms his face is blurred in the saved clip
 - [ ] 08-04-PLAN.md — Step 4: full 15s 1080p clip end-to-end with temporal coverage + perf/memory tuning; [DEVICE] whole-clip blur, acceptable time, no OOM
