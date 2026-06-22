@@ -121,10 +121,10 @@ Plans:
 **Goal:** Get the app cleanly through Apple App Review (TestFlight + App Store): no dead buttons or dev artifacts, real in-app account deletion, in-app privacy/terms links, the testing dispatch timeout reset, and a precise human submission checklist teed up for Troy.
 **Requirements**: D-01 (hide growth screens), D-02 (remove dev blur button), D-03 (account deletion), D-04 (reset dispatch_timeout to 300), D-05 (privacy/terms links), H-01..H-10 (human submission steps)
 **Depends on:** Phase 10
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 Plans:
-- [ ] 11-01-PLAN.md — [BLOCKING] account-deletion migration 0021 (cascade-safe, anonymize financial) + delete-account Edge fn + RED pgTAP/deno (Wave 1)
+- [x] 11-01-PLAN.md — [BLOCKING] account-deletion migration 0021 (cascade-safe, anonymize financial) + delete-account Edge fn + RED pgTAP/deno (Wave 1)
 - [ ] 11-02-PLAN.md — hide growth screens (membership/invite entry points) + wire search location button + remove SHOW_BLUR_TEST + WF badges (Wave 2)
 - [ ] 11-03-PLAN.md — Delete-Account entry points (both profiles) + deleteMyAccount helper + privacy/terms/support links + remove unused photo permission (Wave 3)
 - [ ] 11-04-PLAN.md — [BLOCKING] live: db push 0021 + GREEN pgTAP + deploy delete-account (verify_jwt=true) + reset dispatch_timeout_s=300 + regen types + tsc (Wave 4)
