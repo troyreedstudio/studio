@@ -32,8 +32,10 @@ module.exports = {
           'Let Me Check uses your camera to film verification clips.',
         // No microphone usage string: clips are video-only (audio is never
         // captured — VID-02). vision-camera is configured with the mic disabled.
-        NSPhotoLibraryUsageDescription:
-          'Let Me Check uses your photo library to save your past check videos.',
+        // NSPhotoLibraryUsageDescription intentionally absent: the app uses no
+        // photo-library API (no MediaLibrary, CameraRoll, saveToPhotos, or
+        // ImagePicker anywhere in the codebase). Declaring it unused would
+        // trigger an Apple review query (5.1.1 minimum permissions).
         ITSAppUsesNonExemptEncryption: false,
       },
     },

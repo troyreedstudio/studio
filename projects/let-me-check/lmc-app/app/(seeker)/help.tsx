@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const FAQS = [
@@ -13,10 +13,12 @@ const FAQS = [
 ];
 
 const CONTACT_OPTIONS = [
-  { icon: '✉️', label: 'Email Support', value: 'help@letmecheck.com' },
-  { icon: '💬', label: 'Live Chat', value: 'Mon-Fri · 9am-6pm EST' },
-  { icon: '📜', label: 'Terms of Service', value: 'lmc.app/terms' },
-  { icon: '🔒', label: 'Privacy Policy', value: 'lmc.app/privacy' },
+  { icon: '✉️', label: 'Email Support', value: 'help@letmecheck.com', href: 'mailto:help@letmecheck.com' },
+  { icon: '💬', label: 'Live Chat', value: 'Mon-Fri, 9am-6pm EST', href: 'mailto:help@letmecheck.com' },
+  // PLACEHOLDER: swap for the hosted URL before submission (D-05)
+  { icon: '📜', label: 'Terms of Service', value: 'lmc.app/terms', href: 'https://lmc.app/terms' },
+  // PLACEHOLDER: swap for the hosted URL before submission (D-05)
+  { icon: '🔒', label: 'Privacy Policy', value: 'lmc.app/privacy', href: 'https://lmc.app/privacy' },
 ];
 
 export default function HelpScreen() {
@@ -52,6 +54,7 @@ export default function HelpScreen() {
               key={c.label}
               style={[styles.contactRow, i < CONTACT_OPTIONS.length - 1 && styles.contactRowBorder]}
               activeOpacity={0.7}
+              onPress={() => { if (c.href) void Linking.openURL(c.href); }}
             >
               <Text style={styles.contactIcon}>{c.icon}</Text>
               <View style={styles.contactInfo}>
@@ -63,26 +66,30 @@ export default function HelpScreen() {
           ))}
         </View>
 
-        {/* Dev preview — remove before public launch */}
-        <Text style={[styles.sectionLabel, { marginTop: 22 }]}>DEV · PREVIEW ERROR STATES</Text>
-        <View style={styles.devList}>
-          {[
-            { key: 'no-scouts', label: 'No Scouts available' },
-            { key: 'payment-declined', label: 'Payment declined' },
-            { key: 'connection', label: 'Connection lost' },
-            { key: 'missed-window', label: 'Scout missed window' },
-          ].map((e, i, arr) => (
-            <TouchableOpacity
-              key={e.key}
-              style={[styles.devRow, i < arr.length - 1 && styles.devRowBorder]}
-              onPress={() => router.push({ pathname: '/(seeker)/error', params: { type: e.key } })}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.devLabel}>{e.label}</Text>
-              <Text style={styles.devArrow}>›</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* Dev preview — gated to development builds only, not visible in Release */}
+        {__DEV__ && (
+          <>
+            <Text style={[styles.sectionLabel, { marginTop: 22 }]}>DEV · PREVIEW ERROR STATES</Text>
+            <View style={styles.devList}>
+              {[
+                { key: 'no-scouts', label: 'No Scouts available' },
+                { key: 'payment-declined', label: 'Payment declined' },
+                { key: 'connection', label: 'Connection lost' },
+                { key: 'missed-window', label: 'Scout missed window' },
+              ].map((e, i, arr) => (
+                <TouchableOpacity
+                  key={e.key}
+                  style={[styles.devRow, i < arr.length - 1 && styles.devRowBorder]}
+                  onPress={() => router.push({ pathname: '/(seeker)/error', params: { type: e.key } })}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.devLabel}>{e.label}</Text>
+                  <Text style={styles.devArrow}>›</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
 
         <Text style={styles.disclaimer}>
           Let Me Check · "Know Before You Go" · v1.0 · Built with care
