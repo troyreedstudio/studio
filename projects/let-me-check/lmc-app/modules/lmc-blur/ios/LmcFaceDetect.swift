@@ -26,6 +26,41 @@ struct LmcDetectionResult {
   let faceCount: Int
 }
 
+/// Per-frame face-rect lookup used by the export handler (08-03).
+///
+/// Detection runs at <= 15fps (sampled), but export emits every frame. For each
+/// export frame we find the NEAREST sampled detection in time and reuse its rects
+/// — so we never re-run Vision per frame (Pitfall 3). Faces move little between
+/// 15fps samples, so nearest-sample reuse keeps the blur on the face.
+struct LmcDetectionLookup {
+  /// Sampled detections sorted ascending by time.
+  private let sorted: [LmcFrameDetection]
+
+  init(detections: [LmcFrameDetection]) {
+    self.sorted = detections.sorted { CMTimeGetSeconds($0.time) < CMTimeGetSeconds($1.time) }
+  }
+
+  /// Normalized face rects from the sampled detection nearest to `time`.
+  /// Returns [] if there were no detections at all.
+  func faceRects(at time: CMTime) -> [CGRect] {
+    guard !sorted.isEmpty else { return [] }
+    let t = CMTimeGetSeconds(time)
+
+    // Linear nearest-time scan. Sampled-frame counts are small (<=15fps * 15s ~=
+    // 225 entries, and only frames WITH faces are stored), so this stays cheap.
+    var best = sorted[0]
+    var bestDelta = abs(CMTimeGetSeconds(best.time) - t)
+    for d in sorted.dropFirst() {
+      let delta = abs(CMTimeGetSeconds(d.time) - t)
+      if delta < bestDelta {
+        bestDelta = delta
+        best = d
+      }
+    }
+    return best.faceRects
+  }
+}
+
 enum LmcFaceDetectError: Error {
   case noVideoTrack
   case generatorFailed(String)
