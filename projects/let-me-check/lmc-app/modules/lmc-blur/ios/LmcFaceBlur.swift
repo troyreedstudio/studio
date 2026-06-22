@@ -98,10 +98,11 @@ struct LmcFaceBlur {
       let faceRect = paddedPixelRect(nrect, extent: extent)
       guard faceRect.width > 0, faceRect.height > 0 else { continue }
       if let blurredFace = blurredFaceRegion(source: source, faceRect: faceRect) {
-        // Mask the blurred crop through a feathered ELLIPSE so it fades into the
-        // sharp background at the edges instead of a hard square cut.
-        let masked = featheredOval(blurred: blurredFace, faceRect: faceRect)
-        result = masked.composited(over: result)
+        // Composite the blurred face crop directly (proven-working rect path).
+        // NOTE: the feathered-oval mask (featheredOval) crashed Core Image on
+        // device and is DEFERRED to later polish — the rect blur fully covers the
+        // face (privacy unchanged); only the edge aesthetic differs.
+        result = blurredFace.composited(over: result)
       }
     }
     return result.cropped(to: extent)
