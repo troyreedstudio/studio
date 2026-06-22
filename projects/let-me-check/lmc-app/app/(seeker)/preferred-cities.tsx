@@ -1,6 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { getProfile } from '../lib/api';
 
 const CITIES = [
   { id: 'mia', name: 'Miami', region: 'Florida, USA', scouts: 142 },
@@ -15,13 +17,37 @@ const CITIES = [
 
 export default function PreferredCitiesScreen() {
   const router = useRouter();
-  const [selected, setSelected] = useState<Set<string>>(new Set(['mia', 'nyc']));
+  // Start empty — real selection loads from the profile on mount.
+  const [selected, setSelected] = useState<Set<string>>(new Set<string>());
 
+  // Load persisted preferred_cities (text[] in DB) into a Set on mount.
+  useEffect(() => {
+    getProfile()
+      .then((profile) => {
+        const saved = (profile as any)?.preferred_cities as string[] | null;
+        setSelected(new Set(saved ?? []));
+      })
+      .catch(() => {
+        // Network error keeps an empty set — honest empty state.
+      });
+  }, []);
+
+  // Optimistically toggles the local Set and persists the full array to profiles.preferred_cities.
+  // Write failures are silent so an offline toggle still reflects the user's choice.
   const toggle = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      next.has(id) ? next.delete(id) : next.add(id);
+      (async () => {
+        const { data } = await supabase.auth.getUser();
+        const uid = data.user?.id;
+        if (!uid) return;
+        // preferred_cities is not in generated types until Plan 04 regen — cast to any.
+        await (supabase as any)
+          .from('profiles')
+          .update({ preferred_cities: Array.from(next) })
+          .eq('id', uid);
+      })().catch(() => {});
       return next;
     });
   };
