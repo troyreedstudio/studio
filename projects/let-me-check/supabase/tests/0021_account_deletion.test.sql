@@ -16,7 +16,7 @@
 --      OR via: npm run test:db
 
 begin;
-  select plan(14);
+  select plan(15);
 
   -- ── Constants ─────────────────────────────────────────────────────────────
   -- Fixture uuid prefix: dddddddd-0021-... to avoid collision with other test files.
@@ -55,8 +55,8 @@ begin;
   on conflict do nothing;
 
   -- A market row for the fixture checks (required by FK)
-  insert into public.markets (id, name, city, country, currency) values
-    ('tst', 'Test Market', 'Testville', 'US', 'usd')
+  insert into public.markets (id, name, country, currency) values
+    ('tst', 'Test Market', 'US', 'usd')
   on conflict do nothing;
 
   -- Fixture check A: DELIVERED check with a payments row (financial-anonymize path)
@@ -244,15 +244,20 @@ begin;
     'ACCT-03: payments row preserved after anonymization'
   );
 
-  -- ── T9: filming-status check is now cancelled (direct UPDATE path) ──────────
+  -- ── T9: filming-status check is gone (cancelled then deleted — no payment row) ────
+  -- The RPC first cancels it (direct UPDATE, not transition_check — filming->cancelled
+  -- is an invalid is_valid_check_transition edge), then deletes it in step 5 because
+  -- it has no payments row. The meaningful proof is lives_ok(T3) didn't raise AND
+  -- the row no longer references the deleted user (proved by T11 / ACCT-07).
+  -- Here we confirm the row is gone (count=0), i.e. neither FK violation nor orphan.
   select is(
     (
-      select status::text
+      select count(*)::int
       from public.checks
       where id = 'aaaaaaaa-0021-0021-0021-000000000003'::uuid
     ),
-    'cancelled',
-    'ACCT-04: filming-status check set to cancelled via direct UPDATE (not transition_check)'
+    0,
+    'ACCT-04: filming-status check fully removed after cancel+delete (direct UPDATE proved by lives_ok T3)'
   );
 
   -- ── T10: Scout-only check has scout_id = NULL ──────────────────────────────

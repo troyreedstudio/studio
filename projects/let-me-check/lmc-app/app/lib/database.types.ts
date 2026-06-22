@@ -39,6 +39,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletions: {
+        Row: {
+          deleted_at: string
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          deleted_at?: string
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          deleted_at?: string
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       checks: {
         Row: {
           accepted_at: string | null
@@ -1056,6 +1077,7 @@ export type Database = {
             }
             Returns: string
           }
+      delete_my_account: { Args: { p_reason?: string }; Returns: undefined }
       diag:
         | {
             Args: { msg: unknown }
