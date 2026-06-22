@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 11-02-PLAN.md — dead button removal + dev artifact cleanup
-last_updated: "2026-06-22T14:23:15.309Z"
+stopped_at: Completed 11-03-PLAN.md — Delete Account + help links + photo permission removed
+last_updated: "2026-06-22T14:29:04.387Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 47
-  completed_plans: 41
-  percent: 87
+  completed_plans: 42
+  percent: 89
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 11 (Apple submission readiness) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-06-22
 
@@ -96,6 +96,7 @@ Progress: [█████████░] 91% (30 of 33 plans complete)
 | Phase 10-push-notifications P05 | 25 | 3 tasks | 3 files |
 | Phase 11 P01 | 5m | 3 tasks | 4 files |
 | Phase 11-apple-submission-readiness P02 | 196 | 3 tasks | 5 files |
+| Phase 11 P03 | 12 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -212,6 +213,9 @@ Recent decisions affecting current work:
 - [Phase 11]: Hide growth screens by removing nav entry points only; screen files (membership.tsx, invite.tsx) preserved for fast-follow (D-01)
 - [Phase 11]: Voice mic gated with __DEV__ ternary in search.tsx so fake voice search never renders in Release builds
 - [Phase 11]: Dev blur block fully deleted (not __DEV__-gated) because SHOW_BLUR_TEST was force-true in Release — full deletion safer than gating
+- [Phase 11]: invokeEdgeFunction copied into account.ts (not re-exported from payments.ts) — account lifecycle is a separate concern; copy keeps modules independent
+- [Phase 11]: Delete Account button below Sign Out in both profiles, red #ff5a5a — findable without being prominent (Apple 5.1.1(v))
+- [Phase 11]: NSPhotoLibraryUsageDescription removed and replaced with explanatory comment; placeholder URLs marked for swap before submission (D-05)
 
 ### Roadmap Evolution
 
@@ -243,6 +247,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T14:23:15.306Z
-Stopped at: Completed 11-02-PLAN.md — dead button removal + dev artifact cleanup
+Last session: 2026-06-22T14:29:04.385Z
+Stopped at: Completed 11-03-PLAN.md — Delete Account + help links + photo permission removed
 Resume file: None
