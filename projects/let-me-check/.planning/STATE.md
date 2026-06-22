@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 10-04-PLAN.md (step 8c seeker video-ready push in mux-webhook)
-last_updated: "2026-06-22T13:21:50.624Z"
+status: verifying
+stopped_at: Completed 10-05-PLAN.md — full push pipeline live (send-push + mux-webhook deployed; trigger Vault-authenticated; types regen; APNs EAS key flagged)
+last_updated: "2026-06-22T13:37:56.892Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 42
-  completed_plans: 38
-  percent: 90
+  completed_plans: 39
+  percent: 93
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 
 Phase: 10 (Push notifications) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-22
 
 Progress: [█████████░] 91% (30 of 33 plans complete)
@@ -93,6 +93,7 @@ Progress: [█████████░] 91% (30 of 33 plans complete)
 | Phase 10 P02 | 6m | 2 tasks | 2 files |
 | Phase 10-push-notifications P03 | 223 | 3 tasks | 5 files |
 | Phase 10-push-notifications P04 | 4 | 1 tasks | 1 files |
+| Phase 10-push-notifications P05 | 25 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -201,6 +202,8 @@ Recent decisions affecting current work:
 - [Phase 10]: EAS_PROJECT_ID bundled in config.ts (not Constants.expoConfig.extra) — same Release-safe pattern as SUPABASE_URL to prevent null-on-device crash
 - [Phase 10]: registerPushToken() re-used in signOut() to fetch current token before deletion; no module-level token state needed
 - [Phase 10-push-notifications]: mux-webhook step 8c: fire-and-forget send-push {video-ready} after delivered — mirrors fraud-eval 8b pattern exactly; push failure never blocks delivery (T-10-14)
+- [Phase 10-push-notifications]: ALTER DATABASE GUC denied on managed Supabase — Supabase Vault (lmc_supabase_url + lmc_service_role_key) used for trigger credential storage with GUC fallback for local dev
+- [Phase 10-push-notifications]: scouts_in_range_of_check RPC created as migration 0019 — check-centric ST_DWithin geo query, SECURITY DEFINER, correct direction for job-nearby audience (not list_open_checks_for_scout)
 
 ### Roadmap Evolution
 
@@ -232,6 +235,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T13:21:50.622Z
-Stopped at: Completed 10-04-PLAN.md (step 8c seeker video-ready push in mux-webhook)
+Last session: 2026-06-22T13:37:56.890Z
+Stopped at: Completed 10-05-PLAN.md — full push pipeline live (send-push + mux-webhook deployed; trigger Vault-authenticated; types regen; APNs EAS key flagged)
 Resume file: None
