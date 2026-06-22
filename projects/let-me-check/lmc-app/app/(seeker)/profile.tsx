@@ -1,7 +1,11 @@
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { switchRole, signOut } from '../lib/auth';
+import { getProfile } from '../lib/api';
+import { listMyChecks } from '../lib/checks';
+import { supabase } from '../lib/supabase';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -17,8 +21,73 @@ const SETTINGS: { icon: IconName; label: string; route: string }[] = [
   { icon: 'help-circle-outline', label: 'Help', route: '/(seeker)/help' },
 ];
 
+/** Derive initials from a display name (e.g. "Troy Reed" -> "TR"; single word -> first 2 chars). */
+function toInitials(name: string | null): string {
+  if (!name) return 'S';
+  const words = name.trim().split(/\s+/);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
 export default function ProfileScreen() {
   const router = useRouter();
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [memberSince, setMemberSince] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ count: number; spent: number; avgRating: number | null }>({
+    count: 0,
+    spent: 0,
+    avgRating: null,
+  });
+
+  // Load real profile data, check stats, and avg rating from the Seeker's own ratings rows.
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u.user?.id;
+
+      const [profile, checks] = await Promise.all([getProfile(), listMyChecks()]);
+
+      // Real display name + member-since date.
+      setDisplayName(profile?.display_name ?? null);
+      if (profile?.created_at) {
+        setMemberSince(
+          new Date(profile.created_at).toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric',
+          })
+        );
+      }
+
+      // Count + spent: exclude cancelled and no_scout (these weren't delivered).
+      const delivered = checks.filter(
+        (c) => c.status !== 'cancelled' && c.status !== 'no_scout'
+      );
+      const count = delivered.length;
+      const spent = delivered.reduce(
+        (acc, c) => acc + (c.tier === 'priority' ? 20 : 15),
+        0
+      );
+
+      // Avg rating: Seeker reads their own rows via ratings_select_own RLS (0005).
+      let avgRating: number | null = null;
+      if (uid) {
+        const { data: rows } = await supabase
+          .from('ratings')
+          .select('stars')
+          .eq('seeker_id', uid);
+        if (rows && rows.length > 0) {
+          avgRating =
+            Math.round(
+              (rows.reduce((s, r) => s + (r.stars ?? 0), 0) / rows.length) * 10
+            ) / 10;
+        }
+      }
+
+      setStats({ count, spent, avgRating });
+    })().catch(() => {
+      // Network error — keep zero/null states; no fake numbers.
+    });
+  }, []);
 
   // AUTH-03: persist current_role='scout' (logs auth.role_switched) then route to
   // the Scout hub. Route optimistically; the write completes in the background.
@@ -33,6 +102,8 @@ export default function ProfileScreen() {
     void signOut().catch(() => {});
     router.replace('/index');
   };
+
+  const initials = toInitials(displayName);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -50,10 +121,12 @@ export default function ProfileScreen() {
         {/* Avatar */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitials}>TR</Text>
+            <Text style={styles.avatarInitials}>{initials}</Text>
           </View>
-          <Text style={styles.userName}>Troy R.</Text>
-          <Text style={styles.memberSince}>Member since January 2026</Text>
+          <Text style={styles.userName}>{displayName ?? 'Seeker'}</Text>
+          <Text style={styles.memberSince}>
+            {memberSince ? `Member since ${memberSince}` : ' '}
+          </Text>
           <View style={styles.verifiedBadge}>
             <Ionicons name="checkmark-circle" size={12} color="#00FF7F" />
             <Text style={styles.verifiedText}>VERIFIED SEEKER</Text>
@@ -63,17 +136,19 @@ export default function ProfileScreen() {
         {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>14</Text>
+            <Text style={styles.statValue}>{stats.count}</Text>
             <Text style={styles.statLabel}>CHECKS</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>$245</Text>
+            <Text style={styles.statValue}>{`$${stats.spent}`}</Text>
             <Text style={styles.statLabel}>SPENT</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>4.8★</Text>
+            <Text style={styles.statValue}>
+              {stats.avgRating != null ? `${stats.avgRating}★` : '—'}
+            </Text>
             <Text style={styles.statLabel}>AVG RATING</Text>
           </View>
         </View>
