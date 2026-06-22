@@ -102,14 +102,6 @@ export default function MembershipScreen() {
           <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.wireframeBadge}
-            onPress={() => router.push('/flow-map')}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.wireframeBadgeText}>WF</Text>
-          </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
