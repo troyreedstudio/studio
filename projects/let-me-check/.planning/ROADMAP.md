@@ -91,13 +91,16 @@ Plans:
 
 ### Phase 9: Verified badge + Scout identity + quick-win reconnects — surface real gps_verified + real Scout name/rating on delivery; reconnect saved places, recurring checks, payment-method cards, notification prefs, profile stats to existing backend; remove fake AI-verdict/crowd copy
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** The seeker-facing delivery + profile surface tells the truth: the ✓ Verified badge reflects the real gps_verified result, the Scout card shows the real Scout (IDOR-safe), the fake AI-verdict/crowd copy is gone, and notification prefs / preferred cities / profile stats persist to the real backend.
+**Requirements**: D-01 (real Verified badge), D-02 (IDOR-safe Scout identity), D-03 (remove fake AI/crowd), D-04 (reconnect quick-win screens), D-05 (recurring UI+persistence; scheduler fast-follow)
 **Depends on:** Phase 8
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 9 to break down)
+- [ ] 09-01-PLAN.md — Migration 0017: profile prefs/cities columns + IDOR-safe get_check_scout_public RPC + RED pgTAP (wave 1)
+- [ ] 09-02-PLAN.md — delivery.tsx: real Verified badge + real Scout identity via RPC + remove fake AI/crowd (wave 2)
+- [ ] 09-03-PLAN.md — Reconnect screens: persist notification prefs + preferred cities + real profile stats (wave 2)
+- [ ] 09-04-PLAN.md — [BLOCKING] db push 0017 + live pgTAP + regen types + tsc (wave 3)
 
 ### Phase 10: Push notifications — Expo Push + device-tokens table, notify Scouts of nearby jobs + Seekers on delivery, wire notification preference toggles
 
