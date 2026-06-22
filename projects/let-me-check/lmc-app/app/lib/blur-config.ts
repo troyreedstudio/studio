@@ -17,10 +17,20 @@
 export type PostRecordBlurMode = 'gaussian' | 'pixelate';
 
 /**
- * Gaussian blur radius (pixels at native frame resolution) for the post-record
- * face blur. ~18-25 at 1080p gives strong, non-recoverable coverage. Tunable.
+ * FALLBACK / baseline gaussian radius (pixels at native frame resolution).
+ *
+ * As of 08-04 the native blur SCALES TO EACH FACE'S SIZE: per detected face the
+ * module computes its own strength from the face's pixel width
+ * (gaussian radius ≈ faceWidthPx * 0.30, clamped 12..220; pixelate block ≈
+ * faceWidthPx * 0.18, clamped 8..120). This fixes the "flat white box" a single
+ * fixed radius produced on small/distant faces while still heavily obscuring
+ * close-up faces — every face is de-identified at any distance.
+ *
+ * This value is now only the FALLBACK used when a face's pixel size can't be
+ * derived; it is NOT the strength applied to a normally-detected face. Leave it
+ * generous so the fallback still over-blurs (privacy errs toward more blur).
  */
-export const BLUR_POST_RECORD_RADIUS = 22;
+export const BLUR_POST_RECORD_RADIUS = 70;
 
 /** Default post-record blur style. Gaussian is strongest; pixelate is the cheaper fallback. */
 export const BLUR_POST_RECORD_MODE: PostRecordBlurMode = 'gaussian';
