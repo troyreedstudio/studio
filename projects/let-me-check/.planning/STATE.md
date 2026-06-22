@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: 08-02 autonomous done (AVFoundation re-encode + Vision detection committed b8969d7, 03b1dcc); Task 3 DEVICE gate handed to orchestrator
-last_updated: "2026-06-22T09:23:32.823Z"
+stopped_at: Completed 08-03-PLAN.md autonomous (Core Image face blur); Task 3 DEVICE gate handed to orchestrator
+last_updated: "2026-06-22T09:33:17.990Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 4
   total_plans: 33
-  completed_plans: 28
-  percent: 85
+  completed_plans: 29
+  percent: 88
 ---
 
 # Project State
@@ -83,6 +83,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 07-sla-money-integrity-real-server-driven-delivery-deadlines-de P04 | 8 | 2 tasks | 5 files |
 | Phase 08 P01 | 1 | 3 tasks | 7 files |
 | Phase 08 P02 | 1 | 2 tasks | 4 files |
+| Phase 08 P03 | 1 | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -170,6 +171,8 @@ Recent decisions affecting current work:
 - [Phase 08]: blurFaces no-op returns status 'no_faces' (never 'blurred') so a passthrough cannot be mistaken for a real blur (Pitfall 5); plain AsyncFunction = no worklet/JSI bridge
 - [Phase 08]: [Phase 08-02]: detection confidence threshold 0.3 (D-05 discretion); faceCount = max faces in any single sampled frame; export uses HighestQuality preset, video-only (VID-02), 0-byte output -> status failed
 - [Phase 08]: [Phase 08-02]: detection failure non-fatal (logged, count=0); only EXPORT failure -> status failed (export is the framework-link gate); blurFaces still status no_faces (no pixels changed, Pitfall 5)
+- [Phase 08]: [Phase 08-03]: Core Image blur via CIBlendWithMask (blur whole frame once + white-on-black face-rect mask, +20% padding); blurFaces now returns 'blurred'/'no_faces'(original untouched)/'failed'(any error, never sharp-as-blurred)
+- [Phase 08]: [Phase 08-03]: Vision normalized rects -> CI pixels with NO Y-flip (both bottom-left); per-frame rect lookup = nearest sampled detection (no per-frame Vision, Pitfall 3); post-record radius=22 gaussian default
 
 ### Roadmap Evolution
 
@@ -201,6 +204,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T09:23:32.820Z
-Stopped at: 08-02 autonomous done (AVFoundation re-encode + Vision detection committed b8969d7, 03b1dcc); Task 3 DEVICE gate handed to orchestrator
+Last session: 2026-06-22T09:33:09.704Z
+Stopped at: Completed 08-03-PLAN.md autonomous (Core Image face blur); Task 3 DEVICE gate handed to orchestrator
 Resume file: None
