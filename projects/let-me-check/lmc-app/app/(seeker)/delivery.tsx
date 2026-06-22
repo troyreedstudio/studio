@@ -6,6 +6,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { getCheck, getCheckClip, rateCheck, type CheckRow, type ClipRow } from '../lib/checks';
 import { getPlaybackToken } from '../lib/clips';
 import { requestRefund, type RefundReason } from '../lib/payments';
+import { supabase } from '../lib/supabase';
 
 const REFUND_REASONS: { code: RefundReason; label: string }[] = [
   { code: 'blurry', label: 'Too blurry to use' },
@@ -108,11 +109,23 @@ export default function DeliveryScreen() {
   const [clip, setClip] = useState<ClipRow | null>(null);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const [scoutProfile, setScoutProfile] = useState<{ display_name: string | null; avg_rating: number | null; clip_count: number | null } | null>(null);
 
   useEffect(() => {
     if (!checkId) return;
     getCheck(checkId).then(setCheck).catch(() => {});
     getCheckClip(checkId).then(setClip).catch(() => {});
+  }, [checkId]);
+
+  useEffect(() => {
+    if (!checkId) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .rpc('get_check_scout_public', { p_check_id: checkId })
+      .then(({ data }: { data: { display_name: string | null; avg_rating: number | null; clip_count: number | null }[] | null }) => {
+        if (data?.[0]) setScoutProfile(data[0]);
+      })
+      .catch(() => {});
   }, [checkId]);
 
   useEffect(() => {
@@ -127,6 +140,12 @@ export default function DeliveryScreen() {
   const player = useVideoPlayer(videoSrc, (p) => { p.loop = false; });
   const locationLabel = check?.location_label || `${venue}, ${city}`;
   const filmedLine = formatFilmedAgo(clip?.filmed_at ?? null);
+
+  const scoutName = scoutProfile?.display_name ?? 'Your Scout';
+  const scoutInitial = (scoutProfile?.display_name?.trim()?.[0] ?? 'S').toUpperCase();
+  const ratingPart = scoutProfile?.avg_rating != null ? `⭐ ${scoutProfile.avg_rating}` : null;
+  const clipsPart = scoutProfile?.clip_count != null ? `${scoutProfile.clip_count} videos` : null;
+  const scoutMeta = [ratingPart, clipsPart].filter(Boolean).join(' · ');
 
   const handleRate = async (star: number) => {
     if (submitting) return;
@@ -177,12 +196,14 @@ export default function DeliveryScreen() {
         {rating > 0 && <Text style={styles.ratingFeedback}>{rating >= 4 ? 'Awesome! Thanks for rating 🙌' : 'Thanks for the feedback'}</Text>}
 
         <View style={styles.scoutCard}>
-          <View style={styles.scoutAvatar}><Text style={styles.scoutAvatarText}>J</Text></View>
+          <View style={styles.scoutAvatar}><Text style={styles.scoutAvatarText}>{scoutInitial}</Text></View>
           <View style={styles.scoutInfo}>
-            <Text style={styles.scoutName}>Jake C.</Text>
-            <Text style={styles.scoutRating}>⭐ 4.9 · 247 videos</Text>
+            <Text style={styles.scoutName}>{scoutName}</Text>
+            {scoutMeta ? <Text style={styles.scoutRating}>{scoutMeta}</Text> : null}
           </View>
-          <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Verified</Text></View>
+          {clip?.gps_verified === true && (
+            <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Verified</Text></View>
+          )}
         </View>
 
         <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/(seeker)/home')} activeOpacity={0.85}>
