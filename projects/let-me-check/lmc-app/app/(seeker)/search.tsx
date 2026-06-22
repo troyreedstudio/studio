@@ -12,6 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { getMarketById, DEFAULT_MARKET_ID, nearestLiveMarket } from '../data/markets';
+import { requestUserLocation } from '../state/location';
 
 const VOICE_MOCKS = [
   'Soho House New York',
@@ -204,8 +205,10 @@ export default function SearchScreen() {
     return () => clearInterval(t);
   }, [voiceListening]);
 
-  // Mock voice capture: after 2.5 sec, fill input with a random mock query
+  // Mock voice capture: after 2.5 sec, fill input with a random mock query.
+  // Guard: never inject a fake query in Release — only fires in dev.
   useEffect(() => {
+    if (!__DEV__) return;
     if (!voiceListening) return;
     const t = setTimeout(() => {
       const mock = VOICE_MOCKS[Math.floor(Math.random() * VOICE_MOCKS.length)];
@@ -292,15 +295,27 @@ export default function SearchScreen() {
           <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.clearIcon}>✕</Text>
           </TouchableOpacity>
-        ) : (
+        ) : __DEV__ ? (
           <TouchableOpacity onPress={() => setVoiceListening(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.micIcon}>🎤</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
 
       {/* Use Current Location */}
-      <TouchableOpacity style={styles.locButton} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.locButton}
+        activeOpacity={0.7}
+        onPress={async () => {
+          const { status, coords } = await requestUserLocation();
+          if (status === 'granted' && coords) {
+            // Home re-centres on getUserCoords() on load — navigate there and it
+            // will pick up the freshly-resolved coords automatically.
+            router.replace({ pathname: '/(seeker)/home' });
+          }
+          // On denial: keep the search screen open so the user can type manually.
+        }}
+      >
         <Text style={styles.locIcon}>📍</Text>
         <View style={styles.locTextWrap}>
           <Text style={styles.locTitle}>Use my current location</Text>
