@@ -51,9 +51,9 @@ module.exports = {
       favicon: './assets/favicon.png',
     },
     plugins: [
-      // Durable iOS deployment target 15.5 (Phase 6): MLKit face detector
-      // (react-native-vision-camera-face-detector) requires iOS >= 15.5. Set here
-      // so a clean prebuild regenerates ios/ at 15.5 (ios/ is gitignored).
+      // Durable iOS deployment target 15.5. Set here so a clean prebuild
+      // regenerates ios/ at 15.5 (ios/ is gitignored). The lmc-blur post-record
+      // module (Vision + Core Image) is comfortable at this target.
       ['expo-build-properties', { ios: { deploymentTarget: '15.5' } }],
       'expo-router',
       'expo-font',
@@ -90,23 +90,18 @@ module.exports = {
     // picks up install_modules_dependencies(s) (TurboModule deps) instead of
     // the Old Arch React-Core branch.
     //
-    // Phase 6 Category B — on-device blur native stack:
-    // Three new native packages were added (06-05-PLAN.md Task 1):
-    //   - react-native-worklets-core@1.6.3  (frame processor worklet runtime)
-    //   - react-native-vision-camera-face-detector@1.10.2  (MLKit face detector; v1.x for v4.7.x compat — v2.x requires vision-camera v5+)
-    //   - @shopify/react-native-skia@2.6.6  (Skia Canvas blur overlay; expo-suggested was 2.2.12 but 2.6.6 pinned per RESEARCH)
-    //   - NOTE: react-native-vision-camera-skia has NO v4-compatible version (all versions are v5.x).
-    //     The blur overlay falls back to a plain Skia <Canvas> positioned over the viewfinder.
-    //   - NOTE: babel.config.js not yet created. The worklets-core babel plugin
-    //     ("react-native-worklets-core/plugin") must be added to babel.config.js
-    //     before BLUR_NATIVE_ENABLED is flipped true — otherwise 'worklet' directives
-    //     in _filming-blur-overlay.tsx will not be compiled for the runtime.
-    // New-Arch compatibility is UNVERIFIED for this exact combo on Expo 54 / RN 0.83.2
-    // (06-RESEARCH A1-A3). Prior New-Arch bites: createUploadTask + google-signin.
-    // BLUR_NATIVE_ENABLED defaults false. Do NOT enable until:
-    //   (1) The EAS dev build boots cleanly (Category B — orchestrator runs overnight).
-    //   (2) Troy confirms faces are blurred in the filming viewfinder (Category C).
-    //   (3) blur_enabled = true is set in market_config (server gate, Plan 04).
+    // On-device face blur — POST-RECORD path (Phase 8):
+    // Faces are blurred AFTER recording by the first-party `lmc-blur` native
+    // module (modules/lmc-blur — AVFoundation + Vision + Core Image), which
+    // re-encodes the saved clip before upload. No third-party native blur
+    // packages are required.
+    // The OLD Phase-6 live-viewfinder scaffold (react-native-worklets-core,
+    // react-native-vision-camera-face-detector, @shopify/react-native-skia +
+    // the worklets-core babel plugin) was ABANDONED (08-CONTEXT D-02) and has
+    // been REMOVED — it caused native build-linking fragility (undefined
+    // RNWorklet symbol, Hermes heap corruption) with no benefit. Do NOT re-add it.
+    // The dormant server-side detect-and-hold net (face-blur-check +
+    // market_config.blur_enabled) remains as the last-resort fallback.
     extra: {
       router: {},
       eas: {

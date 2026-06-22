@@ -39,7 +39,6 @@
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@rnmapbox/maps": "^10.3.1",
-    "@shopify/react-native-skia": "2.6.6",
     "@stripe/stripe-react-native": "0.67.0",
     "@supabase/supabase-js": "^2.108.2",
     "expo": "~54.0.35",
@@ -67,15 +66,9 @@
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.16.0",
     "react-native-url-polyfill": "^3.0.0",
-    "react-native-vision-camera": "^4.7.3",
-    "react-native-vision-camera-face-detector": "^1.10.2",
-    "react-native-worklets-core": "1.6.3"
+    "react-native-vision-camera": "^4.7.3"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.18.6",
-    "@babel/plugin-proposal-optional-catch-binding": "^7.18.6",
-    "@babel/plugin-proposal-optional-chaining": "^7.21.0",
-    "@babel/preset-env": "^8.0.2",
     "@types/react": "~19.1.10",
     "@vitest/coverage-v8": "^4.1.9",
     "typescript": "~5.9.2",

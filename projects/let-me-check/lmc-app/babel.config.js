@@ -1,11 +1,9 @@
 module.exports = function (api) {
   api.cache(true);
   return {
+    // Expo SDK 54 default. The worklets-core babel plugin (and its proposal
+    // plugins) was removed alongside the abandoned live-blur scaffold — the
+    // post-record lmc-blur module needs no babel transforms.
     presets: ['babel-preset-expo'],
-    // Phase 6 (on-device blur): the worklets-core plugin compiles the 'worklet'
-    // directives in _filming-blur-overlay.tsx (the vision-camera face-detector
-    // frame processor). Must be last in the plugins list. Harmless when the
-    // BLUR_NATIVE_ENABLED flag is off (no worklets are mounted).
-    plugins: [['react-native-worklets-core/plugin']],
   };
 };
