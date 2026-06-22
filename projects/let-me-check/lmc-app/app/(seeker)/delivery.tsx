@@ -1,4 +1,9 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Modal, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Modal, TextInput, ActivityIndicator, Dimensions } from 'react-native';
+
+// Hero video height — the clip is portrait, so let it dominate the screen
+// (Netflix-style) instead of a small thumbnail. Caps so a sliver of the details
+// below peeks to invite scroll.
+const HERO_VIDEO_H = Math.round(Dimensions.get('window').height * 0.62);
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
@@ -175,9 +180,9 @@ export default function DeliveryScreen() {
           <Text style={styles.venueName}>{locationLabel}</Text>
         </View>
 
-        <View style={styles.videoBox}>
+        <View style={[styles.videoBox, { height: HERO_VIDEO_H }]}>
           {videoSrc ? (
-            <VideoView player={player} style={StyleSheet.absoluteFillObject} contentFit="cover" allowsFullscreen nativeControls />
+            <VideoView player={player} style={StyleSheet.absoluteFillObject} contentFit="contain" allowsFullscreen nativeControls />
           ) : (
             <View style={styles.processingWrap}>
               <Ionicons name="hourglass-outline" size={28} color="rgba(255,255,255,0.6)" />
