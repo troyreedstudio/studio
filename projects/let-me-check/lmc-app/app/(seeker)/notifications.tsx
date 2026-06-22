@@ -1,6 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { getProfile } from '../lib/api';
 
 const SETTINGS = [
   { id: 'delivered', label: 'Check Delivered', sub: 'When your video is ready to watch', defaultValue: true },
@@ -11,11 +13,45 @@ const SETTINGS = [
   { id: 'marketing', label: 'LMC Updates', sub: 'Product news and new features', defaultValue: false },
 ];
 
+const DEFAULT_VALUES = SETTINGS.reduce<Record<string, boolean>>(
+  (acc, s) => ({ ...acc, [s.id]: s.defaultValue }),
+  {}
+);
+
 export default function NotificationsScreen() {
   const router = useRouter();
-  const [values, setValues] = useState<Record<string, boolean>>(
-    SETTINGS.reduce((acc, s) => ({ ...acc, [s.id]: s.defaultValue }), {})
-  );
+  const [values, setValues] = useState<Record<string, boolean>>(DEFAULT_VALUES);
+
+  // Load persisted notification_prefs from the profile on mount.
+  // Merges saved prefs over client defaults so any new setting IDs fall back gracefully.
+  useEffect(() => {
+    getProfile()
+      .then((profile) => {
+        const saved = (profile as any)?.notification_prefs as Record<string, boolean> | null;
+        if (saved && typeof saved === 'object') {
+          setValues((prev) => ({ ...prev, ...saved }));
+        }
+      })
+      .catch(() => {
+        // Network error keeps the defaults — silent fail is intentional.
+      });
+  }, []);
+
+  // Optimistically updates local state and persists the full map to profiles.notification_prefs.
+  // Write failures are silent so an offline toggle still reflects the user's choice.
+  const handleToggle = (id: string, v: boolean) => {
+    setValues((prev) => {
+      const next = { ...prev, [id]: v };
+      (async () => {
+        const { data } = await supabase.auth.getUser();
+        const uid = data.user?.id;
+        if (!uid) return;
+        // notification_prefs is not in generated types until Plan 04 regen — cast to any.
+        await (supabase as any).from('profiles').update({ notification_prefs: next }).eq('id', uid);
+      })().catch(() => {});
+      return next;
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -41,7 +77,7 @@ export default function NotificationsScreen() {
               </View>
               <Switch
                 value={values[s.id]}
-                onValueChange={(v) => setValues((prev) => ({ ...prev, [s.id]: v }))}
+                onValueChange={(v) => handleToggle(s.id, v)}
                 trackColor={{ false: '#222', true: '#00FF7F' }}
                 thumbColor={values[s.id] ? '#fff' : '#666'}
               />
