@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 11-03-PLAN.md — Delete Account + help links + photo permission removed
-last_updated: "2026-06-22T14:29:04.387Z"
+stopped_at: Completed 11-04-PLAN.md — 0021 live + delete-account deployed (verify_jwt=TRUE) + dispatch_timeout=300 + types regen + tsc clean
+last_updated: "2026-06-22T14:37:54.701Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 47
-  completed_plans: 42
-  percent: 89
+  completed_plans: 43
+  percent: 91
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 11 (Apple submission readiness) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-06-22
 
@@ -97,6 +97,7 @@ Progress: [█████████░] 91% (30 of 33 plans complete)
 | Phase 11 P01 | 5m | 3 tasks | 4 files |
 | Phase 11-apple-submission-readiness P02 | 196 | 3 tasks | 5 files |
 | Phase 11 P03 | 12 | 3 tasks | 5 files |
+| Phase 11 P04 | 25 | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -216,6 +217,7 @@ Recent decisions affecting current work:
 - [Phase 11]: invokeEdgeFunction copied into account.ts (not re-exported from payments.ts) — account lifecycle is a separate concern; copy keeps modules independent
 - [Phase 11]: Delete Account button below Sign Out in both profiles, red #ff5a5a — findable without being prominent (Apple 5.1.1(v))
 - [Phase 11]: NSPhotoLibraryUsageDescription removed and replaced with explanatory comment; placeholder URLs marked for swap before submission (D-05)
+- [Phase 11]: supabase db push --include-all required for 0021 (out-of-order history); filming-check ACCT-04 assertion updated to count=0 (row deleted after cancel — correct behavior); delete-account deployed verify_jwt=TRUE (401 confirmed); dispatch_timeout reset 3600->300 across all 102 markets
 
 ### Roadmap Evolution
 
@@ -247,6 +249,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T14:29:04.385Z
-Stopped at: Completed 11-03-PLAN.md — Delete Account + help links + photo permission removed
+Last session: 2026-06-22T14:37:54.698Z
+Stopped at: Completed 11-04-PLAN.md — 0021 live + delete-account deployed (verify_jwt=TRUE) + dispatch_timeout=300 + types regen + tsc clean
 Resume file: None
