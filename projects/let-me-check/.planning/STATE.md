@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 10-02-PLAN.md (send-push Edge Function authored + 7 Deno tests green)
-last_updated: "2026-06-22T13:11:59.010Z"
+stopped_at: Completed 10-03-PLAN.md (push.ts + auth wiring + job-nearby toggle)
+last_updated: "2026-06-22T13:18:58.258Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 42
-  completed_plans: 36
-  percent: 86
+  completed_plans: 37
+  percent: 88
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 10 (Push notifications) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-06-22
 
@@ -91,6 +91,7 @@ Progress: [█████████░] 91% (30 of 33 plans complete)
 | Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P04 | 12 | 2 tasks | 1 files |
 | Phase 10-push-notifications P01 | 8 | 3 tasks | 5 files |
 | Phase 10 P02 | 6m | 2 tasks | 2 files |
+| Phase 10-push-notifications P03 | 223 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -196,6 +197,8 @@ Recent decisions affecting current work:
 - [Phase 10-push-notifications]: dispatching trigger guarded on pg_net availability (DO block); fallback = Supabase Dashboard Webhooks
 - [Phase 10]: job-nearby audience uses scouts_in_range_of_check RPC (check-centric) not list_open_checks_for_scout (scout-centric/wrong direction per CHECKER WARNING 3)
 - [Phase 10]: send-push deploys --no-verify-jwt (Wave 4/10-05): server-to-server, no user JWT
+- [Phase 10]: EAS_PROJECT_ID bundled in config.ts (not Constants.expoConfig.extra) — same Release-safe pattern as SUPABASE_URL to prevent null-on-device crash
+- [Phase 10]: registerPushToken() re-used in signOut() to fetch current token before deletion; no module-level token state needed
 
 ### Roadmap Evolution
 
@@ -227,6 +230,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T13:11:59.008Z
-Stopped at: Completed 10-02-PLAN.md (send-push Edge Function authored + 7 Deno tests green)
+Last session: 2026-06-22T13:18:58.255Z
+Stopped at: Completed 10-03-PLAN.md (push.ts + auth wiring + job-nearby toggle)
 Resume file: None

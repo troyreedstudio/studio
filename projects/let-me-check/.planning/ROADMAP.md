@@ -107,12 +107,12 @@ Plans:
 **Goal:** Scouts get a push when a nearby job appears and Seekers get a push when their video is ready — server-owned, fire-and-forget, respecting per-user notification preferences.
 **Requirements**: PUSH-01, PUSH-02, PUSH-03, PUSH-04, PUSH-05, PUSH-06, PUSH-07, PUSH-08, PUSH-09, PUSH-10, PUSH-11, PUSH-12, PUSH-13
 **Depends on:** Phase 9
-**Plans:** 2/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 - [x] 10-01-PLAN.md — install expo-notifications/expo-device + plugin; migration 0018 device_push_tokens + RLS + dispatching push trigger + RED pgTAP (Wave 1)
 - [x] 10-02-PLAN.md — send-push Edge Function (recipient resolution, prefs, Expo batch, DeviceNotRegistered cleanup, never-throws) + Deno tests (Wave 2)
-- [ ] 10-03-PLAN.md — client push.ts (register/upsert/delete) + auth.ts wiring + sign-out cleanup + Scout job-nearby toggle + vitest (Wave 2)
+- [x] 10-03-PLAN.md — client push.ts (register/upsert/delete) + auth.ts wiring + sign-out cleanup + Scout job-nearby toggle + vitest (Wave 2)
 - [ ] 10-04-PLAN.md — mux-webhook step 8c: fire-and-forget seeker video-ready push on delivered (Wave 3)
 - [ ] 10-05-PLAN.md — BLOCKING deploy: db push 0018 + GUCs, deploy send-push + redeploy mux-webhook (--no-verify-jwt), regen types, full suite (Wave 4)
 
