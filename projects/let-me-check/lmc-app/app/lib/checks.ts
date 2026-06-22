@@ -191,16 +191,22 @@ export async function rateCheck(checkId: string, stars: number): Promise<void> {
     throw new Error('rateCheck: stars must be an integer between 1 and 5');
   }
   const uid = await requireUserId();
+  // UPSERT (not insert): a Seeker may change their rating / tap again. A bare
+  // insert hits the (check_id, seeker_id) unique constraint and throws
+  // "couldn't save your rating" on the second tap. onConflict updates the stars.
   const { error: rateError } = await supabase
     .from('ratings')
-    .insert({ check_id: checkId, seeker_id: uid, stars });
+    .upsert({ check_id: checkId, seeker_id: uid, stars }, { onConflict: 'check_id,seeker_id' });
   if (rateError) throw rateError;
 
+  // Move delivered -> rated. On a RE-rate the check is already 'rated', so this
+  // transition is a no-op that may error — the rating itself is saved (above),
+  // which is what the user intended, so a re-rate must NOT surface as a failure.
   const { error } = await supabase.rpc('transition_check', {
     p_check_id: checkId,
     p_to: 'rated',
   });
-  if (error) throw error;
+  if (error && !/transition|already|rated/i.test(error.message ?? '')) throw error;
 }
 
 /** The owning Seeker cancels a requested/dispatching check. Server-owned. */
@@ -236,10 +242,16 @@ export async function expireUnmatchedCheck(checkId: string): Promise<void> {
  * (0009) confines clips to the check's seeker or assigned scout.
  */
 export async function getCheckClip(checkId: string): Promise<ClipRow | null> {
+  // A check can legitimately have MORE THAN ONE clip row (retakes, a rejected
+  // clip then a re-submit, etc.). Return the LATEST one — never use bare
+  // .maybeSingle() here, which throws "multiple rows returned" and (when the
+  // caller swallows it) leaves the delivery screen stuck on "Processing…".
   const { data, error } = await supabase
     .from('clips')
     .select('*')
     .eq('check_id', checkId)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
   if (error) throw error;
   return data;
