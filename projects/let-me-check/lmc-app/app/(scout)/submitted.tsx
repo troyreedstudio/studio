@@ -102,9 +102,9 @@ export default function SubmittedScreen() {
                   <Ionicons name="alert" size={28} color="#000" />
                 </View>
               </View>
-              <Text style={styles.title}>This clip couldn’t be verified</Text>
+              <Text style={styles.title}>This video couldn’t be verified</Text>
               <Text style={styles.subtitle}>
-                We couldn’t confirm this clip was filmed at {venue} — it looks like it was
+                We couldn’t confirm this video was filmed at {venue} — it looks like it was
                 recorded too far from the location. Because we can’t verify it, it can’t be
                 delivered, and there’s no payout for this one.
               </Text>
@@ -161,23 +161,23 @@ export default function SubmittedScreen() {
               </View>
             </View>
 
-            <Text style={styles.title}>Clip sent</Text>
+            <Text style={styles.title}>Video sent</Text>
             <Text style={styles.subtitle}>
-              Your 15-second clip of {venue} is on its way to the Seeker.
+              Your 15-second video of {venue} is on its way to the Seeker.
             </Text>
 
             {/* Status timeline */}
             <Text style={styles.sectionLabel}>PROGRESS</Text>
             <View style={styles.timeline}>
               <TimelineRow
-                label="Clip received"
+                label="Video received"
                 detail="We've got your footage"
                 state="done"
                 isFirst
               />
               <TimelineRow
                 label="Getting it ready"
-                detail="Preparing your clip to send — takes a moment"
+                detail="Preparing your video to send — takes a moment"
                 state={stage === 'processing' ? 'active' : 'done'}
               />
               <TimelineRow
@@ -193,7 +193,7 @@ export default function SubmittedScreen() {
               />
               <TimelineRow
                 label="You get paid"
-                detail={`$${payout} clears once the Seeker accepts the clip`}
+                detail={`$${payout} clears once the Seeker accepts the video`}
                 state={stage === 'accepted' ? 'done' : 'pending'}
                 isLast
               />
@@ -202,7 +202,7 @@ export default function SubmittedScreen() {
             {/* Earnings */}
             <View style={styles.earningsCard}>
               <View style={styles.earningsTop}>
-                <Text style={styles.earningsLabel}>EARNED THIS CLIP</Text>
+                <Text style={styles.earningsLabel}>EARNED THIS VIDEO</Text>
                 <View
                   style={[
                     styles.earningStatusPill,
@@ -232,7 +232,7 @@ export default function SubmittedScreen() {
             <View style={styles.rejectionNote}>
               <Ionicons name="alert-circle" size={14} color="#FFCB47" />
               <Text style={styles.rejectionNoteText}>
-                Payment clears once the Seeker accepts the clip. Low-quality footage, wrong venue, or GPS mismatch can lead to rejection — and no payout. See{' '}
+                Payment clears once the Seeker accepts the video. Low-quality footage, wrong venue, or GPS mismatch can lead to rejection — and no payout. See{' '}
                 <Text
                   style={styles.rejectionNoteLink}
                   onPress={() => router.push('/legal/code')}
@@ -244,7 +244,7 @@ export default function SubmittedScreen() {
             </View>
 
             {/* Clip stats */}
-            <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>CLIP DETAILS</Text>
+            <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>VIDEO DETAILS</Text>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>15s</Text>
@@ -270,7 +270,7 @@ export default function SubmittedScreen() {
                 color={stage === 'accepted' ? '#FFCB47' : 'rgba(255,255,255,0.4)'}
               />
               <Text style={styles.ratingLineText}>
-                We’ll notify you when the Seeker rates this clip.
+                We’ll notify you when the Seeker rates this video.
               </Text>
             </View>
           </Animated.View>

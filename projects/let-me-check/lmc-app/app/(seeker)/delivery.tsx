@@ -158,7 +158,7 @@ export default function DeliveryScreen() {
           ) : (
             <View style={styles.processingWrap}>
               <Ionicons name="hourglass-outline" size={28} color="rgba(255,255,255,0.6)" />
-              <Text style={styles.processingText}>Processing your clip…</Text>
+              <Text style={styles.processingText}>Processing your video…</Text>
             </View>
           )}
           <View style={styles.videoBadge}><Text style={styles.videoBadgeText}>HD · 15s</Text></View>
@@ -192,7 +192,7 @@ export default function DeliveryScreen() {
           <View style={styles.scoutAvatar}><Text style={styles.scoutAvatarText}>J</Text></View>
           <View style={styles.scoutInfo}>
             <Text style={styles.scoutName}>Jake C.</Text>
-            <Text style={styles.scoutRating}>⭐ 4.9 · 247 clips</Text>
+            <Text style={styles.scoutRating}>⭐ 4.9 · 247 videos</Text>
           </View>
           <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Verified</Text></View>
         </View>

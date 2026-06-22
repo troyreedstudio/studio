@@ -273,7 +273,7 @@ export default function PaymentScreen() {
         <Text style={styles.disclaimer}>
           {processing
             ? 'Authorizing with Stripe…'
-            : 'Your card is held now and only charged once your clip is delivered.'}
+            : 'Your card is held now and only charged once your video is delivered.'}
         </Text>
       </View>
     </SafeAreaView>

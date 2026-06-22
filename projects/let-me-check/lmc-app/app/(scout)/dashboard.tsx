@@ -209,7 +209,7 @@ export default function ScoutDashboard() {
               <View style={styles.earningsChip}>
                 <View style={styles.earningsDot} />
                 <Text style={styles.earningsChipText}>
-                  {earnings.clipsDelivered} clips delivered
+                  {earnings.clipsDelivered} videos delivered
                 </Text>
               </View>
               <TouchableOpacity
@@ -301,7 +301,7 @@ export default function ScoutDashboard() {
                   </View>
                   <View style={styles.requestDetailDivider} />
                   <View style={styles.requestDetail}>
-                    <Text style={styles.requestDetailLabel}>CLIP</Text>
+                    <Text style={styles.requestDetailLabel}>VIDEO</Text>
                     <Text style={styles.requestDetailValue}>15s</Text>
                   </View>
                 </View>

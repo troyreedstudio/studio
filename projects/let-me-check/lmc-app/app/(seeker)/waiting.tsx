@@ -377,7 +377,7 @@ export default function WaitingScreen() {
           {isFilming ? 'YOUR SCOUT IS FILMING' : 'YOUR SCOUT IS ON SITE'}
         </Text>
         <Text style={styles.statusHero}>
-          {isFilming ? 'Recording your clip…' : 'Getting into position…'}
+          {isFilming ? 'Recording your video…' : 'Getting into position…'}
         </Text>
 
         {/* Venue + Scout meta */}

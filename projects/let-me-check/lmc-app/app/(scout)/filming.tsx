@@ -308,7 +308,7 @@ export default function FilmingScreen() {
       // No file was captured (e.g. the recorder never produced one). Tell the
       // Scout instead of silently doing nothing, and let them retake.
       console.error('[LMC-CAM] submit blocked: capturedPath is null');
-      Alert.alert('No clip captured', 'That take didn’t record. Please film the clip again.');
+      Alert.alert('No video captured', 'That take didn’t record. Please film the video again.');
       return;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -333,7 +333,7 @@ export default function FilmingScreen() {
 
   const runDevBlur = async (mode: BlurMode) => {
     if (!capturedPath) {
-      Alert.alert('No clip', 'Record a clip first, then run the blur test.');
+      Alert.alert('No video', 'Record a video first, then run the blur test.');
       return;
     }
     setDevBlurBusy(true);
@@ -346,7 +346,7 @@ export default function FilmingScreen() {
       setDevBlurResult(res);
       Alert.alert(
         `Blur: ${res.status}`,
-        `mode: ${mode}\nfaces: ${res.facesBlurred}\n${res.status === 'blurred' ? 'Playing the blurred clip below — check your face is hidden.' : res.status === 'no_faces' ? 'No faces found; original returned untouched.' : 'FAILED — fallback would run in the real flow.'}`,
+        `mode: ${mode}\nfaces: ${res.facesBlurred}\n${res.status === 'blurred' ? 'Playing the blurred video below — check your face is hidden.' : res.status === 'no_faces' ? 'No faces found; original returned untouched.' : 'FAILED — fallback would run in the real flow.'}`,
       );
     } catch (e) {
       console.error('[LMC-BLUR DEV] threw', e);
@@ -377,10 +377,10 @@ export default function FilmingScreen() {
 
   const STEPS = [
     { label: 'Arrived at venue' },
-    { label: recording ? `Filming ${recordSecs}s / 15s` : recordSecs >= 15 ? 'Captured 15s clip' : 'Capture 15s clip' },
+    { label: recording ? `Filming ${recordSecs}s / 15s` : recordSecs >= 15 ? 'Captured 15s video' : 'Capture 15s video' },
     {
       label: securing
-        ? 'Securing clip'
+        ? 'Securing video'
         : uploading
         ? clipUpload.status === 'processing'
           ? 'Processing'
@@ -529,10 +529,10 @@ export default function FilmingScreen() {
               <View style={styles.uploadHeader}>
                 <Text style={styles.uploadStageLabel}>
                   {securing
-                    ? 'SECURING CLIP'
+                    ? 'SECURING VIDEO'
                     : clipUpload.status === 'processing'
                     ? 'PROCESSING'
-                    : 'UPLOADING CLIP'}
+                    : 'UPLOADING VIDEO'}
                 </Text>
                 {/* While securing, the blur is on-device with no byte progress;
                     show a spinner instead of a misleading 0%. */}
@@ -549,9 +549,9 @@ export default function FilmingScreen() {
               )}
               <Text style={styles.uploadSub}>
                 {securing
-                  ? 'Securing your clip… blurring faces on your device before upload.'
+                  ? 'Securing your video… blurring faces on your device before upload.'
                   : clipUpload.status === 'processing'
-                  ? 'Upload complete. We’re finishing your clip, the Seeker gets it when it’s ready.'
+                  ? 'Upload complete. We’re finishing your video, the Seeker gets it when it’s ready.'
                   : 'Encrypted upload in progress. Don’t close the app.'}
               </Text>
             </View>
@@ -599,7 +599,7 @@ export default function FilmingScreen() {
                   onPress={handleSubmit}
                 >
                   <Ionicons name="arrow-up" size={14} color="#000" />
-                  <Text style={styles.submitBtnText}>SUBMIT CLIP</Text>
+                  <Text style={styles.submitBtnText}>SUBMIT VIDEO</Text>
                 </TouchableOpacity>
               </View>
 

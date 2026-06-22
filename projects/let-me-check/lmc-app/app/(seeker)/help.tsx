@@ -5,9 +5,9 @@ const FAQS = [
   { q: 'What is Let Me Check?', a: 'Order a real 15-second video of any place from a real person nearby. Delivered in 7-10 minutes. From $15.' },
   { q: 'How do I request a check?', a: 'Tap "Where do you need eyes?" on home, type or speak the place, pick a tier (Standard $15 or Priority $20), and pay. A nearby Scout will film and deliver to you within minutes.' },
   { q: 'When am I charged?', a: 'When you tap CONFIRM & PAY. If no Scout accepts within 5 minutes, you\'re refunded automatically.' },
-  { q: 'Can I get a refund?', a: 'Yes — automatic if no Scout shows up, the clip arrives outside the time window, or the Scout filmed the wrong place.' },
-  { q: 'How do Scouts get verified?', a: 'GPS geofence, GPS-stamped clips, AI signage detection, reference photos, and a 20-min cooldown per venue prevent fraud.' },
-  { q: 'Can I share the video?', a: 'No. Per our policy, LMC clips are for personal use and verification only. Sharing to social media is not allowed.' },
+  { q: 'Can I get a refund?', a: 'Yes — automatic if no Scout shows up, the video arrives outside the time window, or the Scout filmed the wrong place.' },
+  { q: 'How do Scouts get verified?', a: 'GPS geofence, GPS-stamped videos, AI signage detection, reference photos, and a 20-min cooldown per venue prevent fraud.' },
+  { q: 'Can I share the video?', a: 'No. Per our policy, LMC videos are for personal use and verification only. Sharing to social media is not allowed.' },
   { q: 'What if the Scout films the wrong place?', a: 'Tap REPORT ISSUE on the delivery screen and pick "Wrong place." We refund automatically and warn the Scout.' },
   { q: 'Can I become a Scout?', a: 'Yes — switch modes anytime from your Profile. You\'ll need to pass a quick verification flow and link a payout account.' },
 ];

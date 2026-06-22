@@ -201,7 +201,7 @@ export default function EarningsScreen() {
               <View style={styles.statsRow}>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{earnings.clipsDelivered}</Text>
-                  <Text style={styles.statLabel}>CLIPS</Text>
+                  <Text style={styles.statLabel}>VIDEOS</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
@@ -211,7 +211,7 @@ export default function EarningsScreen() {
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>$10</Text>
-                  <Text style={styles.statLabel}>AVG / CLIP</Text>
+                  <Text style={styles.statLabel}>AVG / VIDEO</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>

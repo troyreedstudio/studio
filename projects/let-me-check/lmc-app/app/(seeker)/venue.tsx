@@ -148,8 +148,8 @@ export default function VenueScreen() {
               </View>
               <Text style={styles.interiorSub}>
                 {interior
-                  ? `${name} is an LMC Partner. Scout films exterior + inside the venue. 30-sec clip.`
-                  : `${name} is a Partner — add inside footage to your check. 30-sec clip.`}
+                  ? `${name} is an LMC Partner. Scout films exterior + inside the venue. 30-sec video.`
+                  : `${name} is a Partner — add inside footage to your check. 30-sec video.`}
               </Text>
             </View>
           </TouchableOpacity>

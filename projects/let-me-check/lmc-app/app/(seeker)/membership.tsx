@@ -33,7 +33,7 @@ const TIERS: Tier[] = [
     features: [
       { text: '$15 Standard · $20 Priority per check', included: true },
       { text: 'Delivery in 7–10 minutes', included: true },
-      { text: '15-second verified clip', included: true },
+      { text: '15-second verified video', included: true },
       { text: 'Save up to 5 places', included: true },
       { text: 'Standard support', included: true },
       { text: 'Recurring scheduled checks', included: false },

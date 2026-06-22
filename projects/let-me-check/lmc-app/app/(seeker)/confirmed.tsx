@@ -103,7 +103,7 @@ export default function ConfirmedScreen() {
             <Text style={styles.eyebrow}>SCOUT MATCHED</Text>
             <Text style={styles.title}>Your check is on the way.</Text>
             <Text style={styles.subtitle}>
-              {scout} accepted your check near {venue}. Your clip will be with you within {time}.
+              {scout} accepted your check near {venue}. Your video will be with you within {time}.
             </Text>
 
             {/* Receipt */}

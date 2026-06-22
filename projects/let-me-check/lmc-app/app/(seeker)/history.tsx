@@ -100,7 +100,7 @@ export default function HistoryScreen() {
         ) : rows.length === 0 ? (
           <View style={styles.stateWrap}>
             <Text style={styles.stateText}>No checks yet.</Text>
-            <Text style={styles.stateSub}>Your verification clips will show up here.</Text>
+            <Text style={styles.stateSub}>Your verification videos will show up here.</Text>
           </View>
         ) : (
           rows.map((check) => {
