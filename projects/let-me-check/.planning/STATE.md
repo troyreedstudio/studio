@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-02-PLAN.md — trouble-report + scout-earnings + stripe-connect-payout Edge Functions + 0016 migration; 98 deno tests green; not deployed live (Plan 04)
-last_updated: "2026-06-22T08:53:59.365Z"
+stopped_at: "Completed 07-03-PLAN.md — client wiring: deadline countdown, Trouble-Here, earnings, withdraw all wired to real Edge Functions; tsc clean"
+last_updated: "2026-06-22T09:00:22.137Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 33
-  completed_plans: 24
-  percent: 73
+  completed_plans: 25
+  percent: 76
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 7 (SLA + money integrity) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-22
 
@@ -79,6 +79,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P05 | 20 | 2 tasks | 6 files |
 | Phase 07 P01 | 15 | 2 tasks | 3 files |
 | Phase 07 P02 | 7 | 3 tasks | 8 files |
+| Phase 07 P03 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -157,6 +158,9 @@ Recent decisions affecting current work:
 - [Phase 07]: 0016 RPCs are plpgsql (not pure-sql) to support IDOR guard raise inside SECURITY DEFINER
 - [Phase 07]: instant payout rejects if amount > net_available (400) rather than silent clamp — prevents overdraw (Pitfall 5)
 - [Phase 07]: log_event payment.payout_initiated called BEFORE payouts.create — audit-first, double-payout mitigation (T-07-07)
+- [Phase 07]: waiting.tsx left untouched — already status-driven with no fixed Seeker countdown (D-01 satisfied)
+- [Phase 07]: Trouble-Here awaits reportTrouble() server confirm before showing REPORTED state — prevents false refund claim (T-07-12)
+- [Phase 07]: withdraw.tsx available balance from route params not hardcoded; requestPayout replaces setTimeout fake
 
 ### Roadmap Evolution
 
@@ -188,6 +192,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T08:53:59.362Z
-Stopped at: Completed 07-02-PLAN.md — trouble-report + scout-earnings + stripe-connect-payout Edge Functions + 0016 migration; 98 deno tests green; not deployed live (Plan 04)
+Last session: 2026-06-22T09:00:22.134Z
+Stopped at: Completed 07-03-PLAN.md — client wiring: deadline countdown, Trouble-Here, earnings, withdraw all wired to real Edge Functions; tsc clean
 Resume file: None

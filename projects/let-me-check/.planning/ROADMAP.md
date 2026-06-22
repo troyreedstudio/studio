@@ -65,12 +65,12 @@ Plans:
 **Goal:** Make time and money REAL and trustworthy: a server-set deadline_at on checks drives client countdowns that survive app reopen; pg_cron sweeps auto-expire stale/late checks and release the Seeker's hold; Trouble-Here fires a real refund (PI cancel) plus platform-funded Scout no-fault pay; and Scout earnings + payout/withdraw run on real Stripe Connect data.
 **Requirements**: D-01 (server deadlines), D-02 (5-min unclaimed timeout), D-03 (auto-refund on miss), D-04 (Scout pay protection), D-05 (pg_cron sweep), D-06 (real earnings + payout)
 **Depends on:** Phase 6
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 - [x] 07-01-PLAN.md — Migration 0015: additive deadline_at/accepted_at, deadline-seeding accept_check (420/600 by tier), expire_stale_filming() + 5-min unclaimed window + RED pgTAP scaffolds (D-01/D-02/D-03)
 - [x] 07-02-PLAN.md — Money Edge fns: trouble-report (PI cancel + flat no-fault Transfer), scout-earnings (DB aggregate + Stripe balance), stripe-connect-payout (instant net, never gross) + deno tests (D-04/D-06)
-- [ ] 07-03-PLAN.md — Client wiring: filming countdown reads deadline_at, Trouble-Here calls reportTrouble, earnings + withdraw show/move real money (D-01/D-04/D-06)
+- [x] 07-03-PLAN.md — Client wiring: filming countdown reads deadline_at, Trouble-Here calls reportTrouble, earnings + withdraw show/move real money (D-01/D-04/D-06)
 - [ ] 07-04-PLAN.md — [BLOCKING] live deploy: push 0015 + enable pg_cron/pg_net + schedule sweeps + sla-sweeper hold release + deploy functions + regen types + on-device walk-through (D-01..D-06)
 
 ### Phase 8: On-device face blur — custom Expo native module: post-record blur of faces in the recorded clip before upload (iOS AVFoundation+Vision+CoreImage, Android MediaCodec+MLKit), avoiding the worklets-core/New-Arch crash class; server-side detect-and-hold kept as dormant last-resort net
