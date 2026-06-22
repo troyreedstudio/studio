@@ -270,6 +270,15 @@ These need a migration `0017_phase9_surface_reconnects.sql`:
 -- Phase 9: Verified badge + Scout identity + seeker quick-win reconnects.
 -- (1) Profiles: notification_prefs + preferred_cities storage.
 -- (2) SECURITY DEFINER RPC: get_check_scout_public — IDOR-safe scout identity.
+--
+-- ⚠️ CAUTION (per 09-01 Task 2): the example below shows a LATERAL join on
+-- scout_earnings_totals(p.id). DO NOT do that. scout_earnings_totals has its own
+-- IDOR guard that raises 'forbidden' when auth.uid() (the Seeker) != the scout id —
+-- so calling it from inside this SECURITY DEFINER RPC self-traps. INLINE the clip
+-- count instead, e.g.
+--   (select count(*) from public.checks c2
+--      where c2.scout_id = v_scout_id and c2.status::text in ('delivered','rated'))::bigint
+-- The migration in 09-01 Task 2 uses the inlined form; this example block is illustrative only.
 
 alter table public.profiles
   add column if not exists notification_prefs   jsonb,
@@ -571,17 +580,13 @@ const handleToggle = (id: string, v: boolean) => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Profile UPDATE policy scope**
-   - What we know: `api.ts setCurrentRole()` and `setIntendedRoleFlags()` both call `.update({...}).eq('id', uid)` successfully, confirming some UPDATE policy exists.
-   - What's unclear: Whether the policy uses `WITH CHECK (id = auth.uid())` on all columns or is column-restricted.
-   - Recommendation: Read migration 0005 `profiles` UPDATE policy before writing notification/city update code. If column-restricted, add explicit column grants in 0017.
+1. **Profile UPDATE policy scope** — **RESOLVED: no RLS widening needed.** Migration 0005 (lines 31-32) defines `profiles_update_own` as `for update ... using (auth.uid() = id) with check (auth.uid() = id)` — it is ROW-level, NOT column-restricted. The new `notification_prefs` / `preferred_cities` columns are automatically writable by the row owner. 0017 adds NO policy changes. (Verified against 0005_rls_policies.sql.)
+   - What we knew: `api.ts setCurrentRole()` / `setIntendedRoleFlags()` already `.update({...}).eq('id', uid)` successfully.
 
-2. **Profile stats: avg rating without joining ratings**
-   - What we know: `listMyChecks()` returns `CheckRow[]` — no stars in CheckRow.
-   - What's unclear: The cleanest way to show avg rating on profile.tsx without a second DB round-trip.
-   - Recommendation: For Phase 9, show only check count + total spent on profile.tsx. Avg rating requires either a second query to `ratings` or a DB view — defer to the planner to decide.
+2. **Profile stats: avg rating without joining ratings** — **RESOLVED: include avg rating via an owned-rows ratings query.** The `ratings` table has `seeker_id` + `stars`, and the `ratings_select_own` RLS policy (0005 lines 70-71) lets a Seeker read their OWN rating rows. So avg rating is a cheap, RLS-safe direct query (`supabase.from('ratings').select('stars').eq('seeker_id', uid)`, average client-side) — no new RPC, no DB view. profile.tsx shows count + spent + avg rating (09-03 Task 3). (Verified against 0004 + 0005.)
+   - What we knew: `listMyChecks()` returns `CheckRow[]` — no stars — so count + spent come from checks, avg rating from the ratings query.
 
 ---
 
@@ -658,9 +663,9 @@ Step 2.6: SKIPPED — Phase 9 has no new external dependencies. All tooling (Sup
 | RPC design (get_check_scout_public) | HIGH | Follows exact pattern of 4 existing SECURITY DEFINER RPCs |
 | Migration 0017 scope | HIGH | Negative confirmed — columns absent from all migrations |
 
-### Open Questions
-- Does the profiles UPDATE RLS policy cover new columns automatically (no restriction) or does it need widening?
-- Should profile.tsx show avg rating (needs separate ratings query) or count+spent only for Phase 9?
+### Open Questions (RESOLVED at planning)
+- RLS widening for new columns: RESOLVED — 0005 `profiles_update_own` is row-level (`auth.uid() = id`), covers new columns automatically. No widening in 0017.
+- profile.tsx avg rating: RESOLVED — included via owned-rows ratings query (`ratings_select_own` permits it). count+spent from checks; avg from ratings.
 
 ### Ready for Planning
 Research complete. Planner can now create PLAN.md files.

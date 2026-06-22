@@ -2,8 +2,8 @@
 phase: 9
 slug: verified-badge-scout-identity-quick-win-reconnects-surface-r
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-22
 ---
 
@@ -25,7 +25,21 @@ created: 2026-06-22
 - Fake removed: grep asserts no AI-verdict/crowd TAGS remain in delivery.tsx.
 
 ## Per-Task Verification Map
-*Planner fills — each task → automated check.*
+*Each task → its `<automated>` check (from the 4 PLAN files).*
+
+| Plan | Task | Automated check |
+|------|------|-----------------|
+| 09-01 | T1 RED pgTAP 0017 | `grep -c "throws_ok" supabase/tests/0017_phase9_reconnects.test.sql` (file has IDOR + not-delivered throws_ok, both new columns, plan(6)) |
+| 09-01 | T2 migration 0017 | `grep -c "raise exception" supabase/migrations/0017_phase9_surface_reconnects.sql` (security definer + search_path + `is distinct from auth.uid()`; NOT calling scout_earnings_totals) |
+| 09-02 | T1 remove fake AI/crowd | `cd lmc-app && npx tsc --noEmit` (+ grep: no AI VERDICT/CROWD REPORT/TAGS/aiVerdictRow/tagRow; sectionLabel + RATE YOUR CHECK retained) |
+| 09-02 | T2 real badge + scout RPC | `cd lmc-app && npx tsc --noEmit` (+ grep: `gps_verified === true`, `get_check_scout_public`, no "Jake C."/"247 videos") |
+| 09-03 | T1 notification prefs persist | `cd lmc-app && npx tsc --noEmit` (+ grep: notification_prefs, getProfile, `from('profiles').update`, useEffect) |
+| 09-03 | T2 preferred cities persist | `cd lmc-app && npx tsc --noEmit` (+ grep: preferred_cities, getProfile, Array.from, no mia/nyc seed) |
+| 09-03 | T3 real profile stats | `cd lmc-app && npx tsc --noEmit` (+ grep: getProfile, listMyChecks, `from('ratings')`, no "Troy R."/"January 2026") |
+| 09-04 | T1 live push + pgTAP | `supabase test db` passes 0017 (operator-run) |
+| 09-04 | T2 regen types + tsc | `cd lmc-app && npx tsc --noEmit` (+ grep: notification_prefs, preferred_cities, get_check_scout_public in database.types.ts) |
+
+**Wave-0 order:** 09-01 Task 1 (RED pgTAP) precedes Task 2 (migration) — correct Wave-0 sequencing. Live pgTAP green is the Wave-3 gate (09-04 Task 1).
 
 ## Wave 0 Requirements
 - [ ] pgTAP for 0017 (RPC IDOR + new columns)
