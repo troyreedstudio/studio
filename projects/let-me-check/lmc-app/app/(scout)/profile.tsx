@@ -134,26 +134,6 @@ export default function ScoutProfileScreen() {
           {ACCOUNT_ITEMS.map((item, i) => renderItem(item, i, ACCOUNT_ITEMS.length))}
         </View>
 
-        {/* Refer a Scout */}
-        <View style={styles.referralBanner}>
-          <View style={styles.referralLeft}>
-            <View style={styles.referralIconWrap}>
-              <Ionicons name="gift-outline" size={20} color="#FFCB47" />
-            </View>
-            <View>
-              <Text style={styles.referralTitle}>Refer a Scout — $50</Text>
-              <Text style={styles.referralSub}>When a friend completes 10 paid checks</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.referralBtn}
-            onPress={() => router.push('/(seeker)/invite')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.referralBtnText}>INVITE</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Switch Mode */}
         <TouchableOpacity
           style={styles.switchModeBtn}

@@ -11,13 +11,11 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 const SETTINGS: { icon: IconName; label: string; route: string }[] = [
   { icon: 'receipt-outline', label: 'Past Checks', route: '/(seeker)/history' },
-  { icon: 'star-outline', label: 'LMC Plus / Pro', route: '/(seeker)/membership' },
   { icon: 'heart-outline', label: 'Saved Places', route: '/(seeker)/saved' },
   { icon: 'repeat-outline', label: 'Recurring Checks', route: '/(seeker)/recurring' },
   { icon: 'card-outline', label: 'Payment Methods', route: '/(seeker)/payment-methods' },
   { icon: 'notifications-outline', label: 'Notifications', route: '/(seeker)/notifications' },
   { icon: 'location-outline', label: 'Preferred Cities', route: '/(seeker)/preferred-cities' },
-  { icon: 'people-outline', label: 'Invite Friends', route: '/(seeker)/invite' },
   { icon: 'help-circle-outline', label: 'Help', route: '/(seeker)/help' },
 ];
 
@@ -175,26 +173,6 @@ export default function ProfileScreen() {
               <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
             </TouchableOpacity>
           ))}
-        </View>
-
-        {/* Referral Banner */}
-        <View style={styles.referralBanner}>
-          <View style={styles.referralLeft}>
-            <View style={styles.referralIconWrap}>
-              <Ionicons name="gift-outline" size={20} color="#FFCB47" />
-            </View>
-            <View>
-              <Text style={styles.referralTitle}>Give $5, Get $5</Text>
-              <Text style={styles.referralSub}>Invite friends and earn credits</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.referralBtn}
-            onPress={() => router.push('/(seeker)/invite')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.referralBtnText}>INVITE</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Switch Mode */}
