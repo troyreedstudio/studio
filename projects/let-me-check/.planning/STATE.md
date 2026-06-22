@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: "Completed 07-03-PLAN.md — client wiring: deadline countdown, Trouble-Here, earnings, withdraw all wired to real Edge Functions; tsc clean"
-last_updated: "2026-06-22T09:00:22.137Z"
+status: verifying
+stopped_at: Completed 07-04 Tasks 1+2 — sla-sweeper built + deployed, 0015+0016 live, pg_cron+crons active; Task 3 deferred to Troy (device walk-through)
+last_updated: "2026-06-22T09:11:23.283Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 33
-  completed_plans: 25
-  percent: 76
+  completed_plans: 26
+  percent: 79
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 
 Phase: 7 (SLA + money integrity) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-22
 
 Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-01 schema is pushed live)
@@ -80,6 +80,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 07 P01 | 15 | 2 tasks | 3 files |
 | Phase 07 P02 | 7 | 3 tasks | 8 files |
 | Phase 07 P03 | 3 | 2 tasks | 4 files |
+| Phase 07-sla-money-integrity-real-server-driven-delivery-deadlines-de P04 | 8 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -161,6 +162,8 @@ Recent decisions affecting current work:
 - [Phase 07]: waiting.tsx left untouched — already status-driven with no fixed Seeker countdown (D-01 satisfied)
 - [Phase 07]: Trouble-Here awaits reportTrouble() server confirm before showing REPORTED state — prevents false refund claim (T-07-12)
 - [Phase 07]: withdraw.tsx available balance from route params not hardcoded; requestPayout replaces setTimeout fake
+- [Phase 07]: sla-sweeper is the SOLE caller of expire_stale_filming (BLOCKER-3)
+- [Phase 07]: No-time-window hold query in sla-sweeper: authorized-filter is the idempotency guard
 
 ### Roadmap Evolution
 
@@ -192,6 +195,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T09:00:22.134Z
-Stopped at: Completed 07-03-PLAN.md — client wiring: deadline countdown, Trouble-Here, earnings, withdraw all wired to real Edge Functions; tsc clean
+Last session: 2026-06-22T09:11:23.280Z
+Stopped at: Completed 07-04 Tasks 1+2 — sla-sweeper built + deployed, 0015+0016 live, pg_cron+crons active; Task 3 deferred to Troy (device walk-through)
 Resume file: None
