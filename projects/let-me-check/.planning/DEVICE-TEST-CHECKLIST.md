@@ -1,4 +1,4 @@
-# LMC — Device Test Checklist (Beta build, Phases 7-11)
+Submitted submitted# LMC — Device Test Checklist (Beta build, Phases 7-11)
 
 Run on the all-in-one Release build. Tick each. Most need a re-armed test job (dispatch_timeout is back to 300 = 5 min, so jobs expire — Guy can re-arm or temporarily widen it during the session).
 
@@ -45,3 +45,14 @@ Note: full two-sided tests (push between two devices, seeker watching a scout's 
 
 ## After testing → Apple submission
 See `.planning/APPLE-SUBMISSION-CHECKLIST.md` for the human steps (App Store Connect, screenshots, demo account, privacy URLs, EAS build + submit).
+
+---
+## Test-pass findings (2026-06-23)
+PASSED: blur end-to-end ✅, Phase-7 server countdown (resumes after backgrounding) ✅, seeker delivery (hero video + branded poster + Verified badge + real Scout + rating) ✅, dead buttons gone ✅, help links open ✅ (placeholder URLs → host real Privacy/Terms before submit), Delete Account flow present ✅, notification-prefs + preferred-cities PERSIST ✅.
+FIXED mid-pass: getCheckClip/mux-playback-token multi-clip bug (delivery stuck "Processing"); rateCheck delete-then-insert (re-rate); hero video + cover + poster.
+POLISH (batch into redesign pass): load-flicker on settings screens (notifications, preferred-cities, +onboarding) — they render defaults/old values for a split second, then snap to saved data. Fix = gate render until the saved data loads (don't flash defaults). Also: delivery-screen color/layout tweaks; soft-oval blur mask.
+DEFER to TestFlight/2-device/payment pass: Trouble-Here refund, scout withdraw, auto-refund-on-miss (need a real card hold), push delivery (needs APNs key on an eas build).
+
+## Waiting-screen findings (2026-06-23)
+FIXED: real waiting countdown wired from deadline_at (was "no faked countdown" + no timer at all); "LMC" -> "Let Me Check" on the waiting sheet.
+POLISH (redesign pass): waiting screen layout is "messy" (blue pill, Paid/Assigned, status text) — needs a clean redesign; jarring SCREEN TRANSITIONS (delivery's black/green poster -> jump back to the map) need a consistent visual language across waiting<->delivery; confirm tier copy ("standard check") reads cleanly.
