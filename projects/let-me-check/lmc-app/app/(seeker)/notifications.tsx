@@ -7,6 +7,7 @@ import { getProfile } from '../lib/api';
 const SETTINGS = [
   { id: 'delivered', label: 'Check Delivered', sub: 'When your video is ready to watch', defaultValue: true },
   { id: 'scout-assigned', label: 'Scout Assigned', sub: 'When a Scout accepts your request', defaultValue: true },
+  { id: 'job-nearby', label: 'Job Alerts', sub: 'New checks near you (Scout)', defaultValue: true },
   { id: 'reminder', label: 'Re-check Reminders', sub: 'For places you check often', defaultValue: false },
   { id: 'trending', label: 'Trending Near You', sub: 'When queues spike at a venue you watch', defaultValue: false },
   { id: 'promotions', label: 'Promotions & Credits', sub: 'New cities, referral bonuses, deals', defaultValue: true },

@@ -149,13 +149,14 @@ describe('lib/push — upsertPushToken (PUSH-13)', () => {
       { onConflict: 'user_id,token' },
     );
     // updated_at must be a non-empty ISO string
-    const payload = upsert.mock.calls[0][0] as Record<string, string>;
+    const calls = upsert.mock.calls as unknown as Array<[Record<string, string>, unknown]>;
+    const payload = calls[0][0];
     expect(payload.updated_at).toBeTruthy();
     expect(typeof payload.updated_at).toBe('string');
   });
 
   it('returns early without calling upsert when no authenticated user', async () => {
-    supabaseMock.auth.getUser.mockResolvedValueOnce({ data: { user: null } });
+    supabaseMock.auth.getUser.mockResolvedValueOnce({ data: { user: null as unknown as { id: string } } });
     const { upsertPushToken } = await import('./push');
     await upsertPushToken('ExponentPushToken[test-token-abc]', 'ios');
     expect(upsert).not.toHaveBeenCalled();
@@ -171,7 +172,7 @@ describe('lib/push — deletePushToken', () => {
   });
 
   it('returns early without calling delete when no authenticated user', async () => {
-    supabaseMock.auth.getUser.mockResolvedValueOnce({ data: { user: null } });
+    supabaseMock.auth.getUser.mockResolvedValueOnce({ data: { user: null as unknown as { id: string } } });
     const { deletePushToken } = await import('./push');
     await deletePushToken('ExponentPushToken[test-token-abc]');
     // from() should not be called for device_push_tokens in this case

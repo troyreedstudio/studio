@@ -17,9 +17,11 @@
 
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { Platform } from 'react-native';
 import { supabase } from './supabase';
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from './config';
 import { logEvent, setCurrentRole, type Role } from './api';
+import { registerPushToken, upsertPushToken, deletePushToken } from './push';
 
 /**
  * Master switch for the phone-OTP path. Keep false until the SMS provider +
@@ -45,6 +47,10 @@ export async function signInWithApple(): Promise<void> {
   });
   if (error) throw error;
   await logEvent('auth.signed_in', { method: 'apple' });
+  // Fire-and-forget: push token registration must NEVER block sign-in.
+  registerPushToken()
+    .then((token) => { if (token) void upsertPushToken(token, Platform.OS); })
+    .catch(() => { /* push registration never blocks sign-in */ });
 }
 
 // ── Google (live) ─────────────────────────────────────────────────────────────
@@ -96,6 +102,10 @@ export async function signInWithGoogle(): Promise<void> {
   });
   if (error) throw error;
   await logEvent('auth.signed_in', { method: 'google' });
+  // Fire-and-forget: push token registration must NEVER block sign-in.
+  registerPushToken()
+    .then((token) => { if (token) void upsertPushToken(token, Platform.OS); })
+    .catch(() => { /* push registration never blocks sign-in */ });
 }
 
 // ── Phone OTP (deferred — guarded) ────────────────────────────────────────────
@@ -135,6 +145,12 @@ export async function verifyPhoneOtp(phone: string, code: string): Promise<void>
 // ── Sign out (AUTH-04) ────────────────────────────────────────────────────────
 
 export async function signOut(): Promise<void> {
+  // Best-effort push token cleanup BEFORE signing out (session still exists so
+  // getUser() works). Errors are swallowed — never block sign-out.
+  try {
+    const t = await registerPushToken();
+    if (t) await deletePushToken(t);
+  } catch { /* best-effort token cleanup */ }
   await logEvent('auth.signed_out');
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
