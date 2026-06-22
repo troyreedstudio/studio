@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-01-PLAN.md — migration 0015 (deadline_at + expire_stale_filming + BLOCKER-1 edges) + RED pgTAP scaffolds; not pushed live (Plan 04)
-last_updated: "2026-06-22T08:43:17.974Z"
+stopped_at: Completed 07-02-PLAN.md — trouble-report + scout-earnings + stripe-connect-payout Edge Functions + 0016 migration; 98 deno tests green; not deployed live (Plan 04)
+last_updated: "2026-06-22T08:53:59.365Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 33
-  completed_plans: 23
-  percent: 70
+  completed_plans: 24
+  percent: 73
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 ## Current Position
 
 Phase: 7 (SLA + money integrity) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-22
 
@@ -78,6 +78,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P04 | 12 | 3 tasks | 2 files |
 | Phase 06-privacy-anti-fraud-hardening-on-device-face-plate-blur-befor P05 | 20 | 2 tasks | 6 files |
 | Phase 07 P01 | 15 | 2 tasks | 3 files |
+| Phase 07 P02 | 7 | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -150,6 +151,12 @@ Recent decisions affecting current work:
 - [Phase 07]: deadline_at derived server-side in accept_check from checks.tier — client cannot influence it (T-07-01, D-01)
 - [Phase 07]: assigned->no_scout and filming->no_scout edges added to is_valid_check_transition (BLOCKER-1 fix for expire_stale_filming + Plan 02 trouble-report)
 - [Phase 07]: dispatch_timeout_s updated to 300 s (5-min unclaimed window, D-02)
+- [Phase 07]: trouble-report drives check to no_scout (NOT cancelled) — BLOCKER-1: null uid cannot pass v_uid-is-distinct-from-v_seeker guard on cancelled transition
+- [Phase 07]: NOFAULT_CENTS=300 (.00 flat) as named module-top constant — single-line change if Troy sends updated value (D-04)
+- [Phase 07]: paymentIntents.cancel used for uncaptured holds (not refunds.create) — refunds.create fails on authorized PIs (Pitfall 4)
+- [Phase 07]: 0016 RPCs are plpgsql (not pure-sql) to support IDOR guard raise inside SECURITY DEFINER
+- [Phase 07]: instant payout rejects if amount > net_available (400) rather than silent clamp — prevents overdraw (Pitfall 5)
+- [Phase 07]: log_event payment.payout_initiated called BEFORE payouts.create — audit-first, double-payout mitigation (T-07-07)
 
 ### Roadmap Evolution
 
@@ -181,6 +188,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T08:43:17.971Z
-Stopped at: Completed 07-01-PLAN.md — migration 0015 (deadline_at + expire_stale_filming + BLOCKER-1 edges) + RED pgTAP scaffolds; not pushed live (Plan 04)
+Last session: 2026-06-22T08:53:59.362Z
+Stopped at: Completed 07-02-PLAN.md — trouble-report + scout-earnings + stripe-connect-payout Edge Functions + 0016 migration; 98 deno tests green; not deployed live (Plan 04)
 Resume file: None
