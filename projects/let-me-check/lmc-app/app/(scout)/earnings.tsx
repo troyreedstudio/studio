@@ -5,44 +5,71 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useScoutEarnings } from '../state/scout-earnings';
-
-const BAR_DATA = [
-  { day: 'MON', value: 45, amount: '$45' },
-  { day: 'TUE', value: 80, amount: '$80' },
-  { day: 'WED', value: 60, amount: '$60' },
-  { day: 'THU', value: 95, amount: '$95' },
-  { day: 'FRI', value: 100, amount: '$127', today: true },
-  { day: 'SAT', value: 0, amount: '$0' },
-  { day: 'SUN', value: 0, amount: '$0' },
-];
+import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
 
 const MAX_BAR_HEIGHT = 110;
 
-type Payout = {
-  id: string;
-  date: string;
-  clips: number;
-  amount: string;
-  status: 'Pending' | 'Paid';
+// Day abbreviations in display order (Mon..Sun). The server returns ISO day
+// names; we normalise to 3-char uppercase for the bar labels.
+const DAY_ABBR: Record<string, string> = {
+  monday: 'MON', tuesday: 'TUE', wednesday: 'WED', thursday: 'THU',
+  friday: 'FRI', saturday: 'SAT', sunday: 'SUN',
 };
-
-const PAYOUTS: Payout[] = [
-  { id: '1', date: 'Jun 8, 2026', clips: 12, amount: '$127.00', status: 'Pending' },
-  { id: '2', date: 'Jun 1, 2026', clips: 9, amount: '$94.50', status: 'Paid' },
-  { id: '3', date: 'May 25, 2026', clips: 11, amount: '$115.50', status: 'Paid' },
-  { id: '4', date: 'May 18, 2026', clips: 8, amount: '$84.00', status: 'Paid' },
-];
 
 export default function EarningsScreen() {
   const router = useRouter();
   const earnings = useScoutEarnings();
 
-  const monthTotal = 220 + earnings.earningsToday;
+  const [data, setData] = useState<ScoutEarnings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    getScoutEarnings()
+      .then((d) => { if (!cancelled) { setData(d); setLoading(false); } })
+      .catch((e) => {
+        if (!cancelled) {
+          setLoadError(e instanceof Error ? e.message : 'Could not load earnings.');
+          setLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Derived display values — fall back to 0 while loading or on error.
+  const monthTotal = (data?.allTimeCents ?? 0) / 100;
+  const available = (data?.availableCents ?? 0) / 100;
+
+  // Bar chart data from real weeklyByDay. Normalise to {day, value(0-100), cents}.
+  const weekMax = data?.weeklyByDay?.length
+    ? Math.max(1, ...data.weeklyByDay.map((b) => b.cents))
+    : 1;
+  const barData = data?.weeklyByDay?.map((b) => ({
+    day: DAY_ABBR[b.day.toLowerCase()] ?? b.day.slice(0, 3).toUpperCase(),
+    value: Math.round((b.cents / weekMax) * 100),
+    cents: b.cents,
+  })) ?? [];
+
+  // Find today's bar (highest value in the week, or last bar for display).
+  // The server returns the week Mon-Sun; highlight the last non-zero bar as "today".
+  const todayIdx = (() => {
+    for (let i = barData.length - 1; i >= 0; i--) {
+      if (barData[i].cents > 0) return i;
+    }
+    return barData.length - 1;
+  })();
+
+  const payouts = data?.payouts ?? [];
 
   return (
     <View style={styles.container}>
@@ -51,7 +78,7 @@ export default function EarningsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
         >
-          {/* Top bar — matches every other screen */}
+          {/* Top bar */}
           <View style={styles.topBar}>
             <TouchableOpacity
               onPress={() => router.back()}
@@ -76,167 +103,216 @@ export default function EarningsScreen() {
             <Text style={styles.subtitle}>Your earnings, payouts, and history</Text>
           </View>
 
-          {/* Big monthly total card */}
-          <View style={styles.totalCard}>
-            <Text style={styles.totalLabel}>THIS MONTH</Text>
-            <Text style={styles.totalValue}>${monthTotal.toFixed(2)}</Text>
-            <View style={styles.totalRow}>
-              <View style={styles.totalChip}>
-                <View style={styles.totalChipDot} />
-                <Text style={styles.totalChipText}>
-                  +${earnings.earningsToday.toFixed(2)} today
-                </Text>
-              </View>
-              <View style={styles.upBadge}>
-                <Ionicons name="trending-up" size={10} color="#00FF7F" />
-                <Text style={styles.upText}>23%</Text>
-              </View>
+          {loading ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator color="#00FF7F" />
+              <Text style={styles.loadingText}>Loading earnings...</Text>
             </View>
-          </View>
-
-          {/* Bar chart */}
-          <Text style={styles.sectionLabel}>THIS WEEK</Text>
-          <View style={styles.chartCard}>
-            <View style={styles.barsRow}>
-              {BAR_DATA.map((bar) => (
-                <View key={bar.day} style={styles.barColumn}>
-                  <Text
-                    style={[
-                      styles.barAmount,
-                      !bar.today && { opacity: 0 },
-                    ]}
-                  >
-                    {bar.amount}
-                  </Text>
-                  <View style={styles.barWrapper}>
-                    <View
-                      style={[
-                        styles.bar,
-                        {
-                          height: Math.max(4, (bar.value / 100) * MAX_BAR_HEIGHT),
-                          backgroundColor: bar.today
-                            ? '#00FF7F'
-                            : bar.value > 0
-                            ? 'rgba(255,255,255,0.12)'
-                            : 'rgba(255,255,255,0.06)',
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.barDay,
-                      bar.today && styles.barDayActive,
-                    ]}
-                  >
-                    {bar.day}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* Stats row */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-            ALL TIME
-          </Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{earnings.clipsDelivered}</Text>
-              <Text style={styles.statLabel}>CLIPS</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#FFCB47' }]}>4.9★</Text>
-              <Text style={styles.statLabel}>RATING</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>$10</Text>
-              <Text style={styles.statLabel}>AVG / CLIP</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#00FF7F' }]}>100%</Text>
-              <Text style={styles.statLabel}>DELIVERY</Text>
-            </View>
-          </View>
-
-          {/* Recent payouts */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-            RECENT PAYOUTS
-          </Text>
-          <View style={styles.payoutsList}>
-            {PAYOUTS.map((p, i) => (
-              <View
-                key={p.id}
-                style={[
-                  styles.payoutRow,
-                  i < PAYOUTS.length - 1 && styles.payoutRowDivider,
-                ]}
+          ) : loadError ? (
+            <View style={styles.errorWrap}>
+              <Text style={styles.errorText}>{loadError}</Text>
+              <TouchableOpacity
+                style={styles.retryBtn}
+                onPress={() => {
+                  setLoading(true);
+                  setLoadError(null);
+                  getScoutEarnings()
+                    .then(setData)
+                    .catch((e) => setLoadError(e instanceof Error ? e.message : 'Could not load earnings.'))
+                    .finally(() => setLoading(false));
+                }}
               >
-                <View style={styles.payoutLeft}>
-                  <Text style={styles.payoutDate}>{p.date}</Text>
-                  <Text style={styles.payoutClips}>{p.clips} clips delivered</Text>
-                </View>
-                <View style={styles.payoutRight}>
-                  <Text style={styles.payoutAmount}>{p.amount}</Text>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      p.status === 'Paid' && styles.statusBadgePaid,
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.statusDot,
-                        p.status === 'Paid' && styles.statusDotPaid,
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.statusText,
-                        p.status === 'Paid' && styles.statusTextPaid,
-                      ]}
-                    >
-                      {p.status.toUpperCase()}
+                <Text style={styles.retryBtnText}>RETRY</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              {/* Big total card */}
+              <View style={styles.totalCard}>
+                <Text style={styles.totalLabel}>ALL TIME</Text>
+                <Text style={styles.totalValue}>${monthTotal.toFixed(2)}</Text>
+                <View style={styles.totalRow}>
+                  <View style={styles.totalChip}>
+                    <View style={styles.totalChipDot} />
+                    <Text style={styles.totalChipText}>
+                      +${earnings.earningsToday.toFixed(2)} today
                     </Text>
                   </View>
+                  <View style={styles.upBadge}>
+                    <Ionicons name="trending-up" size={10} color="#00FF7F" />
+                    <Text style={styles.upText}>LIVE</Text>
+                  </View>
                 </View>
               </View>
-            ))}
-          </View>
 
-          {/* Withdraw card */}
-          <View style={styles.withdrawCard}>
-            <View style={styles.balanceRow}>
-              <View>
-                <Text style={styles.balanceLabel}>AVAILABLE TO WITHDRAW</Text>
-                <Text style={styles.balanceValue}>
-                  ${earnings.earningsToday.toFixed(2)}
+              {/* Bar chart */}
+              {barData.length > 0 && (
+                <>
+                  <Text style={styles.sectionLabel}>THIS WEEK</Text>
+                  <View style={styles.chartCard}>
+                    <View style={styles.barsRow}>
+                      {barData.map((bar, i) => {
+                        const isToday = i === todayIdx;
+                        return (
+                          <View key={bar.day} style={styles.barColumn}>
+                            <Text
+                              style={[
+                                styles.barAmount,
+                                !isToday && { opacity: 0 },
+                              ]}
+                            >
+                              ${(bar.cents / 100).toFixed(0)}
+                            </Text>
+                            <View style={styles.barWrapper}>
+                              <View
+                                style={[
+                                  styles.bar,
+                                  {
+                                    height: Math.max(4, (bar.value / 100) * MAX_BAR_HEIGHT),
+                                    backgroundColor: isToday
+                                      ? '#00FF7F'
+                                      : bar.cents > 0
+                                      ? 'rgba(255,255,255,0.12)'
+                                      : 'rgba(255,255,255,0.06)',
+                                  },
+                                ]}
+                              />
+                            </View>
+                            <Text
+                              style={[
+                                styles.barDay,
+                                isToday && styles.barDayActive,
+                              ]}
+                            >
+                              {bar.day}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {/* Stats row */}
+              <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
+                ALL TIME
+              </Text>
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{earnings.clipsDelivered}</Text>
+                  <Text style={styles.statLabel}>CLIPS</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: '#FFCB47' }]}>4.9★</Text>
+                  <Text style={styles.statLabel}>RATING</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>$10</Text>
+                  <Text style={styles.statLabel}>AVG / CLIP</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: '#00FF7F' }]}>100%</Text>
+                  <Text style={styles.statLabel}>DELIVERY</Text>
+                </View>
+              </View>
+
+              {/* Recent payouts */}
+              {payouts.length > 0 && (
+                <>
+                  <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
+                    RECENT PAYOUTS
+                  </Text>
+                  <View style={styles.payoutsList}>
+                    {payouts.map((p, i) => {
+                      const isPaid = p.status === 'paid';
+                      return (
+                        <View
+                          key={p.id}
+                          style={[
+                            styles.payoutRow,
+                            i < payouts.length - 1 && styles.payoutRowDivider,
+                          ]}
+                        >
+                          <View style={styles.payoutLeft}>
+                            <Text style={styles.payoutDate}>{p.arrivalDate}</Text>
+                            <Text style={styles.payoutClips}>{p.method}</Text>
+                          </View>
+                          <View style={styles.payoutRight}>
+                            <Text style={styles.payoutAmount}>
+                              ${(p.amountCents / 100).toFixed(2)}
+                            </Text>
+                            <View
+                              style={[
+                                styles.statusBadge,
+                                isPaid && styles.statusBadgePaid,
+                              ]}
+                            >
+                              <View
+                                style={[
+                                  styles.statusDot,
+                                  isPaid && styles.statusDotPaid,
+                                ]}
+                              />
+                              <Text
+                                style={[
+                                  styles.statusText,
+                                  isPaid && styles.statusTextPaid,
+                                ]}
+                              >
+                                {p.status.toUpperCase()}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
+
+              {/* Withdraw card */}
+              <View style={styles.withdrawCard}>
+                <View style={styles.balanceRow}>
+                  <View>
+                    <Text style={styles.balanceLabel}>AVAILABLE TO WITHDRAW</Text>
+                    <Text style={styles.balanceValue}>
+                      ${available.toFixed(2)}
+                    </Text>
+                  </View>
+                  <View style={styles.balanceIconWrap}>
+                    <Ionicons name="card-outline" size={20} color="#00FF7F" />
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.withdrawBtn, available <= 0 && styles.withdrawBtnDisabled]}
+                  activeOpacity={0.85}
+                  disabled={available <= 0}
+                  onPress={() => {
+                    if (available <= 0) {
+                      Alert.alert('Nothing to withdraw', 'Your available balance is $0.00.');
+                      return;
+                    }
+                    router.push({
+                      pathname: '/(scout)/withdraw',
+                      params: {
+                        available: available.toFixed(2),
+                        payoutSpeed: data?.payoutSpeed ?? 'standard',
+                      },
+                    });
+                  }}
+                >
+                  <Text style={styles.withdrawBtnText}>WITHDRAW TO BANK</Text>
+                </TouchableOpacity>
+                <Text style={styles.withdrawFoot}>
+                  Standard payouts arrive in 1 to 2 business days. Instant in ~30 min (1.5% fee).
                 </Text>
               </View>
-              <View style={styles.balanceIconWrap}>
-                <Ionicons name="card-outline" size={20} color="#00FF7F" />
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.withdrawBtn}
-              activeOpacity={0.85}
-              onPress={() =>
-                Alert.alert(
-                  'Withdraw to bank',
-                  'In production this opens Stripe Connect Express to initiate an instant or standard payout.\n\nFor the prototype, this is a placeholder.',
-                  [{ text: 'OK' }],
-                )
-              }
-            >
-              <Text style={styles.withdrawBtnText}>WITHDRAW TO BANK</Text>
-            </TouchableOpacity>
-            <Text style={styles.withdrawFoot}>
-              Standard payouts arrive in 1–2 business days. Instant in ~30 min (1.5% fee).
-            </Text>
-          </View>
+            </>
+          )}
 
           <View style={{ height: 40 }} />
         </ScrollView>
@@ -300,6 +376,45 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     marginTop: 8,
     letterSpacing: 0.2,
+  },
+
+  loadingWrap: {
+    alignItems: 'center',
+    paddingVertical: 48,
+    gap: 12,
+  },
+  loadingText: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 0.3,
+  },
+  errorWrap: {
+    alignItems: 'center',
+    paddingVertical: 48,
+    paddingHorizontal: 22,
+    gap: 16,
+  },
+  errorText: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,100,100,0.9)',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  retryBtn: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  retryBtnText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: '#ffffff',
+    letterSpacing: 2,
   },
 
   totalCard: {
@@ -572,6 +687,9 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     marginBottom: 10,
+  },
+  withdrawBtnDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   withdrawBtnText: {
     fontFamily: 'Inter_700Bold',

@@ -1,29 +1,62 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, TextInput } from 'react-native';
-import { useRouter } from 'expo-router';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TextInput,
+  Alert,
+} from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-
-const AVAILABLE = 137.0;
-const QUICK_AMOUNTS = ['$25', '$50', '$100', 'All ($137)'];
+import { requestPayout } from '../lib/payments';
 
 export default function WithdrawScreen() {
   const router = useRouter();
+  // available + payoutSpeed come from earnings.tsx via router.push params (D-06).
+  // Fall back to 0 / 'standard' if navigated to directly.
+  const { available: availableParam, payoutSpeed: speedParam } = useLocalSearchParams<{
+    available?: string;
+    payoutSpeed?: string;
+  }>();
+
+  const AVAILABLE = parseFloat(availableParam ?? '0') || 0;
+  const speed = (speedParam === 'instant' ? 'instant' : 'standard') as 'instant' | 'standard';
+
+  // Build quick-amount presets dynamically from the real available balance.
+  const QUICK_AMOUNTS = ['$25', '$50', '$100', `All ($${AVAILABLE.toFixed(2)})`];
+
   const [amount, setAmount] = useState('');
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [paidAmount, setPaidAmount] = useState(0);
 
   const handleQuick = (preset: string) => {
-    if (preset === 'All ($137)') setAmount('137');
-    else setAmount(preset.replace('$', ''));
+    if (preset.startsWith('All')) {
+      setAmount(AVAILABLE.toFixed(2));
+    } else {
+      setAmount(preset.replace('$', ''));
+    }
   };
 
-  const handleWithdraw = () => {
-    if (!amount || parseFloat(amount) <= 0) return;
+  const handleWithdraw = async () => {
+    const numAmount = parseFloat(amount);
+    if (!numAmount || numAmount <= 0) return;
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
+    try {
+      const amountCents = Math.round(numAmount * 100);
+      await requestPayout(amountCents, speed);
+      setPaidAmount(numAmount);
       setSuccess(true);
+      // Route back to earnings after a short success moment.
       setTimeout(() => router.replace('/(scout)/earnings'), 1800);
-    }, 2000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      Alert.alert('Withdrawal failed', msg);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   if (success) {
@@ -34,9 +67,11 @@ export default function WithdrawScreen() {
             <Text style={styles.successCheck}>✓</Text>
           </View>
           <Text style={styles.successTitle}>Withdrawal Sent</Text>
-          <Text style={styles.successAmount}>${parseFloat(amount).toFixed(2)}</Text>
+          <Text style={styles.successAmount}>${paidAmount.toFixed(2)}</Text>
           <Text style={styles.successSub}>
-            Funds will arrive in your bank account in 1-2 business days.
+            {speed === 'instant'
+              ? 'Funds arrive in your bank in ~30 minutes.'
+              : 'Funds will arrive in your bank account in 1 to 2 business days.'}
           </Text>
         </View>
       </SafeAreaView>
@@ -57,13 +92,13 @@ export default function WithdrawScreen() {
           <Text style={styles.subtitle}>Cash out your earnings to your bank</Text>
         </View>
 
-        {/* Available balance */}
+        {/* Available balance — real value from route params */}
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>AVAILABLE TO WITHDRAW</Text>
           <Text style={styles.balanceValue}>${AVAILABLE.toFixed(2)}</Text>
           <View style={styles.balanceRow}>
             <View style={styles.statusDot} />
-            <Text style={styles.balanceStatus}>Cleared and ready · No pending holds</Text>
+            <Text style={styles.balanceStatus}>Cleared and ready. No pending holds.</Text>
           </View>
         </View>
 
@@ -113,7 +148,7 @@ export default function WithdrawScreen() {
 
         <View style={{ height: 24 }} />
 
-        {/* Withdraw button */}
+        {/* Withdraw button — calls real requestPayout, no setTimeout */}
         <TouchableOpacity
           style={[
             styles.withdrawBtn,
@@ -124,12 +159,20 @@ export default function WithdrawScreen() {
           activeOpacity={0.85}
         >
           <Text style={styles.withdrawBtnText}>
-            {processing ? 'PROCESSING...' : numAmount > 0 ? `WITHDRAW $${numAmount.toFixed(2)}` : 'WITHDRAW'}
+            {processing
+              ? 'PROCESSING...'
+              : numAmount > 0
+              ? `WITHDRAW $${numAmount.toFixed(2)}`
+              : 'WITHDRAW'}
           </Text>
         </TouchableOpacity>
 
         <Text style={styles.disclaimer}>
-          {processing ? 'Securely transferring via Stripe Connect...' : 'Powered by Stripe Connect · 1-2 business days · No fees'}
+          {processing
+            ? 'Securely transferring via Stripe Connect...'
+            : speed === 'instant'
+            ? 'Powered by Stripe Connect · ~30 min · 1.5% fee'
+            : 'Powered by Stripe Connect · 1 to 2 business days · No fees'}
         </Text>
       </ScrollView>
     </SafeAreaView>
