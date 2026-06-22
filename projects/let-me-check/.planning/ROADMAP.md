@@ -86,7 +86,7 @@ Plans:
 - [x] 08-02-PLAN.md — Steps 2+3: AVFoundation re-encode (export links) + Vision face detection (count only, no blur yet); [DEVICE] re-encode plays audio-free + face count plausible
 - [x] 08-03-PLAN.md — Step 3: Core Image blur composited to detected face rects; [DEVICE] Troy confirms his face is blurred in the saved clip
 - [ ] 08-04-PLAN.md — Step 4: full 15s 1080p clip end-to-end with temporal coverage + perf/memory tuning; [DEVICE] whole-clip blur, acceptable time, no OOM
-- [ ] 08-05-PLAN.md — Step 5: wire blurFaces into submit() flag-gated + retry→pixelate→server-hold fallback; [DEVICE] flag on/off + forced-failure never uploads raw
+- [x] 08-05-PLAN.md — Step 5: wire blurFaces into submit() flag-gated + retry→pixelate→server-hold fallback; [DEVICE] flag on/off + forced-failure never uploads raw
 - [ ] 08-06-PLAN.md — Step 6: end-to-end (Troy confirms DELIVERED clip blurred) + remove dead worklets-core live-blur scaffold; [DEVICE] post-cleanup build still compiles + blurs
 
 ### Phase 9: Verified badge + Scout identity + quick-win reconnects — surface real gps_verified + real Scout name/rating on delivery; reconnect saved places, recurring checks, payment-method cards, notification prefs, profile stats to existing backend; remove fake AI-verdict/crowd copy

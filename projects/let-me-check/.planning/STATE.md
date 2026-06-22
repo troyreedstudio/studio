@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 08-03-PLAN.md autonomous (Core Image face blur); Task 3 DEVICE gate handed to orchestrator
-last_updated: "2026-06-22T09:33:17.990Z"
+stopped_at: Completed 08-05-PLAN.md (oval mask + blur wiring); device gate pending
+last_updated: "2026-06-22T11:47:13.571Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
   completed_phases: 4
   total_plans: 33
-  completed_plans: 29
-  percent: 88
+  completed_plans: 30
+  percent: 91
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-19)
 
 **Core value:** A Seeker can pay for, and reliably receive, a genuine, recent, location-true 15-second clip of a real place — fast.
-**Current focus:** Phase 7 — SLA + money integrity
+**Current focus:** Phase 8 — On-device face blur (post-record)
 
 ## Current Position
 
-Phase: 7 (SLA + money integrity) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
+Phase: 8 (On-device face blur) — EXECUTING
+Plan: 5 of 6 complete (08-05 done; Step-5 device gate pending, 08-06 cleanup next)
+Status: ready for verification — the Step-5 device build is the orchestrator checkpoint
 Last activity: 2026-06-22
 
-Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-01 schema is pushed live)
+Progress: [█████████░] 91% (30 of 33 plans complete)
 
 ## Performance Metrics
 
@@ -84,6 +84,7 @@ Progress: [░░░░░░░░░░] 0% (no plan fully complete until 01-0
 | Phase 08 P01 | 1 | 3 tasks | 7 files |
 | Phase 08 P02 | 1 | 2 tasks | 4 files |
 | Phase 08 P03 | 1 | 3 tasks | 7 files |
+| Phase 08 P05 | 1 | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -173,6 +174,9 @@ Recent decisions affecting current work:
 - [Phase 08]: [Phase 08-02]: detection failure non-fatal (logged, count=0); only EXPORT failure -> status failed (export is the framework-link gate); blurFaces still status no_faces (no pixels changed, Pitfall 5)
 - [Phase 08]: [Phase 08-03]: Core Image blur via CIBlendWithMask (blur whole frame once + white-on-black face-rect mask, +20% padding); blurFaces now returns 'blurred'/'no_faces'(original untouched)/'failed'(any error, never sharp-as-blurred)
 - [Phase 08]: [Phase 08-03]: Vision normalized rects -> CI pixels with NO Y-flip (both bottom-left); per-frame rect lookup = nearest sampled detection (no per-frame Vision, Pitfall 3); post-record radius=22 gaussian default
+- [Phase 08]: Post-record blur wired into submit() behind BLUR_POST_RECORD_ENABLED (default TRUE for beta); blur runs before upload, uploads the blurred file, deletes the raw on success
+- [Phase 08]: Blur failure (after retry->pixelate) never uploads the raw as a normal delivery; routes to the dormant server hold + Scout retake (D-07)
+- [Phase 08]: Face-blur mask is now a soft feathered OVAL (not a square censor box); privacy coverage unchanged
 
 ### Roadmap Evolution
 
@@ -204,6 +208,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T09:33:09.704Z
-Stopped at: Completed 08-03-PLAN.md autonomous (Core Image face blur); Task 3 DEVICE gate handed to orchestrator
+Last session: 2026-06-22T11:47:04.440Z
+Stopped at: Completed 08-05-PLAN.md (oval mask + blur wiring); device gate pending
 Resume file: None
