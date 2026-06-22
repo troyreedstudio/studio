@@ -38,10 +38,14 @@ export async function handlePlaybackToken(
   }
 
   // The clip must be ready (has a signed playback id) before a token is meaningful.
+  // A check can have MORE THAN ONE clip row (retakes / re-submit), so take the
+  // LATEST — a bare .maybeSingle() returns null on multiple rows and wrongly 409s.
   const { data: clip } = await deps.svc
     .from("clips")
     .select("mux_playback_id, status")
     .eq("check_id", checkId)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!clip?.mux_playback_id || clip.status !== "ready") {
