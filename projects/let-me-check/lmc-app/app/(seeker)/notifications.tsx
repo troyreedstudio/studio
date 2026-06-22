@@ -22,6 +22,9 @@ const DEFAULT_VALUES = SETTINGS.reduce<Record<string, boolean>>(
 export default function NotificationsScreen() {
   const router = useRouter();
   const [values, setValues] = useState<Record<string, boolean>>(DEFAULT_VALUES);
+  // Gate rendering of toggles until saved data has resolved so the UI never
+  // shows default values that then snap to the persisted state.
+  const [loaded, setLoaded] = useState(false);
 
   // Load persisted notification_prefs from the profile on mount.
   // Merges saved prefs over client defaults so any new setting IDs fall back gracefully.
@@ -35,6 +38,9 @@ export default function NotificationsScreen() {
       })
       .catch(() => {
         // Network error keeps the defaults — silent fail is intentional.
+      })
+      .finally(() => {
+        setLoaded(true);
       });
   }, []);
 
@@ -67,7 +73,7 @@ export default function NotificationsScreen() {
 
         <Text style={styles.sectionLabel}>YOUR PREFERENCES</Text>
         <View style={styles.list}>
-          {SETTINGS.map((s, i) => (
+          {loaded && SETTINGS.map((s, i) => (
             <View
               key={s.id}
               style={[styles.row, i < SETTINGS.length - 1 && styles.rowBorder]}

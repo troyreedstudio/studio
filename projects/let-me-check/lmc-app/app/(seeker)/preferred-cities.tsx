@@ -19,6 +19,9 @@ export default function PreferredCitiesScreen() {
   const router = useRouter();
   // Start empty — real selection loads from the profile on mount.
   const [selected, setSelected] = useState<Set<string>>(new Set<string>());
+  // Gate rendering of city rows until saved data has resolved so the UI never
+  // shows unselected rows that then snap to the persisted selection.
+  const [loaded, setLoaded] = useState(false);
 
   // Load persisted preferred_cities (text[] in DB) into a Set on mount.
   useEffect(() => {
@@ -29,6 +32,9 @@ export default function PreferredCitiesScreen() {
       })
       .catch(() => {
         // Network error keeps an empty set — honest empty state.
+      })
+      .finally(() => {
+        setLoaded(true);
       });
   }, []);
 
@@ -64,7 +70,7 @@ export default function PreferredCitiesScreen() {
         </View>
 
         <Text style={styles.sectionLabel}>FOLLOW CITIES</Text>
-        {CITIES.map((c) => {
+        {loaded && CITIES.map((c) => {
           const isSelected = selected.has(c.id);
           return (
             <TouchableOpacity
