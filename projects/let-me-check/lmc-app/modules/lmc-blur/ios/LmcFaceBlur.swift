@@ -28,6 +28,17 @@ import CoreGraphics
 // only apply ONE radius to every face — that is exactly what produced the white
 // box on small faces.)
 //
+// SOFT OVAL MASK (Troy's ask): the blurred region is no longer composited as a
+// hard SQUARE. Instead the blurred crop is masked through a FEATHERED ELLIPSE
+// (oval) inscribed in the padded face rect, so the blur fades smoothly into the
+// sharp background at the edges — face-shaped and natural, not a censor box. The
+// mask is a CIRadialGradient: fully OPAQUE (white) out to ~88% of the ellipse
+// radius — the whole face core (+ hairline padding) stays 100% blurred — then it
+// FEATHERS to clear across the outermost ~12%, which sits in the +20% padding
+// (background, not face). Privacy coverage is therefore UNCHANGED: the face is
+// still fully obscured; only the surrounding margin softens. Anisotropic scaling
+// turns the circular gradient into a face-shaped oval that fills the padded rect.
+//
 // COORDINATES: Vision boundingBox is normalized (0..1) with a BOTTOM-LEFT origin.
 // Core Image's coordinate space is ALSO bottom-left origin (in pixels). So a
 // normalized Vision rect maps to CI pixels by multiplying by the frame extent —
@@ -87,7 +98,10 @@ struct LmcFaceBlur {
       let faceRect = paddedPixelRect(nrect, extent: extent)
       guard faceRect.width > 0, faceRect.height > 0 else { continue }
       if let blurredFace = blurredFaceRegion(source: source, faceRect: faceRect) {
-        result = blurredFace.composited(over: result)
+        // Mask the blurred crop through a feathered ELLIPSE so it fades into the
+        // sharp background at the edges instead of a hard square cut.
+        let masked = featheredOval(blurred: blurredFace, faceRect: faceRect)
+        result = masked.composited(over: result)
       }
     }
     return result.cropped(to: extent)
@@ -142,6 +156,69 @@ struct LmcFaceBlur {
     }
     let scaled = faceWidthPx * Self.pixelateFraction
     return min(Self.pixelateMaxBlock, max(Self.pixelateMinBlock, scaled))
+  }
+
+  // MARK: - Soft oval mask
+
+  /// Fraction of the ellipse radius that stays FULLY opaque (100% blur). Beyond
+  /// this the mask feathers to clear by the ellipse edge. 0.88 keeps the whole
+  /// face core + hairline solidly blurred; only the outer ~12% (which lives in the
+  /// +20% background padding) softens. Higher = more coverage, less feather.
+  static let featherOpaqueFraction: Double = 0.88
+
+  /// Mask the already-blurred `faceRect` crop through a FEATHERED ELLIPSE inscribed
+  /// in `faceRect`, returning a CIImage (cropped to `faceRect`) whose alpha is 1.0
+  /// across the face core and fades to 0.0 at the oval's edge. Compositing this
+  /// over the sharp frame yields a soft oval blur instead of a hard square.
+  ///
+  /// Built from a CIRadialGradient (a soft-edged disc: opaque white to radius0,
+  /// clear by radius1) which is then ANISOTROPICALLY scaled to the rect's aspect
+  /// so the disc becomes a face-shaped oval filling the padded rect. The blurred
+  /// crop is blended over a transparent image through that oval alpha mask
+  /// (CIBlendWithMask), so only the oval interior of the blur survives.
+  private func featheredOval(blurred: CIImage, faceRect: CGRect) -> CIImage {
+    // Build the gradient in a unit (square) space centered at origin, then scale
+    // it to the rect — that turns the circular gradient into the right oval.
+    let halfW = faceRect.width / 2.0
+    let halfH = faceRect.height / 2.0
+    // Use the LARGER half-extent as the unit radius so, after anisotropic scaling
+    // back, the ellipse exactly inscribes the padded rect on both axes.
+    let unitRadius = max(halfW, halfH)
+    guard unitRadius > 0 else { return blurred }
+
+    let gradient = CIFilter.radialGradient()
+    gradient.center = CGPoint(x: faceRect.midX, y: faceRect.midY)
+    gradient.radius0 = Float(unitRadius * Self.featherOpaqueFraction) // opaque out to here
+    gradient.radius1 = Float(unitRadius)                              // clear by the edge
+    gradient.color0 = CIColor(red: 1, green: 1, blue: 1, alpha: 1)    // inside: keep blur
+    gradient.color1 = CIColor(red: 1, green: 1, blue: 1, alpha: 0)    // edge: show sharp bg
+    guard var mask = gradient.outputImage else { return blurred }
+
+    // Squash the circular gradient into the rect's aspect so it becomes an oval
+    // that inscribes the padded face rect (not a circle that under/over-covers a
+    // non-square face). Scale about the rect center so the oval stays centered.
+    if halfW != halfH {
+      let sx = CGFloat(halfW / unitRadius)
+      let sy = CGFloat(halfH / unitRadius)
+      let cx = faceRect.midX
+      let cy = faceRect.midY
+      let t = CGAffineTransform(translationX: cx, y: cy)
+        .scaledBy(x: sx, y: sy)
+        .translatedBy(x: -cx, y: -cy)
+      mask = mask.transformed(by: t)
+    }
+    mask = mask.cropped(to: faceRect)
+
+    // Blend the blurred crop over a fully transparent backdrop using the oval as
+    // the alpha mask: result = blurred where mask is white, transparent where
+    // clear, feathered in between. Compositing THAT over the sharp frame yields
+    // the soft oval. clearImage() is the empty (transparent) background.
+    let blend = CIFilter.blendWithMask()
+    blend.inputImage = blurred
+    blend.backgroundImage = CIImage.empty()
+    blend.maskImage = mask
+    guard let out = blend.outputImage else { return blurred }
+    return out.cropped(to: faceRect)
   }
 
   // MARK: - Geometry
