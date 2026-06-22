@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Modal, TextInput, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Modal, TextInput, ActivityIndicator, Dimensions, Animated, Easing } from 'react-native';
 
 // Hero video height — the clip is portrait, so let it dominate the screen
 // (Netflix-style) instead of a small thumbnail. Caps so a sliver of the details
@@ -6,7 +6,7 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Ale
 const HERO_VIDEO_H = Math.round(Dimensions.get('window').height * 0.62);
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { getCheck, getCheckClip, rateCheck, type CheckRow, type ClipRow } from '../lib/checks';
 import { getPlaybackToken } from '../lib/clips';
@@ -115,6 +115,10 @@ export default function DeliveryScreen() {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [scoutProfile, setScoutProfile] = useState<{ display_name: string | null; avg_rating: number | null; clip_count: number | null } | null>(null);
+  // Branded poster shown over the player until the Seeker taps play — avoids the
+  // raw green/blank video surface expo-video shows before the first frame.
+  const [showPoster, setShowPoster] = useState(true);
+  const posterPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!checkId) return;
@@ -149,6 +153,23 @@ export default function DeliveryScreen() {
   }, [checkId, clip?.mux_playback_id]);
 
   const player = useVideoPlayer(videoSrc, (p) => { p.loop = false; });
+
+  // Gentle pulse on the poster play button.
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(posterPulse, { toValue: 1.12, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(posterPulse, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [posterPulse]);
+
+  const handlePlayPoster = () => {
+    try { player.play(); } catch { /* player may not be ready; the tap still reveals controls */ }
+    setShowPoster(false);
+  };
   const locationLabel = check?.location_label || `${venue}, ${city}`;
   const filmedLine = formatFilmedAgo(clip?.filmed_at ?? null);
 
@@ -190,6 +211,16 @@ export default function DeliveryScreen() {
             </View>
           )}
           <View style={styles.videoBadge}><Text style={styles.videoBadgeText}>HD · 15s</Text></View>
+          {/* Branded poster over the player until tap — hides the raw green surface. */}
+          {videoSrc && showPoster && (
+            <TouchableOpacity style={styles.poster} activeOpacity={0.92} onPress={handlePlayPoster}>
+              <Text style={styles.posterBrand}>LET ME CHECK</Text>
+              <Animated.View style={[styles.posterPlay, { transform: [{ scale: posterPulse }] }]}>
+                <Ionicons name="play" size={34} color="#000" style={{ marginLeft: 4 }} />
+              </Animated.View>
+              <Text style={styles.posterHint}>Tap to play your check</Text>
+            </TouchableOpacity>
+          )}
         </View>
         {/* Filmed-ago moved BELOW the player so it never covers the footage. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10, marginBottom: 8 }}>
@@ -251,6 +282,10 @@ const styles = StyleSheet.create({
   processingWrap: { alignItems: 'center', justifyContent: 'center', gap: 10 },
   processingText: { fontFamily: 'Inter_500Medium', fontSize: 12.5, color: 'rgba(255,255,255,0.6)', letterSpacing: 0.3 },
   videoBadge: { position: 'absolute', top: 12, right: 12, backgroundColor: '#000000aa', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
+  poster: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', gap: 22 },
+  posterBrand: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 22, letterSpacing: 3, textTransform: 'uppercase' },
+  posterPlay: { width: 76, height: 76, borderRadius: 38, backgroundColor: '#00FF7F', justifyContent: 'center', alignItems: 'center', shadowColor: '#00FF7F', shadowOpacity: 0.5, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } },
+  posterHint: { fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.6)', fontSize: 12.5, letterSpacing: 0.4 },
   videoBadgeText: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 9, letterSpacing: 1.5 },
   liveTimestamp: { position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 5 },
   liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#00FF7F' },
