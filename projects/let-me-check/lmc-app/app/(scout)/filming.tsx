@@ -93,8 +93,8 @@ export default function FilmingScreen() {
   const [distanceM, setDistanceM] = useState<number | null>(null);
 
   // Fetch the venue location + seed the deadline countdown from the real deadline_at.
-  // deadline_at is added by migration 0015 (Plan 01) and not yet in database.types.ts;
-  // access via cast to any. Falls back to totalSeconds if the field is absent.
+  // deadline_at is typed in database.types.ts after Phase 7 / 0015 type regen (Plan 04).
+  // Falls back to totalSeconds if the field is absent (legacy row pre-Phase-7).
   useEffect(() => {
     if (!checkId) return;
     getCheck(checkId)
@@ -105,8 +105,8 @@ export default function FilmingScreen() {
         // Seed the countdown from the real server deadline so it resumes correctly
         // after an app reopen (D-01). If deadline_at is absent (legacy row), fall
         // back to the tier-derived totalSeconds constant.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const deadlineAt = (c as any)?.deadline_at as string | null | undefined;
+        // deadline_at is now typed in database.types.ts (Phase 7 / 0015)
+        const deadlineAt = c?.deadline_at;
         if (deadlineAt) {
           const remaining = Math.max(0, Math.round((new Date(deadlineAt).getTime() - Date.now()) / 1000));
           setSecondsLeft(remaining);
