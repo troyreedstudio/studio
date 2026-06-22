@@ -139,6 +139,22 @@ export async function listOpenChecks(): Promise<CheckRow[]> {
 }
 
 /**
+ * Seeker history: the current Seeker's own checks, newest first. RLS already
+ * confines a Seeker to their own rows (seeker_id = auth.uid(), migration 0009);
+ * the explicit eq is belt-and-braces and lets the planner use the index.
+ */
+export async function listMyChecks(): Promise<CheckRow[]> {
+  const uid = await requireUserId();
+  const { data, error } = await supabase
+    .from('checks')
+    .select('*')
+    .eq('seeker_id', uid)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
  * CHECK-03: atomically claim an open check. The server `accept_check` does the
  * guarded first-wins UPDATE; a losing race surfaces here as a thrown error
  * (e.g. "already taken"). The client never sets scout_id itself.
