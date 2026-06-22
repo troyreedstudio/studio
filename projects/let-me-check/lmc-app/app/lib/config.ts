@@ -44,3 +44,9 @@ export const MAPBOX_TOKEN =
 export const STRIPE_PUBLISHABLE_KEY =
   process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ??
   'pk_test_51TkdlePlOqOhCKIqky9Zlvs2NvN62pA7gSEhjauZr9HNgdo07l79JPeniCe1IwcbhbrtyWuxHWtkkRcraaF3ehT500SOpsOCmG';
+
+// EAS project ID — bundled directly so it is ALWAYS present in Release builds.
+// Constants.expoConfig is null on Release builds (no native ExponentConstants link),
+// so we NEVER read from expo-constants Extra. Same pattern as SUPABASE_URL.
+// This value is the public EAS projectId (not a secret).
+export const EAS_PROJECT_ID = '59bc5e82-de99-4541-b883-82e09005acfc';
