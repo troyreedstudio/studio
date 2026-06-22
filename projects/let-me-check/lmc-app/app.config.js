@@ -69,6 +69,11 @@ module.exports = {
         },
       ],
       'expo-apple-authentication',
+      // expo-notifications plugin — adds the APNs entitlement to the iOS binary
+      // (without this, push permission is granted but APNs rejects delivery).
+      // SDK 54 deprecates the old top-level `notification` config key in favour of this plugin.
+      // enableBackgroundRemoteNotifications defaults to false (correct for LMC — standard push only).
+      ['expo-notifications', {}],
       [
         '@react-native-google-signin/google-signin',
         {
