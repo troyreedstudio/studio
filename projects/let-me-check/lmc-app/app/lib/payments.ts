@@ -224,3 +224,69 @@ export async function getConnectStatus(): Promise<{
     payoutSpeed: (data?.payoutSpeed as PayoutSpeed) ?? 'standard',
   };
 }
+
+// ── reportTrouble ─────────────────────────────────────────────────────────────
+
+/**
+ * D-04: Report a trouble situation from the Scout at the filming location.
+ * Calls the trouble-report Edge Function which transitions the check to no_scout,
+ * auto-refunds the Seeker, and pays the Scout a flat no-fault fee.
+ *
+ * ONLY show the REPORTED state in the UI after this resolves successfully.
+ * On error, show an Alert — never claim "SEEKER REFUNDED" before the server confirms.
+ * (T-07-12: prevents client-side spoofing/repudiation of the reported state.)
+ */
+export type TroubleReason = string; // matches filming.tsx TROUBLE_REASONS
+
+export async function reportTrouble(
+  checkId: string,
+  reason: TroubleReason,
+): Promise<{ status: 'reported' }> {
+  const data = await invokeEdgeFunction('trouble-report', { checkId, reason }) as Record<string, unknown>;
+  if (data.status !== 'reported') {
+    throw new Error('reportTrouble: unexpected response from server');
+  }
+  return { status: 'reported' };
+}
+
+// ── getScoutEarnings ──────────────────────────────────────────────────────────
+
+/**
+ * D-06: Fetch the Scout's real earnings data from the scout-earnings Edge Function.
+ * The server derives identity from the caller's bearer token (T-07-14: no scoutId in body).
+ */
+export interface ScoutEarnings {
+  weeklyByDay: { day: string; cents: number }[];
+  allTimeCents: number;
+  availableCents: number;
+  instantNetCents: number;
+  payoutSpeed: 'instant' | 'standard';
+  payouts: {
+    id: string;
+    amountCents: number;
+    status: string;
+    arrivalDate: string;
+    method: string;
+  }[];
+}
+
+export async function getScoutEarnings(): Promise<ScoutEarnings> {
+  return await invokeEdgeFunction('scout-earnings', {}) as ScoutEarnings;
+}
+
+// ── requestPayout ─────────────────────────────────────────────────────────────
+
+/**
+ * D-06: Initiate a Scout payout via the stripe-connect-payout Edge Function.
+ * The server bounds amountCents to the Scout's actual available balance —
+ * the client cannot overdraw (T-07-13). Pass speed from the Scout's stored preference.
+ */
+export async function requestPayout(
+  amountCents: number,
+  speed?: 'instant' | 'standard',
+): Promise<{ status: 'initiated'; payoutId: string }> {
+  return await invokeEdgeFunction(
+    'stripe-connect-payout',
+    { amountCents, speed },
+  ) as { status: 'initiated'; payoutId: string };
+}

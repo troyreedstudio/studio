@@ -19,6 +19,7 @@ import {
 } from 'react-native-vision-camera';
 import * as Location from 'expo-location';
 import { markFilming, getCheck } from '../lib/checks';
+import { reportTrouble } from '../lib/payments';
 import { useClipUpload } from '../lib/clips';
 import { collectFraudSignals, FraudSignals } from '../lib/fraud-signals';
 import { CameraViewfinder } from './_filming-viewfinder';
@@ -91,13 +92,24 @@ export default function FilmingScreen() {
   const [venuePt, setVenuePt] = useState<{ lat: number; lng: number } | null>(null);
   const [distanceM, setDistanceM] = useState<number | null>(null);
 
-  // Fetch the venue location for this check (requested_lat/lng set at creation).
+  // Fetch the venue location + seed the deadline countdown from the real deadline_at.
+  // deadline_at is added by migration 0015 (Plan 01) and not yet in database.types.ts;
+  // access via cast to any. Falls back to totalSeconds if the field is absent.
   useEffect(() => {
     if (!checkId) return;
     getCheck(checkId)
       .then((c) => {
         if (c?.requested_lat != null && c?.requested_lng != null) {
           setVenuePt({ lat: c.requested_lat, lng: c.requested_lng });
+        }
+        // Seed the countdown from the real server deadline so it resumes correctly
+        // after an app reopen (D-01). If deadline_at is absent (legacy row), fall
+        // back to the tier-derived totalSeconds constant.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const deadlineAt = (c as any)?.deadline_at as string | null | undefined;
+        if (deadlineAt) {
+          const remaining = Math.max(0, Math.round((new Date(deadlineAt).getTime() - Date.now()) / 1000));
+          setSecondsLeft(remaining);
         }
       })
       .catch(() => {});
@@ -131,6 +143,7 @@ export default function FilmingScreen() {
   const [recordSecs, setRecordSecs] = useState(0);
   const [troubleOpen, setTroubleOpen] = useState(false);
   const [troubleReason, setTroubleReason] = useState<string | null>(null);
+  const [troubleBusy, setTroubleBusy] = useState(false);
   const [takesCount, setTakesCount] = useState(0);
   const MAX_TAKES = 3;
   // Real upload orchestration (extracted to lib/clips). Drives the progress UI
@@ -576,9 +589,9 @@ export default function FilmingScreen() {
             <View style={[styles.troubleBase, styles.troubleReported]}>
               <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
               <View style={{ flex: 1 }}>
-                <Text style={styles.troubleTitle}>REPORTED · SEEKER REFUNDED</Text>
+                <Text style={styles.troubleTitle}>REPORTED, SEEKER REFUNDED, YOU’RE COVERED</Text>
                 <Text style={styles.troubleSub}>
-                  {troubleReason} · You’ll still be paid for travel.
+                  {troubleReason}. You’ll still be paid for travel.
                 </Text>
               </View>
             </View>
@@ -610,14 +623,31 @@ export default function FilmingScreen() {
               {TROUBLE_REASONS.map((r) => (
                 <TouchableOpacity
                   key={r}
-                  style={styles.troubleReasonRow}
+                  style={[styles.troubleReasonRow, troubleBusy && { opacity: 0.4 }]}
                   activeOpacity={0.7}
-                  onPress={() => {
-                    setTroubleReason(r);
-                    setTroubleOpen(false);
+                  disabled={troubleBusy}
+                  onPress={async () => {
+                    if (!checkId || troubleBusy) return;
+                    setTroubleBusy(true);
+                    try {
+                      await reportTrouble(String(checkId), r);
+                      // Server confirmed: check is now no_scout, Seeker refunded,
+                      // Scout no-fault fee queued. Show the confirmed state then
+                      // route the Scout back to their dashboard.
+                      setTroubleReason(r);
+                      setTroubleOpen(false);
+                      setTimeout(() => router.replace('/(scout)/dashboard'), 2000);
+                    } catch (err) {
+                      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+                      Alert.alert('Could not report trouble', msg);
+                    } finally {
+                      setTroubleBusy(false);
+                    }
                   }}
                 >
-                  <Text style={styles.troubleReasonText}>{r}</Text>
+                  <Text style={styles.troubleReasonText}>
+                    {troubleBusy ? 'Reporting...' : r}
+                  </Text>
                   <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
                 </TouchableOpacity>
               ))}
