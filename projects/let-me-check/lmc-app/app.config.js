@@ -51,6 +51,10 @@ module.exports = {
       favicon: './assets/favicon.png',
     },
     plugins: [
+      // Durable iOS deployment target 15.5 (Phase 6): MLKit face detector
+      // (react-native-vision-camera-face-detector) requires iOS >= 15.5. Set here
+      // so a clean prebuild regenerates ios/ at 15.5 (ios/ is gitignored).
+      ['expo-build-properties', { ios: { deploymentTarget: '15.5' } }],
       'expo-router',
       'expo-font',
       'expo-video',
