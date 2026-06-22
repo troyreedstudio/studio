@@ -22,6 +22,9 @@ import { markFilming, getCheck } from '../lib/checks';
 import { useClipUpload } from '../lib/clips';
 import { collectFraudSignals, FraudSignals } from '../lib/fraud-signals';
 import { CameraViewfinder } from './_filming-viewfinder';
+// Phase 6 (D-01, D-07): on-device face-blur overlay — DORMANT until flag is on.
+import { BLUR_NATIVE_ENABLED } from '../lib/blur-config';
+import { BlurViewfinder } from './_filming-blur-overlay';
 import { styles } from './_filming-styles';
 
 const TROUBLE_REASONS = [
@@ -623,26 +626,49 @@ export default function FilmingScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* LIVE CAMERA VIEWFINDER — opens when recording, auto-closes at 15s */}
-      <CameraViewfinder
-        visible={recording || captureFlash}
-        recordSecs={recordSecs}
-        captured={captureFlash}
-        onStop={() => {
-          // STOP mid-recording = abort + discard the take. Stop the real
-          // recorder, reset recordSecs so the next tap starts fresh, and DON'T
-          // increment takesCount (a botched take doesn't burn a retake).
-          camera.current?.stopRecording().catch(() => {});
-          setRecordSecs(0);
-          setRecording(false);
-          setCapturedPath(null);
-        }}
-        venue={String(venue)}
-        cameraRef={camera}
-        device={device}
-        hasPermission={hasPermission}
-        onCameraInitialized={handleCameraInitialized}
-      />
+      {/* LIVE CAMERA VIEWFINDER — opens when recording, auto-closes at 15s.
+          Phase 6 (D-01): when BLUR_NATIVE_ENABLED is true, BlurViewfinder adds
+          an MLKit face-detector frame processor + Skia Canvas blur overlay.
+          With the flag false (default), CameraViewfinder runs byte-for-byte
+          unchanged — no native blur code path activates. */}
+      {BLUR_NATIVE_ENABLED ? (
+        <BlurViewfinder
+          visible={recording || captureFlash}
+          recordSecs={recordSecs}
+          captured={captureFlash}
+          onStop={() => {
+            camera.current?.stopRecording().catch(() => {});
+            setRecordSecs(0);
+            setRecording(false);
+            setCapturedPath(null);
+          }}
+          venue={String(venue)}
+          cameraRef={camera}
+          device={device}
+          hasPermission={hasPermission}
+          onCameraInitialized={handleCameraInitialized}
+        />
+      ) : (
+        <CameraViewfinder
+          visible={recording || captureFlash}
+          recordSecs={recordSecs}
+          captured={captureFlash}
+          onStop={() => {
+            // STOP mid-recording = abort + discard the take. Stop the real
+            // recorder, reset recordSecs so the next tap starts fresh, and DON'T
+            // increment takesCount (a botched take doesn't burn a retake).
+            camera.current?.stopRecording().catch(() => {});
+            setRecordSecs(0);
+            setRecording(false);
+            setCapturedPath(null);
+          }}
+          venue={String(venue)}
+          cameraRef={camera}
+          device={device}
+          hasPermission={hasPermission}
+          onCameraInitialized={handleCameraInitialized}
+        />
+      )}
     </View>
   );
 }
