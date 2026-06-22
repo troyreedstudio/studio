@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 09-03-PLAN.md (notification prefs + preferred cities + real profile stats)
-last_updated: "2026-06-22T12:47:28.482Z"
+status: verifying
+stopped_at: Completed 09-04-PLAN.md (0017 live, pgTAP 6/6 green, types regen, tsc clean — Phase 9 complete)
+last_updated: "2026-06-22T12:57:39.693Z"
 last_activity: 2026-06-22
 progress:
   total_phases: 9
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 42
-  completed_plans: 33
-  percent: 79
+  completed_plans: 34
+  percent: 81
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 
 Phase: 9 (Verified badge + scout identity + reconnects) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-22
 
 Progress: [█████████░] 91% (30 of 33 plans complete)
@@ -88,6 +88,7 @@ Progress: [█████████░] 91% (30 of 33 plans complete)
 | Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P01 | 2 | 2 tasks | 2 files |
 | Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P02 | 5 | 2 tasks | 1 files |
 | Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P03 | 4m | 3 tasks | 3 files |
+| Phase 09-verified-badge-scout-identity-quick-win-reconnects-surface-r P04 | 12 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -187,6 +188,8 @@ Recent decisions affecting current work:
 - [Phase 09]: notification_prefs merged over client defaults on load — new setting IDs fall back to defaultValue without a DB migration
 - [Phase 09]: preferred_cities initial state is empty Set (not hardcoded mia/nyc) — honest empty state if profile has no saved cities
 - [Phase 09]: avg rating computed client-side from own ratings rows (ratings_select_own RLS) — no extra RPC needed
+- [Phase 09]: pgTAP run via raw SQL through supabase db query --linked (Docker unavailable); all 6 assertions from 0017_phase9_reconnects.test.sql verified against live DB
+- [Phase 09]: 0017 required --include-all flag (inserted before 20260621000002 in remote history); safe because migration is additive + idempotent
 
 ### Roadmap Evolution
 
@@ -218,6 +221,6 @@ Carried from research — to resolve at the relevant phase, not now:
 
 ## Session Continuity
 
-Last session: 2026-06-22T12:47:28.479Z
-Stopped at: Completed 09-03-PLAN.md (notification prefs + preferred cities + real profile stats)
+Last session: 2026-06-22T12:57:39.691Z
+Stopped at: Completed 09-04-PLAN.md (0017 live, pgTAP 6/6 green, types regen, tsc clean — Phase 9 complete)
 Resume file: None
