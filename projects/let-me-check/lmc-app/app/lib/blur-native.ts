@@ -9,6 +9,7 @@
 
 import { blurFaces as nativeBlurFaces } from '../../modules/lmc-blur';
 import type { BlurOptions, BlurResult } from '../../modules/lmc-blur';
+import { BLUR_POST_RECORD_RADIUS, BLUR_POST_RECORD_MODE } from './blur-config';
 
 export type { BlurMode, BlurStatus, BlurResult, BlurOptions } from '../../modules/lmc-blur';
 
@@ -19,11 +20,17 @@ export type { BlurMode, BlurStatus, BlurResult, BlurOptions } from '../../module
  *  - 'no_faces' -> none found, original returned, deliver.
  *  - 'failed'   -> use the fallback, NEVER deliver as if blurred.
  *
- * STEP 1: always resolves { outputPath: inputPath, facesBlurred: 0, status: 'no_faces' }.
+ * STEP 3: faces are now actually blurred by the native module. The post-record
+ * radius/mode defaults (blur-config.ts) are applied unless the caller overrides
+ * them. Still NOT wired into the upload flow — Step 5 adds that behind a flag.
  */
 export function blurFaces(
   inputPath: string,
   opts?: BlurOptions,
 ): Promise<BlurResult> {
-  return nativeBlurFaces(inputPath, opts);
+  const merged: BlurOptions = {
+    radius: opts?.radius ?? BLUR_POST_RECORD_RADIUS,
+    mode: opts?.mode ?? BLUR_POST_RECORD_MODE,
+  };
+  return nativeBlurFaces(inputPath, merged);
 }

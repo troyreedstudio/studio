@@ -33,3 +33,29 @@ export const BLUR_NATIVE_ENABLED = false;
  * Only active when BLUR_NATIVE_ENABLED = true.
  */
 export const BLUR_PIXEL_RADIUS = 18;
+
+// ---------------------------------------------------------------------------
+// Phase 8 — POST-RECORD on-device face blur (the LIVE mechanism now).
+//
+// The BLUR_NATIVE_ENABLED flag + viewfinder overlay above are the OLD live-path
+// (worklets-core) that was ABANDONED (08-CONTEXT D-02). Leave it FALSE. Faces are
+// now blurred AFTER recording by the lmc-blur native module (AVFoundation + Vision
+// + Core Image), which re-encodes the saved clip before upload.
+//
+// These tunables are passed by app/lib/blur-native.ts into the native blurFaces
+// call (BlurOptions { radius, mode }). The post-record path is NOT yet wired into
+// the upload flow — that wiring lands in Plan 05 behind a NEW feature flag added
+// there. Until then only a dev trigger calls it.
+// ---------------------------------------------------------------------------
+
+/** Blur style for the post-record module: 'gaussian' (default) or 'pixelate' (cheaper). */
+export type PostRecordBlurMode = 'gaussian' | 'pixelate';
+
+/**
+ * Gaussian blur radius (pixels at native frame resolution) for the post-record
+ * face blur. ~18-25 at 1080p gives strong, non-recoverable coverage. Tunable.
+ */
+export const BLUR_POST_RECORD_RADIUS = 22;
+
+/** Default post-record blur style. Gaussian is strongest; pixelate is the cheaper fallback. */
+export const BLUR_POST_RECORD_MODE: PostRecordBlurMode = 'gaussian';
