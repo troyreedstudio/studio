@@ -41,9 +41,11 @@ export type Database = {
     Tables: {
       checks: {
         Row: {
+          accepted_at: string | null
           coord: unknown
           created_at: string
           currency: string
+          deadline_at: string | null
           id: string
           location_label: string | null
           market_id: string | null
@@ -58,9 +60,11 @@ export type Database = {
           venue_id: string | null
         }
         Insert: {
+          accepted_at?: string | null
           coord?: unknown
           created_at?: string
           currency?: string
+          deadline_at?: string | null
           id?: string
           location_label?: string | null
           market_id?: string | null
@@ -75,9 +79,11 @@ export type Database = {
           venue_id?: string | null
         }
         Update: {
+          accepted_at?: string | null
           coord?: unknown
           created_at?: string
           currency?: string
+          deadline_at?: string | null
           id?: string
           location_label?: string | null
           market_id?: string | null
@@ -967,6 +973,7 @@ export type Database = {
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
       expire_stale_dispatching: { Args: never; Returns: number }
+      expire_stale_filming: { Args: never; Returns: number }
       geometry: { Args: { "": string }; Returns: unknown }
       geometry_above: {
         Args: { geom1: unknown; geom2: unknown }
@@ -1080,9 +1087,11 @@ export type Database = {
       list_open_checks_for_scout: {
         Args: { p_scout_lat: number; p_scout_lng: number }
         Returns: {
+          accepted_at: string | null
           coord: unknown
           created_at: string
           currency: string
+          deadline_at: string | null
           id: string
           location_label: string | null
           market_id: string | null
@@ -1156,6 +1165,20 @@ export type Database = {
       reset_check_for_redispatch: {
         Args: { p_check_id: string }
         Returns: Database["public"]["Enums"]["check_status"]
+      }
+      scout_earnings_totals: {
+        Args: { p_scout_id: string }
+        Returns: {
+          total_cents: number
+          total_clips: number
+        }[]
+      }
+      scout_earnings_weekly: {
+        Args: { p_scout_id: string }
+        Returns: {
+          cents: number
+          day: string
+        }[]
       }
       set_scout_offline: { Args: never; Returns: undefined }
       st_3dclosestpoint: {

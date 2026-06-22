@@ -16,9 +16,9 @@ begin;
     ('aaaaaaaa-0001-0001-0001-000000000002', 'scout2@test.local')
   on conflict do nothing;
 
-  insert into public.profiles (id, role) values
-    ('aaaaaaaa-0001-0001-0001-000000000001', 'scout'),
-    ('aaaaaaaa-0001-0001-0001-000000000002', 'scout')
+  insert into public.profiles (id, is_scout) values
+    ('aaaaaaaa-0001-0001-0001-000000000001', true),
+    ('aaaaaaaa-0001-0001-0001-000000000002', true)
   on conflict do nothing;
 
   -- Minimal checks rows
