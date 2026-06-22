@@ -122,13 +122,12 @@ export default function DeliveryScreen() {
 
   useEffect(() => {
     if (!checkId) return;
-    console.log(`[LMC-PLAY] load checkId=${checkId}`);
     getCheck(checkId)
-      .then((c) => { console.log(`[LMC-PLAY] check status=${c?.status}`); setCheck(c); })
-      .catch((e) => console.error(`[LMC-PLAY] getCheck error: ${e?.message ?? e}`));
+      .then((c) => { setCheck(c); })
+      .catch(() => {});
     getCheckClip(checkId)
-      .then((cl) => { console.log(`[LMC-PLAY] clip=${!!cl} playbackId=${cl?.mux_playback_id ?? 'none'} status=${cl?.status ?? 'none'}`); setClip(cl); })
-      .catch((e) => console.error(`[LMC-PLAY] getCheckClip error: ${e?.message ?? e}`));
+      .then((cl) => { setClip(cl); })
+      .catch(() => {});
   }, [checkId]);
 
   useEffect(() => {
@@ -143,12 +142,11 @@ export default function DeliveryScreen() {
   }, [checkId]);
 
   useEffect(() => {
-    if (!checkId || !clip?.mux_playback_id) { console.log(`[LMC-PLAY] token effect skipped (clip=${!!clip} playbackId=${clip?.mux_playback_id ?? 'none'})`); return; }
+    if (!checkId || !clip?.mux_playback_id) return;
     let cancelled = false;
-    console.log('[LMC-PLAY] requesting playback token…');
     getPlaybackToken(checkId)
-      .then((token) => { console.log(`[LMC-PLAY] token ok (len=${token?.length ?? 0}) → setting videoSrc`); if (!cancelled) setVideoSrc(`https://stream.mux.com/${clip.mux_playback_id}.m3u8?token=${token}`); })
-      .catch((e) => console.error(`[LMC-PLAY] getPlaybackToken error: ${e?.message ?? e}`));
+      .then((token) => { if (!cancelled) setVideoSrc(`https://stream.mux.com/${clip.mux_playback_id}.m3u8?token=${token}`); })
+      .catch(() => {});
     return () => { cancelled = true; };
   }, [checkId, clip?.mux_playback_id]);
 
