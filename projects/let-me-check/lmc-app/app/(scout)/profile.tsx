@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Switch, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { switchRole, signOut } from '../lib/auth';
+import { deleteMyAccount } from '../lib/account';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -27,6 +28,7 @@ const SCOUT_ID = 'SCT-7K4M-X9P';
 export default function ScoutProfileScreen() {
   const router = useRouter();
   const [online, setOnline] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // AUTH-03: persist current_role='seeker' (logs auth.role_switched) then route to
   // the Seeker hub.
@@ -39,6 +41,33 @@ export default function ScoutProfileScreen() {
   const handleSignOut = () => {
     void signOut().catch(() => {});
     router.replace('/index');
+  };
+
+  // D-03: two-step destructive confirm before calling the delete-account Edge Function.
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This permanently deletes your account and all your data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteMyAccount();
+              router.replace('/index');
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+              Alert.alert('Could not delete account', msg);
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   const renderItem = (item: { icon: IconName; label: string; route: string }, i: number, len: number) => (
@@ -150,6 +179,17 @@ export default function ScoutProfileScreen() {
           activeOpacity={0.7}
         >
           <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteAccountBtn}
+          onPress={handleDeleteAccount}
+          activeOpacity={0.7}
+          disabled={deleting}
+        >
+          <Text style={styles.deleteAccountText}>
+            {deleting ? 'Deleting...' : 'Delete Account'}
+          </Text>
         </TouchableOpacity>
 
         <View style={{ height: 32 }} />
@@ -401,6 +441,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
     color: 'rgba(255,255,255,0.5)',
     fontSize: 12.5,
+    letterSpacing: 0.5,
+  },
+  deleteAccountBtn: {
+    marginHorizontal: 22,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  deleteAccountText: {
+    fontFamily: 'Inter_500Medium',
+    color: '#ff5a5a',
+    fontSize: 12,
     letterSpacing: 0.5,
   },
 });

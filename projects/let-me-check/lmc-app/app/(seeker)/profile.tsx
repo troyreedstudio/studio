@@ -1,8 +1,9 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { switchRole, signOut } from '../lib/auth';
+import { deleteMyAccount } from '../lib/account';
 import { getProfile } from '../lib/api';
 import { listMyChecks } from '../lib/checks';
 import { supabase } from '../lib/supabase';
@@ -30,6 +31,7 @@ function toInitials(name: string | null): string {
 export default function ProfileScreen() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [memberSince, setMemberSince] = useState<string | null>(null);
   const [stats, setStats] = useState<{ count: number; spent: number; avgRating: number | null }>({
     count: 0,
@@ -99,6 +101,33 @@ export default function ProfileScreen() {
   const handleSignOut = () => {
     void signOut().catch(() => {});
     router.replace('/index');
+  };
+
+  // D-03: two-step destructive confirm before calling the delete-account Edge Function.
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This permanently deletes your account and all your data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteMyAccount();
+              router.replace('/index');
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+              Alert.alert('Could not delete account', msg);
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   const initials = toInitials(displayName);
@@ -191,6 +220,17 @@ export default function ProfileScreen() {
           activeOpacity={0.7}
         >
           <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteAccountBtn}
+          onPress={handleDeleteAccount}
+          activeOpacity={0.7}
+          disabled={deleting}
+        >
+          <Text style={styles.deleteAccountText}>
+            {deleting ? 'Deleting...' : 'Delete Account'}
+          </Text>
         </TouchableOpacity>
 
         <View style={{ height: 32 }} />
@@ -400,6 +440,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
     color: '#666',
     fontSize: 12.5,
+    letterSpacing: 0.5,
+  },
+  deleteAccountBtn: {
+    marginHorizontal: 22,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  deleteAccountText: {
+    fontFamily: 'Inter_500Medium',
+    color: '#ff5a5a',
+    fontSize: 12,
     letterSpacing: 0.5,
   },
 });
