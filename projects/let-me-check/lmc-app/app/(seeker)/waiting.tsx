@@ -240,6 +240,23 @@ export default function WaitingScreen() {
   const status = check?.status ?? 'assigned';
   const isFilming = status === 'filming';
 
+  // REAL countdown to the server-owned delivery deadline (deadline_at, set when a
+  // Scout accepts — Phase 7). Ticks every second; null until a deadline exists.
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
+  useEffect(() => {
+    // deadline_at is on the row after a Scout accepts; cast (types may lag).
+    const dlRaw = (check as { deadline_at?: string | null } | null)?.deadline_at ?? null;
+    const dl = dlRaw ? new Date(dlRaw).getTime() : null;
+    if (!dl || Number.isNaN(dl)) { setRemainingMs(null); return; }
+    const tick = () => setRemainingMs(Math.max(0, dl - Date.now()));
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [check]);
+  const mmss = remainingMs == null
+    ? null
+    : `${Math.floor(remainingMs / 60000)}:${String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0')}`;
+
   // Scout is AT the venue — jitter position every 2s to feel alive
   const [scoutPos, setScoutPos] = useState<[number, number]>(SCOUT_BASE);
 
@@ -369,16 +386,26 @@ export default function WaitingScreen() {
       <View style={styles.sheet}>
         <View style={styles.sheetHandle} />
 
-        {/* LMC mini brand mark — centered hero above the countdown */}
-        <Text style={styles.brandMonogram}>LMC</Text>
+        {/* Brand mark — full wordmark, not the LMC shorthand */}
+        <Text style={styles.brandMonogram}>Let Me Check</Text>
 
-        {/* Live status hero — driven by the real check row, not a timer */}
+        {/* Live status hero */}
         <Text style={styles.etaLabel}>
           {isFilming ? 'YOUR SCOUT IS FILMING' : 'YOUR SCOUT IS ON SITE'}
         </Text>
-        <Text style={styles.statusHero}>
-          {isFilming ? 'Recording your video…' : 'Getting into position…'}
-        </Text>
+        {/* Real countdown to the delivery deadline (the hero moment). */}
+        {mmss ? (
+          <Text style={styles.statusHero}>{mmss}</Text>
+        ) : (
+          <Text style={styles.statusHero}>
+            {isFilming ? 'Recording your video…' : 'Getting into position…'}
+          </Text>
+        )}
+        {mmss ? (
+          <Text style={styles.etaLabel}>
+            {isFilming ? 'Recording your video' : 'estimated time to delivery'}
+          </Text>
+        ) : null}
 
         {/* Venue + Scout meta */}
         <View style={styles.metaRow}>
