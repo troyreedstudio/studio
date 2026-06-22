@@ -434,7 +434,9 @@ export type Database = {
           id: string
           is_scout: boolean
           is_seeker: boolean
+          notification_prefs: Json | null
           phone: string | null
+          preferred_cities: string[] | null
           stripe_customer_id: string | null
           updated_at: string
         }
@@ -446,7 +448,9 @@ export type Database = {
           id: string
           is_scout?: boolean
           is_seeker?: boolean
+          notification_prefs?: Json | null
           phone?: string | null
+          preferred_cities?: string[] | null
           stripe_customer_id?: string | null
           updated_at?: string
         }
@@ -458,7 +462,9 @@ export type Database = {
           id?: string
           is_scout?: boolean
           is_seeker?: boolean
+          notification_prefs?: Json | null
           phone?: string | null
+          preferred_cities?: string[] | null
           stripe_customer_id?: string | null
           updated_at?: string
         }
@@ -1072,6 +1078,14 @@ export type Database = {
         Returns: boolean
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
+      get_check_scout_public: {
+        Args: { p_check_id: string }
+        Returns: {
+          avg_rating: number
+          clip_count: number
+          display_name: string
+        }[]
+      }
       gettransactionid: { Args: never; Returns: unknown }
       is_in_no_film_zone: {
         Args: { p_lat: number; p_lng: number }
