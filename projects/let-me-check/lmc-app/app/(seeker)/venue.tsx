@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -17,9 +17,6 @@ export default function VenueScreen() {
   const isLive = market.status === 'live';
   const [selectedTier, setSelectedTier] = useState<'standard' | 'priority'>('standard');
   const [interior, setInterior] = useState(false);
-  const [videoPlaying, setVideoPlaying] = useState(false);
-  const [processing, setProcessing] = useState(false);
-
   const isPartner = isPartnerVenue(String(name));
 
   const player = useVideoPlayer(require('../../assets/scout-sample.mov'), (p) => {
@@ -56,7 +53,7 @@ export default function VenueScreen() {
             <View style={styles.venueDot} />
             <View style={styles.venueScoutDot} />
             <Text style={styles.venueScouts}>
-              {isLive ? `${market.scouts} Scouts nearby` : 'Launching soon'}
+              {isLive ? 'Scouts active in your area' : 'Launching soon'}
             </Text>
           </View>
         </View>
@@ -161,30 +158,23 @@ export default function VenueScreen() {
       {/* CTA */}
       <View style={styles.ctaContainer}>
         <TouchableOpacity
-          style={[styles.ctaButton, processing && styles.ctaButtonProcessing]}
-          disabled={processing}
+          style={styles.ctaButton}
           onPress={() => {
-            setProcessing(true);
-            setTimeout(() => {
-              setProcessing(false);
-              router.push({
-                pathname: '/(seeker)/payment',
-                params: {
-                  venue: name,
-                  city,
-                  tier: selectedTier,
-                  price: tier.price,
-                  time: tier.time,
-                  interior: interior ? '1' : '0',
-                },
-              });
-            }, 900);
+            router.push({
+              pathname: '/(seeker)/payment',
+              params: {
+                venue: name,
+                city,
+                tier: selectedTier,
+                price: tier.price,
+                time: tier.time,
+                interior: interior ? '1' : '0',
+              },
+            });
           }}
           activeOpacity={0.85}
         >
-          <Text style={styles.ctaButtonText}>
-            {processing ? 'ONE MOMENT…' : `REVIEW & PAY · ${tier.price}`}
-          </Text>
+          <Text style={styles.ctaButtonText}>{`REVIEW & PAY · ${tier.price}`}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -488,9 +478,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
-  },
-  ctaButtonProcessing: {
-    backgroundColor: '#cccccc',
   },
   ctaButtonText: {
     color: '#000',
