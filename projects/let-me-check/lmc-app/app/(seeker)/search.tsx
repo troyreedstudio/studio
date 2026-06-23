@@ -8,11 +8,15 @@ import {
   ScrollView,
   Keyboard,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getMarketById, DEFAULT_MARKET_ID, nearestLiveMarket } from '../data/markets';
 import { requestUserLocation } from '../state/location';
+import { useSavedPlaces } from '../state/saved';
+import { useRecents, addRecent, relativeTime } from '../state/recents';
+import { searchPlaces, getPlaceCoords, placeToAppCoord, type PlaceSuggestion } from '../lib/places';
 
 const VOICE_MOCKS = [
   'Soho House New York',
@@ -33,161 +37,37 @@ const PLACEHOLDER_HINTS = [
   'Try: "Heathrow Terminal 5"',
 ];
 
-const ALL_PLACES = [
-  // Nightlife
-  { id: 'p1', name: 'Komodo', address: 'Brickell, Miami', category: 'Nightlife', scouts: 14 },
-  { id: 'p2', name: 'LIV Nightclub', address: 'Fontainebleau, Miami', category: 'Nightlife', scouts: 18 },
-  { id: 'p3', name: 'Marquee New York', address: 'Chelsea, NYC', category: 'Nightlife', scouts: 10 },
-  { id: 'p4', name: '1 OAK', address: 'Chelsea, New York', category: 'Nightlife', scouts: 9 },
-  { id: 'p5', name: 'TAO Downtown', address: 'Chelsea, New York', category: 'Nightlife', scouts: 11 },
-  { id: 'p6', name: "Harriet's Rooftop", address: 'West Hollywood, LA', category: 'Nightlife', scouts: 8 },
-  // Hotels / Members Clubs
-  { id: 'p7', name: 'Soho House New York', address: 'Meatpacking, New York', category: 'Hotels', scouts: 12 },
-  { id: 'p8', name: 'Soho House Miami Beach', address: 'South Beach, Miami', category: 'Hotels', scouts: 9 },
-  { id: 'p9', name: 'Soho House West Hollywood', address: 'West Hollywood, LA', category: 'Hotels', scouts: 7 },
-  { id: 'p10', name: 'The Standard Hotel', address: 'Belle Isle, Miami', category: 'Hotels', scouts: 8 },
-  { id: 'p11', name: 'The Edition New York', address: 'Times Square, NYC', category: 'Hotels', scouts: 6 },
-  { id: 'p12', name: 'Faena Miami Beach', address: 'Mid Beach, Miami', category: 'Hotels', scouts: 10 },
-  // Airports
-  { id: 'p13', name: 'JFK Terminal 4', address: 'Queens, New York', category: 'Airports', scouts: 8 },
-  { id: 'p14', name: 'JFK Terminal 1', address: 'Queens, New York', category: 'Airports', scouts: 6 },
-  { id: 'p15', name: 'LaGuardia Terminal B', address: 'Queens, New York', category: 'Airports', scouts: 5 },
-  { id: 'p16', name: 'LAX Terminal 7', address: 'Los Angeles Airport', category: 'Airports', scouts: 16 },
-  { id: 'p17', name: 'MIA Terminal D', address: 'Miami International', category: 'Airports', scouts: 11 },
-  // Gyms
-  { id: 'p18', name: 'Equinox Hudson Yards', address: '33 Hudson Yards, NYC', category: 'Gyms', scouts: 11 },
-  { id: 'p19', name: 'Equinox Brickell', address: 'Miami Avenue, Miami', category: 'Gyms', scouts: 6 },
-  { id: 'p20', name: 'Equinox SoHo', address: 'Greene St, New York', category: 'Gyms', scouts: 9 },
-  { id: 'p21', name: 'Barrys Tribeca', address: 'Tribeca, New York', category: 'Gyms', scouts: 7 },
-  // DMV / Gov
-  { id: 'p22', name: 'DMV - Miami Beach', address: '101 5th St, Miami Beach', category: 'DMV / Gov', scouts: 5 },
-  { id: 'p23', name: 'DMV - Hialeah', address: '5060 W 12 Ave, Hialeah', category: 'DMV / Gov', scouts: 3 },
-  { id: 'p24', name: 'DMV - Manhattan', address: '11 Greenwich St, NYC', category: 'DMV / Gov', scouts: 4 },
-  // Retail
-  { id: 'p25', name: 'Apple Store Aventura', address: 'Aventura Mall, FL', category: 'Retail', scouts: 7 },
-  { id: 'p26', name: 'Apple Fifth Avenue', address: '767 5th Ave, NYC', category: 'Retail', scouts: 9 },
-  { id: 'p27', name: 'Whole Foods Lincoln Rd', address: 'Lincoln Rd, Miami Beach', category: 'Retail', scouts: 4 },
-  { id: 'p28', name: 'Bal Harbour Shops', address: 'Bal Harbour, Miami', category: 'Retail', scouts: 8 },
-  // Beach Clubs
-  { id: 'p29', name: 'Nikki Beach Miami', address: 'Ocean Dr, Miami Beach', category: 'Beach Clubs', scouts: 12 },
-  { id: 'p30', name: 'White Dubai', address: 'Meydan, Dubai', category: 'Beach Clubs', scouts: 9 },
-  // Events / Venues
-  { id: 'p31', name: 'Coachella Festival', address: 'Indio, California', category: 'Events', scouts: 22 },
-  { id: 'p32', name: 'Miami Heat Arena', address: 'Kaseya Center, Miami', category: 'Events', scouts: 13 },
-  { id: 'p33', name: 'Madison Square Garden', address: 'Penn Plaza, New York', category: 'Events', scouts: 15 },
-  { id: 'p34', name: 'Hollywood Bowl', address: 'Hollywood, Los Angeles', category: 'Events', scouts: 11 },
-  { id: 'p35', name: 'SoFi Stadium', address: 'Inglewood, California', category: 'Events', scouts: 9 },
-  // More Cities — Santa Monica / Venice / Beverly Hills
-  { id: 'p36', name: 'Santa Monica Pier', address: 'Santa Monica, California', category: 'Events', scouts: 7 },
-  { id: 'p37', name: 'Santa Monica Place', address: 'Santa Monica, California', category: 'Retail', scouts: 5 },
-  { id: 'p38', name: 'Erewhon Santa Monica', address: 'Santa Monica, California', category: 'Retail', scouts: 4 },
-  { id: 'p39', name: 'The Abbey', address: 'West Hollywood, California', category: 'Nightlife', scouts: 8 },
-  { id: 'p40', name: 'Beverly Hills DMV', address: 'Beverly Hills, California', category: 'DMV / Gov', scouts: 3 },
-  // Big-box retail (chain stores)
-  { id: 'p41', name: 'Walmart Supercenter', address: 'Hialeah, Miami', category: 'Retail', scouts: 6 },
-  { id: 'p42', name: 'Target Westchester', address: 'Bronx, New York', category: 'Retail', scouts: 5 },
-  { id: 'p43', name: 'Costco Miami Beach', address: 'Miami Beach, FL', category: 'Retail', scouts: 7 },
-  { id: 'p44', name: 'Best Buy Times Square', address: 'Times Square, NYC', category: 'Retail', scouts: 5 },
-  { id: 'p45', name: 'Trader Joes Union Square', address: 'Union Square, NYC', category: 'Retail', scouts: 6 },
-  // Chain gyms
-  { id: 'p46', name: 'Planet Fitness Miami', address: 'Brickell, Miami', category: 'Gyms', scouts: 4 },
-  { id: 'p47', name: 'SoulCycle Tribeca', address: 'Tribeca, New York', category: 'Gyms', scouts: 5 },
-  { id: 'p48', name: 'Crunch Fitness Brickell', address: 'Brickell, Miami', category: 'Gyms', scouts: 3 },
-  // Restaurants (very common search)
-  { id: 'p49', name: 'Carbone', address: 'Greenwich Village, NYC', category: 'Restaurants', scouts: 14 },
-  { id: 'p50', name: "Joe's Stone Crab", address: 'South Beach, Miami', category: 'Restaurants', scouts: 12 },
-  { id: 'p51', name: 'Nobu Malibu', address: 'Malibu, California', category: 'Restaurants', scouts: 10 },
-  { id: 'p52', name: 'Catch Steak NYC', address: 'Meatpacking, NYC', category: 'Restaurants', scouts: 9 },
-  { id: 'p53', name: 'Carbone Miami', address: 'South Beach, Miami', category: 'Restaurants', scouts: 11 },
-  { id: 'p54', name: 'In-N-Out Burger', address: 'Hollywood, California', category: 'Restaurants', scouts: 8 },
-  // Movie theaters
-  { id: 'p55', name: 'AMC Aventura 24', address: 'Aventura, Miami', category: 'Movie Theaters', scouts: 5 },
-  { id: 'p56', name: 'AMC Lincoln Square 13', address: 'Upper West Side, NYC', category: 'Movie Theaters', scouts: 7 },
-  { id: 'p57', name: 'Alamo Drafthouse Brooklyn', address: 'Downtown Brooklyn, NY', category: 'Movie Theaters', scouts: 4 },
-  // More Airports
-  { id: 'p58', name: 'SFO Terminal 2', address: 'San Francisco Airport', category: 'Airports', scouts: 9 },
-  { id: 'p59', name: 'ORD Terminal 3', address: 'Chicago O\'Hare', category: 'Airports', scouts: 7 },
-  { id: 'p60', name: 'ATL Concourse F', address: 'Atlanta International', category: 'Airports', scouts: 6 },
-  // More Hotels (chain)
-  { id: 'p61', name: 'Marriott Marquis Times Square', address: 'Times Square, NYC', category: 'Hotels', scouts: 8 },
-  { id: 'p62', name: 'Four Seasons Beverly Hills', address: 'Beverly Hills, CA', category: 'Hotels', scouts: 7 },
-  { id: 'p63', name: 'W South Beach', address: 'South Beach, Miami', category: 'Hotels', scouts: 9 },
-  // Real Estate (open houses common)
-  { id: 'p64', name: 'Open House — Wynwood Loft', address: 'Wynwood, Miami', category: 'Real Estate', scouts: 4 },
-  { id: 'p65', name: 'Open House — SoHo Penthouse', address: 'SoHo, New York', category: 'Real Estate', scouts: 5 },
-  // London
-  { id: 'p66', name: 'Fabric', address: 'Farringdon, London', category: 'Nightlife', scouts: 8 },
-  { id: 'p67', name: "Annabel's Mayfair", address: 'Mayfair, London', category: 'Nightlife', scouts: 6 },
-  { id: 'p68', name: 'Heathrow Terminal 5', address: 'London Heathrow Airport', category: 'Airports', scouts: 13 },
-  { id: 'p69', name: 'Heathrow Terminal 2', address: 'London Heathrow Airport', category: 'Airports', scouts: 9 },
-  { id: 'p70', name: 'The Dorchester', address: 'Park Lane, London', category: 'Hotels', scouts: 7 },
-  { id: 'p71', name: 'The Shard', address: 'London Bridge, London', category: 'Events', scouts: 8 },
-  { id: 'p72', name: 'Selfridges Oxford Street', address: 'Oxford St, London', category: 'Retail', scouts: 9 },
-  { id: 'p73', name: 'Harrods', address: 'Knightsbridge, London', category: 'Retail', scouts: 11 },
-  { id: 'p74', name: "Equinox St James's", address: "St James's, London", category: 'Gyms', scouts: 5 },
-  { id: 'p75', name: 'Soho House White City', address: 'White City, London', category: 'Hotels', scouts: 6 },
-  // Dubai
-  { id: 'p76', name: 'DXB Terminal 3', address: 'Dubai International Airport', category: 'Airports', scouts: 14 },
-  { id: 'p77', name: 'Burj Al Arab', address: 'Jumeirah, Dubai', category: 'Hotels', scouts: 10 },
-  { id: 'p78', name: 'Atlantis The Palm', address: 'Palm Jumeirah, Dubai', category: 'Hotels', scouts: 9 },
-  { id: 'p79', name: 'Mall of the Emirates', address: 'Al Barsha, Dubai', category: 'Retail', scouts: 12 },
-  { id: 'p80', name: 'The Dubai Mall', address: 'Downtown Dubai', category: 'Retail', scouts: 15 },
-  { id: 'p81', name: 'Coya Dubai', address: 'DIFC, Dubai', category: 'Restaurants', scouts: 7 },
-  { id: 'p82', name: 'Zuma Dubai', address: 'DIFC, Dubai', category: 'Restaurants', scouts: 9 },
-  { id: 'p83', name: 'Soul Beach Dubai', address: 'JBR, Dubai', category: 'Beach Clubs', scouts: 8 },
-  { id: 'p84', name: 'E11EVEN', address: '29 NE 11th St, Downtown Miami', category: 'Nightclub', scouts: 17 },
-];
-
-// Coord lookup for prototype. Known venues → exact coords. Unknown → city fallback.
-const VENUE_COORDS: Record<string, [number, number]> = {
-  Komodo: [-80.1932, 25.7651],
-  'LIV Nightclub': [-80.1228, 25.8186],
-  E11EVEN: [-80.1962, 25.7831],
-  'Soho House Miami Beach': [-80.1300, 25.7858],
-  'JFK Terminal 4': [-73.7795, 40.6443],
-  'Equinox Hudson Yards': [-74.0014, 40.7536],
-  'Marquee New York': [-74.0048, 40.7470],
-  'LAX Terminal 7': [-118.4053, 33.9425],
-  'Heathrow Terminal 5': [-0.4882, 51.4720],
-  Carbone: [-74.0006, 40.7290],
-  'Madison Square Garden': [-73.9934, 40.7505],
-  'Apple Fifth Avenue': [-73.9737, 40.7637],
-  'Burj Al Arab': [55.1853, 25.1413],
-};
-
-function getCoordsFor(place: { name: string; address: string }): [number, number] {
-  if (VENUE_COORDS[place.name]) return VENUE_COORDS[place.name];
-  const addr = (place.address || '').toLowerCase();
-  if (addr.includes('miami beach') || addr.includes('south beach')) return [-80.1300, 25.7906];
-  if (addr.includes('miami') || addr.includes('brickell') || addr.includes('wynwood') || addr.includes('hialeah') || addr.includes('aventura')) return [-80.1918, 25.7617];
-  if (addr.includes('queens') || addr.includes('brooklyn') || addr.includes('bronx') || addr.includes('manhattan') || addr.includes('soho') || addr.includes('chelsea') || addr.includes('tribeca') || addr.includes('new york') || addr.includes('nyc') || addr.includes('greenwich')) return [-74.006, 40.7128];
-  if (addr.includes('hollywood') || addr.includes('beverly') || addr.includes('santa monica') || addr.includes('malibu') || addr.includes('inglewood') || addr.includes('los angeles')) return [-118.2437, 34.0522];
-  if (addr.includes('london') || addr.includes('mayfair') || addr.includes('farringdon')) return [-0.1278, 51.5074];
-  if (addr.includes('dubai') || addr.includes('jumeirah') || addr.includes('difc')) return [55.2708, 25.2048];
-  if (addr.includes('chicago')) return [-87.6298, 41.8781];
-  if (addr.includes('atlanta')) return [-84.388, 33.749];
-  if (addr.includes('san francisco')) return [-122.4194, 37.7749];
-  return [-80.1918, 25.7617];
-}
-
-const RECENTS = [
-  { id: 'r1', name: 'Komodo', address: 'Brickell, Miami', when: '2 days ago' },
-  { id: 'r2', name: 'DMV - Miami Beach', address: '101 5th St, Miami Beach', when: 'Last week' },
-  { id: 'r3', name: 'JFK Terminal 4', address: 'Queens, New York', when: 'Last month' },
-];
+type SearchState =
+  | { kind: 'idle' }
+  | { kind: 'loading' }
+  | { kind: 'results'; suggestions: PlaceSuggestion[]; unavailable: false }
+  | { kind: 'no-results' }
+  | { kind: 'unavailable' };
 
 export default function SearchScreen() {
   const router = useRouter();
-  const { marketId: marketIdParam, voice, mode } = useLocalSearchParams<{ marketId?: string; voice?: string; mode?: string }>();
+  const { marketId: marketIdParam, voice, mode } = useLocalSearchParams<{
+    marketId?: string;
+    voice?: string;
+    mode?: string;
+  }>();
   const isRecurring = mode === 'recurring';
   const activeMarket = getMarketById(marketIdParam || DEFAULT_MARKET_ID) || getMarketById(DEFAULT_MARKET_ID)!;
+
   const [query, setQuery] = useState('');
-  // Arriving from the home "Voice" chip starts listening straight away.
   const [voiceListening, setVoiceListening] = useState(voice === '1');
   const [voiceDots, setVoiceDots] = useState('');
   const [hintIdx, setHintIdx] = useState(0);
+  const [searchState, setSearchState] = useState<SearchState>({ kind: 'idle' });
+  const [resolving, setResolving] = useState(false);
 
-  // Rotate AI-style placeholder hints every 3.5s when input empty
+  // Real saved places + recents from Supabase-backed state
+  const { list: savedList } = useSavedPlaces();
+  const recents = useRecents();
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Rotate placeholder hints every 3.5 s when input is empty
   useEffect(() => {
     if (query.length > 0) return;
     const t = setInterval(() => {
@@ -205,8 +85,7 @@ export default function SearchScreen() {
     return () => clearInterval(t);
   }, [voiceListening]);
 
-  // Mock voice capture: after 2.5 sec, fill input with a random mock query.
-  // Guard: never inject a fake query in Release — only fires in dev.
+  // Mock voice capture in dev only — fills input after 2.5 s
   useEffect(() => {
     if (!__DEV__) return;
     if (!voiceListening) return;
@@ -218,53 +97,145 @@ export default function SearchScreen() {
     return () => clearTimeout(t);
   }, [voiceListening]);
 
-  const tokens = query.toLowerCase().trim().split(/[\s,]+/).filter(Boolean);
-  const results = tokens.length > 0
-    ? ALL_PLACES.filter((p) => {
-        const haystack = `${p.name} ${p.address} ${p.category}`.toLowerCase();
-        return tokens.every((t) => haystack.includes(t));
-      }).slice(0, 8)
-    : [];
+  // Debounced autocomplete — fires 300 ms after the user stops typing
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
-  const handleSelect = (place: { name: string; address: string }) => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setSearchState({ kind: 'idle' });
+      return;
+    }
+
+    setSearchState({ kind: 'loading' });
+
+    debounceRef.current = setTimeout(async () => {
+      const biasCoord = activeMarket.center as [number, number];
+      const outcome = await searchPlaces(trimmed, { locationBias: biasCoord });
+
+      if (outcome.unavailable) {
+        setSearchState({ kind: 'unavailable' });
+        return;
+      }
+
+      if (outcome.results.length === 0) {
+        setSearchState({ kind: 'no-results' });
+        return;
+      }
+
+      setSearchState({ kind: 'results', suggestions: outcome.results, unavailable: false });
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, activeMarket.center]);
+
+  /**
+   * Resolve a tapped suggestion to real coords, record it as a recent,
+   * then navigate to the destination screen.
+   */
+  const handleSelectSuggestion = async (suggestion: PlaceSuggestion) => {
     Keyboard.dismiss();
-    const coords = getCoordsFor(place);
-    const [lon, lat] = coords;
-    // Market follows the SELECTED venue's location — not where search was opened.
-    // (Search a NYC venue from the Miami map → the venue page should say New York.)
-    const resolved = nearestLiveMarket(coords);
-    const marketId = resolved.inMarket ? resolved.market.id : marketIdParam || activeMarket.id;
-    // Scheduling a recurring check → hand off to the schedule screen (no charge now).
+    setResolving(true);
+
+    try {
+      const coords = await getPlaceCoords(suggestion.placeId);
+      const name = suggestion.primaryText;
+      const address = suggestion.secondaryText || suggestion.primaryText;
+
+      let appCoord: [number, number];
+      if (coords) {
+        appCoord = placeToAppCoord(coords);
+      } else {
+        // Place Details failed — fall back to active market centre so we never crash.
+        appCoord = activeMarket.center as [number, number];
+      }
+
+      const [lon, lat] = appCoord;
+      const resolved = nearestLiveMarket(appCoord);
+      const marketId = resolved.inMarket ? resolved.market.id : marketIdParam || activeMarket.id;
+
+      // Record in recents (persisted to Supabase in background)
+      addRecent({ name, city: resolved.market.name });
+
+      if (isRecurring) {
+        router.replace({
+          pathname: '/(seeker)/recurring-setup',
+          params: { pinLat: String(lat), pinLon: String(lon), pinName: name, pinAddress: address, marketId },
+        });
+        return;
+      }
+
+      router.replace({
+        pathname: '/(seeker)/home',
+        params: { pinLat: String(lat), pinLon: String(lon), pinName: name, pinAddress: address, marketId },
+      });
+    } finally {
+      setResolving(false);
+    }
+  };
+
+  /**
+   * Handle a tap on a saved place or recent — these already have coords.
+   */
+  const handleSelectSaved = (item: { name: string; address?: string; coord: [number, number]; marketId: string }) => {
+    Keyboard.dismiss();
+    const [lon, lat] = item.coord;
+    const resolved = nearestLiveMarket(item.coord);
+    const marketId = resolved.inMarket ? resolved.market.id : item.marketId || activeMarket.id;
+
+    addRecent({ name: item.name, city: resolved.market.name });
+
     if (isRecurring) {
       router.replace({
         pathname: '/(seeker)/recurring-setup',
-        params: {
-          pinLat: String(lat),
-          pinLon: String(lon),
-          pinName: place.name,
-          pinAddress: place.address,
-          marketId,
-        },
+        params: { pinLat: String(lat), pinLon: String(lon), pinName: item.name, pinAddress: item.address ?? '', marketId },
       });
       return;
     }
     router.replace({
       pathname: '/(seeker)/home',
-      params: {
-        pinLat: String(lat),
-        pinLon: String(lon),
-        pinName: place.name,
-        pinAddress: place.address,
-        marketId,
-      },
+      params: { pinLat: String(lat), pinLon: String(lon), pinName: item.name, pinAddress: item.address ?? '', marketId },
     });
   };
+
+  /**
+   * Handle a tap on a recent check (no stored coord — use market centre fallback).
+   */
+  const handleSelectRecent = (item: { name: string; city: string }) => {
+    Keyboard.dismiss();
+    // Recents store only name + city — we don't have coords. Use active market
+    // centre as a best-effort so the home map opens near the right city.
+    const appCoord = activeMarket.center as [number, number];
+    const [lon, lat] = appCoord;
+    const marketId = marketIdParam || activeMarket.id;
+
+    if (isRecurring) {
+      router.replace({
+        pathname: '/(seeker)/recurring-setup',
+        params: { pinLat: String(lat), pinLon: String(lon), pinName: item.name, pinAddress: item.city, marketId },
+      });
+      return;
+    }
+    router.replace({
+      pathname: '/(seeker)/home',
+      params: { pinLat: String(lat), pinLon: String(lon), pinName: item.name, pinAddress: item.city, marketId },
+    });
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  const showIdle = query.trim().length === 0;
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{isRecurring ? 'Pick a place to repeat' : 'Search any place'}</Text>
@@ -280,23 +251,24 @@ export default function SearchScreen() {
           placeholderTextColor="#666"
           value={query}
           onChangeText={setQuery}
-          onSubmitEditing={() => {
-            const trimmed = query.trim();
-            if (!trimmed) return;
-            // If a pre-loaded match exists, pick the top one. Otherwise use the literal typed query.
-            const target = results.length > 0 ? results[0] : { name: trimmed, address: 'Search this location' };
-            handleSelect(target);
-          }}
           autoFocus
           returnKeyType="search"
           autoCorrect={false}
         />
-        {query.length > 0 ? (
-          <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        {resolving || searchState.kind === 'loading' ? (
+          <ActivityIndicator size="small" color="#00FF7F" />
+        ) : query.length > 0 ? (
+          <TouchableOpacity
+            onPress={() => setQuery('')}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Text style={styles.clearIcon}>✕</Text>
           </TouchableOpacity>
         ) : __DEV__ ? (
-          <TouchableOpacity onPress={() => setVoiceListening(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <TouchableOpacity
+            onPress={() => setVoiceListening(true)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Text style={styles.micIcon}>🎤</Text>
           </TouchableOpacity>
         ) : null}
@@ -309,11 +281,8 @@ export default function SearchScreen() {
         onPress={async () => {
           const { status, coords } = await requestUserLocation();
           if (status === 'granted' && coords) {
-            // Home re-centres on getUserCoords() on load — navigate there and it
-            // will pick up the freshly-resolved coords automatically.
             router.replace({ pathname: '/(seeker)/home' });
           }
-          // On denial: keep the search screen open so the user can type manually.
         }}
       >
         <Text style={styles.locIcon}>📍</Text>
@@ -329,92 +298,134 @@ export default function SearchScreen() {
         <Text style={styles.locArrow}>›</Text>
       </TouchableOpacity>
 
-
       {/* Results / Recents / Saved */}
-      <ScrollView style={styles.resultsScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        {query.length > 0 ? (
-          /* Live autocomplete — Google Maps pattern: typed query is the first suggestion */
+      <ScrollView
+        style={styles.resultsScroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {showIdle ? (
+          /* ── Empty state: show saved places + recents ── */
           <>
-            <Text style={styles.sectionLabel}>SUGGESTIONS</Text>
+            {recents.length > 0 && (
+              <>
+                <Text style={styles.sectionLabel}>RECENT</Text>
+                {recents.slice(0, 5).map((r, idx) => (
+                  <TouchableOpacity
+                    key={`recent-${idx}`}
+                    style={styles.resultRow}
+                    onPress={() => handleSelectRecent(r)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.resultIconWrap}>
+                      <Text style={styles.resultPin}>🕐</Text>
+                    </View>
+                    <View style={styles.resultTextWrap}>
+                      <Text style={styles.resultName}>{r.name}</Text>
+                      <Text style={styles.resultAddress}>{r.city}</Text>
+                      <Text style={styles.resultRecentWhen}>{relativeTime(r.ts)}</Text>
+                    </View>
+                    <Text style={styles.resultArrow}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
 
-            {/* Top row: user's literal typed query, always actionable */}
+            <Text style={[styles.sectionLabel, recents.length > 0 ? { marginTop: 28 } : undefined]}>
+              SAVED PLACES
+            </Text>
+            {savedList.length > 0 ? (
+              savedList.map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={styles.resultRow}
+                  onPress={() => handleSelectSaved(p)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.resultIconWrap}>
+                    <Text style={styles.resultPin}>🔖</Text>
+                  </View>
+                  <View style={styles.resultTextWrap}>
+                    <Text style={styles.resultName}>{p.name}</Text>
+                    {p.address ? (
+                      <Text style={styles.resultAddress}>{p.address}</Text>
+                    ) : null}
+                  </View>
+                  <Text style={styles.resultArrow}>›</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptySaved}>
+                <Text style={styles.emptySavedTitle}>No saved places yet</Text>
+                <Text style={styles.emptySavedSub}>
+                  Tap the bookmark on any place after checking to save it here.
+                </Text>
+              </View>
+            )}
+          </>
+        ) : searchState.kind === 'unavailable' ? (
+          /* ── No API key configured ── */
+          <View style={styles.feedbackWrap}>
+            <Text style={styles.feedbackTitle}>Search not available yet</Text>
+            <Text style={styles.feedbackSub}>
+              Live place search will be active when the team adds a Google Places key. Type the name above and tap Go to check any location.
+            </Text>
             <TouchableOpacity
               style={styles.resultRow}
-              onPress={() => handleSelect({ name: query.trim(), address: 'Search this location' })}
+              onPress={() => handleSelectRecent({ name: query.trim(), city: 'Typed location' })}
               activeOpacity={0.7}
             >
-              <View style={[styles.resultIconWrap, styles.resultIconWrapOrange]}>
+              <View style={[styles.resultIconWrap, styles.resultIconWrapGreen]}>
                 <Text style={styles.resultPin}>🔍</Text>
               </View>
               <View style={styles.resultTextWrap}>
                 <Text style={styles.resultName}>{query.trim()}</Text>
-                <Text style={styles.resultAddress}>Search this location</Text>
+                <Text style={styles.resultAddress}>Check this location</Text>
                 <Text style={styles.priceChip}>$15 · ~10 min</Text>
               </View>
               <Text style={styles.resultArrow}>›</Text>
             </TouchableOpacity>
-
-            {/* Pre-loaded autocomplete matches below */}
-            {results.map((r) => (
+          </View>
+        ) : searchState.kind === 'no-results' ? (
+          /* ── Zero results ── */
+          <View style={styles.feedbackWrap}>
+            <Text style={styles.feedbackSub}>
+              No places found for "{query.trim()}". Try a different name or address.
+            </Text>
+          </View>
+        ) : searchState.kind === 'results' ? (
+          /* ── Live autocomplete results ── */
+          <>
+            <Text style={styles.sectionLabel}>SUGGESTIONS</Text>
+            {searchState.suggestions.map((s) => (
               <TouchableOpacity
-                key={r.id}
+                key={s.placeId}
                 style={styles.resultRow}
-                onPress={() => handleSelect(r)}
+                onPress={() => handleSelectSuggestion(s)}
                 activeOpacity={0.7}
               >
                 <View style={styles.resultIconWrap}>
                   <Text style={styles.resultPin}>📍</Text>
                 </View>
                 <View style={styles.resultTextWrap}>
-                  <Text style={styles.resultName}>{r.name}</Text>
-                  <Text style={styles.resultAddress}>{r.address}</Text>
-                  <View style={styles.resultMeta}>
-                    <Text style={styles.priceChip}>$15 · ~10 min</Text>
-                    <Text style={styles.resultDot}>·</Text>
-                    <View style={styles.scoutDot} />
-                    <Text style={styles.resultScouts}>{r.scouts} ready</Text>
-                  </View>
+                  <Text style={styles.resultName}>{s.primaryText}</Text>
+                  <Text style={styles.resultAddress}>{s.secondaryText}</Text>
+                  <Text style={styles.priceChip}>$15 · ~10 min</Text>
                 </View>
                 <Text style={styles.resultArrow}>›</Text>
               </TouchableOpacity>
             ))}
           </>
-        ) : (
-          /* Recents + Saved */
-          <>
-            <Text style={styles.sectionLabel}>RECENT</Text>
-            {RECENTS.map((r) => (
-              <TouchableOpacity
-                key={r.id}
-                style={styles.resultRow}
-                onPress={() => handleSelect(r)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.resultIconWrap}>
-                  <Text style={styles.resultPin}>🕐</Text>
-                </View>
-                <View style={styles.resultTextWrap}>
-                  <Text style={styles.resultName}>{r.name}</Text>
-                  <Text style={styles.resultAddress}>{r.address}</Text>
-                  <Text style={styles.resultRecentWhen}>{r.when}</Text>
-                </View>
-                <Text style={styles.resultArrow}>›</Text>
-              </TouchableOpacity>
-            ))}
-
-            <Text style={[styles.sectionLabel, { marginTop: 28 }]}>SAVED PLACES</Text>
-            <View style={styles.emptySaved}>
-              <Text style={styles.emptySavedTitle}>No saved places yet</Text>
-              <Text style={styles.emptySavedSub}>
-                Tap the bookmark on any place after checking to save it here.
-              </Text>
-            </View>
-          </>
-        )}
+        ) : null /* loading state — spinner is shown in the input bar */ }
       </ScrollView>
 
       {/* Voice Listening Modal */}
-      <Modal visible={voiceListening} transparent animationType="fade" onRequestClose={() => setVoiceListening(false)}>
+      <Modal
+        visible={voiceListening}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setVoiceListening(false)}
+      >
         <View style={styles.voiceOverlay}>
           <View style={styles.voiceCard}>
             <Text style={styles.voiceMic}>🎤</Text>
@@ -427,7 +438,11 @@ export default function SearchScreen() {
               <View style={[styles.voicePulse, { height: 22 }]} />
               <View style={[styles.voicePulse, { height: 16 }]} />
             </View>
-            <TouchableOpacity style={styles.voiceCancel} onPress={() => setVoiceListening(false)} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.voiceCancel}
+              onPress={() => setVoiceListening(false)}
+              activeOpacity={0.7}
+            >
               <Text style={styles.voiceCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -610,11 +625,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  resultIconWrapOrange: {
+  resultIconWrapGreen: {
     borderColor: '#00FF7F',
-  },
-  searchAnywhereRow: {
-    backgroundColor: 'rgba(255,133,51,0.06)',
   },
   resultPin: { fontSize: 16 },
   resultTextWrap: { flex: 1 },
@@ -631,34 +643,6 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 4,
   },
-  resultMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  resultCategory: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 9,
-    color: '#00FF7F',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
-  resultDot: {
-    fontSize: 10,
-    color: '#666',
-  },
-  scoutDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#00FF7F',
-  },
-  resultScouts: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 10,
-    color: '#00FF7F',
-    letterSpacing: 0.3,
-  },
   resultRecentWhen: {
     fontFamily: 'Inter_400Regular',
     fontSize: 10,
@@ -670,14 +654,22 @@ const styles = StyleSheet.create({
     color: '#00FF7F',
     fontWeight: '500',
   },
-  noResults: {
+  feedbackWrap: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  feedbackTitle: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 15,
+    color: '#fff',
+    marginBottom: 6,
+  },
+  feedbackSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
     color: '#888',
-    textAlign: 'center',
-    paddingHorizontal: 32,
-    marginTop: 12,
     lineHeight: 19,
+    marginBottom: 16,
   },
   emptySaved: {
     marginHorizontal: 20,
