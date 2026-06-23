@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -13,14 +13,27 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase';
+import { setIntendedRoleFlags } from '../lib/api';
 
-function generateScoutId(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let id = 'SCT-';
-  for (let i = 0; i < 4; i++) id += chars[Math.floor(Math.random() * chars.length)];
-  id += '-';
-  for (let i = 0; i < 3; i++) id += chars[Math.floor(Math.random() * chars.length)];
-  return id;
+/**
+ * Derive a stable, human-readable Scout ID from the user's Supabase auth UUID.
+ * Takes the last 7 hex chars of the UUID and converts them to our base-32
+ * alphabet, giving a deterministic "SCT-XXXX-XXX" that never changes across
+ * remounts (unlike Math.random()).
+ */
+function stableScoutId(uid: string): string {
+  const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  // Strip hyphens and take the last 7 hex digits.
+  const hex = uid.replace(/-/g, '').slice(-7);
+  const n = parseInt(hex, 16);
+  let out = '';
+  let v = n;
+  for (let i = 0; i < 7; i++) {
+    out = CHARS[v % 32] + out;
+    v = Math.floor(v / 32);
+  }
+  return `SCT-${out.slice(0, 4)}-${out.slice(4)}`;
 }
 
 const ON_FILE = [
@@ -46,13 +59,23 @@ export default function ScoutApprovedScreen() {
   const router = useRouter();
   const fade = useRef(new Animated.Value(0)).current;
   const breath = useRef(new Animated.Value(1)).current;
-  const scoutId = useMemo(generateScoutId, []);
-  const today = useMemo(() => {
-    const d = new Date();
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }, []);
+  // Stable Scout ID derived from the auth UID — never regenerates on re-mount.
+  const [scoutId, setScoutId] = useState('SCT-••••-•••');
+  const today = new Date().toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  });
 
   useEffect(() => {
+    // AUTH-03: set is_scout=true + current_role='scout' in the profiles table.
+    // Best-effort — a transient failure must not block the confirmation screen.
+    setIntendedRoleFlags('scout').catch(() => {});
+
+    // Resolve the stable Scout ID from the real auth UID.
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data?.user?.id;
+      if (uid) setScoutId(stableScoutId(uid));
+    }).catch(() => {});
+
     Animated.timing(fade, { toValue: 1, duration: 700, useNativeDriver: true }).start();
     const loop = Animated.loop(
       Animated.sequence([

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,69 +7,58 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-type IdType = 'license' | 'passport' | 'state' | 'permit';
-type SlotKey = 'front' | 'back' | 'selfie';
+// Identity verification for Scouts is handled by Stripe Identity during the
+// Stripe Connect Express onboarding (the payout step). Stripe collects the
+// government ID + selfie liveness check directly inside their hosted flow,
+// meaning we never see or store raw ID images — only an approved/denied status.
+//
+// This screen is an informational bridge: it explains what will happen and
+// points the user to the payout step where the real verification occurs.
+// The former "fake camera capture" prototype Alerts have been removed —
+// they were misleading and never submitted anything to Stripe.
 
-const ID_TYPES: { id: IdType; label: string; needsBack: boolean }[] = [
-  { id: 'license', label: "Driver's license", needsBack: true },
-  { id: 'state', label: 'State ID', needsBack: true },
-  { id: 'passport', label: 'Passport', needsBack: false },
-  { id: 'permit', label: 'Residence permit', needsBack: true },
+const WHY_ITEMS = [
+  {
+    icon: 'shield-checkmark-outline' as const,
+    title: 'Keeps the network trustworthy',
+    detail: 'One real human per account means Seekers can trust every clip.',
+  },
+  {
+    icon: 'card-outline' as const,
+    title: 'Required for payouts',
+    detail: 'Financial regulations require us to verify your identity before we can pay you.',
+  },
+  {
+    icon: 'lock-closed-outline' as const,
+    title: 'Handled by Stripe Identity',
+    detail: 'Let Me Check never sees your raw ID. Stripe stores and processes it; we only receive an approved or denied status.',
+  },
 ];
 
-const NEED = [
-  { icon: 'camera-outline' as const, text: 'Your phone’s camera' },
-  { icon: 'card-outline' as const, text: 'A government-issued photo ID' },
-  { icon: 'sunny-outline' as const, text: 'A well-lit space with a plain background' },
-  { icon: 'time-outline' as const, text: '2 minutes' },
+const HOW_ITEMS = [
+  {
+    n: '1',
+    title: 'Connect your payout account',
+    detail: "On the next screen, tap \"Set up payouts\" to open Stripe's secure onboarding.",
+  },
+  {
+    n: '2',
+    title: 'Verify your identity inside Stripe',
+    detail: "Stripe will ask for a government-issued photo ID and a selfie. Takes about 2 minutes.",
+  },
+  {
+    n: '3',
+    title: 'Approval in minutes',
+    detail: 'Most verifications complete automatically. Stripe notifies us and your Scout account activates.',
+  },
 ];
 
 export default function ScoutIdentityScreen() {
   const router = useRouter();
-  const [idType, setIdType] = useState<IdType>('license');
-  const [slots, setSlots] = useState<Record<SlotKey, boolean>>({
-    front: false,
-    back: false,
-    selfie: false,
-  });
-  const [consented, setConsented] = useState(false);
-
-  const activeType = ID_TYPES.find((t) => t.id === idType)!;
-  const needsBack = activeType.needsBack;
-
-  const requiredSlots: SlotKey[] = needsBack ? ['front', 'back', 'selfie'] : ['front', 'selfie'];
-  const allCaptured = requiredSlots.every((k) => slots[k]);
-  const canSubmit = allCaptured && consented;
-
-  const handleCapture = (slot: SlotKey, label: string) => {
-    Alert.alert(
-      `Capture ${label}`,
-      'In production this opens the camera with Stripe Identity guidance overlays.\n\nFor the prototype we’ll mark it captured.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Mark captured',
-          onPress: () => setSlots((s) => ({ ...s, [slot]: true })),
-        },
-      ],
-    );
-  };
-
-  const handleSubmit = () => {
-    Alert.alert(
-      'Open Stripe Identity',
-      'In production this submits your captures to Stripe Identity for review. Review usually completes within 2 minutes.\n\nFor the prototype, we’ll move you to the next step.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Continue', onPress: () => router.push('/scout/payout') },
-      ],
-    );
-  };
 
   return (
     <View style={styles.bg}>
@@ -93,190 +82,78 @@ export default function ScoutIdentityScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Verify your identity</Text>
-          <Text style={styles.subtitle}>
-            A quick verification before your first check. Handled by Stripe Identity, encrypted, private, and never shared.
-          </Text>
-
-          {/* WHY card */}
-          <View style={styles.whyCard}>
-            <Text style={styles.whyLabel}>WHY WE VERIFY</Text>
-            <Text style={styles.whyText}>
-              Every Scout is verified to keep the network trustworthy for venues, Seekers, and each other. One real human, one verified account.
+          {/* Hero */}
+          <View style={styles.heroWrap}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="shield-checkmark-outline" size={36} color="#00FF7F" />
+            </View>
+            <Text style={styles.title}>Identity verification</Text>
+            <Text style={styles.subtitle}>
+              Your identity is verified by our payment partner, Stripe, as part of setting up payouts — not by a separate camera step.
             </Text>
           </View>
 
-          {/* WHAT YOU'LL NEED */}
-          <Text style={styles.sectionLabel}>WHAT YOU’LL NEED</Text>
-          <View style={styles.needCard}>
-            {NEED.map((n, i) => (
-              <View key={i} style={styles.needRow}>
-                <Ionicons name={n.icon} size={16} color="rgba(255,255,255,0.7)" />
-                <Text style={styles.needText}>{n.text}</Text>
+          {/* Why we verify */}
+          <Text style={styles.sectionLabel}>WHY WE VERIFY</Text>
+          <View style={styles.listCard}>
+            {WHY_ITEMS.map((item, i) => (
+              <View
+                key={i}
+                style={[styles.listRow, i < WHY_ITEMS.length - 1 && styles.listRowDivider]}
+              >
+                <View style={styles.iconWrap}>
+                  <Ionicons name={item.icon} size={20} color="#00FF7F" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.listTitle}>{item.title}</Text>
+                  <Text style={styles.listDetail}>{item.detail}</Text>
+                </View>
               </View>
             ))}
           </View>
 
-          {/* ID TYPE SELECTOR */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>WHICH ID</Text>
-          <View style={styles.typeRow}>
-            {ID_TYPES.map((t) => {
-              const active = t.id === idType;
-              return (
-                <TouchableOpacity
-                  key={t.id}
-                  style={[styles.typePill, active && styles.typePillActive]}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    setIdType(t.id);
-                    if (!t.needsBack) setSlots((s) => ({ ...s, back: false }));
-                  }}
-                >
-                  <Text style={[styles.typePillText, active && styles.typePillTextActive]}>
-                    {t.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* UPLOADS */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-            CAPTURE · {requiredSlots.length} STEP{requiredSlots.length > 1 ? 'S' : ''}
-          </Text>
-
-          <UploadSlot
-            n={1}
-            label="Front of ID"
-            hint={idType === 'passport' ? 'Photo page facing up' : 'Photo side facing up'}
-            captured={slots.front}
-            onPress={() => handleCapture('front', 'front of ID')}
-          />
-
-          {needsBack && (
-            <UploadSlot
-              n={2}
-              label="Back of ID"
-              hint="Barcode / mag stripe visible"
-              captured={slots.back}
-              onPress={() => handleCapture('back', 'back of ID')}
-            />
-          )}
-
-          <UploadSlot
-            n={needsBack ? 3 : 2}
-            label="Selfie + liveness check"
-            hint="Face camera, follow prompts (blink, turn head)"
-            captured={slots.selfie}
-            onPress={() => handleCapture('selfie', 'selfie')}
-          />
-
-          {/* TIPS */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>TIPS FOR A FAST APPROVAL</Text>
-          <View style={styles.tipsCard}>
-            <Tip text="Clean, dry, undamaged ID." />
-            <Tip text="No glare or reflections, angle the ID slightly if you see one." />
-            <Tip text="Whole ID in frame. No fingers covering text or photo." />
-            <Tip text="Selfie: plain background, good lighting, no hat or sunglasses." />
-          </View>
-
-          {/* CONSENT */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>CONSENT</Text>
-          <TouchableOpacity
-            style={styles.gateRow}
-            activeOpacity={0.75}
-            onPress={() => setConsented((v) => !v)}
-          >
-            <View style={[styles.checkbox, consented && styles.checkboxOn]}>
-              {consented && <Ionicons name="checkmark" size={14} color="#000" />}
+          {/* How it works */}
+          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>HOW IT WORKS</Text>
+          {HOW_ITEMS.map((item, i) => (
+            <View key={i} style={styles.stepRow}>
+              <View style={styles.stepNum}>
+                <Text style={styles.stepNumText}>{item.n}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.listTitle}>{item.title}</Text>
+                <Text style={styles.listDetail}>{item.detail}</Text>
+              </View>
             </View>
-            <Text style={styles.gateText}>
-              <Text style={styles.gateBold}>I CONSENT.</Text> I authorize Let Me Check + Stripe Identity to process my government ID and a selfie (including biometric facial-match data) to verify my identity. Stripe stores and processes this data; Let Me Check receives only an approved/denied status.
-            </Text>
-          </TouchableOpacity>
+          ))}
 
-          {/* CTA */}
+          {/* Privacy note */}
+          <View style={styles.privacyCard}>
+            <Ionicons name="lock-closed-outline" size={16} color="#00FF7F" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.privacyTitle}>Privacy</Text>
+              <Text style={styles.privacyText}>
+                Stripe is BIPA and GDPR compliant. We never see or store your raw ID images or biometric data.
+              </Text>
+            </View>
+          </View>
+
+          {/* CTA — proceed to payout setup where Stripe KYC actually happens */}
           <TouchableOpacity
-            style={[styles.primaryBtn, !canSubmit && styles.primaryBtnDisabled]}
-            disabled={!canSubmit}
-            onPress={handleSubmit}
+            style={styles.primaryBtn}
+            onPress={() => router.push('/scout/payout')}
             activeOpacity={0.85}
           >
             <View style={styles.primaryBtnInner}>
-              <Ionicons
-                name="shield-checkmark-outline"
-                size={16}
-                color={canSubmit ? '#000' : 'rgba(255,255,255,0.35)'}
-              />
-              <Text
-                style={[styles.primaryBtnText, !canSubmit && styles.primaryBtnTextDisabled]}
-              >
-                {!allCaptured
-                  ? `CAPTURE ${requiredSlots.length} ${requiredSlots.length === 1 ? 'STEP' : 'STEPS'} TO CONTINUE`
-                  : !consented
-                  ? 'CONSENT TO CONTINUE'
-                  : 'VERIFY WITH STRIPE IDENTITY'}
-              </Text>
+              <Ionicons name="arrow-forward" size={16} color="#000" />
+              <Text style={styles.primaryBtnText}>CONTINUE TO PAYOUT SETUP</Text>
             </View>
           </TouchableOpacity>
 
           <Text style={styles.foot}>
-            We never see or store your raw ID images. Stripe Identity is BIPA + GDPR compliant.
+            Identity verification happens inside the Stripe payout flow on the next screen.
           </Text>
         </ScrollView>
       </SafeAreaView>
-    </View>
-  );
-}
-
-function UploadSlot({
-  n,
-  label,
-  hint,
-  captured,
-  onPress,
-}: {
-  n: number;
-  label: string;
-  hint: string;
-  captured: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      style={[styles.slot, captured && styles.slotDone]}
-      activeOpacity={0.85}
-      onPress={onPress}
-    >
-      <View style={styles.slotNumWrap}>
-        {captured ? (
-          <View style={styles.slotCheck}>
-            <Ionicons name="checkmark" size={14} color="#000" />
-          </View>
-        ) : (
-          <Text style={styles.slotNum}>{n}</Text>
-        )}
-      </View>
-      <View style={styles.slotBody}>
-        <Text style={styles.slotLabel}>{label}</Text>
-        <Text style={styles.slotHint}>{hint}</Text>
-      </View>
-      <View style={styles.slotCameraWrap}>
-        <Ionicons
-          name={captured ? 'refresh-outline' : 'camera-outline'}
-          size={18}
-          color={captured ? '#00FF7F' : 'rgba(255,255,255,0.7)'}
-        />
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-function Tip({ text }: { text: string }) {
-  return (
-    <View style={styles.tipRow}>
-      <Ionicons name="bulb-outline" size={14} color="#FFCB47" />
-      <Text style={styles.tipText}>{text}</Text>
     </View>
   );
 }
@@ -304,41 +181,38 @@ const styles = StyleSheet.create({
   dotActive: { backgroundColor: '#00FF7F' },
   scroll: { paddingHorizontal: 26, paddingBottom: 64 },
 
+  heroWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: 28,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(0,255,127,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,127,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+  },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
     color: '#ffffff',
     letterSpacing: 0.2,
-    marginBottom: 6,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: 'Inter_300Light',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13.5,
+    color: 'rgba(255,255,255,0.65)',
     letterSpacing: 0.3,
     lineHeight: 20,
-    marginBottom: 18,
-  },
-
-  whyCard: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 20,
-  },
-  whyLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 2,
-    marginBottom: 6,
-  },
-  whyText: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 13,
-    color: '#ffffff',
-    letterSpacing: 0.1,
-    lineHeight: 20,
+    textAlign: 'center',
+    paddingHorizontal: 8,
   },
 
   sectionLabel: {
@@ -348,169 +222,92 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 12,
   },
-  sectionLabelGap: { marginTop: 20 },
+  sectionLabelGap: { marginTop: 22 },
 
-  needCard: {
+  listCard: {
     backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
-    padding: 14,
-    gap: 10,
-  },
-  needRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  needText: {
-    flex: 1,
-    fontFamily: 'Inter_400Regular',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.75)',
-    letterSpacing: 0.2,
-  },
-
-  typeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  typePill: {
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: 'rgba(255,255,255,0.035)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 999,
   },
-  typePillActive: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.6)',
-  },
-  typePillText: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 0.2,
-  },
-  typePillTextActive: { color: '#ffffff' },
-
-  slot: {
+  listRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.035)',
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
+    paddingVertical: 14,
   },
-  slotDone: {
-    backgroundColor: 'rgba(0,255,127,0.08)',
-    borderStyle: 'solid',
-    borderColor: 'rgba(0,255,127,0.4)',
+  listRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
-  slotNumWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.035)',
-  },
-  slotCheck: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#00FF7F',
-  },
-  slotNum: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  slotBody: { flex: 1 },
-  slotLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 14,
-    color: '#ffffff',
-    letterSpacing: 0.2,
-    marginBottom: 2,
-  },
-  slotHint: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.55)',
-    lineHeight: 16,
-  },
-  slotCameraWrap: {
+  iconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,255,127,0.10)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    marginTop: 1,
   },
-
-  tipsCard: {
-    backgroundColor: 'rgba(255,255,255,0.035)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 12,
-    padding: 14,
-    gap: 8,
+  listTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13.5,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+    marginBottom: 3,
   },
-  tipRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  tipText: {
-    flex: 1,
+  listDetail: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 18,
+    color: 'rgba(255,255,255,0.6)',
+    lineHeight: 17,
   },
 
-  gateRow: {
+  stepRow: {
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'flex-start',
-    paddingVertical: 10,
-    marginBottom: 8,
+    marginBottom: 14,
   },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
+  stepNum: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,255,127,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,127,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
   },
-  checkboxOn: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+  stepNumText: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 12,
+    color: '#00FF7F',
   },
-  gateText: {
-    flex: 1,
-    fontFamily: 'Inter_400Regular',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
-    lineHeight: 19,
-    letterSpacing: 0.1,
+
+  privacyCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    padding: 14,
+    backgroundColor: 'rgba(0,255,127,0.06)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,127,0.25)',
+    marginTop: 22,
+    marginBottom: 24,
   },
-  gateBold: {
+  privacyTitle: {
     fontFamily: 'Inter_700Bold',
+    fontSize: 13,
     color: '#ffffff',
-    letterSpacing: 1,
+    marginBottom: 3,
+  },
+  privacyText: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.65)',
+    lineHeight: 17,
   },
 
   primaryBtn: {
@@ -518,11 +315,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
-    marginTop: 8,
     marginBottom: 14,
-  },
-  primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   primaryBtnInner: {
     flexDirection: 'row',
@@ -534,10 +327,6 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 13,
     letterSpacing: 2.5,
-  },
-  primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.35)',
-    letterSpacing: 2,
   },
 
   foot: {

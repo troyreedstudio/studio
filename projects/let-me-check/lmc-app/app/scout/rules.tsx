@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { recordDocConsent } from '../lib/consent';
 
 // Source of truth: docs/SCOUT-CONDUCT.md + docs/FILMING-POLICY.md.
 // Binding legal text lives in the full Scout Agreement (/legal/code) — these
@@ -200,7 +201,12 @@ export default function ScoutRulesScreen() {
             <TouchableOpacity
               style={[styles.primaryBtn, !bothGated && styles.primaryBtnDisabled]}
               disabled={!bothGated}
-              onPress={() => router.push('/scout/approved')}
+              onPress={() => {
+                // SAFE-02: record Scout Code of Conduct acceptance before
+                // navigating to the approved screen.
+                void recordDocConsent('code');
+                router.push('/scout/approved');
+              }}
               activeOpacity={0.85}
             >
               <Text style={[styles.primaryBtnText, !bothGated && styles.primaryBtnTextDisabled]}>
