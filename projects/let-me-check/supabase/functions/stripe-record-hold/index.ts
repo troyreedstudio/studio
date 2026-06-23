@@ -106,20 +106,21 @@ export async function handleRecordHold(
   // payments has unique (check_id) — migration 0011, line 92.
   // ON CONFLICT DO NOTHING means a duplicate call is a safe no-op.
   // We return 200 either way so the caller's retry loop terminates.
+  // upsert with ignoreDuplicates = INSERT ... ON CONFLICT (check_id) DO NOTHING.
+  // (.insert().onConflict() is NOT a supabase-js method — that was the 500.)
   const { error: insertErr } = await svc
     .from("payments")
-    .insert({
-      check_id: checkId,
-      stripe_payment_intent_id: check.stripe_payment_intent_id,
-      amount_total: pricing.seekerTotal,
-      scout_amount: pricing.scoutAmount,
-      currency: pricing.currency,
-      status: "authorized",
-    })
-    .select("id")
-    // ON CONFLICT (check_id) DO NOTHING — idempotent re-entry
-    .onConflict("check_id")
-    .ignoreDuplicates();
+    .upsert(
+      {
+        check_id: checkId,
+        stripe_payment_intent_id: check.stripe_payment_intent_id,
+        amount_total: pricing.seekerTotal,
+        scout_amount: pricing.scoutAmount,
+        currency: pricing.currency,
+        status: "authorized",
+      },
+      { onConflict: "check_id", ignoreDuplicates: true },
+    );
 
   if (insertErr) {
     return new Response(
