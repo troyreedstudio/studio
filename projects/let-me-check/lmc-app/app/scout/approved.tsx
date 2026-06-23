@@ -80,14 +80,6 @@ export default function ScoutApprovedScreen() {
               <View key={n} style={[styles.dot, styles.dotDone]} />
             ))}
           </View>
-          <TouchableOpacity
-            style={styles.wireframeBadge}
-            onPress={() => router.push('/flow-map')}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.wireframeBadgeText}>WF</Text>
-          </TouchableOpacity>
         </View>
 
         <Animated.View style={[styles.scrollWrap, { opacity: fade }]}>
@@ -268,19 +260,6 @@ const styles = StyleSheet.create({
   progressRow: { flexDirection: 'row', gap: 6 },
   dot: { width: 24, height: 3, borderRadius: 2 },
   dotDone: { backgroundColor: '#00FF7F' },
-  wireframeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,107,0,0.18)',
-  },
-  wireframeBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    color: '#FF6B00',
-    fontSize: 9,
-    letterSpacing: 1.4,
-  },
-
   scrollWrap: { flex: 1 },
   scroll: { paddingHorizontal: 26, paddingBottom: 64 },
 

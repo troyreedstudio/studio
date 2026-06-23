@@ -72,18 +72,6 @@ export default function HowItWorksScreen() {
         </TouchableOpacity>
       </SafeAreaView>
 
-      {/* Dev nav */}
-      <SafeAreaView style={styles.devHeader} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.wireframeBadge}
-          onPress={() => router.push('/flow-map')}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.wireframeBadgeText}>WF</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-
       {/* Combined trailer (placeholder clip) fills this frame */}
       <View style={styles.videoFrame}>
         <VideoView
@@ -183,28 +171,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  devHeader: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    zIndex: 5,
-    alignItems: 'flex-end',
-    paddingHorizontal: 16,
-    paddingTop: 6,
-  },
-  wireframeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,107,0,0.25)',
-  },
-  wireframeBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    color: '#FF6B00',
-    fontSize: 9,
-    letterSpacing: 1.4,
-  },
-
   // Combined-trailer frame — fills the top, branding overlaid at its base
   videoFrame: {
     flex: 1,

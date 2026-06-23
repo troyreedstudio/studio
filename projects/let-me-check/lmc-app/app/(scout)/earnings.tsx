@@ -86,14 +86,6 @@ export default function EarningsScreen() {
             >
               <Text style={styles.backText}>‹ Back</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.wireframeBadge}
-              onPress={() => router.push('/flow-map')}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.wireframeBadgeText}>WF</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Header */}
@@ -343,19 +335,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 0.5,
   },
-  wireframeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,107,0,0.18)',
-  },
-  wireframeBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    color: '#FF6B00',
-    fontSize: 9,
-    letterSpacing: 1.4,
-  },
-
   header: {
     paddingHorizontal: 22,
     paddingTop: 8,

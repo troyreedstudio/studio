@@ -65,14 +65,6 @@ export default function SignInScreen() {
             >
               <Text style={styles.backText}>‹ Back</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.wireframeBadge}
-              onPress={() => router.push('/flow-map')}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.wireframeBadgeText}>WF</Text>
-            </TouchableOpacity>
           </View>
 
           <ScrollView
@@ -257,18 +249,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
     fontSize: 14,
     letterSpacing: 0.5,
-  },
-  wireframeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,107,0,0.18)',
-  },
-  wireframeBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    color: '#FF6B00',
-    fontSize: 9,
-    letterSpacing: 1.4,
   },
   scroll: {
     paddingHorizontal: 26,

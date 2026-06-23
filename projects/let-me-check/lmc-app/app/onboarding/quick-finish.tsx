@@ -64,10 +64,10 @@ export default function QuickFinishScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.push('/flow-map')}
+            onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Flow Map</Text>
+            <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
@@ -81,14 +81,6 @@ export default function QuickFinishScreen() {
               />
             ))}
           </View>
-          <TouchableOpacity
-            style={styles.wireframeBadge}
-            onPress={() => router.push('/flow-map')}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.wireframeBadgeText}>WF</Text>
-          </TouchableOpacity>
         </View>
 
         <ScrollView
@@ -331,19 +323,6 @@ const styles = StyleSheet.create({
   dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.12)' },
   dotDone: { backgroundColor: 'rgba(0,255,127,0.55)' },
   dotActive: { backgroundColor: '#00FF7F' },
-  wireframeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,107,0,0.18)',
-  },
-  wireframeBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    color: '#FF6B00',
-    fontSize: 9,
-    letterSpacing: 1.4,
-  },
-
   scroll: { paddingHorizontal: 26, paddingBottom: 48 },
 
   title: {

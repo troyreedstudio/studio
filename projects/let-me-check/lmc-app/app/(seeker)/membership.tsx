@@ -210,18 +210,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 0.5,
   },
-  wireframeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,107,0,0.18)',
-  },
-  wireframeBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    color: '#FF6B00',
-    fontSize: 9,
-    letterSpacing: 1.4,
-  },
   scroll: { paddingHorizontal: 22, paddingBottom: 48 },
   heroIconWrap: { alignItems: 'center', marginTop: 8, marginBottom: 16 },
   heroIcon: {

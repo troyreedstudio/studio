@@ -113,7 +113,7 @@ export default function SignUpScreen() {
   }, [step, fade, slide]);
 
   const goNext = (next: Step) => setStep(next);
-  const goBack = () => (step === 'method' ? router.push('/flow-map') : setStep(prevStep(step)));
+  const goBack = () => (step === 'method' ? router.back() : setStep(prevStep(step)));
 
   const handleFinish = () => {
     setSubmitting(true);

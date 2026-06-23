@@ -163,24 +163,6 @@ export default function ScoutDashboard() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
         >
-          {/* Top bar — Flow Map exit for prototype navigation */}
-          <View style={styles.topBar}>
-            <TouchableOpacity
-              onPress={() => router.push('/flow-map')}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            >
-              <Text style={styles.backText}>‹ Flow Map</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.wireframeBadge}
-              onPress={() => router.push('/flow-map')}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.wireframeBadgeText}>WF</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* Header */}
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
@@ -406,33 +388,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000000' },
   safe: { flex: 1 },
   scroll: { paddingBottom: 110 },
-
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 22,
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 14,
-    letterSpacing: 0.5,
-  },
-  wireframeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,107,0,0.18)',
-  },
-  wireframeBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    color: '#FF6B00',
-    fontSize: 9,
-    letterSpacing: 1.4,
-  },
 
   header: {
     flexDirection: 'row',

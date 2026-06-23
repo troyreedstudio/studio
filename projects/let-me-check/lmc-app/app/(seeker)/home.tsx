@@ -681,14 +681,6 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.topSafe} pointerEvents="box-none">
         <View style={styles.topRow}>
           <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => router.push('/flow-map')}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Text style={styles.iconChevron}>‹</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={styles.locPill}
             onPress={() => router.push('/onboarding/city')}
             activeOpacity={0.85}

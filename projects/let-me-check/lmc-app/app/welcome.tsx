@@ -45,14 +45,6 @@ export default function WelcomeScreen() {
       <StatusBar barStyle="light-content" />
 
       <SafeAreaView style={styles.safe}>
-        <View style={styles.devHeader}>
-          <TouchableOpacity
-            onPress={() => router.push('/flow-map')}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Text style={styles.devLink}>‹ Flow Map</Text>
-          </TouchableOpacity>
-        </View>
         <Animated.View style={[styles.topBlock, { opacity: fade }]}>
           <MaskedView
             style={styles.maskWrap}
@@ -137,16 +129,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 28,
     justifyContent: 'space-between',
-  },
-  devHeader: {
-    paddingTop: 6,
-    paddingBottom: 0,
-  },
-  devLink: {
-    fontFamily: 'Inter_400Regular',
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 12,
-    letterSpacing: 0.5,
   },
   topBlock: {
     alignItems: 'center',

@@ -68,24 +68,16 @@ export default function CityPickerScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.push('/flow-map')}
+            onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Flow Map</Text>
+            <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
               <View key={i} style={[styles.dot, styles.dotDone]} />
             ))}
           </View>
-          <TouchableOpacity
-            style={styles.wireframeBadge}
-            onPress={() => router.push('/flow-map')}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.wireframeBadgeText}>WF</Text>
-          </TouchableOpacity>
         </View>
 
         <Text style={styles.title}>Pick your city</Text>
@@ -289,21 +281,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 0.5,
   },
-  wireframeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,107,0,0.18)',
-  },
   progressRow: { flexDirection: 'row', gap: 6 },
   dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
   dotDone: { backgroundColor: '#00FF7F' },
-  wireframeBadgeText: {
-    fontFamily: 'Inter_700Bold',
-    color: '#FF6B00',
-    fontSize: 9,
-    letterSpacing: 1.4,
-  },
 
   title: {
     fontFamily: 'Inter_700Bold',
