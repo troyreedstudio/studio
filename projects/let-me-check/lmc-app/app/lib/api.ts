@@ -163,13 +163,22 @@ export async function getSavedPlaces(): Promise<SavedPlaceRow[]> {
 
 export async function addSavedPlace(place: SavedPlaceInput): Promise<void> {
   const uid = await requireUserId();
-  const { error } = await supabase.from('saved_places').insert({
+  // Persist coord as WKT geography point (longitude FIRST — PostGIS convention).
+  // This is the same pattern used by createCheck (lib/checks.ts). Without this,
+  // tapping CHECK on a saved place drops a pin at [0,0] (null island).
+  const coordWkt =
+    place.coord && place.coord[0] !== 0 && place.coord[1] !== 0
+      ? `POINT(${place.coord[0]} ${place.coord[1]})`
+      : null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from('saved_places') as any).insert({
     user_id: uid,
     place_key: place.placeKey,
     name: place.name,
     address: place.address ?? null,
     category: place.category ?? null,
     market_id: place.marketId ?? null,
+    ...(coordWkt ? { coord: coordWkt } : {}),
   });
   if (error) throw error;
   await logEvent('saved_place.added', { placeKey: place.placeKey });

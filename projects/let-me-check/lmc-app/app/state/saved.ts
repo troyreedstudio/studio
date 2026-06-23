@@ -26,19 +26,46 @@ function notify() {
   _listeners.forEach((fn) => fn());
 }
 
+/**
+ * Extract [lng, lat] from a PostGIS geography value returned by Supabase.
+ * The JS client returns geography columns as a GeoJSON-like object:
+ *   { type: 'Point', coordinates: [lng, lat] }
+ * If the value is missing or malformed, returns null so the caller can skip
+ * places with no valid coordinate (they would drop the map pin at null island).
+ */
+function extractCoord(raw: unknown): [number, number] | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const geo = raw as { type?: string; coordinates?: unknown };
+  if (geo.type === 'Point' && Array.isArray(geo.coordinates) && geo.coordinates.length >= 2) {
+    const [lng, lat] = geo.coordinates as number[];
+    if (typeof lng === 'number' && typeof lat === 'number' && (lng !== 0 || lat !== 0)) {
+      return [lng, lat];
+    }
+  }
+  return null;
+}
+
 /** Pull the user's saved places from Supabase into the local cache. */
 export async function hydrateSaved(): Promise<void> {
   try {
     const rows = await getSavedPlaces();
-    _saved = rows.map((r) => ({
-      id: r.place_key,
-      name: r.name,
-      address: r.address ?? undefined,
-      category: r.category ?? undefined,
-      coord: [0, 0],
-      marketId: r.market_id ?? '',
-      savedAt: r.saved_at,
-    }));
+    const hydrated: SavedPlace[] = [];
+    for (const r of rows) {
+      const coord = extractCoord(r.coord);
+      // Skip rows with no persisted coordinate — tapping CHECK would drop a pin
+      // at [0,0] (null island). They will be re-saved with coords on next toggle.
+      if (!coord) continue;
+      hydrated.push({
+        id: r.place_key,
+        name: r.name,
+        address: r.address ?? undefined,
+        category: r.category ?? undefined,
+        coord,
+        marketId: r.market_id ?? '',
+        savedAt: r.saved_at,
+      });
+    }
+    _saved = hydrated;
     _hydrated = true;
     notify();
   } catch {
