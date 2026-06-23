@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
-import { listMyChecks, type CheckRow } from '../lib/checks';
+import { listMyChecks, listMyRatings, type CheckRow } from '../lib/checks';
 
 // Seeker-paid total per tier (the pricing model). Used for the price label +
 // "Total Spent". Currency-aware display is a later refinement; symbol from row.
@@ -39,12 +39,16 @@ function statusLabel(status: string | null): string {
 export default function HistoryScreen() {
   const router = useRouter();
   const [checks, setChecks] = useState<CheckRow[] | null>(null);
+  const [ratingsMap, setRatingsMap] = useState<Map<string, number>>(new Map());
   const [error, setError] = useState(false);
 
   const load = useCallback(() => {
     setError(false);
-    listMyChecks()
-      .then(setChecks)
+    Promise.all([listMyChecks(), listMyRatings()])
+      .then(([rows, ratings]) => {
+        setChecks(rows);
+        setRatingsMap(ratings);
+      })
       .catch(() => { setError(true); setChecks([]); });
   }, []);
 
@@ -54,8 +58,11 @@ export default function HistoryScreen() {
   const totalSpent = rows
     .filter((c) => isWatchable(c.status))
     .reduce((sum, c) => sum + (TIER_PRICE[c.tier] ?? 0), 0);
-  const rated = rows.map((c) => (c as { rating?: number }).rating ?? 0).filter((r) => r > 0);
-  const avgRating = rated.length ? (rated.reduce((a, b) => a + b, 0) / rated.length) : 0;
+  // Real ratings from the ratings table, not from CheckRow (which has no rating column).
+  const ratingValues = Array.from(ratingsMap.values()).filter((r) => r > 0);
+  const avgRating = ratingValues.length
+    ? ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length
+    : 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -105,7 +112,7 @@ export default function HistoryScreen() {
         ) : (
           rows.map((check) => {
             const watchable = isWatchable(check.status);
-            const rating = (check as { rating?: number }).rating ?? 0;
+            const rating = ratingsMap.get(check.id) ?? 0;
             const price = TIER_PRICE[check.tier] ?? 0;
             const label = check.location_label || 'Check';
             return (

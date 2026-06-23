@@ -159,6 +159,27 @@ export async function listMyChecks(): Promise<CheckRow[]> {
   return data ?? [];
 }
 
+export type RatingRow = Database['public']['Tables']['ratings']['Row'];
+
+/**
+ * Fetch all ratings the current Seeker has submitted, keyed by check_id.
+ * Used by history.tsx to show real star values on rated checks.
+ * RLS on ratings (seeker_id = auth.uid()) restricts to the caller's own rows.
+ */
+export async function listMyRatings(): Promise<Map<string, number>> {
+  const uid = await requireUserId();
+  const { data, error } = await supabase
+    .from('ratings')
+    .select('check_id, stars')
+    .eq('seeker_id', uid);
+  if (error) throw error;
+  const map = new Map<string, number>();
+  for (const row of data ?? []) {
+    map.set(row.check_id, row.stars);
+  }
+  return map;
+}
+
 /**
  * CHECK-03: atomically claim an open check. The server `accept_check` does the
  * guarded first-wins UPDATE; a losing race surfaces here as a thrown error
