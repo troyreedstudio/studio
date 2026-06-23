@@ -1,14 +1,16 @@
+// TODO (post-v1): real Stripe card management — list saved cards, set default,
+// remove cards via the Stripe Customer Portal or a custom UI backed by
+// stripe-list-payment-methods / stripe-detach-payment-method Edge Functions.
+// For v1 the Stripe PaymentSheet (in payment.tsx) handles card capture and
+// saving directly; this screen is kept as a placeholder only.
+
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { usePaymentMethod, type CardBrand } from '../state/payment-method';
-
-// Phase-1 placeholder card to add when none is on file (no Stripe yet — brand +
-// last4 only, persisted via the payment-method store → Supabase).
-const PLACEHOLDER_CARD: { brand: CardBrand; last4: string } = { brand: 'Visa', last4: '4242' };
+import { usePaymentMethod } from '../state/payment-method';
 
 export default function PaymentMethodsScreen() {
   const router = useRouter();
-  const { card, save, clear } = usePaymentMethod();
+  const { card, clear } = usePaymentMethod();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,20 +44,11 @@ export default function PaymentMethodsScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <Text style={styles.emptyText}>No card on file yet.</Text>
+          <Text style={styles.emptyText}>No card on file yet. Cards are saved automatically when you complete a check.</Text>
         )}
 
-        <TouchableOpacity
-          style={styles.addBtn}
-          activeOpacity={0.7}
-          onPress={() => save(PLACEHOLDER_CARD.brand, PLACEHOLDER_CARD.last4)}
-        >
-          <Text style={styles.addBtnPlus}>+</Text>
-          <Text style={styles.addBtnText}>ADD NEW CARD</Text>
-        </TouchableOpacity>
-
         <Text style={styles.disclaimer}>
-          Cards will be securely stored with Stripe. We never store your full card number.
+          Cards are securely stored with Stripe. We never store your full card number.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -134,28 +127,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: 'rgba(255,255,255,0.7)',
     letterSpacing: 1.5,
-  },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#0d0d0d',
-    borderRadius: 14,
-    marginHorizontal: 20,
-    marginTop: 8,
-    marginBottom: 22,
-    paddingVertical: 18,
-    borderWidth: 1,
-    borderColor: '#00FF7F',
-    borderStyle: 'dashed',
-  },
-  addBtnPlus: { fontSize: 18, color: '#00FF7F' },
-  addBtnText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 12,
-    color: '#00FF7F',
-    letterSpacing: 2,
   },
   disclaimer: {
     fontFamily: 'Inter_400Regular',
