@@ -1,8 +1,8 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, ActivityIndicator, Keyboard, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, ActivityIndicator, Keyboard, Modal, FlatList } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   DEFAULT_MARKET_ID,
   getMarketById,
@@ -16,12 +16,23 @@ import { useRecents, addRecent, relativeTime } from '../state/recents';
 import { getProfile } from '../lib/api';
 import { searchPlaces, getPlaceCoords, placeToAppCoord, type PlaceSuggestion } from '../lib/places';
 
+// ── SearchState ───────────────────────────────────────────────────────────────
+// Used by SearchOverlay below.
 type SearchState =
   | { kind: 'idle' }
   | { kind: 'loading' }
   | { kind: 'results'; suggestions: PlaceSuggestion[] }
   | { kind: 'no-results' }
   | { kind: 'unavailable' };
+
+// ── PLACEHOLDER_HINTS — rotate in the overlay ────────────────────────────────
+const PLACEHOLDER_HINTS = [
+  'Any place. Any address.',
+  'Try: "JFK Terminal 4"',
+  'Try: "Equinox Hudson Yards"',
+  'Try: "DMV Miami Beach"',
+  'Try: "Whole Foods Brooklyn"',
+];
 
 const VOICE_MOCKS = [
   'Soho House New York',
@@ -261,6 +272,666 @@ function PulsingScout({ coordinate }: { coordinate: [number, number] }) {
   );
 }
 
+// ── SearchOverlay ─────────────────────────────────────────────────────────────
+// Slide-up Modal: search bar pinned at top, results fill the space above the
+// keyboard, no black void, no flicker. Results persist through debounce — only
+// a small spinner in the bar indicates a fetch is in-flight. The list only
+// replaces when new data arrives.
+
+type SearchOverlayProps = {
+  visible: boolean;
+  startVoice?: boolean;
+  marketCenter: [number, number];
+  recents: { name: string; city: string; ts: number }[];
+  saved: { id: string; name: string; coord: [number, number]; marketId: string }[];
+  onClose: () => void;
+  onSelect: (coord: [number, number], name: string) => void;
+};
+
+function SearchOverlay({
+  visible,
+  startVoice = false,
+  marketCenter,
+  recents,
+  saved,
+  onClose,
+  onSelect,
+}: SearchOverlayProps) {
+  const [query, setQuery] = useState('');
+  // Stable list: never cleared to empty during a debounce cycle — only replaced
+  // when new results arrive. This is what prevents the flicker.
+  const [stableResults, setStableResults] = useState<PlaceSuggestion[]>([]);
+  const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'no-results' | 'unavailable'>('idle');
+  const [resolving, setResolving] = useState(false);
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceDots, setVoiceDots] = useState('');
+  const [hintIdx, setHintIdx] = useState(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<TextInput>(null);
+
+  // Reset state each time the overlay opens
+  useEffect(() => {
+    if (visible) {
+      setQuery('');
+      setStableResults([]);
+      setSearchStatus('idle');
+      setResolving(false);
+      setVoiceListening(startVoice);
+    }
+  }, [visible, startVoice]);
+
+  // Rotate placeholder hints when idle
+  useEffect(() => {
+    if (query.length > 0) return;
+    const t = setInterval(() => {
+      setHintIdx((i) => (i + 1) % PLACEHOLDER_HINTS.length);
+    }, 3500);
+    return () => clearInterval(t);
+  }, [query]);
+
+  // "Listening..." dot animation
+  useEffect(() => {
+    if (!voiceListening) return;
+    const t = setInterval(() => {
+      setVoiceDots((d) => (d.length >= 3 ? '' : d + '.'));
+    }, 350);
+    return () => clearInterval(t);
+  }, [voiceListening]);
+
+  // Mock voice capture in dev
+  useEffect(() => {
+    if (!__DEV__ || !voiceListening) return;
+    const t = setTimeout(() => {
+      const mock = VOICE_MOCKS[Math.floor(Math.random() * VOICE_MOCKS.length)];
+      setQuery(mock);
+      setVoiceListening(false);
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [voiceListening]);
+
+  // Debounced autocomplete — no-flicker: keep stableResults visible while fetching
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    const trimmed = query.trim();
+    if (!trimmed) {
+      // Query cleared — go back to idle, keep stableResults to avoid flash
+      setSearchStatus('idle');
+      setStableResults([]);
+      return;
+    }
+
+    // Mark loading but DO NOT clear stableResults — prior list stays visible
+    setSearchStatus('loading');
+
+    debounceRef.current = setTimeout(async () => {
+      const biasCoord = (getUserCoords() ?? marketCenter) as [number, number];
+      const outcome = await searchPlaces(trimmed, { locationBias: biasCoord });
+
+      if (outcome.unavailable) {
+        setSearchStatus('unavailable');
+        // Keep stableResults as-is so the user sees something
+        return;
+      }
+      if (outcome.results.length === 0) {
+        setSearchStatus('no-results');
+        setStableResults([]);
+        return;
+      }
+      // New results arrived — replace the stable list now
+      setStableResults(outcome.results);
+      setSearchStatus('idle');
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, marketCenter]);
+
+  const handleSelect = useCallback(async (suggestion: PlaceSuggestion) => {
+    Keyboard.dismiss();
+    setResolving(true);
+    try {
+      const coords = await getPlaceCoords(suggestion.placeId);
+      const name = suggestion.primaryText;
+      let appCoord: [number, number];
+      if (coords) {
+        appCoord = placeToAppCoord(coords);
+      } else {
+        appCoord = marketCenter;
+      }
+      const resolved = nearestLiveMarket(appCoord);
+      addRecent({ name, city: resolved.market.name });
+      onClose();
+      onSelect(appCoord, name);
+    } finally {
+      setResolving(false);
+    }
+  }, [marketCenter, onClose, onSelect]);
+
+  const handleSelectSaved = useCallback((item: { name: string; coord: [number, number]; marketId: string }) => {
+    Keyboard.dismiss();
+    const resolved = nearestLiveMarket(item.coord);
+    addRecent({ name: item.name, city: resolved.market.name });
+    onClose();
+    onSelect(item.coord, item.name);
+  }, [onClose, onSelect]);
+
+  const handleUnavailableFallback = useCallback(() => {
+    const name = query.trim();
+    if (!name) return;
+    addRecent({ name, city: '' });
+    onClose();
+    onSelect(marketCenter, name);
+  }, [query, marketCenter, onClose, onSelect]);
+
+  const showIdle = query.trim().length === 0;
+  const isLoading = searchStatus === 'loading' || resolving;
+
+  // FlatList data: results when we have them, recents/saved when idle
+  type ListItem =
+    | { type: 'suggestion'; data: PlaceSuggestion }
+    | { type: 'recent'; data: { name: string; city: string; ts: number } }
+    | { type: 'saved'; data: { id: string; name: string; coord: [number, number]; marketId: string } }
+    | { type: 'section'; label: string }
+    | { type: 'empty-saved' }
+    | { type: 'no-results'; query: string }
+    | { type: 'unavailable'; query: string }
+    | { type: 'prompt' };
+
+  const listItems: ListItem[] = (() => {
+    if (showIdle) {
+      const items: ListItem[] = [{ type: 'prompt' }];
+      if (recents.length > 0) {
+        items.push({ type: 'section', label: 'RECENT' });
+        recents.slice(0, 5).forEach((r) => items.push({ type: 'recent', data: r }));
+      }
+      items.push({ type: 'section', label: 'SAVED PLACES' });
+      if (saved.length > 0) {
+        saved.forEach((s) => items.push({ type: 'saved', data: s }));
+      } else {
+        items.push({ type: 'empty-saved' });
+      }
+      return items;
+    }
+
+    if (searchStatus === 'no-results') {
+      return [{ type: 'no-results', query: query.trim() }];
+    }
+
+    if (searchStatus === 'unavailable') {
+      return [{ type: 'unavailable', query: query.trim() }];
+    }
+
+    // results or loading — show stableResults (no flicker)
+    if (stableResults.length > 0) {
+      const items: ListItem[] = [{ type: 'section', label: 'SUGGESTIONS' }];
+      stableResults.forEach((s) => items.push({ type: 'suggestion', data: s }));
+      return items;
+    }
+
+    // loading with no prior results yet — show prompt
+    return [{ type: 'prompt' }];
+  })();
+
+  const renderItem = ({ item }: { item: ListItem }) => {
+    if (item.type === 'prompt') {
+      return (
+        <View style={overlayStyles.promptWrap}>
+          <Text style={overlayStyles.promptText}>Search any place, any address</Text>
+          <Text style={overlayStyles.promptSub}>DMV lines, airports, restaurants, venues, hotels</Text>
+        </View>
+      );
+    }
+    if (item.type === 'section') {
+      return <Text style={overlayStyles.sectionLabel}>{item.label}</Text>;
+    }
+    if (item.type === 'suggestion') {
+      const s = item.data;
+      return (
+        <TouchableOpacity
+          style={overlayStyles.resultRow}
+          activeOpacity={0.75}
+          onPress={() => handleSelect(s)}
+        >
+          <View style={overlayStyles.resultIconWrap}>
+            <Text style={overlayStyles.resultPin}>📍</Text>
+          </View>
+          <View style={overlayStyles.resultTextWrap}>
+            <Text style={overlayStyles.resultName} numberOfLines={1}>{s.primaryText}</Text>
+            <Text style={overlayStyles.resultAddress} numberOfLines={1}>{s.secondaryText}</Text>
+            <Text style={overlayStyles.priceChip}>$15 · ~10 min</Text>
+          </View>
+          <Text style={overlayStyles.resultArrow}>›</Text>
+        </TouchableOpacity>
+      );
+    }
+    if (item.type === 'recent') {
+      const r = item.data;
+      return (
+        <TouchableOpacity
+          style={overlayStyles.resultRow}
+          activeOpacity={0.75}
+          onPress={() => {
+            // Recents have no stored coord — use market center as best-effort
+            addRecent({ name: r.name, city: r.city });
+            onClose();
+            onSelect(marketCenter, r.name);
+          }}
+        >
+          <View style={overlayStyles.resultIconWrap}>
+            <Text style={overlayStyles.resultPin}>🕐</Text>
+          </View>
+          <View style={overlayStyles.resultTextWrap}>
+            <Text style={overlayStyles.resultName}>{r.name}</Text>
+            <Text style={overlayStyles.resultAddress}>{r.city} · {relativeTime(r.ts)}</Text>
+          </View>
+          <Text style={overlayStyles.resultArrow}>›</Text>
+        </TouchableOpacity>
+      );
+    }
+    if (item.type === 'saved') {
+      const p = item.data;
+      return (
+        <TouchableOpacity
+          style={overlayStyles.resultRow}
+          activeOpacity={0.75}
+          onPress={() => handleSelectSaved(p)}
+        >
+          <View style={overlayStyles.resultIconWrap}>
+            <Text style={overlayStyles.resultPin}>🔖</Text>
+          </View>
+          <View style={overlayStyles.resultTextWrap}>
+            <Text style={overlayStyles.resultName}>{p.name}</Text>
+          </View>
+          <Text style={overlayStyles.resultArrow}>›</Text>
+        </TouchableOpacity>
+      );
+    }
+    if (item.type === 'empty-saved') {
+      return (
+        <View style={overlayStyles.emptySaved}>
+          <Text style={overlayStyles.emptySavedTitle}>No saved places yet</Text>
+          <Text style={overlayStyles.emptySavedSub}>
+            Tap the bookmark on any place after checking to save it here.
+          </Text>
+        </View>
+      );
+    }
+    if (item.type === 'no-results') {
+      return (
+        <View style={overlayStyles.feedbackWrap}>
+          <Text style={overlayStyles.feedbackSub}>
+            No places found for "{item.query}". Try a different name or address.
+          </Text>
+        </View>
+      );
+    }
+    if (item.type === 'unavailable') {
+      return (
+        <View style={overlayStyles.feedbackWrap}>
+          <Text style={overlayStyles.feedbackTitle}>Search not available</Text>
+          <Text style={overlayStyles.feedbackSub}>
+            Live place search needs a Google Places key. Tap below to check any location by name.
+          </Text>
+          <TouchableOpacity
+            style={overlayStyles.resultRow}
+            activeOpacity={0.75}
+            onPress={handleUnavailableFallback}
+          >
+            <View style={overlayStyles.resultIconWrap}>
+              <Text style={overlayStyles.resultPin}>🔍</Text>
+            </View>
+            <View style={overlayStyles.resultTextWrap}>
+              <Text style={overlayStyles.resultName}>{item.query}</Text>
+              <Text style={overlayStyles.resultAddress}>Check this location</Text>
+            </View>
+            <Text style={overlayStyles.resultArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <View style={overlayStyles.container}>
+        <SafeAreaView style={overlayStyles.safeArea}>
+          {/* Top bar: Cancel + search input */}
+          <View style={overlayStyles.topBar}>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={overlayStyles.cancelBtn}
+            >
+              <Text style={overlayStyles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <View style={overlayStyles.inputWrap}>
+              <Text style={overlayStyles.inputIcon}>🔍</Text>
+              <TextInput
+                ref={inputRef}
+                style={overlayStyles.input}
+                placeholder={PLACEHOLDER_HINTS[hintIdx]}
+                placeholderTextColor="#666"
+                value={query}
+                onChangeText={setQuery}
+                autoFocus
+                returnKeyType="search"
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#00FF7F" style={overlayStyles.spinner} />
+              ) : query.length > 0 ? (
+                <TouchableOpacity
+                  onPress={() => setQuery('')}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={overlayStyles.clearIcon}>✕</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => setVoiceListening(true)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={overlayStyles.micIcon}>🎤</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          {/* Results list — sits between bar and keyboard, never hidden */}
+          <FlatList
+            data={listItems}
+            keyExtractor={(item, index) => {
+              if (item.type === 'suggestion') return `s-${item.data.placeId}`;
+              if (item.type === 'recent') return `r-${item.data.name}-${item.data.ts}`;
+              if (item.type === 'saved') return `sv-${item.data.id}`;
+              return `${item.type}-${index}`;
+            }}
+            renderItem={renderItem}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={overlayStyles.listContent}
+            style={overlayStyles.list}
+          />
+        </SafeAreaView>
+
+        {/* Voice Listening sheet */}
+        <Modal
+          visible={voiceListening}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setVoiceListening(false)}
+        >
+          <View style={overlayStyles.voiceOverlay}>
+            <View style={overlayStyles.voiceCard}>
+              <Text style={overlayStyles.voiceMic}>🎤</Text>
+              <Text style={overlayStyles.voiceListeningText}>Listening{voiceDots}</Text>
+              <Text style={overlayStyles.voiceHint}>Speak the place you want to check</Text>
+              <View style={overlayStyles.voicePulseRow}>
+                <View style={[overlayStyles.voicePulse, { height: 18 }]} />
+                <View style={[overlayStyles.voicePulse, { height: 28 }]} />
+                <View style={[overlayStyles.voicePulse, { height: 14 }]} />
+                <View style={[overlayStyles.voicePulse, { height: 22 }]} />
+                <View style={[overlayStyles.voicePulse, { height: 16 }]} />
+              </View>
+              <TouchableOpacity
+                style={overlayStyles.voiceCancel}
+                onPress={() => setVoiceListening(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={overlayStyles.voiceCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </Modal>
+  );
+}
+
+// ── overlayStyles ─────────────────────────────────────────────────────────────
+const overlayStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1a1a1a',
+  },
+  cancelBtn: {
+    paddingVertical: 4,
+  },
+  cancelText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 15,
+    color: '#00FF7F',
+  },
+  inputWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0d0d0d',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
+    gap: 10,
+  },
+  inputIcon: { fontSize: 15 },
+  input: {
+    flex: 1,
+    fontFamily: 'Inter_400Regular',
+    fontSize: 15,
+    color: '#fff',
+    paddingVertical: 0,
+  },
+  spinner: { marginHorizontal: 2 },
+  clearIcon: {
+    fontSize: 14,
+    color: '#888',
+    paddingHorizontal: 2,
+  },
+  micIcon: {
+    fontSize: 16,
+    paddingHorizontal: 2,
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingBottom: 32,
+  },
+  sectionLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: '#00FF7F',
+    letterSpacing: 3,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+    textTransform: 'uppercase',
+  },
+  promptWrap: {
+    paddingHorizontal: 20,
+    paddingTop: 32,
+    paddingBottom: 16,
+    alignItems: 'center',
+  },
+  promptText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 16,
+    color: '#fff',
+    letterSpacing: 0.2,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  promptSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#555',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  resultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    gap: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#0d0d0d',
+  },
+  resultIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#0d0d0d',
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resultPin: { fontSize: 16 },
+  resultTextWrap: { flex: 1 },
+  resultName: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 15,
+    color: '#fff',
+    letterSpacing: 0.2,
+    marginBottom: 1,
+  },
+  resultAddress: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 3,
+  },
+  priceChip: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: '#00FF7F',
+    letterSpacing: 0.4,
+  },
+  resultArrow: {
+    fontSize: 22,
+    color: '#00FF7F',
+    fontFamily: 'Inter_500Medium',
+  },
+  feedbackWrap: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+  },
+  feedbackTitle: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 15,
+    color: '#fff',
+    marginBottom: 6,
+  },
+  feedbackSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: '#888',
+    lineHeight: 19,
+    marginBottom: 16,
+  },
+  emptySaved: {
+    marginHorizontal: 20,
+    marginTop: 4,
+    padding: 18,
+    borderRadius: 14,
+    backgroundColor: '#0d0d0d',
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
+    borderStyle: 'dashed',
+  },
+  emptySavedTitle: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 14,
+    color: '#fff',
+    letterSpacing: 0.3,
+    marginBottom: 4,
+  },
+  emptySavedSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#888',
+    lineHeight: 17,
+  },
+  // Voice modal
+  voiceOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  voiceCard: {
+    width: '85%',
+    backgroundColor: '#0d0d0d',
+    borderRadius: 20,
+    paddingVertical: 36,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#00FF7F',
+  },
+  voiceMic: { fontSize: 44, marginBottom: 14 },
+  voiceListeningText: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 22,
+    color: '#fff',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  voiceHint: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  voicePulseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 24,
+    height: 30,
+  },
+  voicePulse: {
+    width: 4,
+    backgroundColor: '#00FF7F',
+    borderRadius: 2,
+  },
+  voiceCancel: { paddingVertical: 8, paddingHorizontal: 24 },
+  voiceCancelText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 13,
+    color: '#00FF7F',
+    letterSpacing: 1,
+  },
+});
+
+// ── HomeScreen ────────────────────────────────────────────────────────────────
+
 export default function HomeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -325,14 +996,9 @@ export default function HomeScreen() {
   const saved = useSavedPlaces();
   const recents = useRecents();
 
-  // ── Inline search state ────────────────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchState, setSearchState] = useState<SearchState>({ kind: 'idle' });
-  const [searchResolving, setSearchResolving] = useState(false);
-  const [voiceListening, setVoiceListening] = useState(false);
-  const [voiceDots, setVoiceDots] = useState('');
-  const searchInputRef = useRef<TextInput>(null);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ── Search overlay state ──────────────────────────────────────────────────
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchVoice, setSearchVoice] = useState(false);
 
   const currentPinSavedId = droppedPin && pinName ? `${pinName}-${droppedPin[0].toFixed(4)}` : null;
   const isCurrentPinSaved = currentPinSavedId ? saved.isSaved(currentPinSavedId) : false;
@@ -345,24 +1011,6 @@ export default function HomeScreen() {
       coord: droppedPin,
       marketId,
     });
-  };
-
-  const handlePickCity = (target: Market) => {
-    setDroppedPin(null);
-    setPinName(null);
-    if (target.id === marketId) {
-      cameraRef.current?.setCamera({
-        centerCoordinate: target.center,
-        zoomLevel: 13.5,
-        pitch: 50,
-        animationDuration: 1200,
-      });
-    } else {
-      router.replace({
-        pathname: '/(seeker)/home',
-        params: { marketId: target.id },
-      });
-    }
   };
 
   // When marketId changes → fly camera to that market's center
@@ -441,93 +1089,18 @@ export default function HomeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Inline search: debounced autocomplete ─────────────────────────────────
-  useEffect(() => {
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-
-    const trimmed = searchQuery.trim();
-    if (!trimmed) {
-      setSearchState({ kind: 'idle' });
-      return;
-    }
-
-    setSearchState({ kind: 'loading' });
-
-    searchDebounceRef.current = setTimeout(async () => {
-      const biasCoord = (getUserCoords() ?? market.center) as [number, number];
-      const outcome = await searchPlaces(trimmed, { locationBias: biasCoord });
-
-      if (outcome.unavailable) {
-        setSearchState({ kind: 'unavailable' });
-        return;
-      }
-      if (outcome.results.length === 0) {
-        setSearchState({ kind: 'no-results' });
-        return;
-      }
-      setSearchState({ kind: 'results', suggestions: outcome.results });
-    }, 300);
-
-    return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
-  }, [searchQuery, market.center]);
-
-  // Animate "Listening..." dots
-  useEffect(() => {
-    if (!voiceListening) return;
-    const t = setInterval(() => {
-      setVoiceDots((d) => (d.length >= 3 ? '' : d + '.'));
-    }, 350);
-    return () => clearInterval(t);
-  }, [voiceListening]);
-
-  // Mock voice capture in dev — fills input after 2.5 s
-  useEffect(() => {
-    if (!__DEV__) return;
-    if (!voiceListening) return;
-    const t = setTimeout(() => {
-      const mock = VOICE_MOCKS[Math.floor(Math.random() * VOICE_MOCKS.length)];
-      setSearchQuery(mock);
-      setVoiceListening(false);
-    }, 2500);
-    return () => clearTimeout(t);
-  }, [voiceListening]);
-
-  // ── Inline search: tap a suggestion ───────────────────────────────────────
-  const handleSelectSuggestion = async (suggestion: PlaceSuggestion) => {
-    Keyboard.dismiss();
-    setSearchResolving(true);
-    try {
-      const coords = await getPlaceCoords(suggestion.placeId);
-      const name = suggestion.primaryText;
-
-      let appCoord: [number, number];
-      if (coords) {
-        appCoord = placeToAppCoord(coords);
-      } else {
-        appCoord = market.center as [number, number];
-      }
-
-      const [lon, lat] = appCoord;
-      const resolved = nearestLiveMarket(appCoord);
-      addRecent({ name, city: resolved.market.name });
-
-      // Clear the search bar and drop the pin on the map (stays on home)
-      setSearchQuery('');
-      setSearchState({ kind: 'idle' });
-      setDroppedPin([lon, lat]);
-      setPinName(name);
-      cameraRef.current?.setCamera({
-        centerCoordinate: [lon, lat],
-        zoomLevel: 17,
-        pitch: 55,
-        animationDuration: 1200,
-      });
-    } finally {
-      setSearchResolving(false);
-    }
-  };
+  // Callback from SearchOverlay: close overlay, drop pin, fly camera, show YES card
+  const handleOverlaySelect = useCallback((appCoord: [number, number], name: string) => {
+    const [lon, lat] = appCoord;
+    setDroppedPin([lon, lat]);
+    setPinName(name);
+    cameraRef.current?.setCamera({
+      centerCoordinate: [lon, lat],
+      zoomLevel: 17,
+      pitch: 55,
+      animationDuration: 1200,
+    });
+  }, []);
 
   // Is the user outside every live market? Drives the honest "not live yet" banner.
   // userCoords + coverage are computed at the top of the component (before marketId
@@ -855,119 +1428,32 @@ export default function HomeScreen() {
         <Text style={styles.sheetTitle}>Where do you need eyes?</Text>
         <Text style={styles.sheetHint}>Search below, or tap any spot on the map.</Text>
 
-        {/* Inline search — TextInput with live Google Places dropdown */}
-        <View style={styles.searchWrap}>
-          <View style={styles.searchBar}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <TextInput
-              ref={searchInputRef}
-              style={styles.searchInput}
-              placeholder="Any place. Any address."
-              placeholderTextColor="rgba(0,0,0,0.4)"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-            {(searchResolving || searchState.kind === 'loading') ? (
-              <ActivityIndicator size="small" color="#22c55e" style={styles.searchSpinner} />
-            ) : searchQuery.length > 0 ? (
-              <TouchableOpacity
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                onPress={() => { setSearchQuery(''); setSearchState({ kind: 'idle' }); }}
-              >
-                <Text style={styles.searchClear}>✕</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                onPress={() => setVoiceListening(true)}
-              >
-                <Text style={styles.searchMic}>🎤</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Dropdown — only visible when there is a query */}
-          {searchQuery.trim().length > 0 && (
-            <View style={styles.searchDropdown}>
-              {searchState.kind === 'results' && searchState.suggestions.map((s) => (
-                <TouchableOpacity
-                  key={s.placeId}
-                  style={styles.dropdownRow}
-                  activeOpacity={0.75}
-                  onPress={() => handleSelectSuggestion(s)}
-                >
-                  <Text style={styles.dropdownPin}>📍</Text>
-                  <View style={styles.dropdownText}>
-                    <Text style={styles.dropdownName} numberOfLines={1}>{s.primaryText}</Text>
-                    <Text style={styles.dropdownSub} numberOfLines={1}>{s.secondaryText}</Text>
-                  </View>
-                  <Text style={styles.dropdownArrow}>›</Text>
-                </TouchableOpacity>
-              ))}
-
-              {searchState.kind === 'no-results' && (
-                <View style={styles.dropdownFeedback}>
-                  <Text style={styles.dropdownFeedbackText}>No results for "{searchQuery.trim()}"</Text>
-                </View>
-              )}
-
-              {searchState.kind === 'unavailable' && (
-                <TouchableOpacity
-                  style={styles.dropdownRow}
-                  activeOpacity={0.75}
-                  onPress={() => {
-                    const name = searchQuery.trim();
-                    addRecent({ name, city: market.name });
-                    setSearchQuery('');
-                    setSearchState({ kind: 'idle' });
-                    setDroppedPin(market.center as [number, number]);
-                    setPinName(name);
-                  }}
-                >
-                  <Text style={styles.dropdownPin}>🔍</Text>
-                  <View style={styles.dropdownText}>
-                    <Text style={styles.dropdownName}>{searchQuery.trim()}</Text>
-                    <Text style={styles.dropdownSub}>Check this location</Text>
-                  </View>
-                  <Text style={styles.dropdownArrow}>›</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </View>
-
-        {/* Voice Listening Modal */}
-        <Modal
-          visible={voiceListening}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setVoiceListening(false)}
+        {/* Search tap-target — opens the slide-up SearchOverlay */}
+        <TouchableOpacity
+          style={styles.searchTapTarget}
+          activeOpacity={0.85}
+          onPress={() => { setSearchVoice(false); setSearchOpen(true); }}
         >
-          <View style={styles.voiceOverlay}>
-            <View style={styles.voiceCard}>
-              <Text style={styles.voiceMic}>🎤</Text>
-              <Text style={styles.voiceListeningText}>Listening{voiceDots}</Text>
-              <Text style={styles.voiceHint}>Speak the place you want to check</Text>
-              <View style={styles.voicePulseRow}>
-                <View style={[styles.voicePulse, { height: 18 }]} />
-                <View style={[styles.voicePulse, { height: 28 }]} />
-                <View style={[styles.voicePulse, { height: 14 }]} />
-                <View style={[styles.voicePulse, { height: 22 }]} />
-                <View style={[styles.voicePulse, { height: 16 }]} />
-              </View>
-              <TouchableOpacity
-                style={styles.voiceCancel}
-                onPress={() => setVoiceListening(false)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.voiceCancelText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <Text style={styles.searchPlaceholder}>Any place. Any address.</Text>
+          <TouchableOpacity
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={(e) => { e.stopPropagation(); setSearchVoice(true); setSearchOpen(true); }}
+          >
+            <Text style={styles.searchMic}>🎤</Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
+
+        {/* Search overlay — slide-up Modal with keyboard-safe layout */}
+        <SearchOverlay
+          visible={searchOpen}
+          startVoice={searchVoice}
+          marketCenter={market.center as [number, number]}
+          recents={recents}
+          saved={saved.list}
+          onClose={() => setSearchOpen(false)}
+          onSelect={handleOverlaySelect}
+        />
 
         {/* Saved chips */}
         {saved.list.length > 0 && (
@@ -1675,12 +2161,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // Inline search — wraps the bar + the dropdown
-  searchWrap: {
-    marginBottom: 10,
-    zIndex: 10,
-  },
-  searchBar: {
+  // Search tap-target — opens the slide-up overlay on tap
+  searchTapTarget: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
@@ -1688,131 +2170,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 13,
     gap: 12,
+    marginBottom: 14,
   },
   searchIcon: { fontSize: 16 },
-  searchInput: {
+  searchPlaceholder: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: '#000000',
-    letterSpacing: 0.2,
-    paddingVertical: 0,
-  },
-  searchSpinner: {
-    marginHorizontal: 4,
-  },
-  searchClear: {
-    fontSize: 14,
     color: 'rgba(0,0,0,0.4)',
-    paddingHorizontal: 4,
+    letterSpacing: 0.2,
   },
   searchMic: {
     fontSize: 16,
     paddingHorizontal: 4,
     opacity: 0.55,
-  },
-  // Dropdown sits directly below the bar
-  searchDropdown: {
-    backgroundColor: '#0d0d0d',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#1e1e1e',
-    marginTop: 4,
-    overflow: 'hidden',
-  },
-  dropdownRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
-  },
-  dropdownPin: { fontSize: 15 },
-  dropdownText: { flex: 1 },
-  dropdownName: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 14,
-    color: '#ffffff',
-    letterSpacing: 0.2,
-    marginBottom: 1,
-  },
-  dropdownSub: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11,
-    color: '#888888',
-  },
-  dropdownArrow: {
-    fontSize: 20,
-    color: '#22c55e',
-    fontFamily: 'Inter_500Medium',
-  },
-  dropdownFeedback: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  dropdownFeedbackText: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 13,
-    color: '#888888',
-  },
-  // Voice modal
-  voiceOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  voiceCard: {
-    width: '85%',
-    backgroundColor: '#0d0d0d',
-    borderRadius: 20,
-    paddingVertical: 36,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#00FF7F',
-  },
-  voiceMic: {
-    fontSize: 44,
-    marginBottom: 14,
-  },
-  voiceListeningText: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 22,
-    color: '#fff',
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
-  voiceHint: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  voicePulseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginBottom: 24,
-    height: 30,
-  },
-  voicePulse: {
-    width: 4,
-    backgroundColor: '#00FF7F',
-    borderRadius: 2,
-  },
-  voiceCancel: {
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-  },
-  voiceCancelText: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 13,
-    color: '#00FF7F',
-    letterSpacing: 1,
   },
 
   // Saved
