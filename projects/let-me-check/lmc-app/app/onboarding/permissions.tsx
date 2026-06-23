@@ -37,8 +37,8 @@ const PERMS: Perm[] = [
     title: 'Location',
     prompt: 'Allow Let Me Check to use your location?',
     why: 'We use your location to show nearby venues, route Scouts to the right spot, and verify GPS-stamped clips were filmed at the venue.',
-    ifDenied: 'You can still browse the app, but you can’t request a check or accept a check until Location is enabled.',
-    iosDescription: 'iOS will ask “Allow While Using App.” That’s the right choice — we never track you in the background.',
+    ifDenied: "You can still browse the app, but you can't request a check or accept a check until Location is enabled.",
+    iosDescription: "iOS will ask \"Allow While Using App.\" That's the right choice -- we never track you in the background.",
   },
   {
     key: 'notif',
@@ -46,14 +46,14 @@ const PERMS: Perm[] = [
     icon: 'notifications-outline',
     title: 'Notifications',
     prompt: 'Allow Let Me Check to send notifications?',
-    why: 'We ping you the moment your check is on the way, when it’s delivered, and when your Scout earnings hit your bank.',
-    ifDenied: 'You’ll need to open the app to check delivery status. Nothing breaks — but you’ll miss real-time updates.',
+    why: "We ping you the moment your check is on the way, when it's delivered, and when your Scout earnings hit your bank.",
+    ifDenied: "You'll need to open the app to check delivery status. Nothing breaks -- but you'll miss real-time updates.",
     iosDescription: 'iOS will ask for Notifications, Sounds, and Badges. You can fine-tune later in Settings.',
   },
 ];
 
 const PRIVACY_BULLETS = [
-  'Location is used only while the app is open — no background tracking in v1',
+  'Location is used only while the app is open -- no background tracking in v1',
   'Stored encrypted at rest, deleted from servers 30 days after your last activity',
   'You can revoke either permission anytime from iOS Settings',
   'We never sell, rent, or share permission data with third parties',
@@ -62,14 +62,14 @@ const PRIVACY_BULLETS = [
 export default function PermissionsScreen() {
   const router = useRouter();
   const { next } = useLocalSearchParams<{ next?: string }>();
-  // Default to seeker home — never loop back to /onboarding/role which would
+  // Default to seeker home -- never loop back to /onboarding/role which would
   // re-ask the user to pick a role they have already chosen.
   const continueTo = next || '/(seeker)/home';
   const [states, setStates] = useState<Record<PermKey, PermState>>({
     location: 'pending',
     notif: 'pending',
   });
-  // When GPS is declined we approximate the city from IP — this holds that name
+  // When GPS is declined we approximate the city from IP -- this holds that name
   // so we can tell the user what we resolved (and let them correct it).
   const [approxCity, setApproxCity] = useState<string | null>(null);
 
@@ -105,17 +105,17 @@ export default function PermissionsScreen() {
     const { status } = await Notifications.requestPermissionsAsync({
       ios: { allowAlert: true, allowBadge: true, allowSound: true },
     });
-    if (status === ‘granted’) {
-      setStates((s) => ({ ...s, [perm.key]: ‘granted’ }));
+    if (status === 'granted') {
+      setStates((s) => ({ ...s, [perm.key]: 'granted' }));
     } else {
-      // Denied or undetermined — mark skipped and tell the user what they miss.
-      setStates((s) => ({ ...s, [perm.key]: ‘skipped’ }));
+      // Denied or undetermined -- mark skipped and tell the user what they miss.
+      setStates((s) => ({ ...s, [perm.key]: 'skipped' }));
       Alert.alert(
-        ‘Notifications off’,
+        'Notifications off',
         perm.ifDenied,
         [
-          { text: ‘OK’ },
-          { text: ‘Open Settings’, onPress: () => Linking.openSettings() },
+          { text: 'OK' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
         ],
       );
     }
@@ -156,7 +156,7 @@ export default function PermissionsScreen() {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Two quick permissions</Text>
           <Text style={styles.subtitle}>
-            One required, one recommended. iOS will prompt you for each — here’s exactly what we use them for.
+            One required, one recommended. iOS will prompt you for each -- here's exactly what we use them for.
           </Text>
 
           {PERMS.map((p) => {
@@ -271,7 +271,7 @@ export default function PermissionsScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* APPROX-LOCATION NOTE — shown when we fell back to IP city detection */}
+          {/* APPROX-LOCATION NOTE -- shown when we fell back to IP city detection */}
           {approxCity && (
             <View style={styles.approxNote}>
               <Ionicons name="navigate-circle-outline" size={14} color="#00FF7F" />
