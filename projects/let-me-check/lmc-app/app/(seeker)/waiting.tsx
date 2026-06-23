@@ -5,84 +5,7 @@ import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getCheck, cancelCheck, type CheckRow } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
-
-// Mapbox uses [longitude, latitude]
-const VENUE: [number, number] = [-80.1917, 25.7634];
-const SCOUT_BASE: [number, number] = [-80.1923, 25.7640]; // Scout is AT the venue (~50m offset, just steps away)
-const USER_COORD: [number, number] = [-80.1850, 25.7680]; // Seeker's GPS — east of route, clearly in viewport
-
-// Ambient supply layer — other scouts in Miami (same set as home map)
-const SCOUTS: [number, number][] = [
-  [-80.193, 25.760],
-  [-80.188, 25.785],
-  [-80.130, 25.785],
-  [-80.130, 25.770],
-  [-80.220, 25.745],
-  [-80.196, 25.737],
-  [-80.175, 25.795],
-  [-80.143, 25.760],
-  [-80.205, 25.770],
-  [-80.155, 25.740],
-  [-80.165, 25.810],
-  [-80.215, 25.795],
-  [-80.118, 25.750],
-  [-80.180, 25.755],
-  [-80.225, 25.760],
-  [-80.150, 25.795],
-  [-80.200, 25.745],
-  [-80.135, 25.745],
-  [-80.170, 25.730],
-  [-80.190, 25.800],
-];
-
-const SCOUT_BEARINGS = SCOUTS.map((_, i) => (i * 47) % 360);
-
-function makeCone(
-  center: [number, number],
-  bearingDeg: number,
-  lengthMeters: number,
-  spreadDeg: number
-): [number, number][] {
-  const [lon, lat] = center;
-  const lonScale = Math.cos((lat * Math.PI) / 180);
-  const degPerMeter = 1 / 111320;
-  const lengthDeg = lengthMeters * degPerMeter;
-  const half = spreadDeg / 2;
-  const segs = 8;
-  const points: [number, number][] = [center];
-  for (let k = 0; k <= segs; k++) {
-    const angle = ((bearingDeg - half + (k * spreadDeg) / segs) * Math.PI) / 180;
-    points.push([
-      lon + (Math.sin(angle) * lengthDeg) / lonScale,
-      lat + Math.cos(angle) * lengthDeg,
-    ]);
-  }
-  points.push(center);
-  return points;
-}
-
-const conesGeoJSON = {
-  type: 'FeatureCollection' as const,
-  features: SCOUTS.map((coords, i) => ({
-    type: 'Feature' as const,
-    id: i,
-    geometry: {
-      type: 'Polygon' as const,
-      coordinates: [makeCone(coords, SCOUT_BEARINGS[i], 180, 55)],
-    },
-    properties: {},
-  })),
-};
-
-const scoutsGeoJSON = {
-  type: 'FeatureCollection' as const,
-  features: SCOUTS.map((coords, i) => ({
-    type: 'Feature' as const,
-    id: i,
-    geometry: { type: 'Point' as const, coordinates: coords },
-    properties: {},
-  })),
-};
+import { getUserCoords } from '../state/location';
 
 function PulsingMarker({ coordinate }: { coordinate: [number, number] }) {
   const pulse = useRef(new Animated.Value(0)).current;
@@ -173,7 +96,6 @@ export default function WaitingScreen() {
   }>();
 
   const [check, setCheck] = useState<CheckRow | null>(null);
-  const [scoutShape, setScoutShape] = useState(scoutsGeoJSON);
   const cameraRef = useRef<Mapbox.Camera>(null);
 
   // Live status off the real row (DISP-04). Initial getCheck() then subscribe;
@@ -214,27 +136,6 @@ export default function WaitingScreen() {
     }
   }, [check, router, venue]);
 
-  useEffect(() => {
-    const t = setInterval(() => {
-      setScoutShape({
-        type: 'FeatureCollection' as const,
-        features: SCOUTS.map((coords, i) => ({
-          type: 'Feature' as const,
-          id: i,
-          geometry: {
-            type: 'Point' as const,
-            coordinates: [
-              coords[0] + (Math.random() - 0.5) * 0.0008,
-              coords[1] + (Math.random() - 0.5) * 0.0008,
-            ] as [number, number],
-          },
-          properties: {},
-        })),
-      });
-    }, 2800);
-    return () => clearInterval(t);
-  }, []);
-
   // Map the real status to the visible phase. 'assigned' = Scout accepted and
   // is on-site; 'filming' = recording in progress.
   const status = check?.status ?? 'assigned';
@@ -257,31 +158,43 @@ export default function WaitingScreen() {
     ? null
     : `${Math.floor(remainingMs / 60000)}:${String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0')}`;
 
-  // Scout is AT the venue — jitter position every 2s to feel alive
-  const [scoutPos, setScoutPos] = useState<[number, number]>(SCOUT_BASE);
+  // Real venue coords from the check row. Only available once the check loads.
+  // Mapbox uses [longitude, latitude].
+  const venueLng = check?.requested_lng ?? null;
+  const venueLat = check?.requested_lat ?? null;
+  const venueCoord: [number, number] | null =
+    venueLng !== null && venueLat !== null ? [venueLng, venueLat] : null;
 
+  // User's real GPS coords (captured at the location permission step).
+  const userCoord = getUserCoords();
+
+  // Scout position: we do not have a real scout GPS feed yet. Place the pulsing
+  // marker at the venue coord once we have it — honest proximity without fabricating
+  // a separate offset. When the venue coord isn't available yet, skip the marker.
+  const [scoutCoord, setScoutCoord] = useState<[number, number] | null>(null);
   useEffect(() => {
+    if (!venueCoord) return;
+    setScoutCoord(venueCoord);
+    // Subtle jitter so the marker feels alive, not frozen.
     const interval = setInterval(() => {
-      setScoutPos([
-        SCOUT_BASE[0] + (Math.random() - 0.5) * 0.0006,
-        SCOUT_BASE[1] + (Math.random() - 0.5) * 0.0006,
+      setScoutCoord([
+        venueCoord[0] + (Math.random() - 0.5) * 0.0004,
+        venueCoord[1] + (Math.random() - 0.5) * 0.0004,
       ]);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [venueCoord ? venueCoord[0] : null, venueCoord ? venueCoord[1] : null]);
 
-  // Scout is on-site — minimal distance from venue
-  const arriving = true;
-
-  // Camera centers between scout, venue, and user — all three on screen
-  const cameraCenter: [number, number] = [
-    (scoutPos[0] + VENUE[0] + USER_COORD[0]) / 3,
-    (scoutPos[1] + VENUE[1] + USER_COORD[1]) / 3,
-  ];
+  // Camera: center between venue and user when we have both; fall back to venue
+  // alone, or user alone. Never hardcoded to a city.
+  const cameraCenter: [number, number] | null =
+    venueCoord && userCoord
+      ? [(venueCoord[0] + userCoord[0]) / 2, (venueCoord[1] + userCoord[1]) / 2]
+      : venueCoord ?? userCoord ?? null;
 
   return (
     <View style={styles.container}>
-      {/* Edge-to-edge Mapbox light canvas */}
+      {/* Edge-to-edge Mapbox satellite canvas */}
       <Mapbox.MapView
         style={StyleSheet.absoluteFillObject}
         styleURL="mapbox://styles/mapbox/satellite-streets-v12"
@@ -292,53 +205,25 @@ export default function WaitingScreen() {
         attributionPosition={{ bottom: 8, left: 8 }}
         logoPosition={{ bottom: 8, left: 8 }}
       >
-        <Mapbox.Camera
-          ref={cameraRef}
-          defaultSettings={{
-            centerCoordinate: cameraCenter,
-            zoomLevel: 14,
-            pitch: 45,
-          }}
-        />
-
-        {/* Ambient Scout vision cones — supply layer */}
-        <Mapbox.ShapeSource id="cones-src" shape={conesGeoJSON}>
-          <Mapbox.FillLayer
-            id="cones-fill"
-            style={{ fillColor: '#00FF7F', fillOpacity: 0.18 }}
-          />
-        </Mapbox.ShapeSource>
-
-        {/* Ambient Scout dots — proof of supply density */}
-        <Mapbox.ShapeSource id="scouts-src" shape={scoutShape}>
-          <Mapbox.CircleLayer
-            id="scouts-glow"
-            style={{
-              circleColor: '#00FF7F',
-              circleRadius: 9,
-              circleOpacity: 0.22,
-              circleBlur: 0.9,
+        {cameraCenter && (
+          <Mapbox.Camera
+            ref={cameraRef}
+            defaultSettings={{
+              centerCoordinate: cameraCenter,
+              zoomLevel: 14,
+              pitch: 45,
             }}
           />
-          <Mapbox.CircleLayer
-            id="scouts-core"
-            style={{
-              circleColor: '#00FF7F',
-              circleRadius: 3,
-              circleStrokeColor: '#ffffff',
-              circleStrokeWidth: 1,
-            }}
-          />
-        </Mapbox.ShapeSource>
+        )}
 
-        {/* Seeker — YOU marker */}
-        <UserPin coordinate={USER_COORD} />
+        {/* User location — real GPS */}
+        {userCoord && <UserPin coordinate={userCoord} />}
 
-        {/* Venue (destination) pin */}
-        <VenuePin coordinate={VENUE} label={String(venue).toUpperCase()} />
+        {/* Venue destination pin — real check coords */}
+        {venueCoord && <VenuePin coordinate={venueCoord} label={String(venue).toUpperCase()} />}
 
-        {/* Live Scout — pulsing green core, orange radar ring */}
-        <PulsingMarker coordinate={scoutPos} />
+        {/* Scout on-site marker — at venue position until real scout GPS lands */}
+        {scoutCoord && <PulsingMarker coordinate={scoutCoord} />}
       </Mapbox.MapView>
 
       {/* Top gradient for floating bar */}
@@ -367,20 +252,22 @@ export default function WaitingScreen() {
       </View>
 
       {/* Recenter button — snap back to fit Scout + Venue + YOU */}
-      <TouchableOpacity
-        style={styles.recenterBtn}
-        activeOpacity={0.75}
-        onPress={() =>
-          cameraRef.current?.setCamera({
-            centerCoordinate: cameraCenter,
-            zoomLevel: 14,
-            pitch: 45,
-            animationDuration: 600,
-          })
-        }
-      >
-        <Text style={styles.recenterGlyph}>◎</Text>
-      </TouchableOpacity>
+      {cameraCenter && (
+        <TouchableOpacity
+          style={styles.recenterBtn}
+          activeOpacity={0.75}
+          onPress={() =>
+            cameraRef.current?.setCamera({
+              centerCoordinate: cameraCenter,
+              zoomLevel: 14,
+              pitch: 45,
+              animationDuration: 600,
+            })
+          }
+        >
+          <Text style={styles.recenterGlyph}>◎</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Bottom sheet — countdown is the hero moment */}
       <View style={styles.sheet}>
@@ -759,13 +646,6 @@ const styles = StyleSheet.create({
   },
 
   // Brand mark
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 10,
-  },
   brandMonogram: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: 18,
@@ -775,7 +655,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  // Big orange countdown
+  // Status hero
   etaLabel: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 10,

@@ -540,9 +540,10 @@ export default function HomeScreen() {
           }}
         />
 
+        {/* User location pin — real GPS, not the demo market centre */}
+        {usingRealLocation && userCoords && <UserPin coordinate={userCoords} />}
         {demo && (
           <>
-            <UserPin coordinate={demo.user} />
             {demo.venues.map((v) => (
               <VenuePin key={v.name} name={v.name} coordinate={v.coord} />
             ))}
