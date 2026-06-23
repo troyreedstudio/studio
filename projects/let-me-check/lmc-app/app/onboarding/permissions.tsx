@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 import { requestUserLocation, detectCityByIP, getUserCity } from '../state/location';
 
 type PermKey = 'location' | 'notif';
@@ -61,7 +62,9 @@ const PRIVACY_BULLETS = [
 export default function PermissionsScreen() {
   const router = useRouter();
   const { next } = useLocalSearchParams<{ next?: string }>();
-  const continueTo = next || '/onboarding/role';
+  // Default to seeker home — never loop back to /onboarding/role which would
+  // re-ask the user to pick a role they have already chosen.
+  const continueTo = next || '/(seeker)/home';
   const [states, setStates] = useState<Record<PermKey, PermState>>({
     location: 'pending',
     notif: 'pending',
@@ -98,18 +101,24 @@ export default function PermissionsScreen() {
       return;
     }
 
-    // Notifications stays a prototype stub until the push pipeline is wired.
-    Alert.alert(
-      perm.prompt,
-      `${perm.iosDescription}\n\nFor the prototype we’ll mark it allowed.`,
-      [
-        { text: "Don't Allow", style: 'cancel' },
-        {
-          text: 'Allow',
-          onPress: () => setStates((s) => ({ ...s, [perm.key]: 'granted' })),
-        },
-      ],
-    );
+    // Fire the real iOS push permission prompt via expo-notifications.
+    const { status } = await Notifications.requestPermissionsAsync({
+      ios: { allowAlert: true, allowBadge: true, allowSound: true },
+    });
+    if (status === ‘granted’) {
+      setStates((s) => ({ ...s, [perm.key]: ‘granted’ }));
+    } else {
+      // Denied or undetermined — mark skipped and tell the user what they miss.
+      setStates((s) => ({ ...s, [perm.key]: ‘skipped’ }));
+      Alert.alert(
+        ‘Notifications off’,
+        perm.ifDenied,
+        [
+          { text: ‘OK’ },
+          { text: ‘Open Settings’, onPress: () => Linking.openSettings() },
+        ],
+      );
+    }
   };
 
   const handleSkip = (perm: Perm) => {
