@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,19 +13,44 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  MARKETS,
   DEFAULT_COUNTRY_CODE,
-  DEFAULT_MARKET_ID,
   getCountryByCode,
   getMarketsForCountry,
   type Market,
   type MarketStatus,
 } from '../data/markets';
+import { getIntendedRole } from '../state/intended-role';
 
 type Status = MarketStatus;
 type City = Market & { scouts: number; status: MarketStatus };
 
-const DETECTED_ID = 'mia';
+/**
+ * Detect the user's city from IP (ipwho.is) and return the best-match market
+ * id from the provided city list. Returns null if no match or on failure.
+ * Never defaults to Miami or any hard-coded market.
+ */
+async function detectCityId(cities: City[]): Promise<string | null> {
+  try {
+    const res = await fetch('https://ipwho.is/');
+    const data = await res.json();
+    if (!data?.success) return null;
+    const ipCity: string = ((data.city as string | undefined) ?? '').toLowerCase();
+    const ipRegion: string = ((data.region as string | undefined) ?? '').toLowerCase();
+    if (!ipCity) return null;
+    // Match against live markets first, then soon markets (never waitlist).
+    const match = cities.find(
+      (c) =>
+        (c.status === 'live' || c.status === 'soon') &&
+        (c.name.toLowerCase() === ipCity ||
+          c.region.toLowerCase() === ipRegion ||
+          c.name.toLowerCase().includes(ipCity) ||
+          ipCity.includes(c.name.toLowerCase()))
+    );
+    return match?.id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export default function CityPickerScreen() {
   const router = useRouter();
@@ -34,32 +59,52 @@ export default function CityPickerScreen() {
   const country = getCountryByCode(countryCode) || getCountryByCode(DEFAULT_COUNTRY_CODE)!;
 
   const [query, setQuery] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(
-    countryCode === 'US' ? DETECTED_ID : null
-  );
+  // No hardcoded default — resolved from real IP detection below.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detectedId, setDetectedId] = useState<string | null>(null);
 
   const allCitiesInCountry: City[] = getMarketsForCountry(countryCode) as City[];
+
+  // Detect the user's real city on mount via IP. Never default to Miami.
+  // If detection fails or finds no matching market, the banner stays hidden
+  // and the user picks manually.
+  useEffect(() => {
+    let cancelled = false;
+    detectCityId(allCitiesInCountry).then((id) => {
+      if (cancelled) return;
+      setDetectedId(id);
+      if (id) setSelectedId(id);
+    });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countryCode]);
 
   const filtered = allCitiesInCountry.filter((c) =>
     `${c.name} ${c.region}`.toLowerCase().includes(query.trim().toLowerCase())
   );
 
-  const featuredCities = filtered.filter((c) => c.featured);
   const sections: { label: string; status: Status }[] = [
     { label: 'LIVE NOW', status: 'live' },
     { label: 'LAUNCHING SOON', status: 'soon' },
     { label: 'WAITLIST', status: 'waitlist' },
   ];
 
+  // Route to sign-up (pre-auth path). The market choice is carried as a param
+  // so quick-finish / post-auth screens can persist it. City.tsx is always
+  // visited BEFORE auth — routing into /(seeker)/home here would bypass sign-up.
   const handleContinue = () => {
     if (!selectedId) return;
+    const role = getIntendedRole() ?? 'seeker';
     router.replace({
-      pathname: '/(seeker)/home',
-      params: { marketId: selectedId },
+      pathname: '/auth/sign-up',
+      params: { role, marketId: selectedId },
     });
   };
 
-  const detected = allCitiesInCountry.find((c) => c.id === DETECTED_ID && c.status === 'live');
+  // The "detected" banner shows only when we matched a real city from IP.
+  const detected = detectedId
+    ? allCitiesInCountry.find((c) => c.id === detectedId && c.status === 'live')
+    : null;
 
   return (
     <View style={styles.bg}>
@@ -142,13 +187,11 @@ export default function CityPickerScreen() {
                       if (city.status === 'live' || city.status === 'soon') {
                         setSelectedId(city.id);
                       } else {
+                        // Waitlist sign-up API not yet built — inform honestly.
                         Alert.alert(
-                          `${city.name} — Waitlist`,
-                          `${city.name} isn't a LMC market yet. Join the waitlist and we'll let you know when it opens.`,
-                          [
-                            { text: 'Not now', style: 'cancel' },
-                            { text: 'Join waitlist', onPress: () => {} },
-                          ]
+                          `${city.name} — Not live yet`,
+                          `${city.name} isn't a Let Me Check market yet. Waitlist sign-up is coming soon.`,
+                          [{ text: 'OK' }]
                         );
                       }
                     }}
@@ -162,11 +205,12 @@ export default function CityPickerScreen() {
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyTitle}>Not on the map yet</Text>
               <Text style={styles.emptySub}>
-                We&apos;ll let you know when LMC launches in your city.
+                We&apos;ll let you know when Let Me Check launches in your city.
               </Text>
-              <TouchableOpacity style={styles.waitlistBtn} activeOpacity={0.85}>
-                <Text style={styles.waitlistBtnText}>JOIN THE WAITLIST</Text>
-              </TouchableOpacity>
+              {/* Waitlist sign-up API not yet built — non-interactive label */}
+              <View style={styles.waitlistBtn}>
+                <Text style={styles.waitlistBtnText}>WAITLIST COMING SOON</Text>
+              </View>
             </View>
           )}
         </ScrollView>

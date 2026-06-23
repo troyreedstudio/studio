@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,49 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COUNTRIES, DEFAULT_COUNTRY_CODE, type Country } from '../data/markets';
+import { COUNTRIES, type Country } from '../data/markets';
 
-const DETECTED_CODE = 'US';
+/**
+ * Detect the user's country code via IP geolocation (ipwho.is).
+ * Returns an ISO 3166-1 alpha-2 code (e.g. "US") or null on failure.
+ * Never throws — a null result simply hides the "DETECTED LOCATION" banner
+ * and the user picks their country manually.
+ */
+async function detectCountryCode(): Promise<string | null> {
+  try {
+    const res = await fetch('https://ipwho.is/');
+    const data = await res.json();
+    if (data?.success && typeof data.country_code === 'string' && data.country_code.length === 2) {
+      return (data.country_code as string).toUpperCase();
+    }
+  } catch {
+    // Network unavailable or parse failure — fall through to null
+  }
+  return null;
+}
 
 export default function CountryPickerScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [selectedCode, setSelectedCode] = useState<string | null>(DETECTED_CODE);
+  // No hardcoded default — resolved from real IP detection below.
+  const [selectedCode, setSelectedCode] = useState<string | null>(null);
+  const [detectedCode, setDetectedCode] = useState<string | null>(null);
+
+  // Detect the user's real country on mount via IP. No GPS needed here —
+  // country-level accuracy from IP is good enough for the picker.
+  // If detection fails the "DETECTED LOCATION" row simply stays hidden.
+  useEffect(() => {
+    let cancelled = false;
+    detectCountryCode().then((code) => {
+      if (cancelled) return;
+      setDetectedCode(code);
+      // Auto-select the detected country only if it exists in our market list.
+      if (code && COUNTRIES.some((c) => c.code === code)) {
+        setSelectedCode(code);
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const filtered = COUNTRIES.filter((c) =>
     `${c.name} ${c.code}`.toLowerCase().includes(query.trim().toLowerCase())
@@ -28,7 +63,7 @@ export default function CountryPickerScreen() {
   const featured = filtered.filter((c) => c.featured);
   const others = filtered.filter((c) => !c.featured);
 
-  const detected = COUNTRIES.find((c) => c.code === DETECTED_CODE);
+  const detected = detectedCode ? COUNTRIES.find((c) => c.code === detectedCode) : null;
 
   const handleContinue = () => {
     if (!selectedCode) return;
@@ -161,22 +196,18 @@ function handlePickCountry(
   if (c.status === 'live') {
     setSelectedCode(c.code);
   } else if (c.status === 'soon') {
+    // Waitlist sign-up API not yet built — inform the user honestly.
     Alert.alert(
       `${c.name} — Launching soon`,
-      `We're recruiting Scouts in ${c.name}. Want us to notify you when we go live there?`,
-      [
-        { text: 'Not now', style: 'cancel' },
-        { text: 'Notify me', onPress: () => {} },
-      ]
+      `We're recruiting Scouts in ${c.name}. Waitlist sign-up coming soon — check back in the app.`,
+      [{ text: 'OK' }]
     );
   } else {
+    // Waitlist sign-up API not yet built — inform the user honestly.
     Alert.alert(
-      `${c.name} — Waitlist`,
-      `${c.name} isn't a LMC market yet. Join the waitlist and we'll let you know when it opens.`,
-      [
-        { text: 'Not now', style: 'cancel' },
-        { text: 'Join waitlist', onPress: () => {} },
-      ]
+      `${c.name} — Not live yet`,
+      `${c.name} isn't a Let Me Check market yet. Waitlist sign-up is coming soon.`,
+      [{ text: 'OK' }]
     );
   }
 }
