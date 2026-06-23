@@ -56,3 +56,12 @@ DEFER to TestFlight/2-device/payment pass: Trouble-Here refund, scout withdraw, 
 ## Waiting-screen findings (2026-06-23)
 FIXED: real waiting countdown wired from deadline_at (was "no faked countdown" + no timer at all); "LMC" -> "Let Me Check" on the waiting sheet.
 POLISH (redesign pass): waiting screen layout is "messy" (blue pill, Paid/Assigned, status text) — needs a clean redesign; jarring SCREEN TRANSITIONS (delivery's black/green poster -> jump back to the map) need a consistent visual language across waiting<->delivery; confirm tier copy ("standard check") reads cleanly.
+
+## 🔴 CRITICAL BUG found in seeker payment test (2026-06-23)
+**Capture-on-delivery is broken: no `payments` row is ever created for a real check.**
+- `stripe-create-payment-intent` creates the Stripe PI but inserts NO payments row.
+- `createCheck` didn't store the PI (FIXED part 1: now stores stripe_payment_intent_id on the check + payment.tsx passes it).
+- BUT stripe-capture / stripe-refund / trouble-report all read the `payments` TABLE by check_id — which is never populated (only old 'bbbbbbbb' Phase-4 seed rows exist).
+- IMPACT: seeker pays + scout delivers, but platform CANNOT capture (or refund / no-fault-pay). Blocks taking money at launch. Never worked outside seed data.
+- FIX part 2 (TODO): a server step (Edge fn/RPC) called after createCheck that inserts the authorized payments row (check_id + check.stripe_payment_intent_id + server amounts from tier pricing + status 'authorized'), so capture/refund/trouble can find it. Then re-test full money flow (pay → deliver → capture; Trouble-Here; refund).
+- This is the #1 pre-launch fix.
