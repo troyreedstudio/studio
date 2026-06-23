@@ -1,22 +1,17 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, Keyboard, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  MARKETS,
   DEFAULT_MARKET_ID,
   getMarketById,
-  getVenuesForMarket,
-  searchInMarket,
   isPartnerVenue,
   nearestLiveMarket,
-  getVenueByName,
   type Market,
-  type Venue,
 } from '../data/markets';
 import { useSavedPlaces } from '../state/saved';
-import { getUserCoords, getUserCity, useUserLocation } from '../state/location';
+import { getUserCoords, getUserCity, useUserLocation, requestUserLocation } from '../state/location';
 import { useRecents, relativeTime } from '../state/recents';
 import { getProfile } from '../lib/api';
 
@@ -311,36 +306,8 @@ export default function HomeScreen() {
   const [currentZoom, setCurrentZoom] = useState<number>(MIAMI_ZOOM);
   const [droppedPin, setDroppedPin] = useState<[number, number] | null>(null);
   const [pinName, setPinName] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [listening, setListening] = useState(false);
-  const searchInputRef = useRef<TextInput>(null);
   const saved = useSavedPlaces();
   const recents = useRecents();
-
-  // Mock voice search until real speech-to-text lands: brief "Listening…" then
-  // fills the box with a venue from the current market so results appear.
-  const startVoiceMock = () => {
-    if (listening) return;
-    setListening(true);
-    setTimeout(() => {
-      const v = getVenuesForMarket(marketId)[0];
-      setSearchQuery(v ? v.name : 'Soho House');
-      setListening(false);
-    }, 1500);
-  };
-
-  // Lift the bottom sheet above the keyboard so inline search stays visible.
-  useEffect(() => {
-    const show = Keyboard.addListener('keyboardWillShow', (e) =>
-      setKeyboardHeight(e.endCoordinates.height)
-    );
-    const hide = Keyboard.addListener('keyboardWillHide', () => setKeyboardHeight(0));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
 
   const currentPinSavedId = droppedPin && pinName ? `${pinName}-${droppedPin[0].toFixed(4)}` : null;
   const isCurrentPinSaved = currentPinSavedId ? saved.isSaved(currentPinSavedId) : false;
@@ -355,26 +322,7 @@ export default function HomeScreen() {
     });
   };
 
-  const searchResults = searchInMarket(marketId, searchQuery);
-
-  const handlePickVenue = (venue: Venue) => {
-    Keyboard.dismiss();
-    searchInputRef.current?.blur();
-    setSearchQuery('');
-    setDroppedPin(venue.coord);
-    setPinName(venue.name);
-    cameraRef.current?.setCamera({
-      centerCoordinate: venue.coord,
-      zoomLevel: 17,
-      pitch: 55,
-      animationDuration: 1200,
-    });
-  };
-
   const handlePickCity = (target: Market) => {
-    Keyboard.dismiss();
-    searchInputRef.current?.blur();
-    setSearchQuery('');
     setDroppedPin(null);
     setPinName(null);
     if (target.id === marketId) {
@@ -390,11 +338,6 @@ export default function HomeScreen() {
         params: { marketId: target.id },
       });
     }
-  };
-
-  const handlePickNeighborhood = (name: string) => {
-    setSearchQuery(name);
-    searchInputRef.current?.focus();
   };
 
   // When marketId changes → fly camera to that market's center
@@ -462,6 +405,16 @@ export default function HomeScreen() {
       animationDuration: 900,
     });
   }, [params.pinLat, params.marketId]);
+
+  // If no coords are resolved yet when home mounts, request location now so
+  // the pill shows the user's real city instead of "Set your location".
+  // This handles the case where onboarding was skipped or state was cleared.
+  useEffect(() => {
+    if (params.pinLat || params.marketId) return;
+    if (getUserCoords()) return; // already resolved — nothing to do
+    requestUserLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Is the user outside every live market? Drives the honest "not live yet" banner.
   // userCoords + coverage are computed at the top of the component (before marketId
@@ -733,7 +686,18 @@ export default function HomeScreen() {
         <View style={styles.topRow}>
           <TouchableOpacity
             style={styles.locPill}
-            onPress={() => router.push({ pathname: '/onboarding/city', params: { from: 'home' } })}
+            onPress={() => {
+              if (displayCity === 'Set your location') {
+                // No location yet — request it directly; city picker as fallback
+                requestUserLocation().then(({ status }) => {
+                  if (status === 'denied') {
+                    router.push({ pathname: '/onboarding/city', params: { from: 'home' } });
+                  }
+                });
+              } else {
+                router.push({ pathname: '/onboarding/city', params: { from: 'home' } });
+              }
+            }}
             activeOpacity={0.85}
           >
             <Text style={styles.locPin}>📍</Text>
@@ -770,207 +734,125 @@ export default function HomeScreen() {
         )}
       </SafeAreaView>
 
-      {/* Bottom sheet — translucent over satellite, lifts above the keyboard */}
-      <View style={[styles.sheet, { bottom: keyboardHeight }]}>
+      {/* Bottom sheet — translucent over satellite */}
+      <View style={styles.sheet}>
         <View style={styles.sheetTint} pointerEvents="none" />
         <View style={styles.sheetHandle} />
 
         <Text style={styles.sheetTitle}>Where do you need eyes?</Text>
         <Text style={styles.sheetHint}>Search below, or tap any spot on the map.</Text>
 
-        {/* Inline search bar */}
-        <View style={styles.searchBar}>
+        {/* Search bar — tap to open the real Google Places search screen */}
+        <TouchableOpacity
+          style={styles.searchBar}
+          activeOpacity={0.85}
+          onPress={() =>
+            router.push({
+              pathname: '/(seeker)/search',
+              params: { marketId },
+            })
+          }
+        >
           <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            ref={searchInputRef}
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder={listening ? 'Listening…' : 'Any place. Any address.'}
-            placeholderTextColor="rgba(0,0,0,0.4)"
-            returnKeyType="search"
-            autoCorrect={false}
-            autoCapitalize="words"
-          />
-          {searchQuery.length > 0 ? (
-            <TouchableOpacity
-              onPress={() => {
-                setSearchQuery('');
-                searchInputRef.current?.blur();
-              }}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text style={styles.searchClear}>✕</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={startVoiceMock}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text style={[styles.searchMic, listening && styles.searchMicActive]}>🎤</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {searchQuery.length === 0 ? (
-          <>
-            {saved.list.length > 0 && (
-              <>
-                <View style={styles.savedRow}>
-                  <Text style={styles.recentLabel}>SAVED · {saved.list.length}</Text>
-                  <TouchableOpacity
-                    onPress={() => router.push('/(seeker)/saved')}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Text style={styles.savedSeeAll}>SEE ALL ›</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.savedChipsRow}>
-                  {saved.list.slice(0, 4).map((p) => (
-                    <TouchableOpacity
-                      key={p.id}
-                      style={styles.savedChip}
-                      activeOpacity={0.85}
-                      onPress={() => {
-                        setDroppedPin(p.coord);
-                        setPinName(p.name);
-                        cameraRef.current?.setCamera({
-                          centerCoordinate: p.coord,
-                          zoomLevel: 17,
-                          pitch: 55,
-                          animationDuration: 1200,
-                        });
-                      }}
-                    >
-                      <Text style={styles.savedChipGlyph}>♥</Text>
-                      <Text style={styles.savedChipText} numberOfLines={1}>
-                        {p.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </>
-            )}
-
-
-            {/* Recent — the user's last 2 confirmed checks, newest first */}
-            {recents.length > 0 && (
-              <>
-                <Text style={styles.recentLabel}>RECENT</Text>
-                {recents.slice(0, 2).map((r) => (
-                  <TouchableOpacity
-                    key={r.name}
-                    style={styles.recentRow}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      const match = getVenueByName(r.name);
-                      if (match) handlePickVenue(match);
-                    }}
-                  >
-                    <View style={styles.recentIconWrap}>
-                      <Text style={styles.recentIcon}>🕐</Text>
-                    </View>
-                    <View style={styles.recentText}>
-                      <Text style={styles.recentName}>{r.name}</Text>
-                      <Text style={styles.recentSub}>{r.city} · {relativeTime(r.ts)}</Text>
-                    </View>
-                    <Text style={styles.recentArrow}>›</Text>
-                  </TouchableOpacity>
-                ))}
-              </>
-            )}
-
-            {/* Refined Scout invitation — supply-side recruit moment */}
-            <TouchableOpacity
-              style={scoutInviteStyles.card}
-              activeOpacity={0.85}
-              onPress={() => router.push('/scout/become')}
-            >
-              <View style={scoutInviteStyles.left}>
-                <View style={scoutInviteStyles.iconWrap}>
-                  <View style={scoutInviteStyles.iconDot} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={scoutInviteStyles.label}>BECOME A SCOUT</Text>
-                  <Text style={scoutInviteStyles.title}>Be the eyes for your city</Text>
-                </View>
-              </View>
-              <Text style={scoutInviteStyles.arrow}>›</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <ScrollView
-            style={styles.resultsScroll}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
+          <Text style={styles.searchPlaceholder}>Any place. Any address.</Text>
+          <TouchableOpacity
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() =>
+              router.push({
+                pathname: '/(seeker)/search',
+                params: { marketId, voice: '1' },
+              })
+            }
           >
-            {searchResults.neighborhoods.length > 0 && (
-              <>
-                <Text style={styles.recentLabel}>NEIGHBORHOODS IN {market.name.toUpperCase()}</Text>
-                {searchResults.neighborhoods.map((n) => (
-                  <TouchableOpacity
-                    key={n.name}
-                    style={styles.recentRow}
-                    activeOpacity={0.7}
-                    onPress={() => handlePickNeighborhood(n.name)}
-                  >
-                    <View style={styles.recentIconWrap}>
-                      <Text style={styles.recentIcon}>🗺️</Text>
-                    </View>
-                    <View style={styles.recentText}>
-                      <Text style={styles.recentName}>{n.name}</Text>
-                      <Text style={styles.recentSub}>{market.name} · neighborhood</Text>
-                    </View>
-                    <Text style={styles.recentArrow}>›</Text>
-                  </TouchableOpacity>
-                ))}
-              </>
-            )}
+            <Text style={styles.searchMic}>🎤</Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
 
-            {searchResults.venues.length > 0 && (
-              <>
-                <Text style={styles.recentLabel}>VENUES IN {market.name.toUpperCase()}</Text>
-                {searchResults.venues.map((v) => (
-                  <TouchableOpacity
-                    key={v.name}
-                    style={styles.recentRow}
-                    activeOpacity={0.7}
-                    onPress={() => handlePickVenue(v)}
-                  >
-                    <View style={styles.recentIconWrap}>
-                      <Text style={styles.recentIcon}>📍</Text>
-                    </View>
-                    <View style={styles.recentText}>
-                      <View style={styles.recentNameRow}>
-                        <Text style={styles.recentName} numberOfLines={1}>{v.name}</Text>
-                        {v.partner && (
-                          <View style={styles.partnerChip}>
-                            <Text style={styles.partnerChipGlyph}>✦</Text>
-                            <Text style={styles.partnerChipText}>PARTNER</Text>
-                          </View>
-                        )}
-                      </View>
-                      <Text style={styles.recentSub}>
-                        {v.address} · {v.category}
-                      </Text>
-                    </View>
-                    <Text style={styles.recentArrow}>›</Text>
-                  </TouchableOpacity>
-                ))}
-              </>
-            )}
-
-            {searchResults.neighborhoods.length === 0 &&
-              searchResults.venues.length === 0 && (
-                <>
-                  <Text style={styles.recentLabel}>NO MATCHES</Text>
-                  <Text style={styles.recentSub}>
-                    Try a neighborhood or venue name in {market.name}.
+        {/* Saved chips */}
+        {saved.list.length > 0 && (
+          <>
+            <View style={styles.savedRow}>
+              <Text style={styles.recentLabel}>SAVED · {saved.list.length}</Text>
+              <TouchableOpacity
+                onPress={() => router.push('/(seeker)/saved')}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.savedSeeAll}>SEE ALL ›</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.savedChipsRow}>
+              {saved.list.slice(0, 4).map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={styles.savedChip}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    setDroppedPin(p.coord);
+                    setPinName(p.name);
+                    cameraRef.current?.setCamera({
+                      centerCoordinate: p.coord,
+                      zoomLevel: 17,
+                      pitch: 55,
+                      animationDuration: 1200,
+                    });
+                  }}
+                >
+                  <Text style={styles.savedChipGlyph}>♥</Text>
+                  <Text style={styles.savedChipText} numberOfLines={1}>
+                    {p.name}
                   </Text>
-                </>
-              )}
-          </ScrollView>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
         )}
+
+        {/* Recent — the user's last 2 confirmed checks, newest first */}
+        {recents.length > 0 && (
+          <>
+            <Text style={styles.recentLabel}>RECENT</Text>
+            {recents.slice(0, 2).map((r) => (
+              <TouchableOpacity
+                key={r.name}
+                style={styles.recentRow}
+                activeOpacity={0.7}
+                onPress={() =>
+                  router.push({
+                    pathname: '/(seeker)/search',
+                    params: { marketId },
+                  })
+                }
+              >
+                <View style={styles.recentIconWrap}>
+                  <Text style={styles.recentIcon}>🕐</Text>
+                </View>
+                <View style={styles.recentText}>
+                  <Text style={styles.recentName}>{r.name}</Text>
+                  <Text style={styles.recentSub}>{r.city} · {relativeTime(r.ts)}</Text>
+                </View>
+                <Text style={styles.recentArrow}>›</Text>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+
+        {/* Scout invitation */}
+        <TouchableOpacity
+          style={scoutInviteStyles.card}
+          activeOpacity={0.85}
+          onPress={() => router.push('/scout/become')}
+        >
+          <View style={scoutInviteStyles.left}>
+            <View style={scoutInviteStyles.iconWrap}>
+              <View style={scoutInviteStyles.iconDot} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={scoutInviteStyles.label}>BECOME A SCOUT</Text>
+              <Text style={scoutInviteStyles.title}>Be the eyes for your city</Text>
+            </View>
+          </View>
+          <Text style={scoutInviteStyles.arrow}>›</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -1592,7 +1474,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // Search bar — the hero CTA
+  // Search bar — tap target that opens the real Google Places search screen
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1604,30 +1486,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   searchIcon: { fontSize: 16 },
-  searchInput: {
+  searchPlaceholder: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: '#000000',
+    color: 'rgba(0,0,0,0.4)',
     letterSpacing: 0.2,
-    padding: 0,
-  },
-  resultsScroll: {
-    maxHeight: 300,
-  },
-  searchClear: {
-    fontSize: 14,
-    color: 'rgba(0,0,0,0.55)',
-    fontFamily: 'Inter_700Bold',
-    paddingHorizontal: 4,
   },
   searchMic: {
     fontSize: 16,
     paddingHorizontal: 4,
     opacity: 0.55,
-  },
-  searchMicActive: {
-    opacity: 1,
   },
 
   // Saved
