@@ -49,3 +49,9 @@ Every screen audited for: wired to real backend vs mock/dead/broken-route/dev-on
 - **Wave E (cosmetic):** #16 #17 #19 #20.
 </content>
 </invoke>
+
+## POST-SEARCH FOLLOW-UPS (Troy, 2026-06-23) — do after the search/frictionless pass
+1. **Referral entry points missing.** invite.tsx + referral backend WORK, but there's NO "Refer a friend / your code" row in the SCOUT profile, and the Scout's unique ID isn't shown in the profile (only on scout/approved). Add referral entry point + show the code in BOTH profiles. Confirm the seeker profile's referral BANNER actually opens the real invite screen (it has styles but routing unverified).
+2. **Unify Scout ID + referral code?** Today they're separate: SCT-XXXX-XXX badge = derived from uid (display, on approved screen); profiles.referral_code = server-stored unique (used by invite). Decide if the Scout's shareable code should BE their badge (store it server-side, show it everywhere).
+3. **Full re-check of BOTH profiles after search:** every row in (scout)/profile.tsx + (seeker)/profile.tsx works end-to-end (Earnings, Payout, Identity, Tax, Scout Code, Personal info, Notifications, Help, referral, stats). Troy explicitly wants this swept once search is done.
+4. (carryover) Collapse the post-pick request steps; Places session tokens; design polish of the search overlay.
