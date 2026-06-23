@@ -18,6 +18,7 @@ import {
 import { useSavedPlaces } from '../state/saved';
 import { getUserCoords, getUserCity } from '../state/location';
 import { useRecents, relativeTime } from '../state/recents';
+import { getProfile } from '../lib/api';
 
 // Mapbox uses [longitude, latitude] order
 const MIAMI_CENTER: [number, number] = [-80.1918, 25.7617];
@@ -260,6 +261,27 @@ export default function HomeScreen() {
   }>();
   const marketId = params.marketId || DEFAULT_MARKET_ID;
   const market: Market = getMarketById(marketId) || getMarketById(DEFAULT_MARKET_ID)!;
+
+  // Profile initials — derived from the real display_name once loaded.
+  // No fallback to a hardcoded name; show a neutral placeholder until resolved.
+  const [profileInitials, setProfileInitials] = useState<string>('?');
+  useEffect(() => {
+    getProfile()
+      .then((profile) => {
+        const name = profile?.display_name?.trim();
+        if (!name) return;
+        const parts = name.split(/\s+/);
+        const initials = parts
+          .map((w) => (w[0] ?? '').toUpperCase())
+          .slice(0, 2)
+          .join('');
+        if (initials) setProfileInitials(initials);
+      })
+      .catch(() => {
+        // Not signed in or network error — keep neutral placeholder.
+      });
+  }, []);
+
   // Demo supply for the active market (Miami / New York). null = clean map.
   const demo = DEMO_BY_MARKET[market.id] ?? null;
   const conesShape = conesToGeoJSON(demo?.scouts ?? []);
@@ -437,12 +459,14 @@ export default function HomeScreen() {
     : inLiveMarket
     ? coverage!.market.name
     : market.name;
+  // TODO: real supply count — wire to a scouts_online_in_market RPC when built.
+  // Do NOT show market.scouts (static demo number) — it is fabricated, not live data.
   const displayStatusText = outOfCoverage
     ? 'Not live yet'
     : inLiveMarket
-    ? `${coverage!.market.scouts} Scouts`
+    ? 'Live'
     : market.status === 'live'
-    ? `${market.scouts} Scouts`
+    ? 'Live'
     : market.status === 'soon'
     ? 'Launching soon'
     : 'Waitlist';
@@ -697,7 +721,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/(seeker)/profile')}
             activeOpacity={0.85}
           >
-            <Text style={styles.profileInitials}>TR</Text>
+            <Text style={styles.profileInitials}>{profileInitials}</Text>
           </TouchableOpacity>
         </View>
 
