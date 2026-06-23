@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useStripe } from '@stripe/stripe-react-native';
 import { addRecurring } from '../state/recurring';
 import { usePaymentMethod } from '../state/payment-method';
-import { createPaymentHold } from '../lib/payments';
+import { createPaymentHold, recordHold } from '../lib/payments';
 import { createCheck } from '../lib/checks';
 
 export default function PaymentScreen() {
@@ -103,6 +103,18 @@ export default function PaymentScreen() {
         locationLabel: String(venue),
         paymentIntentId: hold.paymentIntentId,
       });
+
+      // Step 5: Write the payments row that links this check to its Stripe hold.
+      // stripe-capture / stripe-refund / trouble-report all read payments by
+      // check_id — without this row they return 404 and money cannot move.
+      // Non-fatal if it fails: the check + hold exist and a backfill can repair.
+      // Idempotent on the server (ON CONFLICT DO NOTHING).
+      try {
+        await recordHold(checkId);
+      } catch (recordErr) {
+        // Log but do NOT block navigation — Seeker's booking is already live.
+        console.warn('[payment] recordHold failed (non-fatal):', recordErr);
+      }
 
       setProcessing(false);
       router.replace({

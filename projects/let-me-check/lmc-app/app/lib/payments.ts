@@ -138,6 +138,24 @@ export async function createPaymentHold(tier: Tier): Promise<PaymentHold> {
   };
 }
 
+// ── recordHold ────────────────────────────────────────────────────────────────
+
+/**
+ * PAY-02 / D-01: create the payments row that links a check to its Stripe hold.
+ * Must be called AFTER createCheck returns a checkId. Without this row,
+ * stripe-capture, stripe-refund, and trouble-report all return 404.
+ *
+ * Idempotent on the server — a second call for the same checkId is a safe no-op
+ * (ON CONFLICT DO NOTHING on payments.check_id unique index).
+ *
+ * If this call fails (network, 5xx) do NOT hard-fail the booking — the Seeker's
+ * card hold and check row both exist. Log and proceed; a backfill can repair it.
+ * The caller in payment.tsx wraps this in a try/catch and swallows the error.
+ */
+export async function recordHold(checkId: string): Promise<void> {
+  await invokeEdgeFunction('stripe-record-hold', { checkId });
+}
+
 // ── requestRefund ─────────────────────────────────────────────────────────────
 
 /**
