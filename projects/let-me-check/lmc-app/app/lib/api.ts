@@ -100,6 +100,28 @@ export async function getIntendedRoleFlags(): Promise<IntendedRole | null> {
   return null;
 }
 
+/**
+ * Update user-editable profile fields (display_name, phone).
+ * Email is auth-managed (supabase.auth.updateUser) — not handled here.
+ * Logs a profile.updated event for the audit trail.
+ */
+export async function updateProfile(fields: {
+  displayName?: string;
+  phone?: string;
+}): Promise<void> {
+  const uid = await requireUserId();
+  const updatePayload: { display_name?: string; phone?: string } = {};
+  if (fields.displayName !== undefined) updatePayload.display_name = fields.displayName;
+  if (fields.phone !== undefined) updatePayload.phone = fields.phone;
+  if (Object.keys(updatePayload).length === 0) return;
+  const { error } = await supabase
+    .from('profiles')
+    .update(updatePayload)
+    .eq('id', uid);
+  if (error) throw error;
+  await logEvent('profile.updated', { fields: Object.keys(updatePayload) });
+}
+
 // ── Consent (SAFE-02) ─────────────────────────────────────────────────────────
 
 export async function recordConsent(
