@@ -34,6 +34,9 @@ export type CreateCheckInput = {
   venueId?: string;
   marketId?: string;
   currency?: string;
+  /** The authorized PaymentIntent id from createPaymentHold — MUST be stored so
+   *  capture-on-delivery (mux-webhook → stripe-capture) can find the hold. */
+  paymentIntentId?: string;
 };
 
 /**
@@ -101,6 +104,8 @@ export async function createCheck(input: CreateCheckInput): Promise<string> {
       venue_id: input.venueId ?? null,
       market_id: input.marketId ?? null,
       currency: input.currency ?? 'USD',
+      // Link the authorized hold so capture-on-delivery can find it (PAY-01).
+      ...(input.paymentIntentId ? { stripe_payment_intent_id: input.paymentIntentId } : {}),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
     .select('id')

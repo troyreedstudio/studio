@@ -96,9 +96,12 @@ export default function PaymentScreen() {
       }
 
       // Step 4: Hold succeeded — now create the check (D-01 order enforced).
+      // Pass the hold's PaymentIntent id so the check is LINKED to the hold —
+      // capture-on-delivery needs it (without this the hold is orphaned).
       const checkId = await createCheck({
         tier: tier === 'priority' ? 'priority' : 'standard',
         locationLabel: String(venue),
+        paymentIntentId: hold.paymentIntentId,
       });
 
       setProcessing(false);
