@@ -5,14 +5,14 @@ import { supabase } from '../lib/supabase';
 import { getProfile } from '../lib/api';
 
 const CITIES = [
-  { id: 'mia', name: 'Miami', region: 'Florida, USA', scouts: 142 },
-  { id: 'nyc', name: 'New York', region: 'New York, USA', scouts: 318 },
-  { id: 'lax', name: 'Los Angeles', region: 'California, USA', scouts: 224 },
-  { id: 'lon', name: 'London', region: 'United Kingdom', scouts: 187 },
-  { id: 'dxb', name: 'Dubai', region: 'United Arab Emirates', scouts: 96 },
-  { id: 'sfo', name: 'San Francisco', region: 'California, USA', scouts: 81 },
-  { id: 'chi', name: 'Chicago', region: 'Illinois, USA', scouts: 64 },
-  { id: 'atl', name: 'Atlanta', region: 'Georgia, USA', scouts: 73 },
+  { id: 'mia', name: 'Miami', region: 'Florida, USA' },
+  { id: 'nyc', name: 'New York', region: 'New York, USA' },
+  { id: 'lax', name: 'Los Angeles', region: 'California, USA' },
+  { id: 'lon', name: 'London', region: 'United Kingdom' },
+  { id: 'dxb', name: 'Dubai', region: 'United Arab Emirates' },
+  { id: 'sfo', name: 'San Francisco', region: 'California, USA' },
+  { id: 'chi', name: 'Chicago', region: 'Illinois, USA' },
+  { id: 'atl', name: 'Atlanta', region: 'Georgia, USA' },
 ];
 
 export default function PreferredCitiesScreen() {
@@ -87,10 +87,6 @@ export default function PreferredCitiesScreen() {
                 </View>
               </View>
               <View style={styles.cityRight}>
-                <View style={styles.scoutPill}>
-                  <View style={styles.scoutDot} />
-                  <Text style={styles.scoutCount}>{c.scouts}</Text>
-                </View>
                 <View style={[styles.checkbox, isSelected && styles.checkboxActive]}>
                   {isSelected && <Text style={styles.checkboxCheck}>✓</Text>}
                 </View>
@@ -157,24 +153,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   cityRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  scoutPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(0,255,127,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.3)',
-    borderRadius: 100,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  scoutDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#00FF7F' },
-  scoutCount: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: '#00FF7F',
-    letterSpacing: 0.3,
-  },
   checkbox: {
     width: 22,
     height: 22,

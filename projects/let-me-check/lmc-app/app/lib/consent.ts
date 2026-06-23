@@ -8,8 +8,10 @@
 
 import { recordConsent } from './api';
 
-/** Current version of the legal docs the user is accepting. Bump on any change. */
-export const DOC_VERSION = '2026-06-20';
+/** Current version of the legal docs the user is accepting. Bump on any change.
+ *  Must match the effectiveDate shown in legal/[doc].tsx so consent records
+ *  reference the exact document version the user read. */
+export const DOC_VERSION = '2026-06-08';
 
 /** The four acceptances captured at the onboarding 18+/Terms gate. */
 export const ONBOARDING_CONSENTS = ['age_18plus', 'terms', 'privacy', 'aup'] as const;
