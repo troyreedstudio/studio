@@ -1,78 +1,163 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Share,
+  Platform,
+  ToastAndroid,
+  Alert,
+} from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { getMyReferral, type ReferralStats } from '../lib/referrals';
+
+// Deep-link base URL for referral invites.
+// The onboarding flow reads the ?ref= param at quick-finish.tsx.
+const INVITE_BASE_URL = 'https://letmecheck.app/join';
+
+function buildShareMessage(code: string): string {
+  return (
+    `Know before you go. I use Let Me Check to see any venue live, on demand. ` +
+    `Use my code ${code} when you sign up and you'll get credits on your first check. ` +
+    `${INVITE_BASE_URL}?ref=${code}`
+  );
+}
 
 export default function InviteScreen() {
   const router = useRouter();
-  const referralCode = 'TROY-LMC5';
+  const [stats, setStats] = useState<ReferralStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMyReferral().then((data) => {
+      if (!cancelled) {
+        setStats(data);
+        setLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleCopy = useCallback(async () => {
+    if (!stats?.code) return;
+    await Clipboard.setStringAsync(stats.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2200);
+    if (Platform.OS === 'android') {
+      ToastAndroid.show('Code copied', ToastAndroid.SHORT);
+    }
+  }, [stats?.code]);
+
+  const handleShare = useCallback(async () => {
+    if (!stats?.code) return;
+    try {
+      await Share.share({
+        message: buildShareMessage(stats.code),
+        url: `${INVITE_BASE_URL}?ref=${stats.code}`,
+        title: 'Join me on Let Me Check',
+      });
+    } catch {
+      Alert.alert('Could not open share sheet', 'Try copying the code instead.');
+    }
+  }, [stats?.code]);
+
+  const code = stats?.code ?? '';
+  const invited = stats?.invited ?? 0;
+  const joined = stats?.joined ?? 0;
+  const creditsCents = stats?.creditsCents ?? 0;
+  const creditsDisplay = creditsCents === 0 ? '0' : `$${(creditsCents / 100).toFixed(0)}`;
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Invite Friends</Text>
         </View>
 
-        {/* Big Reward Card */}
+        {/* Reward card — copy describes the mechanic; amounts come from referral_config */}
         <View style={styles.rewardCard}>
           <View style={styles.rewardIconWrap}>
             <Ionicons name="gift-outline" size={30} color="#FFCB47" />
           </View>
-          <Text style={styles.rewardTitle}>Give $5, Get $5</Text>
+          <Text style={styles.rewardTitle}>Give credits, get credits</Text>
           <Text style={styles.rewardSub}>
-            Friends who sign up with your code get $5 off their first check. You earn $5 in credits when they redeem.
+            Friends who sign up with your code get credits toward their first check.
+            You earn credits when they complete their first one.
           </Text>
         </View>
 
-        {/* Referral Code */}
+        {/* Referral code */}
         <Text style={styles.sectionLabel}>YOUR REFERRAL CODE</Text>
         <View style={styles.codeCard}>
-          <Text style={styles.codeText}>{referralCode}</Text>
-          <TouchableOpacity style={styles.copyBtn} activeOpacity={0.7}>
-            <Text style={styles.copyBtnText}>COPY</Text>
+          {loading ? (
+            <Text style={styles.codePlaceholder}>Loading...</Text>
+          ) : (
+            <Text style={styles.codeText}>{code || 'Generating...'}</Text>
+          )}
+          <TouchableOpacity
+            style={[styles.copyBtn, (loading || !code) && styles.copyBtnDisabled]}
+            activeOpacity={0.7}
+            onPress={handleCopy}
+            disabled={loading || !code}
+          >
+            <Text style={styles.copyBtnText}>{copied ? 'COPIED' : 'COPY'}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>4</Text>
+            <Text style={styles.statValue}>{loading ? '--' : String(invited)}</Text>
             <Text style={styles.statLabel}>Invited</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>3</Text>
+            <Text style={styles.statValue}>{loading ? '--' : String(joined)}</Text>
             <Text style={styles.statLabel}>Joined</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>$15</Text>
-            <Text style={styles.statLabel}>Earned</Text>
+            <Text style={styles.statValue}>{loading ? '--' : creditsDisplay}</Text>
+            <Text style={styles.statLabel}>Credits</Text>
           </View>
         </View>
 
-        {/* Share Buttons */}
+        {/* Share */}
         <Text style={styles.sectionLabel}>SHARE</Text>
         <View style={styles.shareButtons}>
-          <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85}>
-            <Ionicons name="chatbubble-outline" size={22} color="#00FF7F" />
-            <Text style={styles.shareBtnText}>iMessage</Text>
+          <TouchableOpacity
+            style={[styles.shareBtn, (loading || !code) && styles.shareBtnDisabled]}
+            activeOpacity={0.85}
+            onPress={handleCopy}
+            disabled={loading || !code}
+          >
+            <Ionicons name="copy-outline" size={22} color="#00FF7F" />
+            <Text style={styles.shareBtnText}>{copied ? 'Copied' : 'Copy code'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85}>
-            <Ionicons name="mail-outline" size={22} color="#00FF7F" />
-            <Text style={styles.shareBtnText}>Email</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85}>
-            <Ionicons name="share-social-outline" size={22} color="#00FF7F" />
-            <Text style={styles.shareBtnText}>More</Text>
+          <TouchableOpacity
+            style={[styles.shareBtn, (loading || !code) && styles.shareBtnDisabled]}
+            activeOpacity={0.85}
+            onPress={handleShare}
+            disabled={loading || !code}
+          >
+            <Ionicons name="share-outline" size={22} color="#00FF7F" />
+            <Text style={styles.shareBtnText}>Share link</Text>
           </TouchableOpacity>
         </View>
 
         <Text style={styles.disclaimer}>
-          Credits apply automatically on your friend's first check. Limit 10 invites per month.
+          Credits apply when your friend completes their first check.
+          Amounts are set by Let Me Check and may vary.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -83,8 +168,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000000' },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#ffffff', fontSize: 15, marginBottom: 16 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#ffffff', letterSpacing: 0.4 },
+  backText: {
+    fontFamily: 'Inter_500Medium',
+    color: '#ffffff',
+    fontSize: 15,
+    marginBottom: 16,
+  },
+  title: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 28,
+    color: '#ffffff',
+    letterSpacing: 0.4,
+  },
   rewardCard: {
     backgroundColor: 'rgba(245,158,11,0.08)',
     borderRadius: 20,
@@ -106,10 +201,11 @@ const styles = StyleSheet.create({
   },
   rewardTitle: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 24,
+    fontSize: 22,
     color: '#FFCB47',
     letterSpacing: 0.4,
     marginBottom: 8,
+    textAlign: 'center',
   },
   rewardSub: {
     fontFamily: 'Inter_400Regular',
@@ -147,15 +243,23 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 2,
   },
+  codePlaceholder: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.4)',
+  },
   copyBtn: {
     backgroundColor: '#00FF7F',
     borderRadius: 100,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
+  copyBtnDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
   copyBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#ffffff',
+    color: '#000000',
     fontSize: 11,
     letterSpacing: 1.5,
   },
@@ -202,7 +306,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
   },
-  shareBtnIcon: { fontSize: 22 },
+  shareBtnDisabled: {
+    opacity: 0.4,
+  },
   shareBtnText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 12,

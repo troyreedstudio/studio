@@ -33,7 +33,11 @@ export type ApplyResult =
  * Returns null when the user is not authenticated or the RPC fails.
  */
 export async function getMyReferral(): Promise<ReferralStats | null> {
-  const { data, error } = await supabase.rpc('get_my_referral_stats');
+  // Cast to `any` because get_my_referral_stats is added by migration 0022 and the
+  // generated database.types.ts is regenerated after the migration is pushed to remote.
+  // The RPC returns a jsonb object; the shape is documented in 0022_referral_system.sql.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc('get_my_referral_stats');
   if (error || !data) return null;
   const row = data as {
     code: string;
