@@ -15,12 +15,13 @@ import { getIntendedRole } from '../state/intended-role';
 import { recordOnboardingConsents } from '../lib/consent';
 import { supabase } from '../lib/supabase';
 import { setIntendedRoleFlags, updateProfile } from '../lib/api';
+import { applyReferralCode } from '../lib/referrals';
 
 type AuthSource = 'apple' | 'google' | 'phone';
 
 export default function QuickFinishScreen() {
   const router = useRouter();
-  const { from } = useLocalSearchParams<{ from?: AuthSource }>();
+  const { from, ref: refCode } = useLocalSearchParams<{ from?: AuthSource; ref?: string }>();
   const source: AuthSource = from === 'apple' || from === 'google' ? from : 'phone';
   const isAutoFill = source === 'apple' || source === 'google';
 
@@ -33,6 +34,10 @@ export default function QuickFinishScreen() {
   const [consented, setConsented] = useState(false);
   const [smsOptIn, setSmsOptIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Referral code: pre-populated from deep-link ?ref= param, or entered manually.
+  const [referralCode, setReferralCode] = useState(
+    typeof refCode === 'string' ? refCode.trim().toUpperCase() : '',
+  );
 
   // Prefill from the real signed-in user's metadata (Apple/Google provide
   // name + email; phone users have neither so fields stay empty).
@@ -102,6 +107,13 @@ export default function QuickFinishScreen() {
       // SAFE-02: record 18+/Terms/Privacy/AUP acceptance to the consents table +
       // event log. Best-effort and non-blocking — the box was a hard gate (`ready`).
       void recordOnboardingConsents();
+
+      // REF-03: attribute the new user to a referrer if a code was supplied.
+      // Best-effort — a failed attribution must never block account creation.
+      // 'already_attributed' and 'self_referral' are silently dropped (no retry).
+      if (referralCode.length >= 1) {
+        void applyReferralCode(referralCode);
+      }
     } catch {
       // Non-blocking — a transient network error should not strand the user.
       // The role/name write will be retried by BootGate on next launch.
@@ -321,6 +333,36 @@ export default function QuickFinishScreen() {
               <Text style={styles.consentOptional}>(Optional · You can opt out anytime)</Text>
             </Text>
           </TouchableOpacity>
+
+          {/* REFERRAL CODE — optional, pre-filled from deep-link ?ref= param */}
+          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>HAVE A REFERRAL CODE?</Text>
+          <View style={[styles.field, { marginBottom: 18 }]}>
+            <View style={styles.inputWrap}>
+              <TextInput
+                style={[styles.input, referralCode.length > 0 && styles.inputAutoFilled]}
+                value={referralCode}
+                onChangeText={(v) => setReferralCode(v.trim().toUpperCase())}
+                placeholder="e.g. ABC1234"
+                placeholderTextColor="rgba(255,255,255,0.25)"
+                autoCapitalize="characters"
+                autoCorrect={false}
+                maxLength={12}
+              />
+              {referralCode.length > 0 && (
+                <Ionicons
+                  name="gift-outline"
+                  size={16}
+                  color="#FFCB47"
+                  style={styles.inputCheck}
+                />
+              )}
+            </View>
+            <Text style={styles.fieldHint}>
+              {referralCode.length > 0
+                ? 'Code saved. Applied automatically when you finish.'
+                : 'Optional. Your friend gave you a code to enter here.'}
+            </Text>
+          </View>
 
           {/* TRUST */}
           <View style={styles.trustCard}>
