@@ -1,37 +1,90 @@
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Switch, Alert } from 'react-native';
+import { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  SafeAreaView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { switchRole, signOut } from '../lib/auth';
 import { deleteMyAccount } from '../lib/account';
+import { getProfile } from '../lib/api';
+import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-// One account, two hats — this is the Scout (worker) hub. Shared account items
+// One account, two hats -- this is the Scout (worker) hub. Shared account items
 // (notifications, help, personal info) are common to both roles.
 const SCOUT_ITEMS: { icon: IconName; label: string; route: string }[] = [
   { icon: 'stats-chart-outline', label: 'Earnings', route: '/(scout)/earnings' },
-  { icon: 'card-outline', label: 'Payout method', route: '/scout/payout' },
-  { icon: 'shield-checkmark-outline', label: 'Identity & verification', route: '/scout/identity' },
-  { icon: 'document-text-outline', label: 'Tax documents (1099)', route: '/scout/payout' },
-  { icon: 'reader-outline', label: 'The Scout Code', route: '/legal/code' },
+  { icon: 'card-outline', label: 'Payout method', route: '/(scout)/payout-method' },
+  { icon: 'shield-checkmark-outline', label: 'Identity & verification', route: '/(scout)/verification' },
+  { icon: 'document-text-outline', label: 'Tax documents (1099)', route: '/(scout)/tax-documents' },
+  { icon: 'reader-outline', label: 'The Scout Code', route: '/(scout)/scout-code' },
 ];
 
 const ACCOUNT_ITEMS: { icon: IconName; label: string; route: string }[] = [
-  { icon: 'person-outline', label: 'Personal info', route: '/onboarding/personal-info' },
+  { icon: 'person-outline', label: 'Personal info', route: '/(scout)/personal-info' },
   { icon: 'notifications-outline', label: 'Notifications', route: '/(seeker)/notifications' },
   { icon: 'help-circle-outline', label: 'Help', route: '/(seeker)/help' },
 ];
 
-const SCOUT_ID = 'SCT-7K4M-X9P';
-
 export default function ScoutProfileScreen() {
   const router = useRouter();
-  const [online, setOnline] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // AUTH-03: persist current_role='seeker' (logs auth.role_switched) then route to
-  // the Seeker hub.
+  // Real profile + earnings data
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [earningsData, setEarningsData] = useState<ScoutEarnings | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatsLoading(true);
+    Promise.all([getProfile(), getScoutEarnings()])
+      .then(([profile, earnings]) => {
+        if (cancelled) return;
+        setDisplayName(profile?.display_name ?? null);
+        setEarningsData(earnings);
+      })
+      .catch(() => {
+        // Stats fail silently -- show zeros rather than crash
+      })
+      .finally(() => {
+        if (!cancelled) setStatsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Derive initials from display name (fallback to '?')
+  const initials = displayName
+    ? displayName
+        .trim()
+        .split(/\s+/)
+        .map((w) => (w[0] ?? '').toUpperCase())
+        .slice(0, 2)
+        .join('')
+    : '?';
+
+  const firstName = displayName
+    ? displayName.trim().split(/\s+/)[0] ?? null
+    : null;
+
+  // Stat values -- real zeros when no data yet
+  const totalEarned = earningsData ? (earningsData.allTimeCents / 100).toFixed(2) : '0.00';
+  // clipsDelivered, rating, avg not returned by scout-earnings Edge Function yet.
+  // TODO: add total_checks, rating, avg_per_video, delivery_rate to scout-earnings response.
+  const totalChecks = '--';
+  const rating = '--';
+
+  // AUTH-03: persist current_role='seeker' then route to the Seeker hub.
   const handleSwitchToSeeker = () => {
     void switchRole('seeker').catch(() => {});
     router.replace('/(seeker)/home');
@@ -59,7 +112,8 @@ export default function ScoutProfileScreen() {
               await deleteMyAccount();
               router.replace('/index');
             } catch (err) {
-              const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+              const msg =
+                err instanceof Error ? err.message : 'Something went wrong. Please try again.';
               Alert.alert('Could not delete account', msg);
             } finally {
               setDeleting(false);
@@ -70,7 +124,11 @@ export default function ScoutProfileScreen() {
     );
   };
 
-  const renderItem = (item: { icon: IconName; label: string; route: string }, i: number, len: number) => (
+  const renderItem = (
+    item: { icon: IconName; label: string; route: string },
+    i: number,
+    len: number,
+  ) => (
     <TouchableOpacity
       key={item.label}
       style={[styles.settingRow, i < len - 1 && styles.settingRowBorder]}
@@ -93,60 +151,58 @@ export default function ScoutProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => (router.canGoBack() ? router.back() : router.push('/(scout)/dashboard'))}
+            onPress={() =>
+              router.canGoBack() ? router.back() : router.push('/(scout)/dashboard')
+            }
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
         </View>
 
         {/* Avatar */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitials}>TR</Text>
+            {statsLoading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.avatarInitials}>{initials}</Text>
+            )}
           </View>
-          <Text style={styles.userName}>Troy R.</Text>
-          <Text style={styles.memberSince}>Scout · {SCOUT_ID}</Text>
+          <Text style={styles.userName}>{firstName ?? 'Scout'}</Text>
+          <Text style={styles.memberSince}>Scout</Text>
           <View style={styles.verifiedBadge}>
             <Ionicons name="checkmark-circle" size={12} color="#00FF7F" />
             <Text style={styles.verifiedText}>VERIFIED SCOUT</Text>
           </View>
         </View>
 
-        {/* Availability */}
-        <View style={[styles.availCard, online && styles.availCardOn]}>
-          <View style={styles.availLeft}>
-            <View style={[styles.availDot, online && styles.availDotOn]} />
-            <View>
-              <Text style={styles.availTitle}>{online ? 'You’re online' : 'You’re offline'}</Text>
-              <Text style={styles.availSub}>
-                {online ? 'Receiving check requests near you.' : 'Go online to receive checks.'}
-              </Text>
-            </View>
-          </View>
-          <Switch
-            value={online}
-            onValueChange={setOnline}
-            trackColor={{ false: 'rgba(255,255,255,0.15)', true: 'rgba(0,255,127,0.5)' }}
-            thumbColor={online ? '#00FF7F' : '#f4f4f4'}
-            ios_backgroundColor="rgba(255,255,255,0.15)"
-          />
-        </View>
-
-        {/* Stats Row */}
+        {/* Stats Row -- real data, real zeros on a fresh account */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>$1,240</Text>
+            {statsLoading ? (
+              <ActivityIndicator color="#00FF7F" size="small" />
+            ) : (
+              <Text style={styles.statValue}>${totalEarned}</Text>
+            )}
             <Text style={styles.statLabel}>EARNED</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>87</Text>
+            {statsLoading ? (
+              <ActivityIndicator color="#00FF7F" size="small" />
+            ) : (
+              <Text style={styles.statValue}>{totalChecks}</Text>
+            )}
             <Text style={styles.statLabel}>CHECKS</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>4.9★</Text>
+            {statsLoading ? (
+              <ActivityIndicator color="#00FF7F" size="small" />
+            ) : (
+              <Text style={styles.statValue}>{rating}</Text>
+            )}
             <Text style={styles.statLabel}>RATING</Text>
           </View>
         </View>
@@ -173,11 +229,7 @@ export default function ScoutProfileScreen() {
           <Text style={styles.switchModeBtnText}>SWITCH TO SEEKER MODE</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.signOutBtn}
-          onPress={handleSignOut}
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.7}>
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
@@ -259,45 +311,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
 
-  availCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.035)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 16,
-    marginHorizontal: 22,
-    marginBottom: 18,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  availCardOn: {
-    backgroundColor: 'rgba(0,255,127,0.08)',
-    borderColor: 'rgba(0,255,127,0.3)',
-  },
-  availLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  availDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  availDotOn: { backgroundColor: '#00FF7F' },
-  availTitle: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 14,
-    color: '#ffffff',
-    letterSpacing: 0.2,
-    marginBottom: 2,
-  },
-  availSub: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11.5,
-    color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 0.2,
-  },
-
   statsRow: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.035)',
@@ -364,53 +377,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ffffff',
     letterSpacing: 0.2,
-  },
-
-  referralBanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,203,71,0.08)',
-    borderRadius: 16,
-    marginHorizontal: 22,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.3)',
-    marginBottom: 18,
-  },
-  referralLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  referralIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,203,71,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  referralTitle: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 16,
-    color: '#FFCB47',
-    letterSpacing: 0.2,
-    marginBottom: 2,
-  },
-  referralSub: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11.5,
-    color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 0.2,
-  },
-  referralBtn: {
-    backgroundColor: '#FFCB47',
-    borderRadius: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-  },
-  referralBtnText: {
-    fontFamily: 'Inter_700Bold',
-    color: '#000',
-    fontSize: 11,
-    letterSpacing: 1.4,
   },
 
   switchModeBtn: {
