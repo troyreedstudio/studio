@@ -8,9 +8,12 @@ import {
   StatusBar,
   Animated,
   Easing,
+  Linking,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+
+const SUPPORT_EMAIL = 'support@letmecheck.app';
 
 export default function CancelledScreen() {
   const router = useRouter();
@@ -80,14 +83,20 @@ export default function CancelledScreen() {
               </View>
               <View style={styles.receiptDivider} />
               <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabelBold}>Refunded to Visa •••• 4242</Text>
+                <Text style={styles.receiptLabelBold}>Refunded to your card</Text>
                 <Text style={styles.receiptRefund}>${Number(refund).toFixed(2)}</Text>
               </View>
             </View>
 
             <Text style={styles.foot}>
-              Refund posts in 3–5 business days. Need help? Tap{' '}
-              <Text style={styles.footLink}>Contact support</Text>.
+              Refund posts in 3–5 business days. Need help?{' '}
+              <Text
+                style={styles.footLink}
+                onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
+              >
+                Contact support
+              </Text>
+              .
             </Text>
           </Animated.View>
         </View>
