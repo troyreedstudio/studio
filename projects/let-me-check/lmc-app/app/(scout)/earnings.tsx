@@ -194,7 +194,10 @@ export default function EarningsScreen() {
                 </>
               )}
 
-              {/* Stats row */}
+              {/* Stats row — rating, avg, delivery rate not yet in ScoutEarnings
+                  server response; show real video count + dashes for fields pending
+                  a backend addition (TODO: add rating, avg_per_video, delivery_rate
+                  to scout-earnings Edge Function response). */}
               <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
                 ALL TIME
               </Text>
@@ -205,17 +208,17 @@ export default function EarningsScreen() {
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: '#FFCB47' }]}>4.9★</Text>
+                  <Text style={[styles.statValue, { color: '#FFCB47' }]}>--</Text>
                   <Text style={styles.statLabel}>RATING</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={styles.statValue}>$10</Text>
+                  <Text style={styles.statValue}>--</Text>
                   <Text style={styles.statLabel}>AVG / VIDEO</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: '#00FF7F' }]}>100%</Text>
+                  <Text style={[styles.statValue, { color: '#00FF7F' }]}>--</Text>
                   <Text style={styles.statLabel}>DELIVERY</Text>
                 </View>
               </View>
