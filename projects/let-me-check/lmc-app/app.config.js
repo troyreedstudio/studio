@@ -30,8 +30,14 @@ module.exports = {
           'Let Me Check uses your location to find nearby Scouts and verified venues.',
         NSCameraUsageDescription:
           'Let Me Check uses your camera to film verification clips.',
-        // No microphone usage string: clips are video-only (audio is never
-        // captured — VID-02). vision-camera is configured with the mic disabled.
+        // Microphone + speech recognition — required for the voice search feature.
+        // Vision-camera itself never opens the mic (enableMicrophonePermission:false,
+        // VID-02), but the iOS Speech framework used by expo-speech-recognition
+        // needs both strings or App Store review will reject the binary.
+        NSMicrophoneUsageDescription:
+          'Let Me Check uses the microphone for voice search.',
+        NSSpeechRecognitionUsageDescription:
+          'Let Me Check uses speech recognition so you can search for a place by voice.',
         // NSPhotoLibraryUsageDescription intentionally absent: the app uses no
         // photo-library API (no MediaLibrary, CameraRoll, saveToPhotos, or
         // ImagePicker anywhere in the codebase). Declaring it unused would
@@ -76,6 +82,11 @@ module.exports = {
       // SDK 54 deprecates the old top-level `notification` config key in favour of this plugin.
       // enableBackgroundRemoteNotifications defaults to false (correct for LMC — standard push only).
       ['expo-notifications', {}],
+      // Voice search — iOS Speech framework + microphone.
+      // Permissions are declared in ios.infoPlist above (NSSpeechRecognitionUsageDescription
+      // + NSMicrophoneUsageDescription). The plugin wires the native Speech framework
+      // entitlement so expo-speech-recognition works in Release builds (not Expo Go).
+      'expo-speech-recognition',
       [
         '@react-native-google-signin/google-signin',
         {
