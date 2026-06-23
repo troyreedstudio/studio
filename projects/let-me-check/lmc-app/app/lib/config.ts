@@ -50,3 +50,16 @@ export const STRIPE_PUBLISHABLE_KEY =
 // so we NEVER read from expo-constants Extra. Same pattern as SUPABASE_URL.
 // This value is the public EAS projectId (not a secret).
 export const EAS_PROJECT_ID = '59bc5e82-de99-4541-b883-82e09005acfc';
+
+// Google Places API key — browser/mobile key with Places API enabled.
+// To activate real search:
+//   1. Go to console.cloud.google.com → APIs & Services → Credentials
+//   2. Create (or copy) a key with "Places API" enabled
+//   3. Paste it as EXPO_PUBLIC_GOOGLE_PLACES_API_KEY in lmc-app/.env
+//   4. Restart the Expo dev server (npm start)
+//
+// Release builds: hard-code the key here as the fallback (same pattern as
+// MAPBOX_TOKEN above). Empty string = graceful "search unavailable" state.
+// NEVER put a secret key here — this file is bundled into the JS.
+export const GOOGLE_PLACES_API_KEY =
+  process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY ?? '';

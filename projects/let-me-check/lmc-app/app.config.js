@@ -124,6 +124,9 @@ module.exports = {
         '676403846721-n1u58r2tdp07n9qb536782kllcgukfnf.apps.googleusercontent.com',
       googleIosClientId:
         '676403846721-denqiskp74ddp8s5ich1rpqdqhfkr5sq.apps.googleusercontent.com',
+      // Google Places API key — empty string until the key is added to .env.
+      // Set EXPO_PUBLIC_GOOGLE_PLACES_API_KEY in lmc-app/.env to activate.
+      googlePlacesApiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY ?? '',
     },
     owner: 'troyreed26',
   },
