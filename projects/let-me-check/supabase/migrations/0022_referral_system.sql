@@ -68,6 +68,36 @@ comment on function public.uid_to_referral_code(uuid) is
   'REF-01: deterministic 7-char base-32 referral code derived from a user UUID. '
   'Same alphabet as stableScoutId (no 0/O/1/I). Immutable — same uid always yields same code.';
 
+-- Collision-proof code generator: random 7-char base-32 code, retried until it
+-- is unused. (uid_to_referral_code above could collide — different uuids mapped
+-- to the same code — which broke the unique constraint on backfill.)
+create or replace function public.gen_referral_code()
+returns text
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_alphabet text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  v_code     text;
+  v_i        int;
+  v_try      int := 0;
+begin
+  loop
+    v_code := '';
+    for v_i in 1..7 loop
+      v_code := v_code || substring(v_alphabet, floor(random() * 32)::int + 1, 1);
+    end loop;
+    exit when not exists (select 1 from public.profiles where referral_code = v_code);
+    v_try := v_try + 1;
+    if v_try > 100 then
+      v_code := v_code || floor(random() * 9)::text; -- 8th char escape hatch
+      exit;
+    end if;
+  end loop;
+  return v_code;
+end;
+$$;
+
 -- Trigger function: populate referral_code on new profile rows.
 create or replace function public.set_referral_code()
 returns trigger
@@ -77,7 +107,7 @@ set search_path = public
 as $$
 begin
   if new.referral_code is null then
-    new.referral_code := public.uid_to_referral_code(new.id);
+    new.referral_code := public.gen_referral_code();
   end if;
   return new;
 end;
@@ -88,10 +118,16 @@ create trigger trg_set_referral_code
   for each row
   execute function public.set_referral_code();
 
--- Backfill existing profile rows that have no code yet.
-update public.profiles
-set referral_code = public.uid_to_referral_code(id)
-where referral_code is null;
+-- Backfill existing profile rows that have no code yet (per-row so each generated
+-- code is checked for uniqueness against rows already updated in this transaction).
+do $$
+declare r record;
+begin
+  for r in select id from public.profiles where referral_code is null loop
+    update public.profiles set referral_code = public.gen_referral_code() where id = r.id;
+  end loop;
+end;
+$$;
 
 -- =============================================================================
 -- 2. referral_config — config-driven reward amounts (REF-02)
