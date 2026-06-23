@@ -65,3 +65,14 @@ POLISH (redesign pass): waiting screen layout is "messy" (blue pill, Paid/Assign
 - IMPACT: seeker pays + scout delivers, but platform CANNOT capture (or refund / no-fault-pay). Blocks taking money at launch. Never worked outside seed data.
 - FIX part 2 (TODO): a server step (Edge fn/RPC) called after createCheck that inserts the authorized payments row (check_id + check.stripe_payment_intent_id + server amounts from tier pricing + status 'authorized'), so capture/refund/trouble can find it. Then re-test full money flow (pay → deliver → capture; Trouble-Here; refund).
 - This is the #1 pre-launch fix.
+
+## ✅ MONEY FLOW — capture-on-delivery FIXED + VERIFIED (2026-06-23)
+- ROOT CAUSE fixed: no `payments` row was ever created → capture/refund/trouble couldn't find the hold.
+  - createCheck now stores stripe_payment_intent_id on the check (part 1).
+  - NEW `stripe-record-hold` Edge fn (called from payment.tsx after createCheck) writes the authorized payments row, server-priced + IDOR-safe + idempotent. (Bug en route: it used `.insert().onConflict()` which isn't supabase-js → 500; fixed to `.upsert(..., {onConflict, ignoreDuplicates})`.)
+- VERIFIED on device: fresh seeker payment → authorized payments row created ($16.50/$8 scout) → set delivered → stripe-capture → **status 'captured', charge id set, transfer deferred (no scout Connect acct = expected)**.
+- FOLLOW-UP GAPS (not blocking, log for fix):
+  1. Cancelling a check does NOT release the hold (payment stayed 'authorized' after the check went 'cancelled') — cancelCheck should cancel/refund the PaymentIntent. Real money gap.
+  2. `clips` has NO unique(check_id) constraint (so duplicate clips per check are possible — already handled on the READ side by taking the latest; consider a constraint + dedup).
+  3. The stripe-record-hold deno test mocked the client so it passed despite the real `.onConflict` API mismatch — mock didn't reflect the real builder.
+- STILL TO TEST (need scout Connect onboarding / 2 devices): Trouble-Here refund, Scout withdraw, push delivery.
