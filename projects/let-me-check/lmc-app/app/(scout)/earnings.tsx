@@ -186,31 +186,40 @@ export default function EarningsScreen() {
                 </>
               )}
 
-              {/* Stats row — rating, avg, delivery rate not yet in ScoutEarnings
-                  server response; show real video count + dashes for fields pending
-                  a backend addition (TODO: add rating, avg_per_video, delivery_rate
-                  to scout-earnings Edge Function response). */}
+              {/* Stats row — real values from scout-earnings Edge fn (Wave D). */}
               <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
                 ALL TIME
               </Text>
               <View style={styles.statsRow}>
                 <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{earnings.clipsDelivered}</Text>
+                  <Text style={styles.statValue}>
+                    {data?.totalChecks ?? 0}
+                  </Text>
                   <Text style={styles.statLabel}>VIDEOS</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: '#FFCB47' }]}>--</Text>
+                  <Text style={[styles.statValue, { color: '#FFCB47' }]}>
+                    {data?.avgRating != null ? data.avgRating.toFixed(1) : '--'}
+                  </Text>
                   <Text style={styles.statLabel}>RATING</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={styles.statValue}>--</Text>
+                  <Text style={styles.statValue}>
+                    {data?.totalChecks && data.totalChecks > 0
+                      ? `$${(data.allTimeCents / 100 / data.totalChecks).toFixed(0)}`
+                      : '--'}
+                  </Text>
                   <Text style={styles.statLabel}>AVG / VIDEO</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: '#00FF7F' }]}>--</Text>
+                  <Text style={[styles.statValue, { color: '#00FF7F' }]}>
+                    {data?.deliveryRate != null
+                      ? `${Math.round(data.deliveryRate * 100)}%`
+                      : '--'}
+                  </Text>
                   <Text style={styles.statLabel}>DELIVERY</Text>
                 </View>
               </View>

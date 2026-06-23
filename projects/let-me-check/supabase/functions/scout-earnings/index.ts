@@ -49,6 +49,10 @@ export interface ScoutEarningsResponse {
   instantNetCents: number;
   payoutSpeed: string;
   payouts: PayoutSummary[];
+  // Scout performance stats (added Wave D)
+  totalChecks: number;      // count of delivered+rated checks for this scout
+  avgRating: number | null; // average stars from ratings on this scout's checks (null = no ratings yet)
+  deliveryRate: number | null; // delivered+rated / assigned-or-beyond (null = never accepted a check)
 }
 
 /**
@@ -85,6 +89,50 @@ export async function handleScoutEarnings(
   // totalsRow may be an array (RETURNS TABLE) or a single object
   const totalsData = Array.isArray(totalsRow) ? totalsRow[0] : totalsRow;
   const allTimeCents: number = totalsData?.total_cents ?? 0;
+
+  // 2b. Scout performance stats — total_checks, avg_rating, delivery_rate.
+  //     These are plain DB queries (service role, no IDOR risk — scoutId is
+  //     always the verified callerId, never a body-supplied value).
+  //
+  //     total_checks: count of checks this scout delivered or got rated on.
+  const { count: deliveredCount } = await svc
+    .from("checks")
+    .select("id", { count: "exact", head: true })
+    .eq("scout_id", scoutId)
+    .in("status", ["delivered", "rated"]);
+
+  const totalChecks: number = deliveredCount ?? 0;
+
+  //     avg_rating: average stars from the ratings table on checks this scout filmed.
+  //     We join via checks.scout_id: ratings.check_id -> checks.id -> checks.scout_id.
+  //     Supabase doesn't expose aggregates directly, so we pull the raw star values
+  //     and compute in JS (typical volume per scout is tiny — well under 1k rows).
+  const { data: ratingRows } = await svc
+    .from("ratings")
+    .select("stars, checks!inner(scout_id)")
+    .eq("checks.scout_id", scoutId);
+
+  // deno-lint-ignore no-explicit-any
+  const stars: number[] = (ratingRows ?? []).map((r: any) => r.stars as number).filter(
+    (s: number) => typeof s === "number"
+  );
+  const avgRating: number | null = stars.length
+    ? stars.reduce((a: number, b: number) => a + b, 0) / stars.length
+    : null;
+
+  //     delivery_rate: (delivered + rated) / (assigned + filming + uploaded + processing +
+  //     delivered + rated). Represents the fraction of accepted checks that were
+  //     successfully delivered. Null when the scout has never accepted a check.
+  const { count: acceptedCount } = await svc
+    .from("checks")
+    .select("id", { count: "exact", head: true })
+    .eq("scout_id", scoutId)
+    .in("status", ["assigned", "filming", "uploaded", "processing", "delivered", "rated"]);
+
+  const totalAccepted: number = acceptedCount ?? 0;
+  const deliveryRate: number | null = totalAccepted > 0
+    ? totalChecks / totalAccepted
+    : null;
 
   // 3. Stripe balance + payout history (only if Scout has a Connect account).
   const { data: acctRow } = await svc
@@ -144,6 +192,9 @@ export async function handleScoutEarnings(
     instantNetCents,
     payoutSpeed,
     payouts,
+    totalChecks,
+    avgRating,
+    deliveryRate,
   };
 
   return Response.json(responseBody);

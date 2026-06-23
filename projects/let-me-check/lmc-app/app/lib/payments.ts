@@ -286,6 +286,10 @@ export interface ScoutEarnings {
     arrivalDate: string;
     method: string;
   }[];
+  // Scout performance stats (Wave D — added to scout-earnings Edge fn)
+  totalChecks: number;
+  avgRating: number | null;
+  deliveryRate: number | null;
 }
 
 export async function getScoutEarnings(): Promise<ScoutEarnings> {

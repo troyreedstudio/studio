@@ -77,12 +77,12 @@ export default function ScoutProfileScreen() {
     ? displayName.trim().split(/\s+/)[0] ?? null
     : null;
 
-  // Stat values -- real zeros when no data yet
+  // Stat values — real data from scout-earnings Edge fn (Wave D).
   const totalEarned = earningsData ? (earningsData.allTimeCents / 100).toFixed(2) : '0.00';
-  // clipsDelivered, rating, avg not returned by scout-earnings Edge Function yet.
-  // TODO: add total_checks, rating, avg_per_video, delivery_rate to scout-earnings response.
-  const totalChecks = '--';
-  const rating = '--';
+  const totalChecks = earningsData ? String(earningsData.totalChecks) : '0';
+  const rating = earningsData?.avgRating != null
+    ? earningsData.avgRating.toFixed(1)
+    : '--';
 
   // AUTH-03: persist current_role='seeker' then route to the Seeker hub.
   const handleSwitchToSeeker = () => {
