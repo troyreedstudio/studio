@@ -16,10 +16,12 @@ import {
   DEFAULT_COUNTRY_CODE,
   getCountryByCode,
   getMarketsForCountry,
+  getMarketById,
   type Market,
   type MarketStatus,
 } from '../data/markets';
 import { getIntendedRole } from '../state/intended-role';
+import { setManualLocation } from '../state/location';
 
 type Status = MarketStatus;
 type City = Market & { scouts: number; status: MarketStatus };
@@ -54,8 +56,12 @@ async function detectCityId(cities: City[]): Promise<string | null> {
 
 export default function CityPickerScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ country?: string }>();
+  const params = useLocalSearchParams<{ country?: string; from?: string }>();
   const countryCode = params.country || DEFAULT_COUNTRY_CODE;
+  // 'home' means the user is already authenticated and opened the picker from
+  // the Seeker home location pill — Continue must update their city and return
+  // to home, NOT route to sign-up (which would bounce them into the scout hub).
+  const isPostAuth = params.from === 'home';
   const country = getCountryByCode(countryCode) || getCountryByCode(DEFAULT_COUNTRY_CODE)!;
 
   const [query, setQuery] = useState('');
@@ -89,11 +95,26 @@ export default function CityPickerScreen() {
     { label: 'WAITLIST', status: 'waitlist' },
   ];
 
-  // Route to sign-up (pre-auth path). The market choice is carried as a param
-  // so quick-finish / post-auth screens can persist it. City.tsx is always
-  // visited BEFORE auth — routing into /(seeker)/home here would bypass sign-up.
+  // Two paths:
+  //   Post-auth (from=home): user tapped the location pill on the Seeker home
+  //     screen. Persist the new city into location state and go straight back to
+  //     home with the chosen marketId. Never touch sign-up from this path.
+  //   Pre-auth (onboarding): carry the market choice into sign-up as before.
   const handleContinue = () => {
     if (!selectedId) return;
+
+    if (isPostAuth) {
+      const chosenMarket = getMarketById(selectedId);
+      if (chosenMarket) {
+        setManualLocation(chosenMarket.center, chosenMarket.name);
+      }
+      router.replace({
+        pathname: '/(seeker)/home',
+        params: { marketId: selectedId },
+      });
+      return;
+    }
+
     const role = getIntendedRole() ?? 'seeker';
     router.replace({
       pathname: '/auth/sign-up',
