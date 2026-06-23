@@ -141,7 +141,7 @@ export default function WithdrawScreen() {
             <Text style={styles.bankName}>Chase Checking</Text>
             <Text style={styles.bankNumber}>···· ···· ···· 6193 · Troy R.</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(scout)/payout-method' as never)}>
             <Text style={styles.changeText}>CHANGE</Text>
           </TouchableOpacity>
         </View>
