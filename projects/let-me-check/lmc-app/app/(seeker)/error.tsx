@@ -23,9 +23,9 @@ const ERRORS: Record<ErrorType, {
   'payment-declined': {
     emoji: '💳',
     title: 'Payment Declined',
-    message: 'Your card was declined. No charge was made. Try a different card or contact your bank.',
-    primaryLabel: 'TRY ANOTHER CARD',
-    primaryRoute: '/(seeker)/payment-methods',
+    message: 'Your card was declined. No charge was made. Try again and use a different card or payment method.',
+    primaryLabel: 'TRY AGAIN',
+    primaryRoute: '/(seeker)/home',
     secondaryLabel: 'Back to Home',
   },
   'connection': {
