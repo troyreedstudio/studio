@@ -1,4 +1,8 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, ActivityIndicator, Keyboard, Modal, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, ActivityIndicator, Keyboard, Modal, FlatList, Alert, Platform } from 'react-native';
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from 'expo-speech-recognition';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -33,8 +37,6 @@ const PLACEHOLDER_HINTS = [
   'Try: "DMV Miami Beach"',
   'Try: "Whole Foods Brooklyn"',
 ];
-
-// TODO: real voice search — integrate expo-speech or Whisper STT in a future phase
 
 // Mapbox uses [longitude, latitude] order
 const MIAMI_CENTER: [number, number] = [-80.1918, 25.7617];
@@ -297,10 +299,93 @@ function SearchOverlay({
   const [resolving, setResolving] = useState(false);
   const [locating, setLocating] = useState(false);
   const [hintIdx, setHintIdx] = useState(0);
+  // ── Voice search state ────────────────────────────────────────────────────
+  const [listening, setListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const micPulse = useRef(new Animated.Value(0)).current;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<TextInput>(null);
 
-  // Reset state each time the overlay opens
+  // Pulse animation — plays while listening
+  useEffect(() => {
+    if (listening) {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(micPulse, { toValue: 1, duration: 700, useNativeDriver: true, easing: Easing.inOut(Easing.ease) }),
+          Animated.timing(micPulse, { toValue: 0, duration: 700, useNativeDriver: true, easing: Easing.inOut(Easing.ease) }),
+        ])
+      );
+      loop.start();
+      return () => loop.stop();
+    } else {
+      micPulse.setValue(0);
+    }
+  }, [listening, micPulse]);
+
+  // ── expo-speech-recognition event wiring ─────────────────────────────────
+  // Partial results — feed live transcript into query so Places search streams in
+  useSpeechRecognitionEvent('result', (ev) => {
+    const transcript = ev.results?.[0]?.transcript ?? '';
+    if (transcript) {
+      setVoiceTranscript(transcript);
+      setQuery(transcript);
+    }
+    // isFinal: true means recognition ended naturally (end-of-speech)
+    if (ev.isFinal) {
+      setListening(false);
+      setVoiceTranscript('');
+    }
+  });
+
+  useSpeechRecognitionEvent('end', () => {
+    setListening(false);
+    setVoiceTranscript('');
+  });
+
+  useSpeechRecognitionEvent('error', (ev) => {
+    setListening(false);
+    setVoiceTranscript('');
+    // 'no-speech' is benign (user didn't speak); suppress the alert for it
+    if (ev.error !== 'no-speech' && ev.error !== 'aborted') {
+      Alert.alert('Voice search error', 'Could not understand. Please try again.');
+    }
+  });
+
+  // Start voice recognition — request permission first, then start
+  const handleMicPress = async () => {
+    if (listening) {
+      // Tap mic again while listening → stop
+      ExpoSpeechRecognitionModule.stop();
+      setListening(false);
+      setVoiceTranscript('');
+      return;
+    }
+
+    const { granted, canAskAgain } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!granted) {
+      if (!canAskAgain) {
+        Alert.alert(
+          'Microphone permission required',
+          'Voice search needs microphone access. Go to Settings > Let Me Check > Microphone and turn it on.',
+          [{ text: 'OK' }]
+        );
+      }
+      return;
+    }
+
+    // Dismiss keyboard so the listening UI has space
+    Keyboard.dismiss();
+    setVoiceTranscript('');
+    setListening(true);
+    ExpoSpeechRecognitionModule.start({
+      lang: 'en-US',
+      interimResults: true,   // partial results as the user speaks
+      maxAlternatives: 1,
+      continuous: false,      // auto-stops after end-of-speech
+    });
+  };
+
+  // Reset state each time the overlay opens; stop any in-progress recognition on close
   useEffect(() => {
     if (visible) {
       setQuery('');
@@ -308,7 +393,17 @@ function SearchOverlay({
       setSearchStatus('idle');
       setResolving(false);
       setLocating(false);
+      setListening(false);
+      setVoiceTranscript('');
+    } else {
+      // Overlay closing — stop recognition if still running
+      if (listening) {
+        ExpoSpeechRecognitionModule.abort();
+        setListening(false);
+        setVoiceTranscript('');
+      }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   // Rotate placeholder hints when idle
@@ -656,9 +751,9 @@ function SearchOverlay({
                 autoCorrect={false}
                 autoCapitalize="none"
               />
-              {isLoading ? (
+              {isLoading && !listening ? (
                 <ActivityIndicator size="small" color="#00FF7F" style={overlayStyles.spinner} />
-              ) : query.length > 0 ? (
+              ) : query.length > 0 && !listening ? (
                 <TouchableOpacity
                   onPress={() => setQuery('')}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -666,8 +761,43 @@ function SearchOverlay({
                   <Text style={overlayStyles.clearIcon}>✕</Text>
                 </TouchableOpacity>
               ) : null}
+              {/* Mic button — always visible when not loading or when listening */}
+              {(!isLoading || listening) && (
+                <TouchableOpacity
+                  onPress={handleMicPress}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={[overlayStyles.micBtn, listening && overlayStyles.micBtnActive]}
+                >
+                  <Animated.View style={listening ? { opacity: micPulse.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) } : undefined}>
+                    <Text style={[overlayStyles.micIcon, listening && overlayStyles.micIconActive]}>
+                      {listening ? '⏹' : '🎤'}
+                    </Text>
+                  </Animated.View>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
+
+          {/* Listening banner — live transcript below the search bar */}
+          {listening && (
+            <View style={overlayStyles.listeningBanner}>
+              <Animated.View
+                style={[
+                  overlayStyles.listeningDot,
+                  { opacity: micPulse.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) },
+                ]}
+              />
+              <Text style={overlayStyles.listeningText} numberOfLines={1}>
+                {voiceTranscript ? voiceTranscript : 'Listening…'}
+              </Text>
+              <TouchableOpacity
+                onPress={handleMicPress}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={overlayStyles.listeningStop}>Stop</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Results list — sits between bar and keyboard, never hidden */}
           <FlatList
@@ -744,6 +874,55 @@ const overlayStyles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     paddingHorizontal: 2,
+  },
+  micBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  micBtnActive: {
+    backgroundColor: 'rgba(0,255,127,0.12)',
+    borderWidth: 1,
+    borderColor: '#00FF7F',
+  },
+  micIcon: {
+    fontSize: 15,
+  },
+  micIconActive: {
+    fontSize: 14,
+  },
+  // Listening banner — shown below search bar while STT is active
+  listeningBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    gap: 10,
+    backgroundColor: 'rgba(0,255,127,0.06)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,255,127,0.15)',
+  },
+  listeningDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00FF7F',
+    flexShrink: 0,
+  },
+  listeningText: {
+    flex: 1,
+    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    color: '#fff',
+    letterSpacing: 0.1,
+  },
+  listeningStop: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: '#00FF7F',
+    paddingHorizontal: 4,
   },
   list: {
     flex: 1,
