@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, ActivityIndicator, Keyboard, Modal } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -12,8 +12,24 @@ import {
 } from '../data/markets';
 import { useSavedPlaces } from '../state/saved';
 import { getUserCoords, getUserCity, useUserLocation, requestUserLocation } from '../state/location';
-import { useRecents, relativeTime } from '../state/recents';
+import { useRecents, addRecent, relativeTime } from '../state/recents';
 import { getProfile } from '../lib/api';
+import { searchPlaces, getPlaceCoords, placeToAppCoord, type PlaceSuggestion } from '../lib/places';
+
+type SearchState =
+  | { kind: 'idle' }
+  | { kind: 'loading' }
+  | { kind: 'results'; suggestions: PlaceSuggestion[] }
+  | { kind: 'no-results' }
+  | { kind: 'unavailable' };
+
+const VOICE_MOCKS = [
+  'Soho House New York',
+  'JFK Terminal 4',
+  'DMV Miami Beach',
+  'Whole Foods Brooklyn',
+  'Equinox Hudson Yards',
+];
 
 // Mapbox uses [longitude, latitude] order
 const MIAMI_CENTER: [number, number] = [-80.1918, 25.7617];
@@ -309,6 +325,15 @@ export default function HomeScreen() {
   const saved = useSavedPlaces();
   const recents = useRecents();
 
+  // ── Inline search state ────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchState, setSearchState] = useState<SearchState>({ kind: 'idle' });
+  const [searchResolving, setSearchResolving] = useState(false);
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceDots, setVoiceDots] = useState('');
+  const searchInputRef = useRef<TextInput>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const currentPinSavedId = droppedPin && pinName ? `${pinName}-${droppedPin[0].toFixed(4)}` : null;
   const isCurrentPinSaved = currentPinSavedId ? saved.isSaved(currentPinSavedId) : false;
 
@@ -415,6 +440,94 @@ export default function HomeScreen() {
     requestUserLocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Inline search: debounced autocomplete ─────────────────────────────────
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      setSearchState({ kind: 'idle' });
+      return;
+    }
+
+    setSearchState({ kind: 'loading' });
+
+    searchDebounceRef.current = setTimeout(async () => {
+      const biasCoord = (getUserCoords() ?? market.center) as [number, number];
+      const outcome = await searchPlaces(trimmed, { locationBias: biasCoord });
+
+      if (outcome.unavailable) {
+        setSearchState({ kind: 'unavailable' });
+        return;
+      }
+      if (outcome.results.length === 0) {
+        setSearchState({ kind: 'no-results' });
+        return;
+      }
+      setSearchState({ kind: 'results', suggestions: outcome.results });
+    }, 300);
+
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchQuery, market.center]);
+
+  // Animate "Listening..." dots
+  useEffect(() => {
+    if (!voiceListening) return;
+    const t = setInterval(() => {
+      setVoiceDots((d) => (d.length >= 3 ? '' : d + '.'));
+    }, 350);
+    return () => clearInterval(t);
+  }, [voiceListening]);
+
+  // Mock voice capture in dev — fills input after 2.5 s
+  useEffect(() => {
+    if (!__DEV__) return;
+    if (!voiceListening) return;
+    const t = setTimeout(() => {
+      const mock = VOICE_MOCKS[Math.floor(Math.random() * VOICE_MOCKS.length)];
+      setSearchQuery(mock);
+      setVoiceListening(false);
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [voiceListening]);
+
+  // ── Inline search: tap a suggestion ───────────────────────────────────────
+  const handleSelectSuggestion = async (suggestion: PlaceSuggestion) => {
+    Keyboard.dismiss();
+    setSearchResolving(true);
+    try {
+      const coords = await getPlaceCoords(suggestion.placeId);
+      const name = suggestion.primaryText;
+
+      let appCoord: [number, number];
+      if (coords) {
+        appCoord = placeToAppCoord(coords);
+      } else {
+        appCoord = market.center as [number, number];
+      }
+
+      const [lon, lat] = appCoord;
+      const resolved = nearestLiveMarket(appCoord);
+      addRecent({ name, city: resolved.market.name });
+
+      // Clear the search bar and drop the pin on the map (stays on home)
+      setSearchQuery('');
+      setSearchState({ kind: 'idle' });
+      setDroppedPin([lon, lat]);
+      setPinName(name);
+      cameraRef.current?.setCamera({
+        centerCoordinate: [lon, lat],
+        zoomLevel: 17,
+        pitch: 55,
+        animationDuration: 1200,
+      });
+    } finally {
+      setSearchResolving(false);
+    }
+  };
 
   // Is the user outside every live market? Drives the honest "not live yet" banner.
   // userCoords + coverage are computed at the top of the component (before marketId
@@ -742,31 +855,119 @@ export default function HomeScreen() {
         <Text style={styles.sheetTitle}>Where do you need eyes?</Text>
         <Text style={styles.sheetHint}>Search below, or tap any spot on the map.</Text>
 
-        {/* Search bar — tap to open the real Google Places search screen */}
-        <TouchableOpacity
-          style={styles.searchBar}
-          activeOpacity={0.85}
-          onPress={() =>
-            router.push({
-              pathname: '/(seeker)/search',
-              params: { marketId },
-            })
-          }
+        {/* Inline search — TextInput with live Google Places dropdown */}
+        <View style={styles.searchWrap}>
+          <View style={styles.searchBar}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <TextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              placeholder="Any place. Any address."
+              placeholderTextColor="rgba(0,0,0,0.4)"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+            {(searchResolving || searchState.kind === 'loading') ? (
+              <ActivityIndicator size="small" color="#22c55e" style={styles.searchSpinner} />
+            ) : searchQuery.length > 0 ? (
+              <TouchableOpacity
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                onPress={() => { setSearchQuery(''); setSearchState({ kind: 'idle' }); }}
+              >
+                <Text style={styles.searchClear}>✕</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                onPress={() => setVoiceListening(true)}
+              >
+                <Text style={styles.searchMic}>🎤</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Dropdown — only visible when there is a query */}
+          {searchQuery.trim().length > 0 && (
+            <View style={styles.searchDropdown}>
+              {searchState.kind === 'results' && searchState.suggestions.map((s) => (
+                <TouchableOpacity
+                  key={s.placeId}
+                  style={styles.dropdownRow}
+                  activeOpacity={0.75}
+                  onPress={() => handleSelectSuggestion(s)}
+                >
+                  <Text style={styles.dropdownPin}>📍</Text>
+                  <View style={styles.dropdownText}>
+                    <Text style={styles.dropdownName} numberOfLines={1}>{s.primaryText}</Text>
+                    <Text style={styles.dropdownSub} numberOfLines={1}>{s.secondaryText}</Text>
+                  </View>
+                  <Text style={styles.dropdownArrow}>›</Text>
+                </TouchableOpacity>
+              ))}
+
+              {searchState.kind === 'no-results' && (
+                <View style={styles.dropdownFeedback}>
+                  <Text style={styles.dropdownFeedbackText}>No results for "{searchQuery.trim()}"</Text>
+                </View>
+              )}
+
+              {searchState.kind === 'unavailable' && (
+                <TouchableOpacity
+                  style={styles.dropdownRow}
+                  activeOpacity={0.75}
+                  onPress={() => {
+                    const name = searchQuery.trim();
+                    addRecent({ name, city: market.name });
+                    setSearchQuery('');
+                    setSearchState({ kind: 'idle' });
+                    setDroppedPin(market.center as [number, number]);
+                    setPinName(name);
+                  }}
+                >
+                  <Text style={styles.dropdownPin}>🔍</Text>
+                  <View style={styles.dropdownText}>
+                    <Text style={styles.dropdownName}>{searchQuery.trim()}</Text>
+                    <Text style={styles.dropdownSub}>Check this location</Text>
+                  </View>
+                  <Text style={styles.dropdownArrow}>›</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </View>
+
+        {/* Voice Listening Modal */}
+        <Modal
+          visible={voiceListening}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setVoiceListening(false)}
         >
-          <Text style={styles.searchIcon}>🔍</Text>
-          <Text style={styles.searchPlaceholder}>Any place. Any address.</Text>
-          <TouchableOpacity
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            onPress={() =>
-              router.push({
-                pathname: '/(seeker)/search',
-                params: { marketId, voice: '1' },
-              })
-            }
-          >
-            <Text style={styles.searchMic}>🎤</Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
+          <View style={styles.voiceOverlay}>
+            <View style={styles.voiceCard}>
+              <Text style={styles.voiceMic}>🎤</Text>
+              <Text style={styles.voiceListeningText}>Listening{voiceDots}</Text>
+              <Text style={styles.voiceHint}>Speak the place you want to check</Text>
+              <View style={styles.voicePulseRow}>
+                <View style={[styles.voicePulse, { height: 18 }]} />
+                <View style={[styles.voicePulse, { height: 28 }]} />
+                <View style={[styles.voicePulse, { height: 14 }]} />
+                <View style={[styles.voicePulse, { height: 22 }]} />
+                <View style={[styles.voicePulse, { height: 16 }]} />
+              </View>
+              <TouchableOpacity
+                style={styles.voiceCancel}
+                onPress={() => setVoiceListening(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.voiceCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         {/* Saved chips */}
         {saved.list.length > 0 && (
@@ -1474,29 +1675,144 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // Search bar — tap target that opens the real Google Places search screen
+  // Inline search — wraps the bar + the dropdown
+  searchWrap: {
+    marginBottom: 10,
+    zIndex: 10,
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
     borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 15,
+    paddingVertical: 13,
     gap: 12,
-    marginBottom: 10,
   },
   searchIcon: { fontSize: 16 },
-  searchPlaceholder: {
+  searchInput: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: 'rgba(0,0,0,0.4)',
+    color: '#000000',
     letterSpacing: 0.2,
+    paddingVertical: 0,
+  },
+  searchSpinner: {
+    marginHorizontal: 4,
+  },
+  searchClear: {
+    fontSize: 14,
+    color: 'rgba(0,0,0,0.4)',
+    paddingHorizontal: 4,
   },
   searchMic: {
     fontSize: 16,
     paddingHorizontal: 4,
     opacity: 0.55,
+  },
+  // Dropdown sits directly below the bar
+  searchDropdown: {
+    backgroundColor: '#0d0d0d',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#1e1e1e',
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  dropdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1a1a1a',
+  },
+  dropdownPin: { fontSize: 15 },
+  dropdownText: { flex: 1 },
+  dropdownName: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 14,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+    marginBottom: 1,
+  },
+  dropdownSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 11,
+    color: '#888888',
+  },
+  dropdownArrow: {
+    fontSize: 20,
+    color: '#22c55e',
+    fontFamily: 'Inter_500Medium',
+  },
+  dropdownFeedback: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  dropdownFeedbackText: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 13,
+    color: '#888888',
+  },
+  // Voice modal
+  voiceOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  voiceCard: {
+    width: '85%',
+    backgroundColor: '#0d0d0d',
+    borderRadius: 20,
+    paddingVertical: 36,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#00FF7F',
+  },
+  voiceMic: {
+    fontSize: 44,
+    marginBottom: 14,
+  },
+  voiceListeningText: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 22,
+    color: '#fff',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  voiceHint: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  voicePulseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 24,
+    height: 30,
+  },
+  voicePulse: {
+    width: 4,
+    backgroundColor: '#00FF7F',
+    borderRadius: 2,
+  },
+  voiceCancel: {
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+  },
+  voiceCancelText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 13,
+    color: '#00FF7F',
+    letterSpacing: 1,
   },
 
   // Saved

@@ -123,7 +123,7 @@ export async function searchPlaces(
     }));
 
     return { results, unavailable: false };
-  } catch {
+  } catch (e) {
     // Network error — degrade gracefully, don't crash.
     return { results: [], unavailable: false };
   }
