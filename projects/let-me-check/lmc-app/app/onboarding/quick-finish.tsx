@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,49 +13,105 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getIntendedRole } from '../state/intended-role';
 import { recordOnboardingConsents } from '../lib/consent';
+import { supabase } from '../lib/supabase';
+import { setIntendedRoleFlags, updateProfile } from '../lib/api';
 
 type AuthSource = 'apple' | 'google' | 'phone';
-
-const PREFILL: Record<'apple' | 'google', { first: string; last: string; email: string }> = {
-  apple: { first: 'Troy', last: 'Reed', email: 'troy.reed@privaterelay.appleid.com' },
-  google: { first: 'Troy', last: 'Reed', email: 'troy.reed@gmail.com' },
-};
 
 export default function QuickFinishScreen() {
   const router = useRouter();
   const { from } = useLocalSearchParams<{ from?: AuthSource }>();
   const source: AuthSource = from === 'apple' || from === 'google' ? from : 'phone';
   const isAutoFill = source === 'apple' || source === 'google';
-  const seed = isAutoFill ? PREFILL[source] : { first: '', last: '', email: '' };
 
-  const [first, setFirst] = useState(seed.first);
-  const [last, setLast] = useState(seed.last);
-  const [email, setEmail] = useState(seed.email);
+  // Start empty — populated from the real session user_metadata below.
+  const [first, setFirst] = useState('');
+  const [last, setLast] = useState('');
+  const [email, setEmail] = useState('');
+  const [autoFilledName, setAutoFilledName] = useState(false);
+  const [autoFilledEmail, setAutoFilledEmail] = useState(false);
   const [consented, setConsented] = useState(false);
   const [smsOptIn, setSmsOptIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Prefill from the real signed-in user's metadata (Apple/Google provide
+  // name + email; phone users have neither so fields stay empty).
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const meta = data?.user?.user_metadata ?? {};
+      // Apple: full_name is an object { firstName, lastName }; Google: name is a string.
+      const rawFull: string =
+        (meta.full_name as string | undefined) ??
+        (meta.name as string | undefined) ??
+        '';
+      const firstName: string =
+        (meta.given_name as string | undefined) ??
+        (meta.first_name as string | undefined) ??
+        rawFull.split(' ')[0] ??
+        '';
+      const lastName: string =
+        (meta.family_name as string | undefined) ??
+        (meta.last_name as string | undefined) ??
+        rawFull.split(' ').slice(1).join(' ') ??
+        '';
+      const rawEmail: string =
+        (data?.user?.email as string | undefined) ??
+        (meta.email as string | undefined) ??
+        '';
+
+      if (firstName || lastName) {
+        setFirst(firstName);
+        setLast(lastName);
+        setAutoFilledName(true);
+      }
+      if (rawEmail) {
+        setEmail(rawEmail);
+        setAutoFilledEmail(true);
+      }
+    }).catch(() => {
+      // Signed-out / network error — leave fields empty for manual entry.
+    });
+  }, []);
+
   const sourceLabel = source === 'apple' ? 'FROM APPLE' : source === 'google' ? 'FROM GOOGLE' : '';
-  const nameUntouched = first === seed.first && last === seed.last;
-  const emailUntouched = email === seed.email;
-  const nameAutoFilled = isAutoFill && nameUntouched;
-  const emailAutoFilled = isAutoFill && emailUntouched;
+  // nameAutoFilled / emailAutoFilled drive the green-tint + checkmark UI.
+  const nameAutoFilled = isAutoFill && autoFilledName;
+  const emailAutoFilled = isAutoFill && autoFilledEmail;
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const ready = first.length >= 1 && last.length >= 1 && emailOk && consented;
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
+    if (submitting) return;
     setSubmitting(true);
-    // SAFE-02: record 18+/Terms/Privacy/AUP acceptance to the consents table +
-    // event log. Best-effort and non-blocking — the box was a hard gate (`ready`).
-    void recordOnboardingConsents();
-    setTimeout(() => {
+    try {
+      // AUTH-03: persist the role the user chose during onboarding (is_seeker /
+      // is_scout / current_role). Real persistence happens here, after the session
+      // exists. setIntendedRole on role.tsx only updated the in-memory cache.
+      const role = getIntendedRole();
+      if (role) {
+        await setIntendedRoleFlags(role);
+      }
+
+      // DATA-01: save display_name from the confirmed name fields.
+      const displayName = `${first.trim()} ${last.trim()}`.trim();
+      if (displayName) {
+        await updateProfile({ displayName });
+      }
+
+      // SAFE-02: record 18+/Terms/Privacy/AUP acceptance to the consents table +
+      // event log. Best-effort and non-blocking — the box was a hard gate (`ready`).
+      void recordOnboardingConsents();
+    } catch {
+      // Non-blocking — a transient network error should not strand the user.
+      // The role/name write will be retried by BootGate on next launch.
+    } finally {
       setSubmitting(false);
       // Scout-only users go straight into Scout-specific onboarding.
       // Seeker + Both users see Seeker rules first.
       const next = getIntendedRole() === 'scout' ? '/scout/become' : '/seeker/rules';
       router.replace(next);
-    }, 700);
+    }
   };
 
   return (
@@ -201,17 +257,19 @@ export default function QuickFinishScreen() {
             )}
           </View>
 
-          {/* PHONE VERIFIED PILL */}
-          <View style={styles.phoneRow}>
-            <View style={styles.phoneIconWrap}>
-              <Ionicons name="phone-portrait-outline" size={18} color="#00FF7F" />
+          {/* PHONE VERIFIED PILL — only shown for phone-OTP sign-ups */}
+          {source === 'phone' && (
+            <View style={styles.phoneRow}>
+              <View style={styles.phoneIconWrap}>
+                <Ionicons name="phone-portrait-outline" size={18} color="#00FF7F" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.phoneTitle}>Phone verified</Text>
+                <Text style={styles.phoneWhy}>From your sign-up. You can update it later in profile.</Text>
+              </View>
+              <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.phoneTitle}>Phone verified</Text>
-              <Text style={styles.phoneWhy}>From your sign-up. You can update it later in profile.</Text>
-            </View>
-            <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
-          </View>
+          )}
 
           {/* CONSENT */}
           <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>ONE LAST STEP</Text>
