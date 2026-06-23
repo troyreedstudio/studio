@@ -16,7 +16,7 @@ import {
   type Venue,
 } from '../data/markets';
 import { useSavedPlaces } from '../state/saved';
-import { getUserCoords, getUserCity } from '../state/location';
+import { getUserCoords, getUserCity, useUserLocation } from '../state/location';
 import { useRecents, relativeTime } from '../state/recents';
 import { getProfile } from '../lib/api';
 
@@ -259,7 +259,26 @@ export default function HomeScreen() {
     pinAddress?: string;
     marketId?: string;
   }>();
-  const marketId = params.marketId || DEFAULT_MARKET_ID;
+
+  // Subscribe to location state changes so the pill re-renders when GPS/IP
+  // resolves after mount (the hook triggers a re-render via a setState inside it).
+  useUserLocation();
+
+  // Derive the effective marketId from:
+  //   1. An explicit param (city picker returned here with a selection)
+  //   2. The user's real GPS/IP location → nearest live market
+  //   3. Neutral placeholder (no location yet — never auto-Miami)
+  const userCoords = getUserCoords();
+  const coverage = userCoords ? nearestLiveMarket(userCoords) : null;
+  const resolvedMarketId: string | null = params.marketId
+    ? params.marketId
+    : coverage?.inMarket
+    ? coverage.market.id
+    : null;
+
+  // Only fall back to DEFAULT_MARKET_ID for venue/search data when we
+  // legitimately have a live market to show — otherwise hold neutral.
+  const marketId = resolvedMarketId ?? DEFAULT_MARKET_ID;
   const market: Market = getMarketById(marketId) || getMarketById(DEFAULT_MARKET_ID)!;
 
   // Profile initials — derived from the real display_name once loaded.
@@ -445,20 +464,27 @@ export default function HomeScreen() {
   }, [params.pinLat, params.marketId]);
 
   // Is the user outside every live market? Drives the honest "not live yet" banner.
-  const userCoords = getUserCoords();
-  const coverage = userCoords ? nearestLiveMarket(userCoords) : null;
+  // userCoords + coverage are computed at the top of the component (before marketId
+  // derivation) — no re-declaration here.
   const usingRealLocation = !params.marketId && !params.pinLat && !!userCoords;
   const outOfCoverage = usingRealLocation && !!coverage && !coverage.inMarket;
   const inLiveMarket = usingRealLocation && !!coverage && coverage.inMarket;
   const userCityLabel = getUserCity() || 'your area';
 
-  // The location pill must reflect the user's REAL place, not the hard-coded
-  // default market. Explicit picks (marketId/pin) win; otherwise use live coords.
-  const displayCity = outOfCoverage
+  // The location pill must reflect the user's REAL place.
+  //   - Explicit marketId param (city picker choice) → use that market's name
+  //   - User is in a live market → use that live market's name
+  //   - User is out of coverage → show their real city name + waitlist state
+  //   - No location resolved yet → neutral "Set your location" (never Miami)
+  const displayCity = params.marketId
+    ? market.name
+    : outOfCoverage
     ? userCityLabel
     : inLiveMarket
     ? coverage!.market.name
-    : market.name;
+    : userCoords
+    ? userCityLabel
+    : 'Set your location';
   // TODO: real supply count — wire to a scouts_online_in_market RPC when built.
   // Do NOT show market.scouts (static demo number) — it is fabricated, not live data.
   const displayStatusText = outOfCoverage
@@ -707,7 +733,7 @@ export default function HomeScreen() {
         <View style={styles.topRow}>
           <TouchableOpacity
             style={styles.locPill}
-            onPress={() => router.push('/onboarding/city')}
+            onPress={() => router.push({ pathname: '/onboarding/city', params: { from: 'home' } })}
             activeOpacity={0.85}
           >
             <Text style={styles.locPin}>📍</Text>
@@ -735,7 +761,7 @@ export default function HomeScreen() {
             </Text>
             <TouchableOpacity
               style={styles.waitlistBtn}
-              onPress={() => router.push('/onboarding/city')}
+              onPress={() => router.push({ pathname: '/onboarding/city', params: { from: 'home' } })}
               activeOpacity={0.85}
             >
               <Text style={styles.waitlistBtnText}>JOIN WAITLIST</Text>
