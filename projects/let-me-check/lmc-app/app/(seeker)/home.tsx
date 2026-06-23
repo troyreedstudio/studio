@@ -34,13 +34,7 @@ const PLACEHOLDER_HINTS = [
   'Try: "Whole Foods Brooklyn"',
 ];
 
-const VOICE_MOCKS = [
-  'Soho House New York',
-  'JFK Terminal 4',
-  'DMV Miami Beach',
-  'Whole Foods Brooklyn',
-  'Equinox Hudson Yards',
-];
+// TODO: real voice search — integrate expo-speech or Whisper STT in a future phase
 
 // Mapbox uses [longitude, latitude] order
 const MIAMI_CENTER: [number, number] = [-80.1918, 25.7617];
@@ -280,7 +274,6 @@ function PulsingScout({ coordinate }: { coordinate: [number, number] }) {
 
 type SearchOverlayProps = {
   visible: boolean;
-  startVoice?: boolean;
   marketCenter: [number, number];
   recents: { name: string; city: string; ts: number }[];
   saved: { id: string; name: string; coord: [number, number]; marketId: string }[];
@@ -290,7 +283,6 @@ type SearchOverlayProps = {
 
 function SearchOverlay({
   visible,
-  startVoice = false,
   marketCenter,
   recents,
   saved,
@@ -303,8 +295,7 @@ function SearchOverlay({
   const [stableResults, setStableResults] = useState<PlaceSuggestion[]>([]);
   const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'no-results' | 'unavailable'>('idle');
   const [resolving, setResolving] = useState(false);
-  const [voiceListening, setVoiceListening] = useState(false);
-  const [voiceDots, setVoiceDots] = useState('');
+  const [locating, setLocating] = useState(false);
   const [hintIdx, setHintIdx] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<TextInput>(null);
@@ -316,9 +307,9 @@ function SearchOverlay({
       setStableResults([]);
       setSearchStatus('idle');
       setResolving(false);
-      setVoiceListening(startVoice);
+      setLocating(false);
     }
-  }, [visible, startVoice]);
+  }, [visible]);
 
   // Rotate placeholder hints when idle
   useEffect(() => {
@@ -328,26 +319,6 @@ function SearchOverlay({
     }, 3500);
     return () => clearInterval(t);
   }, [query]);
-
-  // "Listening..." dot animation
-  useEffect(() => {
-    if (!voiceListening) return;
-    const t = setInterval(() => {
-      setVoiceDots((d) => (d.length >= 3 ? '' : d + '.'));
-    }, 350);
-    return () => clearInterval(t);
-  }, [voiceListening]);
-
-  // Mock voice capture in dev
-  useEffect(() => {
-    if (!__DEV__ || !voiceListening) return;
-    const t = setTimeout(() => {
-      const mock = VOICE_MOCKS[Math.floor(Math.random() * VOICE_MOCKS.length)];
-      setQuery(mock);
-      setVoiceListening(false);
-    }, 2500);
-    return () => clearTimeout(t);
-  }, [voiceListening]);
 
   // Debounced autocomplete — no-flicker: keep stableResults visible while fetching
   useEffect(() => {
@@ -417,6 +388,22 @@ function SearchOverlay({
     onSelect(item.coord, item.name);
   }, [onClose, onSelect]);
 
+  // "Check where I am right now" — request GPS, resolve to real coords, close + pin
+  const handleCheckHere = useCallback(async () => {
+    setLocating(true);
+    try {
+      const { coords } = await requestUserLocation();
+      if (coords) {
+        const resolved = nearestLiveMarket(coords);
+        addRecent({ name: 'My current location', city: resolved.market.name });
+        onClose();
+        onSelect(coords, 'My current location');
+      }
+    } finally {
+      setLocating(false);
+    }
+  }, [onClose, onSelect]);
+
   const handleUnavailableFallback = useCallback(() => {
     const name = query.trim();
     if (!name) return;
@@ -430,6 +417,7 @@ function SearchOverlay({
 
   // FlatList data: results when we have them, recents/saved when idle
   type ListItem =
+    | { type: 'check-here' }
     | { type: 'suggestion'; data: PlaceSuggestion }
     | { type: 'recent'; data: { name: string; city: string; ts: number } }
     | { type: 'saved'; data: { id: string; name: string; coord: [number, number]; marketId: string } }
@@ -441,7 +429,7 @@ function SearchOverlay({
 
   const listItems: ListItem[] = (() => {
     if (showIdle) {
-      const items: ListItem[] = [{ type: 'prompt' }];
+      const items: ListItem[] = [{ type: 'check-here' }];
       if (recents.length > 0) {
         items.push({ type: 'section', label: 'RECENT' });
         recents.slice(0, 5).forEach((r) => items.push({ type: 'recent', data: r }));
@@ -475,6 +463,29 @@ function SearchOverlay({
   })();
 
   const renderItem = ({ item }: { item: ListItem }) => {
+    if (item.type === 'check-here') {
+      return (
+        <TouchableOpacity
+          style={overlayStyles.checkHereRow}
+          activeOpacity={0.78}
+          onPress={handleCheckHere}
+          disabled={locating}
+        >
+          <View style={overlayStyles.checkHereIconWrap}>
+            {locating ? (
+              <ActivityIndicator size="small" color="#000" />
+            ) : (
+              <Text style={overlayStyles.checkHerePin}>📍</Text>
+            )}
+          </View>
+          <View style={overlayStyles.checkHereTextWrap}>
+            <Text style={overlayStyles.checkHereName}>Check where I am right now</Text>
+            <Text style={overlayStyles.checkHereSub}>Use my current location</Text>
+          </View>
+          <Text style={overlayStyles.checkHereArrow}>›</Text>
+        </TouchableOpacity>
+      );
+    }
     if (item.type === 'prompt') {
       return (
         <View style={overlayStyles.promptWrap}>
@@ -512,11 +523,30 @@ function SearchOverlay({
         <TouchableOpacity
           style={overlayStyles.resultRow}
           activeOpacity={0.75}
-          onPress={() => {
-            // Recents have no stored coord — use market center as best-effort
-            addRecent({ name: r.name, city: r.city });
-            onClose();
-            onSelect(marketCenter, r.name);
+          onPress={async () => {
+            // Recents have no stored coord — try to re-resolve via Places API;
+            // fall back to market center if unavailable (no key or network error).
+            Keyboard.dismiss();
+            setResolving(true);
+            try {
+              const outcome = await searchPlaces(r.name, {
+                locationBias: (getUserCoords() ?? marketCenter) as [number, number],
+              });
+              if (!outcome.unavailable && outcome.results.length > 0) {
+                const coords = await getPlaceCoords(outcome.results[0].placeId);
+                const appCoord = coords ? placeToAppCoord(coords) : marketCenter;
+                addRecent({ name: r.name, city: r.city });
+                onClose();
+                onSelect(appCoord as [number, number], r.name);
+              } else {
+                // No Places key or zero results — fall back to market center
+                addRecent({ name: r.name, city: r.city });
+                onClose();
+                onSelect(marketCenter, r.name);
+              }
+            } finally {
+              setResolving(false);
+            }
           }}
         >
           <View style={overlayStyles.resultIconWrap}>
@@ -553,7 +583,7 @@ function SearchOverlay({
         <View style={overlayStyles.emptySaved}>
           <Text style={overlayStyles.emptySavedTitle}>No saved places yet</Text>
           <Text style={overlayStyles.emptySavedSub}>
-            Tap the bookmark on any place after checking to save it here.
+            Search any place above, or tap the bookmark after a check to save it here.
           </Text>
         </View>
       );
@@ -635,14 +665,7 @@ function SearchOverlay({
                 >
                   <Text style={overlayStyles.clearIcon}>✕</Text>
                 </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => setVoiceListening(true)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Text style={overlayStyles.micIcon}>🎤</Text>
-                </TouchableOpacity>
-              )}
+              ) : null}
             </View>
           </View>
 
@@ -664,35 +687,6 @@ function SearchOverlay({
           />
         </SafeAreaView>
 
-        {/* Voice Listening sheet */}
-        <Modal
-          visible={voiceListening}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setVoiceListening(false)}
-        >
-          <View style={overlayStyles.voiceOverlay}>
-            <View style={overlayStyles.voiceCard}>
-              <Text style={overlayStyles.voiceMic}>🎤</Text>
-              <Text style={overlayStyles.voiceListeningText}>Listening{voiceDots}</Text>
-              <Text style={overlayStyles.voiceHint}>Speak the place you want to check</Text>
-              <View style={overlayStyles.voicePulseRow}>
-                <View style={[overlayStyles.voicePulse, { height: 18 }]} />
-                <View style={[overlayStyles.voicePulse, { height: 28 }]} />
-                <View style={[overlayStyles.voicePulse, { height: 14 }]} />
-                <View style={[overlayStyles.voicePulse, { height: 22 }]} />
-                <View style={[overlayStyles.voicePulse, { height: 16 }]} />
-              </View>
-              <TouchableOpacity
-                style={overlayStyles.voiceCancel}
-                onPress={() => setVoiceListening(false)}
-                activeOpacity={0.7}
-              >
-                <Text style={overlayStyles.voiceCancelText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </View>
     </Modal>
   );
@@ -749,10 +743,6 @@ const overlayStyles = StyleSheet.create({
   clearIcon: {
     fontSize: 14,
     color: '#888',
-    paddingHorizontal: 2,
-  },
-  micIcon: {
-    fontSize: 16,
     paddingHorizontal: 2,
   },
   list: {
@@ -877,56 +867,45 @@ const overlayStyles = StyleSheet.create({
     color: '#888',
     lineHeight: 17,
   },
-  // Voice modal
-  voiceOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+  // "Check where I am right now" — primary shortcut row at top of idle state
+  checkHereRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: '#00FF7F',
+    gap: 14,
+  },
+  checkHereIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(0,0,0,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  voiceCard: {
-    width: '85%',
-    backgroundColor: '#0d0d0d',
-    borderRadius: 20,
-    paddingVertical: 36,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#00FF7F',
+  checkHerePin: { fontSize: 18 },
+  checkHereTextWrap: { flex: 1 },
+  checkHereName: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 15,
+    color: '#000',
+    letterSpacing: 0.2,
+    marginBottom: 2,
   },
-  voiceMic: { fontSize: 44, marginBottom: 14 },
-  voiceListeningText: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 22,
-    color: '#fff',
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
-  voiceHint: {
+  checkHereSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: '#888',
-    marginBottom: 24,
-    textAlign: 'center',
+    color: 'rgba(0,0,0,0.55)',
   },
-  voicePulseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginBottom: 24,
-    height: 30,
-  },
-  voicePulse: {
-    width: 4,
-    backgroundColor: '#00FF7F',
-    borderRadius: 2,
-  },
-  voiceCancel: { paddingVertical: 8, paddingHorizontal: 24 },
-  voiceCancelText: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 13,
-    color: '#00FF7F',
-    letterSpacing: 1,
+  checkHereArrow: {
+    fontSize: 22,
+    color: '#000',
+    fontFamily: 'Inter_500Medium',
   },
 });
 
@@ -998,7 +977,6 @@ export default function HomeScreen() {
 
   // ── Search overlay state ──────────────────────────────────────────────────
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchVoice, setSearchVoice] = useState(false);
 
   const currentPinSavedId = droppedPin && pinName ? `${pinName}-${droppedPin[0].toFixed(4)}` : null;
   const isCurrentPinSaved = currentPinSavedId ? saved.isSaved(currentPinSavedId) : false;
@@ -1432,22 +1410,15 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.searchTapTarget}
           activeOpacity={0.85}
-          onPress={() => { setSearchVoice(false); setSearchOpen(true); }}
+          onPress={() => setSearchOpen(true)}
         >
           <Text style={styles.searchIcon}>🔍</Text>
           <Text style={styles.searchPlaceholder}>Any place. Any address.</Text>
-          <TouchableOpacity
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            onPress={(e) => { e.stopPropagation(); setSearchVoice(true); setSearchOpen(true); }}
-          >
-            <Text style={styles.searchMic}>🎤</Text>
-          </TouchableOpacity>
         </TouchableOpacity>
 
         {/* Search overlay — slide-up Modal with keyboard-safe layout */}
         <SearchOverlay
           visible={searchOpen}
-          startVoice={searchVoice}
           marketCenter={market.center as [number, number]}
           recents={recents}
           saved={saved.list}
@@ -2180,12 +2151,6 @@ const styles = StyleSheet.create({
     color: 'rgba(0,0,0,0.4)',
     letterSpacing: 0.2,
   },
-  searchMic: {
-    fontSize: 16,
-    paddingHorizontal: 4,
-    opacity: 0.55,
-  },
-
   // Saved
   savedRow: {
     flexDirection: 'row',
