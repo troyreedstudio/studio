@@ -14,7 +14,6 @@ const SETTINGS: { icon: IconName; label: string; route: string }[] = [
   { icon: 'receipt-outline', label: 'Past Checks', route: '/(seeker)/history' },
   { icon: 'heart-outline', label: 'Saved Places', route: '/(seeker)/saved' },
   { icon: 'repeat-outline', label: 'Recurring Checks', route: '/(seeker)/recurring' },
-  { icon: 'card-outline', label: 'Payment Methods', route: '/(seeker)/payment-methods' },
   { icon: 'notifications-outline', label: 'Notifications', route: '/(seeker)/notifications' },
   { icon: 'location-outline', label: 'Preferred Cities', route: '/(seeker)/preferred-cities' },
   { icon: 'help-circle-outline', label: 'Help', route: '/(seeker)/help' },
