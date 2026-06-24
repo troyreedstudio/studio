@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getCheck, cancelCheck, expireUnmatchedCheck, type CheckRow } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
+import { colors } from '../lib/theme';
 
 // MATCHING / DISPATCH PHASE — the "finding a Scout" wait (status 'dispatching').
 // This time is INCIDENTAL (Uber-style): it is NOT counted against the delivery
@@ -174,7 +175,7 @@ export default function FindingScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         {/* Cancel is free here — no Scout has committed yet. Cancelling the
             real check (server-owned transition) frees it from dispatch. */}
@@ -203,7 +204,7 @@ export default function FindingScreen() {
               <Ionicons
                 name={matched ? 'checkmark' : 'navigate'}
                 size={30}
-                color="#000"
+                color={colors.onRed}
               />
             </View>
           </View>
@@ -225,7 +226,7 @@ export default function FindingScreen() {
               <Text style={styles.matchedEyebrow}>SCOUT FOUND</Text>
               <Text style={styles.matchedName}>A Scout accepted</Text>
               <View style={styles.matchedMeta}>
-                <Ionicons name="checkmark-circle" size={13} color="#00FF7F" />
+                <Ionicons name="checkmark-circle" size={13} color={colors.verified} />
                 <Text style={styles.matchedMetaText}>On-site · starting your clock</Text>
               </View>
               <Text style={styles.matchedNote}>Taking you to your live check…</Text>
@@ -242,7 +243,7 @@ export default function FindingScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1, paddingHorizontal: 26 },
   header: {
     height: 40,
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.red,
     fontSize: 15,
   },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: -30 },
@@ -268,17 +269,17 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
   },
   core: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#00FF7F',
-    shadowOpacity: 0.6,
+    shadowColor: colors.red,
+    shadowOpacity: 0.45,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 0 },
   },
@@ -286,7 +287,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 21,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     textAlign: 'center',
     marginBottom: 10,
@@ -295,14 +296,14 @@ const styles = StyleSheet.create({
   status: {
     fontFamily: 'Inter_400Regular',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
     marginBottom: 22,
   },
   timerPill: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 999,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -311,13 +312,13 @@ const styles = StyleSheet.create({
   timerText: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
   },
   incidental: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 18,
     letterSpacing: 0.2,
@@ -327,14 +328,14 @@ const styles = StyleSheet.create({
   matchedEyebrow: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 2.4,
     marginBottom: 10,
   },
   matchedName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 22,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 8,
   },
@@ -347,13 +348,13 @@ const styles = StyleSheet.create({
   matchedMetaText: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
   },
   matchedNote: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     letterSpacing: 0.2,
   },
 
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
   noScoutText: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.35)',
+    color: colors.textTertiary,
     letterSpacing: 0.3,
     textDecorationLine: 'underline',
   },
