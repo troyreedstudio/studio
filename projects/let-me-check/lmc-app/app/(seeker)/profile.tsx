@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, StatusBar, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { deleteMyAccount } from '../lib/account';
 import { getProfile } from '../lib/api';
 import { listMyChecks } from '../lib/checks';
 import { supabase } from '../lib/supabase';
+import { colors } from '../lib/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -133,6 +134,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>
@@ -154,7 +156,7 @@ export default function ProfileScreen() {
             {memberSince ? `Member since ${memberSince}` : ' '}
           </Text>
           <View style={styles.verifiedBadge}>
-            <Ionicons name="checkmark-circle" size={12} color="#00FF7F" />
+            <Ionicons name="checkmark-circle" size={12} color={colors.verified} />
             <Text style={styles.verifiedText}>VERIFIED SEEKER</Text>
           </View>
         </View>
@@ -194,11 +196,11 @@ export default function ProfileScreen() {
             >
               <View style={styles.settingLeft}>
                 <View style={styles.settingIconWrap}>
-                  <Ionicons name={item.icon} size={18} color="#00FF7F" />
+                  <Ionicons name={item.icon} size={18} color={colors.red} />
                 </View>
                 <Text style={styles.settingLabel}>{item.label}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
             </TouchableOpacity>
           ))}
         </View>
@@ -229,7 +231,7 @@ export default function ProfileScreen() {
           onPress={handleSwitchToScout}
           activeOpacity={0.85}
         >
-          <Ionicons name="swap-horizontal" size={16} color="#ffffff" />
+          <Ionicons name="swap-horizontal" size={16} color={colors.textPrimary} />
           <Text style={styles.switchModeBtnText}>SWITCH TO SCOUT MODE</Text>
         </TouchableOpacity>
 
@@ -259,12 +261,12 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 22, paddingTop: 12 },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -274,9 +276,9 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
@@ -284,20 +286,20 @@ const styles = StyleSheet.create({
   avatarInitials: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 34,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
   },
   userName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 24,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 5,
   },
   memberSince: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: '#888',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     marginBottom: 12,
   },
@@ -305,60 +307,60 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(22,163,74,0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.4)',
+    borderColor: 'rgba(22,163,74,0.35)',
     borderRadius: 100,
     paddingHorizontal: 11,
     paddingVertical: 4,
   },
   verifiedText: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.verified,
     fontSize: 9,
     letterSpacing: 1.4,
   },
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 22,
     marginTop: 8,
     marginBottom: 24,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     alignItems: 'center',
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 5,
   },
   statLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 1.4,
   },
-  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.12)' },
+  statDivider: { width: 1, height: 36, backgroundColor: colors.border },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     paddingHorizontal: 22,
     marginBottom: 12,
   },
   settingsList: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.bg,
     borderRadius: 16,
     marginHorizontal: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     marginBottom: 18,
     overflow: 'hidden',
   },
@@ -368,33 +370,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 15,
+    backgroundColor: colors.bg,
   },
-  settingRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
+  settingRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
   settingLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   settingIconWrap: {
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,255,127,0.1)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   settingLabel: {
     fontFamily: 'Inter_500Medium',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   referralBanner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,203,71,0.08)',
+    backgroundColor: 'rgba(255,203,71,0.06)',
     borderRadius: 16,
     marginHorizontal: 22,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.3)',
+    borderColor: 'rgba(255,203,71,0.35)',
     marginBottom: 18,
   },
   referralLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
@@ -409,25 +412,25 @@ const styles = StyleSheet.create({
   referralTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#FFCB47',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   referralSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: '#888',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
   },
   referralBtn: {
-    backgroundColor: '#FFCB47',
+    backgroundColor: colors.red,
     borderRadius: 100,
     paddingHorizontal: 16,
     paddingVertical: 9,
   },
   referralBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000',
+    color: colors.onRed,
     fontSize: 11,
     letterSpacing: 1.4,
   },
@@ -438,15 +441,15 @@ const styles = StyleSheet.create({
     gap: 8,
     marginHorizontal: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingVertical: 16,
     marginBottom: 12,
   },
   switchModeBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 12,
     letterSpacing: 2,
   },
@@ -457,7 +460,7 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontFamily: 'Inter_500Medium',
-    color: '#666',
+    color: colors.textSecondary,
     fontSize: 12.5,
     letterSpacing: 0.5,
   },
@@ -468,7 +471,7 @@ const styles = StyleSheet.create({
   },
   deleteAccountText: {
     fontFamily: 'Inter_500Medium',
-    color: '#ff5a5a',
+    color: colors.danger,
     fontSize: 12,
     letterSpacing: 0.5,
   },
