@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
   ScrollView,
   Keyboard,
   Modal,
@@ -17,6 +18,7 @@ import { requestUserLocation } from '../state/location';
 import { useSavedPlaces } from '../state/saved';
 import { useRecents, addRecent, relativeTime } from '../state/recents';
 import { searchPlaces, getPlaceCoords, placeToAppCoord, type PlaceSuggestion } from '../lib/places';
+import { colors } from '../lib/theme';
 
 const VOICE_MOCKS = [
   'Soho House New York',
@@ -230,6 +232,7 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -248,7 +251,7 @@ export default function SearchScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder={PLACEHOLDER_HINTS[hintIdx]}
-          placeholderTextColor="#666"
+          placeholderTextColor={colors.textTertiary}
           value={query}
           onChangeText={setQuery}
           autoFocus
@@ -256,7 +259,7 @@ export default function SearchScreen() {
           autoCorrect={false}
         />
         {resolving || searchState.kind === 'loading' ? (
-          <ActivityIndicator size="small" color="#00FF7F" />
+          <ActivityIndicator size="small" color={colors.red} />
         ) : query.length > 0 ? (
           <TouchableOpacity
             onPress={() => setQuery('')}
@@ -289,7 +292,7 @@ export default function SearchScreen() {
         <View style={styles.locTextWrap}>
           <Text style={styles.locTitle}>Use my current location</Text>
           <Text style={styles.locSub}>
-            📍 {activeMarket.name} ·{' '}
+            {activeMarket.name} ·{' '}
             {activeMarket.status === 'live'
               ? `${activeMarket.scouts} Scouts active here`
               : 'Launching soon'}
@@ -375,7 +378,7 @@ export default function SearchScreen() {
               onPress={() => handleSelectRecent({ name: query.trim(), city: 'Typed location' })}
               activeOpacity={0.7}
             >
-              <View style={[styles.resultIconWrap, styles.resultIconWrapGreen]}>
+              <View style={styles.resultIconWrap}>
                 <Text style={styles.resultPin}>🔍</Text>
               </View>
               <View style={styles.resultTextWrap}>
@@ -453,7 +456,7 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -461,28 +464,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   cancelText: {
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: '#fff',
+    color: colors.red,
   },
   headerTitle: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 17,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.4,
   },
   searchInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     marginHorizontal: 20,
+    marginTop: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     gap: 12,
   },
   searchIcon: { fontSize: 16 },
@@ -490,30 +496,35 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 16,
-    color: '#fff',
+    color: colors.textPrimary,
   },
   clearIcon: {
     fontSize: 16,
-    color: '#888',
+    color: colors.textSecondary,
   },
   micIcon: {
     fontSize: 18,
   },
   voiceOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   voiceCard: {
     width: '85%',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.bg,
     borderRadius: 20,
     paddingVertical: 36,
     paddingHorizontal: 32,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#00FF7F',
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
   },
   voiceMic: {
     fontSize: 44,
@@ -522,14 +533,14 @@ const styles = StyleSheet.create({
   voiceListeningText: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 1,
     marginBottom: 8,
   },
   voiceHint: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: '#888',
+    color: colors.textSecondary,
     marginBottom: 24,
     textAlign: 'center',
   },
@@ -542,7 +553,7 @@ const styles = StyleSheet.create({
   },
   voicePulse: {
     width: 4,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     borderRadius: 2,
   },
   voiceCancel: {
@@ -552,26 +563,24 @@ const styles = StyleSheet.create({
   voiceCancelText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 1,
   },
   priceChip: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 0.4,
   },
   locButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.red,
     borderRadius: 14,
     marginHorizontal: 20,
     marginTop: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: '#00FF7F',
     gap: 14,
   },
   locIcon: { fontSize: 18 },
@@ -579,19 +588,19 @@ const styles = StyleSheet.create({
   locTitle: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
-    color: '#fff',
+    color: colors.onRed,
     marginBottom: 2,
   },
   locSub: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11,
-    color: '#00FF7F',
+    color: 'rgba(255,255,255,0.72)',
     letterSpacing: 0.3,
   },
   locArrow: {
     fontSize: 22,
-    color: '#00FF7F',
-    fontWeight: '500',
+    color: colors.onRed,
+    fontFamily: 'Inter_500Medium',
   },
   resultsScroll: {
     flex: 1,
@@ -600,7 +609,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.textTertiary,
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -613,46 +622,43 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#0d0d0d',
+    borderBottomColor: colors.border,
   },
   resultIconWrap: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  resultIconWrapGreen: {
-    borderColor: '#00FF7F',
   },
   resultPin: { fontSize: 16 },
   resultTextWrap: { flex: 1 },
   resultName: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 18,
-    color: '#fff',
+    fontSize: 15,
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 1,
   },
   resultAddress: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: '#888',
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   resultRecentWhen: {
     fontFamily: 'Inter_400Regular',
     fontSize: 10,
-    color: '#666',
+    color: colors.textTertiary,
     letterSpacing: 0.3,
   },
   resultArrow: {
     fontSize: 22,
-    color: '#00FF7F',
-    fontWeight: '500',
+    color: colors.red,
+    fontFamily: 'Inter_500Medium',
   },
   feedbackWrap: {
     paddingHorizontal: 20,
@@ -661,13 +667,13 @@ const styles = StyleSheet.create({
   feedbackTitle: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 15,
-    color: '#fff',
+    color: colors.textPrimary,
     marginBottom: 6,
   },
   feedbackSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: '#888',
+    color: colors.textSecondary,
     lineHeight: 19,
     marginBottom: 16,
   },
@@ -675,22 +681,22 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     padding: 18,
     borderRadius: 14,
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     borderStyle: 'dashed',
   },
   emptySavedTitle: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 16,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 4,
   },
   emptySavedSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: '#888',
+    color: colors.textSecondary,
     lineHeight: 17,
   },
 });
