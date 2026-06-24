@@ -10,9 +10,11 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../lib/theme';
 
 const SECTIONS: { heading: string; body: string }[] = [
   {
@@ -52,6 +54,7 @@ export default function ScoutCodeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Top bar */}
         <View style={styles.topBar}>
@@ -78,7 +81,7 @@ export default function ScoutCodeScreen() {
         {SECTIONS.map((section, i) => (
           <View key={i} style={styles.section}>
             <View style={styles.sectionHeadRow}>
-              <Ionicons name="chevron-forward" size={13} color="#00FF7F" />
+              <Ionicons name="chevron-forward" size={13} color={colors.red} />
               <Text style={styles.heading}>{section.heading}</Text>
             </View>
             <Text style={styles.body}>{section.body}</Text>
@@ -99,7 +102,7 @@ export default function ScoutCodeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
 
   topBar: {
@@ -109,7 +112,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -122,34 +125,34 @@ const styles = StyleSheet.create({
   docLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 2.5,
     marginBottom: 6,
   },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 8,
   },
   titleRule: {
     height: 2,
     width: 32,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     marginBottom: 10,
   },
   effective: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     letterSpacing: 0.3,
   },
 
   intro: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 21,
     letterSpacing: 0.2,
     paddingHorizontal: 22,
@@ -158,11 +161,11 @@ const styles = StyleSheet.create({
 
   section: {
     marginHorizontal: 22,
-    marginBottom: 20,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    marginBottom: 12,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
     padding: 16,
   },
   sectionHeadRow: {
@@ -174,37 +177,37 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   body: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.2,
   },
 
   footer: {
     marginHorizontal: 22,
-    marginTop: 8,
+    marginTop: 12,
     padding: 16,
-    backgroundColor: 'rgba(0,255,127,0.05)',
+    backgroundColor: 'rgba(218,37,29,0.05)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.15)',
+    borderColor: 'rgba(218,37,29,0.18)',
   },
   footLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(0,255,127,0.7)',
+    color: colors.red,
     letterSpacing: 2,
     marginBottom: 6,
   },
   footText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.2,
   },
