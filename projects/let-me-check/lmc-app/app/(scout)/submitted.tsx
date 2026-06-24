@@ -7,6 +7,7 @@ import {
   ScrollView,
   Animated,
   Easing,
+  StatusBar,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -14,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useScoutEarnings } from '../state/scout-earnings';
 import { getCheck } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
+import { colors } from '../lib/theme';
 
 // Stage reflects the REAL server-owned state of the clip after upload.
 //
@@ -25,7 +27,7 @@ import { subscribeToCheck } from '../lib/realtime';
 // 'accepted'   — Seeker watched + rated. Also webhook/server-owned.
 //
 // REMOVED: the fake 2.2s/4.4s timers that auto-advanced through all stages
-// regardless of reality. They masked upload failures 3× and falsely claimed
+// regardless of reality. They masked upload failures 3x and falsely claimed
 // "payment cleared" seconds after submission. Stage advances only happen when
 // real server state arrives (Realtime — future phase).
 type Stage = 'processing' | 'delivered' | 'accepted' | 'rejected';
@@ -94,42 +96,34 @@ export default function SubmittedScreen() {
   if (stage === 'rejected') {
     return (
       <View style={styles.container}>
+        <StatusBar barStyle="dark-content" />
         <SafeAreaView style={styles.safe}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <Animated.View style={[styles.body, { opacity: fade }]}>
-              <View style={[styles.heroCheckRing, { borderColor: '#FFCB47' }]}>
-                <View style={[styles.heroCheckInner, { backgroundColor: '#FFCB47' }]}>
-                  <Ionicons name="alert" size={28} color="#000" />
+              <View style={[styles.heroCheckRing, { borderColor: colors.amber }]}>
+                <View style={[styles.heroCheckInner, { backgroundColor: colors.amber }]}>
+                  <Ionicons name="alert" size={28} color={colors.black} />
                 </View>
               </View>
-              <Text style={styles.title}>This video couldn’t be verified</Text>
+              <Text style={styles.title}>This video couldn't be verified</Text>
               <Text style={styles.subtitle}>
-                We couldn’t confirm this video was filmed at {venue} — it looks like it was
-                recorded too far from the location. Because we can’t verify it, it can’t be
-                delivered, and there’s no payout for this one.
+                We couldn't confirm this video was filmed at {venue} — it looks like it was
+                recorded too far from the location. Because we can't verify it, it can't be
+                delivered, and there's no payout for this one.
               </Text>
               <View style={styles.rejectionNote}>
-                <Ionicons name="information-circle" size={14} color="#FFCB47" />
+                <Ionicons name="information-circle" size={14} color={colors.amber} />
                 <Text style={styles.rejectionNoteText}>
-                  No worries — you haven’t lost anything. Just make sure you’re at the venue
+                  No worries — you haven't lost anything. Just make sure you're at the venue
                   before you start filming.
                 </Text>
               </View>
               <TouchableOpacity
-                style={{
-                  marginTop: 28,
-                  backgroundColor: '#fff',
-                  borderRadius: 14,
-                  paddingVertical: 16,
-                  alignItems: 'center',
-                  alignSelf: 'stretch',
-                }}
+                style={styles.primaryBtn}
                 onPress={() => router.replace('/(scout)/dashboard')}
                 activeOpacity={0.85}
               >
-                <Text style={{ color: '#000', fontSize: 16, fontWeight: '700' }}>
-                  Back to dashboard
-                </Text>
+                <Text style={styles.primaryBtnText}>Back to dashboard</Text>
               </TouchableOpacity>
             </Animated.View>
           </ScrollView>
@@ -140,6 +134,7 @@ export default function SubmittedScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <TouchableOpacity
           style={styles.backFab}
@@ -147,7 +142,7 @@ export default function SubmittedScreen() {
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+          <Ionicons name="chevron-back" size={24} color={colors.textSecondary} />
         </TouchableOpacity>
         <ScrollView
           contentContainerStyle={styles.scroll}
@@ -157,7 +152,7 @@ export default function SubmittedScreen() {
             {/* Hero */}
             <View style={styles.heroCheckRing}>
               <View style={styles.heroCheckInner}>
-                <Ionicons name="checkmark" size={28} color="#000" />
+                <Ionicons name="checkmark" size={28} color={colors.white} />
               </View>
             </View>
 
@@ -230,9 +225,9 @@ export default function SubmittedScreen() {
 
             {/* Quality / rejection note — payment is conditional */}
             <View style={styles.rejectionNote}>
-              <Ionicons name="alert-circle" size={14} color="#FFCB47" />
+              <Ionicons name="alert-circle" size={14} color={colors.amber} />
               <Text style={styles.rejectionNoteText}>
-                Payment clears once the Seeker accepts the video. Low-quality footage, wrong venue, or GPS mismatch can lead to rejection — and no payout. See{' '}
+                Payment clears once the Seeker accepts the video. Low-quality footage, wrong venue, or GPS mismatch can lead to rejection and no payout. See{' '}
                 <Text
                   style={styles.rejectionNoteLink}
                   onPress={() => router.push('/legal/code')}
@@ -243,7 +238,7 @@ export default function SubmittedScreen() {
               </Text>
             </View>
 
-            {/* Clip stats */}
+            {/* Video stats */}
             <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>VIDEO DETAILS</Text>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
@@ -267,10 +262,10 @@ export default function SubmittedScreen() {
               <Ionicons
                 name={stage === 'accepted' ? 'star' : 'star-outline'}
                 size={12}
-                color={stage === 'accepted' ? '#FFCB47' : 'rgba(255,255,255,0.4)'}
+                color={stage === 'accepted' ? colors.amber : colors.textTertiary}
               />
               <Text style={styles.ratingLineText}>
-                We’ll notify you when the Seeker rates this video.
+                We'll notify you when the Seeker rates this video.
               </Text>
             </View>
           </Animated.View>
@@ -295,7 +290,7 @@ export default function SubmittedScreen() {
             ]}
           >
             <View style={styles.toastIconWrap}>
-              <Ionicons name="cash" size={14} color="#00FF7F" />
+              <Ionicons name="cash" size={14} color={colors.verified} />
             </View>
             <Text style={styles.toastText}>
               <Text style={styles.toastBold}>${payout}.00 cleared.</Text> Today: ${earnings.earningsToday.toFixed(2)}
@@ -310,7 +305,7 @@ export default function SubmittedScreen() {
             onPress={() => router.replace('/(scout)/dashboard')}
             activeOpacity={0.85}
           >
-            <Ionicons name="radio" size={14} color="#000" />
+            <Ionicons name="radio" size={14} color={colors.onRed} />
             <Text style={styles.primaryBtnText}>BACK TO DASHBOARD</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -364,7 +359,7 @@ function TimelineRow({
             state === 'active' && { opacity: pulseAnim },
           ]}
         >
-          {state === 'done' && <Ionicons name="checkmark" size={11} color="#000" />}
+          {state === 'done' && <Ionicons name="checkmark" size={11} color={colors.white} />}
           {state === 'active' && <View style={styles.timelineDotPulse} />}
         </Animated.View>
         {!isLast && (
@@ -388,7 +383,7 @@ function TimelineRow({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   backFab: {
     position: 'absolute',
@@ -408,9 +403,9 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(22,163,74,0.10)',
     borderWidth: 1.5,
-    borderColor: 'rgba(0,255,127,0.5)',
+    borderColor: 'rgba(22,163,74,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -419,14 +414,14 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     textAlign: 'center',
     marginBottom: 8,
@@ -434,7 +429,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     textAlign: 'center',
     lineHeight: 20,
@@ -445,7 +440,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 12,
   },
@@ -461,57 +456,62 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.surface,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   timelineDotDone: {
-    backgroundColor: '#00FF7F',
-    borderColor: '#00FF7F',
+    backgroundColor: colors.verified,
+    borderColor: colors.verified,
   },
   timelineDotActive: {
-    backgroundColor: 'rgba(0,255,127,0.15)',
-    borderColor: '#00FF7F',
+    backgroundColor: 'rgba(22,163,74,0.12)',
+    borderColor: colors.verified,
   },
   timelineDotPulse: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
   },
   timelineLine: {
     width: 1.5,
     height: 38,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: colors.border,
     marginTop: 2,
   },
-  timelineLineDone: { backgroundColor: '#00FF7F' },
+  timelineLineDone: { backgroundColor: colors.verified },
   timelineText: { flex: 1, paddingBottom: 18 },
   timelineLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     letterSpacing: 0.2,
     marginBottom: 3,
     paddingTop: 1,
   },
-  timelineLabelDone: { color: '#ffffff' },
-  timelineLabelActive: { color: '#ffffff' },
+  timelineLabelDone: { color: colors.textPrimary },
+  timelineLabelActive: { color: colors.textPrimary },
   timelineDetail: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     lineHeight: 17,
   },
 
   earningsCard: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.55)',
+    borderColor: colors.border,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   earningsTop: {
     flexDirection: 'row',
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   earningsLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     letterSpacing: 2,
   },
   earningStatusPill: {
@@ -532,54 +532,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,203,71,0.12)',
+    backgroundColor: 'rgba(255,203,71,0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.4)',
+    borderColor: 'rgba(255,203,71,0.35)',
   },
   earningStatusPillCleared: {
-    backgroundColor: 'rgba(0,255,127,0.12)',
-    borderColor: 'rgba(0,255,127,0.4)',
+    backgroundColor: 'rgba(22,163,74,0.10)',
+    borderColor: 'rgba(22,163,74,0.35)',
   },
   earningStatusDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#FFCB47',
+    backgroundColor: colors.amber,
   },
-  earningStatusDotCleared: { backgroundColor: '#00FF7F' },
+  earningStatusDotCleared: { backgroundColor: colors.verified },
   earningStatusText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#FFCB47',
+    color: colors.amber,
     letterSpacing: 1.4,
   },
-  earningStatusTextCleared: { color: '#00FF7F' },
+  earningStatusTextCleared: { color: colors.verified },
   earningsValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 36,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
     marginBottom: 0,
-  },
-  earningsBalanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-  },
-  earningsBalanceLabel: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
-    letterSpacing: 0.2,
-  },
-  earningsBalanceValue: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 16,
-    color: '#ffffff',
-    letterSpacing: 0.3,
   },
 
   rejectionNote: {
@@ -598,22 +578,22 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 16,
     letterSpacing: 0.1,
   },
   rejectionNoteLink: {
     fontFamily: 'Inter_700Bold',
-    color: '#FFCB47',
+    color: colors.amber,
   },
 
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
     alignItems: 'center',
     marginBottom: 16,
   },
@@ -621,17 +601,17 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 4,
   },
   statLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     letterSpacing: 1.5,
   },
-  statDivider: { width: 1, height: 26, backgroundColor: 'rgba(255,255,255,0.1)' },
+  statDivider: { width: 1, height: 26, backgroundColor: colors.border },
 
   ratingLine: {
     flexDirection: 'row',
@@ -644,41 +624,17 @@ const styles = StyleSheet.create({
   ratingLineText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
-  },
-  ratingCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    marginBottom: 8,
-  },
-  ratingTitle: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 13,
-    color: '#ffffff',
-    letterSpacing: 0.2,
-    marginBottom: 3,
-  },
-  ratingSub: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11.5,
-    color: 'rgba(255,255,255,0.6)',
-    lineHeight: 17,
   },
 
   toast: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0,255,127,0.1)',
+    backgroundColor: 'rgba(22,163,74,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.4)',
+    borderColor: 'rgba(22,163,74,0.35)',
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -689,7 +645,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: 'rgba(0,255,127,0.15)',
+    backgroundColor: 'rgba(22,163,74,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -697,34 +653,36 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   toastBold: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.verified,
   },
   ctaWrap: {
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 24,
     gap: 8,
-    backgroundColor: '#000000',
+    backgroundColor: colors.bg,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
+    borderTopColor: colors.border,
   },
   primaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 17,
+    marginTop: 28,
+    alignSelf: 'stretch',
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
@@ -734,7 +692,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     fontFamily: 'Inter_600SemiBold',
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     fontSize: 13,
     letterSpacing: 0.3,
   },
