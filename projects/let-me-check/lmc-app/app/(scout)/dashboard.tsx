@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
   Switch,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -15,6 +16,7 @@ import { useScoutEarnings } from '../state/scout-earnings';
 import { acceptCheck, type CheckRow } from '../lib/checks';
 import { upsertScoutLocation, setScoutOffline } from '../lib/scout-location';
 import { listOpenChecksForScout } from '../lib/dispatch';
+import { colors } from '../lib/theme';
 
 // Display-only payout label derived from the check tier. NO money is written
 // here — earnings are credited in Phase 4. Real pricing: standard $8, priority $12.
@@ -158,6 +160,7 @@ export default function ScoutDashboard() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -169,7 +172,7 @@ export default function ScoutDashboard() {
               <Text style={styles.mode}>Scout Mode</Text>
               <View style={styles.modeRule} />
               <Text style={styles.subMode}>
-                {online ? 'You’re online · ready to earn' : 'You’re offline'}
+                {online ? 'You\'re online, ready to earn' : 'You\'re offline'}
               </Text>
             </View>
             <TouchableOpacity
@@ -183,7 +186,7 @@ export default function ScoutDashboard() {
 
           {/* Earnings Card */}
           <View style={styles.earningsCard}>
-            <Text style={styles.earningsLabel}>TODAY’S EARNINGS</Text>
+            <Text style={styles.earningsLabel}>TODAY'S EARNINGS</Text>
             <Text style={styles.earningsValue}>
               ${earnings.earningsToday.toFixed(2)}
             </Text>
@@ -214,21 +217,21 @@ export default function ScoutDashboard() {
                   ]}
                 />
                 <Text style={styles.toggleTitle}>
-                  {online ? 'Online · Accepting Requests' : 'Offline · Not Available'}
+                  {online ? 'Online, Accepting Requests' : 'Offline, Not Available'}
                 </Text>
               </View>
               <Text style={styles.toggleSub}>
                 {online
-                  ? 'You’ll be pinged when a check is requested nearby.'
+                  ? 'You\'ll be pinged when a check is requested nearby.'
                   : 'Toggle on to start earning.'}
               </Text>
             </View>
             <Switch
               value={online}
               onValueChange={setOnline}
-              trackColor={{ false: '#222', true: 'rgba(0,255,127,0.35)' }}
-              thumbColor={online ? '#00FF7F' : '#666'}
-              ios_backgroundColor="#222"
+              trackColor={{ false: colors.border, true: 'rgba(22,163,74,0.35)' }}
+              thumbColor={online ? colors.verified : colors.textTertiary}
+              ios_backgroundColor={colors.surface}
             />
           </View>
 
@@ -252,16 +255,16 @@ export default function ScoutDashboard() {
                       <Ionicons
                         name="location"
                         size={11}
-                        color="rgba(255,255,255,0.6)"
+                        color={colors.textSecondary}
                       />
                       <Text style={styles.requestDistance}>
-                        On-demand check · tap to accept
+                        On-demand check, tap to accept
                       </Text>
                     </View>
                   </View>
                   {request.tier === 'priority' && (
                     <View style={styles.priorityBadge}>
-                      <Ionicons name="flash" size={9} color="#1a1a1a" />
+                      <Ionicons name="flash" size={9} color={colors.black} />
                       <Text style={styles.priorityBadgeText}>PRIORITY</Text>
                     </View>
                   )}
@@ -290,7 +293,7 @@ export default function ScoutDashboard() {
 
                 {taken && (
                   <View style={styles.takenNote}>
-                    <Ionicons name="alert-circle" size={13} color="#FFCB47" />
+                    <Ionicons name="alert-circle" size={13} color={colors.amber} />
                     <Text style={styles.takenNoteText}>
                       Another Scout grabbed that one. Showing the latest open checks.
                     </Text>
@@ -311,7 +314,7 @@ export default function ScoutDashboard() {
                     activeOpacity={0.85}
                   >
                     <Text style={styles.acceptBtnText}>
-                      ACCEPT · EARN ${payoutForTier(request.tier)}
+                      ACCEPT, EARN ${payoutForTier(request.tier)}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -321,26 +324,26 @@ export default function ScoutDashboard() {
             <View style={styles.emptyCard}>
               <View style={styles.emptyIconWrap}>
                 {locationDenied ? (
-                  <Ionicons name="location-outline" size={22} color="#FFCB47" />
+                  <Ionicons name="location-outline" size={22} color={colors.amber} />
                 ) : (
-                  <Ionicons name="radio-outline" size={22} color="#00FF7F" />
+                  <Ionicons name="radio-outline" size={22} color={colors.verified} />
                 )}
               </View>
               <Text style={styles.emptyTitle}>
-                {locationDenied ? "Location needed" : "Listening for requests"}
+                {locationDenied ? 'Location needed' : 'Listening for requests'}
               </Text>
               <Text style={styles.emptyWhy}>
                 {locationDenied
-                  ? "Allow location access in Settings to receive nearby jobs."
-                  : "You’ll be pinged the moment a check is requested in your area."}
+                  ? 'Allow location access in Settings to receive nearby jobs.'
+                  : 'You\'ll be pinged the moment a check is requested in your area.'}
               </Text>
             </View>
           ) : (
             <View style={styles.emptyCard}>
               <View style={styles.emptyIconWrap}>
-                <Ionicons name="moon-outline" size={22} color="rgba(255,255,255,0.5)" />
+                <Ionicons name="moon-outline" size={22} color={colors.textTertiary} />
               </View>
-              <Text style={styles.emptyTitle}>You’re offline</Text>
+              <Text style={styles.emptyTitle}>You're offline</Text>
               <Text style={styles.emptyWhy}>
                 Toggle on above to receive incoming requests.
               </Text>
@@ -351,7 +354,7 @@ export default function ScoutDashboard() {
         {/* Bottom Nav */}
         <View style={styles.navBar}>
           <TouchableOpacity style={styles.navItem} activeOpacity={0.7}>
-            <Ionicons name="radio" size={20} color="#ffffff" />
+            <Ionicons name="radio" size={20} color={colors.red} />
             <Text style={[styles.navLabel, styles.navLabelActive]}>Dashboard</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -359,7 +362,7 @@ export default function ScoutDashboard() {
             activeOpacity={0.7}
             onPress={() => router.push('/(scout)/earnings')}
           >
-            <Ionicons name="stats-chart-outline" size={20} color="rgba(255,255,255,0.5)" />
+            <Ionicons name="stats-chart-outline" size={20} color={colors.textTertiary} />
             <Text style={styles.navLabel}>Earnings</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -367,7 +370,7 @@ export default function ScoutDashboard() {
             activeOpacity={0.7}
             onPress={() => router.replace('/(seeker)/home')}
           >
-            <Ionicons name="eye-outline" size={20} color="rgba(255,255,255,0.5)" />
+            <Ionicons name="eye-outline" size={20} color={colors.textTertiary} />
             <Text style={styles.navLabel}>Seeker Mode</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -375,7 +378,7 @@ export default function ScoutDashboard() {
             activeOpacity={0.7}
             onPress={() => router.push('/(scout)/profile')}
           >
-            <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.5)" />
+            <Ionicons name="person-outline" size={20} color={colors.textTertiary} />
             <Text style={styles.navLabel}>Profile</Text>
           </TouchableOpacity>
         </View>
@@ -385,7 +388,7 @@ export default function ScoutDashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   scroll: { paddingBottom: 110 },
 
@@ -400,19 +403,19 @@ const styles = StyleSheet.create({
   mode: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   modeRule: {
     height: 2,
     width: 32,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     marginTop: 8,
   },
   subMode: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     marginTop: 8,
     letterSpacing: 0.2,
   },
@@ -420,39 +423,44 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   profileInitials: {
     fontFamily: 'Inter_700Bold',
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 13,
     letterSpacing: 0.3,
   },
 
   earningsCard: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
+    backgroundColor: colors.surface,
     borderRadius: 18,
     marginHorizontal: 22,
     padding: 22,
     borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.55)',
+    borderColor: colors.border,
     marginBottom: 14,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   earningsLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     letterSpacing: 2.5,
     marginBottom: 10,
   },
   earningsValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 42,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
     marginBottom: 14,
   },
@@ -465,28 +473,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0,255,127,0.1)',
+    backgroundColor: 'rgba(22,163,74,0.08)',
     borderRadius: 999,
     paddingHorizontal: 11,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.35)',
+    borderColor: 'rgba(22,163,74,0.3)',
   },
   earningsDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
   },
   earningsChipText: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.verified,
     fontSize: 10.5,
     letterSpacing: 0.6,
   },
   viewAllText: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.red,
     fontSize: 10.5,
     letterSpacing: 2,
   },
@@ -495,15 +503,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.bg,
     borderRadius: 14,
     marginHorizontal: 22,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: colors.border,
     marginBottom: 22,
     gap: 12,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   toggleTitleRow: {
     flexDirection: 'row',
@@ -516,18 +529,18 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  statusBubbleOn: { backgroundColor: '#00FF7F' },
-  statusBubbleOff: { backgroundColor: 'rgba(255,255,255,0.3)' },
+  statusBubbleOn: { backgroundColor: colors.verified },
+  statusBubbleOff: { backgroundColor: colors.textTertiary },
   toggleTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   toggleSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     marginLeft: 16,
     lineHeight: 16,
   },
@@ -542,11 +555,11 @@ const styles = StyleSheet.create({
   requestTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#00FF7F',
+    color: colors.textSecondary,
     letterSpacing: 2.5,
   },
   newBadge: {
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -554,15 +567,20 @@ const styles = StyleSheet.create({
   newBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#000000',
+    color: colors.white,
     letterSpacing: 1.4,
   },
   requestCard: {
-    backgroundColor: 'rgba(0,255,127,0.04)',
+    backgroundColor: colors.bg,
     borderRadius: 16,
     padding: 18,
     borderWidth: 1.5,
-    borderColor: 'rgba(0,255,127,0.4)',
+    borderColor: colors.border,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   requestTop: {
     flexDirection: 'row',
@@ -573,7 +591,7 @@ const styles = StyleSheet.create({
   requestVenue: {
     fontFamily: 'Inter_700Bold',
     fontSize: 20,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 4,
   },
@@ -585,14 +603,14 @@ const styles = StyleSheet.create({
   requestDistance: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
   },
   priorityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFCB47',
+    backgroundColor: colors.amber,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -602,37 +620,37 @@ const styles = StyleSheet.create({
   priorityBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#1a1a1a',
+    color: colors.black,
     letterSpacing: 1.5,
   },
   requestDetails: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingVertical: 13,
     marginBottom: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
   },
   requestDetail: { flex: 1, alignItems: 'center' },
   requestDetailLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 1.5,
     marginBottom: 4,
   },
   requestDetailValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 16,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
   requestDetailDivider: {
     width: 1,
     height: 26,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: colors.border,
   },
   takenNote: {
     flexDirection: 'row',
@@ -650,7 +668,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.75)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
     lineHeight: 16,
   },
@@ -658,39 +676,39 @@ const styles = StyleSheet.create({
   requestActions: { flexDirection: 'row', gap: 10 },
   declineBtn: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: colors.border,
   },
   declineBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     fontSize: 12,
     letterSpacing: 2,
   },
   acceptBtn: {
     flex: 2,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: 'center',
   },
   acceptBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 12,
     letterSpacing: 2,
   },
 
   emptyCard: {
     marginHorizontal: 22,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
     paddingVertical: 28,
     paddingHorizontal: 24,
     alignItems: 'center',
@@ -699,7 +717,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -707,14 +727,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 4,
   },
   emptyWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 17,
     paddingHorizontal: 8,
@@ -726,9 +746,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'row',
-    backgroundColor: '#0a0a0a',
+    backgroundColor: colors.bg,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
+    borderTopColor: colors.border,
     paddingBottom: 24,
     paddingTop: 12,
   },
@@ -736,8 +756,8 @@ const styles = StyleSheet.create({
   navLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     letterSpacing: 0.5,
   },
-  navLabelActive: { color: '#ffffff' },
+  navLabelActive: { color: colors.red },
 });
