@@ -175,9 +175,9 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 22, paddingBottom: 40 },
 
   subtitle: {
-    fontFamily: 'Inter_300Light',
+    fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: colors.textSecondary,
+    color: '#4B5563', // a notch darker than textSecondary so it reads more present
     letterSpacing: 0.3,
     lineHeight: 20,
     marginBottom: 26,
@@ -188,10 +188,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(218,37,29,0.06)',
     borderColor: colors.red,
   },
-  // Selected (DARK hero card): keep the dark bg (white text stays readable), red border only
+  // Selected (DARK hero card): seamless — keep the dark bg + dark border (no red ring);
+  // selection is shown by the green check. (Swap borderColor to colors.red to bring the ring back.)
   heroCardActive: {
-    borderColor: colors.red,
-    borderWidth: 2,
+    borderColor: colors.textPrimary,
   },
 
   // HERO (Both)
