@@ -10,11 +10,13 @@ import {
   Platform,
   ToastAndroid,
   Alert,
+  StatusBar,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getMyReferral, type ReferralStats } from '../lib/referrals';
+import { colors } from '../lib/theme';
 
 // Deep-link base URL for referral invites.
 // The onboarding flow reads the ?ref= param at quick-finish.tsx.
@@ -76,6 +78,7 @@ export default function InviteScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -141,7 +144,7 @@ export default function InviteScreen() {
             onPress={handleCopy}
             disabled={loading || !code}
           >
-            <Ionicons name="copy-outline" size={22} color="#00FF7F" />
+            <Ionicons name="copy-outline" size={22} color={colors.red} />
             <Text style={styles.shareBtnText}>{copied ? 'Copied' : 'Copy code'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -150,7 +153,7 @@ export default function InviteScreen() {
             onPress={handleShare}
             disabled={loading || !code}
           >
-            <Ionicons name="share-outline" size={22} color="#00FF7F" />
+            <Ionicons name="share-outline" size={22} color={colors.red} />
             <Text style={styles.shareBtnText}>Share link</Text>
           </TouchableOpacity>
         </View>
@@ -165,28 +168,28 @@ export default function InviteScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: '#ffffff',
+    color: colors.red,
     fontSize: 15,
     marginBottom: 16,
   },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.4,
   },
   rewardCard: {
-    backgroundColor: 'rgba(245,158,11,0.08)',
+    backgroundColor: 'rgba(255,203,71,0.06)',
     borderRadius: 20,
     marginHorizontal: 20,
     padding: 22,
     borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.4)',
+    borderColor: 'rgba(255,203,71,0.35)',
     marginBottom: 24,
     alignItems: 'center',
   },
@@ -202,7 +205,7 @@ const styles = StyleSheet.create({
   rewardTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 22,
-    color: '#FFCB47',
+    color: colors.textPrimary,
     letterSpacing: 0.4,
     marginBottom: 8,
     textAlign: 'center',
@@ -210,7 +213,7 @@ const styles = StyleSheet.create({
   rewardSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: '#cccccc',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 19,
     letterSpacing: 0.2,
@@ -218,7 +221,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -228,49 +231,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     marginHorizontal: 20,
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     marginBottom: 22,
   },
   codeText: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 24,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 2,
   },
   codePlaceholder: {
     fontFamily: 'Inter_400Regular',
     fontSize: 15,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
   },
   copyBtn: {
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     borderRadius: 100,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   copyBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: colors.surface,
   },
   copyBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 11,
     letterSpacing: 1.5,
   },
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     marginBottom: 22,
     alignItems: 'center',
   },
@@ -278,18 +281,18 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 4,
   },
   statLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#666',
+    color: colors.textTertiary,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
-  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.12)' },
+  statDivider: { width: 1, height: 36, backgroundColor: colors.border },
   shareButtons: {
     flexDirection: 'row',
     gap: 10,
@@ -298,13 +301,13 @@ const styles = StyleSheet.create({
   },
   shareBtn: {
     flex: 1,
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.bg,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
   },
   shareBtnDisabled: {
     opacity: 0.4,
@@ -312,13 +315,13 @@ const styles = StyleSheet.create({
   shareBtnText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 12,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
   disclaimer: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: '#666',
+    color: colors.textTertiary,
     paddingHorizontal: 32,
     lineHeight: 16,
     letterSpacing: 0.3,
