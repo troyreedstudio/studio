@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSavedPlaces } from '../state/saved';
+import { colors } from '../lib/theme';
 
 export default function SavedPlacesScreen() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function SavedPlacesScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
@@ -48,7 +49,7 @@ export default function SavedPlacesScreen() {
           {list.length === 0 ? (
             <View style={styles.emptyWrap}>
               <View style={styles.emptyIcon}>
-                <Ionicons name="bookmark-outline" size={36} color="rgba(255,255,255,0.4)" />
+                <Ionicons name="bookmark-outline" size={36} color={colors.textTertiary} />
               </View>
               <Text style={styles.emptyTitle}>No saved places yet</Text>
               <Text style={styles.emptySub}>
@@ -66,7 +67,7 @@ export default function SavedPlacesScreen() {
             list.map((p) => (
               <View key={p.id} style={styles.card}>
                 <View style={styles.cardIconWrap}>
-                  <Ionicons name="location" size={18} color="#E8A0B0" />
+                  <Ionicons name="location" size={18} color={colors.red} />
                 </View>
                 <View style={styles.cardBody}>
                   <Text style={styles.cardName}>{p.name}</Text>
@@ -87,7 +88,7 @@ export default function SavedPlacesScreen() {
                     activeOpacity={0.7}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Ionicons name="close" size={14} color="rgba(255,255,255,0.55)" />
+                    <Ionicons name="close" size={14} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -99,10 +100,8 @@ export default function SavedPlacesScreen() {
   );
 }
 
-const INDIGO = '#143782';
-
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -114,7 +113,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
     width: 50,
@@ -122,13 +121,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     paddingHorizontal: 22,
     marginBottom: 14,
     letterSpacing: 0.2,
@@ -139,7 +138,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -147,28 +146,28 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
     marginBottom: 6,
     letterSpacing: 0.3,
   },
   emptySub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 22,
     paddingHorizontal: 30,
   },
   cta: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 12,
     paddingHorizontal: 22,
     paddingVertical: 14,
   },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 12,
     letterSpacing: 2,
   },
@@ -176,9 +175,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -188,7 +187,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: 'rgba(232,160,176,0.12)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -196,21 +195,21 @@ const styles = StyleSheet.create({
   cardName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   cardSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   cardCategory: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#E8A0B0',
+    color: colors.textTertiary,
     letterSpacing: 1.4,
   },
   cardActions: {
@@ -219,14 +218,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   checkBtn: {
-    backgroundColor: INDIGO,
+    backgroundColor: colors.red,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
   checkBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#ffffff',
+    color: colors.onRed,
     fontSize: 10,
     letterSpacing: 1.4,
   },
@@ -234,7 +233,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
