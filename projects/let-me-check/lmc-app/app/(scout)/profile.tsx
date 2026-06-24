@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
   Alert,
   ActivityIndicator,
 } from 'react-native';
@@ -16,6 +17,7 @@ import { deleteMyAccount } from '../lib/account';
 import { getProfile } from '../lib/api';
 import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
 import { supabase } from '../lib/supabase';
+import { colors } from '../lib/theme';
 
 /**
  * Derive a stable, human-readable Scout ID from the user's Supabase auth UUID.
@@ -159,16 +161,17 @@ export default function ScoutProfileScreen() {
     >
       <View style={styles.settingLeft}>
         <View style={styles.settingIconWrap}>
-          <Ionicons name={item.icon} size={18} color="#00FF7F" />
+          <Ionicons name={item.icon} size={18} color={colors.red} />
         </View>
         <Text style={styles.settingLabel}>{item.label}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+      <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>
@@ -178,7 +181,7 @@ export default function ScoutProfileScreen() {
             }
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>Back</Text>
+            <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
         </View>
 
@@ -186,7 +189,7 @@ export default function ScoutProfileScreen() {
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
             {statsLoading ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={colors.textSecondary} />
             ) : (
               <Text style={styles.avatarInitials}>{initials}</Text>
             )}
@@ -194,7 +197,7 @@ export default function ScoutProfileScreen() {
           <Text style={styles.userName}>{firstName ?? 'Scout'}</Text>
           <Text style={styles.memberSince}>Scout</Text>
           <View style={styles.verifiedBadge}>
-            <Ionicons name="checkmark-circle" size={12} color="#00FF7F" />
+            <Ionicons name="checkmark-circle" size={12} color={colors.verified} />
             <Text style={styles.verifiedText}>VERIFIED SCOUT</Text>
           </View>
         </View>
@@ -207,12 +210,12 @@ export default function ScoutProfileScreen() {
         >
           <View style={styles.scoutIdLeft}>
             <View style={styles.scoutIdIconWrap}>
-              <Ionicons name="finger-print-outline" size={18} color="#00FF7F" />
+              <Ionicons name="finger-print-outline" size={18} color={colors.red} />
             </View>
             <View>
               <Text style={styles.scoutIdLabel}>YOUR SCOUT ID</Text>
               {statsLoading ? (
-                <ActivityIndicator color="#00FF7F" size="small" style={{ marginTop: 2 }} />
+                <ActivityIndicator color={colors.red} size="small" style={{ marginTop: 2 }} />
               ) : (
                 <Text style={styles.scoutIdValue}>{scoutId ?? 'SCT-••••-•••'}</Text>
               )}
@@ -220,7 +223,7 @@ export default function ScoutProfileScreen() {
           </View>
           <View style={styles.scoutIdRight}>
             <Text style={styles.inviteHint}>Invite friends</Text>
-            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.3)" />
+            <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
           </View>
         </TouchableOpacity>
 
@@ -228,7 +231,7 @@ export default function ScoutProfileScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             {statsLoading ? (
-              <ActivityIndicator color="#00FF7F" size="small" />
+              <ActivityIndicator color={colors.red} size="small" />
             ) : (
               <Text style={styles.statValue}>${totalEarned}</Text>
             )}
@@ -237,7 +240,7 @@ export default function ScoutProfileScreen() {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             {statsLoading ? (
-              <ActivityIndicator color="#00FF7F" size="small" />
+              <ActivityIndicator color={colors.red} size="small" />
             ) : (
               <Text style={styles.statValue}>{totalChecks}</Text>
             )}
@@ -246,7 +249,7 @@ export default function ScoutProfileScreen() {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             {statsLoading ? (
-              <ActivityIndicator color="#00FF7F" size="small" />
+              <ActivityIndicator color={colors.red} size="small" />
             ) : (
               <Text style={styles.statValue}>{rating}</Text>
             )}
@@ -272,7 +275,7 @@ export default function ScoutProfileScreen() {
           onPress={handleSwitchToSeeker}
           activeOpacity={0.85}
         >
-          <Ionicons name="swap-horizontal" size={16} color="#ffffff" />
+          <Ionicons name="swap-horizontal" size={16} color={colors.textPrimary} />
           <Text style={styles.switchModeBtnText}>SWITCH TO SEEKER MODE</Text>
         </TouchableOpacity>
 
@@ -298,12 +301,12 @@ export default function ScoutProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 22, paddingTop: 12 },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -313,9 +316,9 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
@@ -323,20 +326,20 @@ const styles = StyleSheet.create({
   avatarInitials: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 34,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
   },
   userName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 24,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 5,
   },
   memberSince: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: 12,
   },
@@ -344,61 +347,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(22,163,74,0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.4)',
+    borderColor: 'rgba(22,163,74,0.35)',
     borderRadius: 100,
     paddingHorizontal: 11,
     paddingVertical: 4,
   },
   verifiedText: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.verified,
     fontSize: 9,
     letterSpacing: 1.4,
   },
 
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 22,
     marginBottom: 24,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     alignItems: 'center',
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 5,
   },
   statLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 1.4,
   },
-  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.12)' },
+  statDivider: { width: 1, height: 36, backgroundColor: colors.border },
 
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     paddingHorizontal: 22,
     marginBottom: 12,
   },
   settingsList: {
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.bg,
     borderRadius: 16,
     marginHorizontal: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     marginBottom: 22,
     overflow: 'hidden',
   },
@@ -408,21 +411,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 15,
+    backgroundColor: colors.bg,
   },
-  settingRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
+  settingRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
   settingLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   settingIconWrap: {
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,255,127,0.1)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   settingLabel: {
     fontFamily: 'Inter_500Medium',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
 
@@ -430,42 +434,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(218,37,29,0.05)',
     borderRadius: 16,
     marginHorizontal: 22,
     marginBottom: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.25)',
+    borderColor: 'rgba(218,37,29,0.20)',
   },
   scoutIdLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   scoutIdIconWrap: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,255,127,0.1)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   scoutIdLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 1.6,
     marginBottom: 3,
   },
   scoutIdValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 16,
-    color: '#00FF7F',
+    color: colors.textPrimary,
     letterSpacing: 1.5,
   },
   scoutIdRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   inviteHint: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     letterSpacing: 0.3,
   },
   switchModeBtn: {
@@ -475,15 +479,15 @@ const styles = StyleSheet.create({
     gap: 8,
     marginHorizontal: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingVertical: 16,
     marginBottom: 12,
   },
   switchModeBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 12,
     letterSpacing: 2,
   },
@@ -494,7 +498,7 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     fontSize: 12.5,
     letterSpacing: 0.5,
   },
@@ -505,7 +509,7 @@ const styles = StyleSheet.create({
   },
   deleteAccountText: {
     fontFamily: 'Inter_500Medium',
-    color: '#ff5a5a',
+    color: colors.danger,
     fontSize: 12,
     letterSpacing: 0.5,
   },
