@@ -143,9 +143,12 @@ function BootGate() {
 
     const group = segments[0]; // e.g. '(seeker)', '(scout)', 'auth', 'onboarding'
     const inHub = group === '(seeker)' || group === '(scout)';
-    const midOnboarding = group === 'onboarding';
-    // Once authed and out of the auth/onboarding flow, land in the right hub.
-    if (!inHub && !midOnboarding) {
+    // Let the AUTH + ONBOARDING flows own their own routing — otherwise BootGate
+    // races the sign-up screen's post-sign-in navigation and both get dropped
+    // (Face ID succeeds but nothing happens). BootGate still routes on a cold
+    // relaunch (splash/index group), which is the case it's for.
+    const inEntryFlow = group === 'onboarding' || group === 'auth';
+    if (!inHub && !inEntryFlow) {
       router.replace(hubRouteForRole(profile?.current_role) as never);
     }
   }, [loading, session, profile, segments, router]);
