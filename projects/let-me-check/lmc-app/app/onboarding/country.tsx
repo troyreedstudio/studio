@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COUNTRIES, type Country } from '../data/markets';
+import { colors } from '../lib/theme';
 
 /**
  * Detect the user's country code via IP geolocation (ipwho.is).
@@ -36,19 +37,14 @@ async function detectCountryCode(): Promise<string | null> {
 export default function CountryPickerScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  // No hardcoded default — resolved from real IP detection below.
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [detectedCode, setDetectedCode] = useState<string | null>(null);
 
-  // Detect the user's real country on mount via IP. No GPS needed here —
-  // country-level accuracy from IP is good enough for the picker.
-  // If detection fails the "DETECTED LOCATION" row simply stays hidden.
   useEffect(() => {
     let cancelled = false;
     detectCountryCode().then((code) => {
       if (cancelled) return;
       setDetectedCode(code);
-      // Auto-select the detected country only if it exists in our market list.
       if (code && COUNTRIES.some((c) => c.code === code)) {
         setSelectedCode(code);
       }
@@ -75,14 +71,14 @@ export default function CountryPickerScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
@@ -93,23 +89,23 @@ export default function CountryPickerScreen() {
 
         <Text style={styles.title}>Pick your country</Text>
         <Text style={styles.subtitle}>
-          LMC works in countries where we have Scouts on the ground. More coming.
+          Let Me Check works in countries where we have Scouts on the ground. More coming.
         </Text>
 
         <View style={styles.searchWrap}>
-          <Ionicons name="search" size={16} color="rgba(255,255,255,0.55)" />
+          <Ionicons name="search" size={16} color={colors.textTertiary} />
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Search countries"
-            placeholderTextColor="rgba(255,255,255,0.25)"
+            placeholderTextColor={colors.textTertiary}
             style={styles.searchInput}
             autoCapitalize="words"
             autoCorrect={false}
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close-circle" size={16} color="rgba(255,255,255,0.45)" />
+              <Ionicons name="close-circle" size={16} color={colors.textTertiary} />
             </TouchableOpacity>
           )}
         </View>
@@ -121,7 +117,7 @@ export default function CountryPickerScreen() {
             onPress={() => setSelectedCode(detected.code)}
           >
             <View style={styles.detectedIconWrap}>
-              <Ionicons name="locate" size={14} color="#00FF7F" />
+              <Ionicons name="locate" size={14} color={colors.verified} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.detectedLabel}>DETECTED LOCATION</Text>
@@ -166,7 +162,7 @@ export default function CountryPickerScreen() {
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyTitle}>Not on the map yet</Text>
               <Text style={styles.emptySub}>
-                We&apos;ll let you know when LMC launches in your country.
+                We&apos;ll let you know when Let Me Check launches in your country.
               </Text>
             </View>
           )}
@@ -196,14 +192,12 @@ function handlePickCountry(
   if (c.status === 'live') {
     setSelectedCode(c.code);
   } else if (c.status === 'soon') {
-    // Waitlist sign-up API not yet built — inform the user honestly.
     Alert.alert(
       `${c.name} — Launching soon`,
       `We're recruiting Scouts in ${c.name}. Waitlist sign-up coming soon — check back in the app.`,
       [{ text: 'OK' }]
     );
   } else {
-    // Waitlist sign-up API not yet built — inform the user honestly.
     Alert.alert(
       `${c.name} — Not live yet`,
       `${c.name} isn't a Let Me Check market yet. Waitlist sign-up is coming soon.`,
@@ -261,11 +255,8 @@ function CountryCard({
   );
 }
 
-const INDIGO = '#143782';
-const INDIGO_LIGHT = 'rgba(20,55,130,0.5)';
-
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -277,17 +268,17 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 20, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
-  dotDone: { backgroundColor: '#00FF7F' },
+  dot: { width: 20, height: 3, borderRadius: 2, backgroundColor: colors.border },
+  dotDone: { backgroundColor: 'rgba(218,37,29,0.4)' },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     paddingHorizontal: 22,
     marginBottom: 6,
     letterSpacing: 0.2,
@@ -295,7 +286,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     paddingHorizontal: 22,
     marginBottom: 18,
     lineHeight: 20,
@@ -307,9 +298,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 11,
@@ -318,7 +309,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     padding: 0,
   },
@@ -328,9 +319,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(0,255,127,0.08)',
+    backgroundColor: 'rgba(22,163,74,0.07)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.25)',
+    borderColor: 'rgba(22,163,74,0.25)',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -339,27 +330,27 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(22,163,74,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   detectedLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 1.8,
     marginBottom: 2,
   },
   detectedCity: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   detectedAction: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 1.6,
   },
   scroll: { flex: 1 },
@@ -368,7 +359,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 10,
   },
@@ -376,33 +367,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 8,
   },
   cardSelected: {
-    backgroundColor: INDIGO_LIGHT,
-    borderColor: 'rgba(60,110,200,0.6)',
+    backgroundColor: 'rgba(218,37,29,0.06)',
+    borderColor: colors.red,
   },
-  cardDimmed: { opacity: 0.65 },
+  cardDimmed: { opacity: 0.55 },
   flag: { fontSize: 30 },
   cardBody: { flex: 1 },
   countryName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
-  countryNameDimmed: { color: 'rgba(255,255,255,0.7)' },
+  countryNameDimmed: { color: colors.textSecondary },
   countryCode: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     letterSpacing: 0.6,
   },
   statusPill: {
@@ -415,24 +406,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statusLive: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderColor: 'rgba(0,255,127,0.55)',
+    backgroundColor: 'rgba(22,163,74,0.08)',
+    borderColor: 'rgba(22,163,74,0.35)',
   },
   statusDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.verified,
   },
   statusLiveText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#ffffff',
+    color: colors.verified,
     letterSpacing: 1,
   },
   statusSoon: {
-    backgroundColor: 'rgba(255,107,0,0.12)',
-    borderColor: 'rgba(255,107,0,0.4)',
+    backgroundColor: 'rgba(255,107,0,0.08)',
+    borderColor: 'rgba(255,107,0,0.3)',
   },
   statusSoonText: {
     fontFamily: 'Inter_700Bold',
@@ -441,27 +432,27 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   statusWait: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   statusWaitText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textTertiary,
     letterSpacing: 1.2,
   },
   emptyWrap: { paddingTop: 24, alignItems: 'center' },
   emptyTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#ffffff',
+    color: colors.textPrimary,
     marginBottom: 6,
     letterSpacing: 0.2,
   },
   emptySub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 19,
     paddingHorizontal: 30,
@@ -471,20 +462,20 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 24,
     borderTopWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: colors.border,
   },
   cta: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
   },
-  ctaDisabled: { backgroundColor: 'rgba(255,255,255,0.12)' },
+  ctaDisabled: { backgroundColor: colors.border },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 3,
   },
-  ctaTextDisabled: { color: 'rgba(255,255,255,0.4)' },
+  ctaTextDisabled: { color: colors.textTertiary },
 });

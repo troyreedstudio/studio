@@ -14,6 +14,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { requestUserLocation, detectCityByIP, getUserCity } from '../state/location';
+import { colors } from '../lib/theme';
 
 type PermKey = 'location' | 'notif';
 type PermState = 'pending' | 'granted' | 'skipped';
@@ -62,19 +63,14 @@ const PRIVACY_BULLETS = [
 export default function PermissionsScreen() {
   const router = useRouter();
   const { next } = useLocalSearchParams<{ next?: string }>();
-  // Default to seeker home -- never loop back to /onboarding/role which would
-  // re-ask the user to pick a role they have already chosen.
   const continueTo = next || '/(seeker)/home';
   const [states, setStates] = useState<Record<PermKey, PermState>>({
     location: 'pending',
     notif: 'pending',
   });
-  // When GPS is declined we approximate the city from IP -- this holds that name
-  // so we can tell the user what we resolved (and let them correct it).
   const [approxCity, setApproxCity] = useState<string | null>(null);
 
   const handleAllow = async (perm: Perm) => {
-    // Location fires the REAL iOS system prompt and reads actual GPS.
     if (perm.key === 'location') {
       const { status } = await requestUserLocation();
       if (status === 'granted') {
@@ -82,8 +78,6 @@ export default function PermissionsScreen() {
         setStates((s) => ({ ...s, location: 'granted' }));
         return;
       }
-      // Declined GPS → silently approximate the city from their connection so we
-      // still show THEIR place (never a hard-coded default). Manual pick backs it up.
       const ip = await detectCityByIP();
       if (ip.coords) {
         setApproxCity(ip.city || getUserCity() || 'your area');
@@ -101,14 +95,12 @@ export default function PermissionsScreen() {
       return;
     }
 
-    // Fire the real iOS push permission prompt via expo-notifications.
     const { status } = await Notifications.requestPermissionsAsync({
       ios: { allowAlert: true, allowBadge: true, allowSound: true },
     });
     if (status === 'granted') {
       setStates((s) => ({ ...s, [perm.key]: 'granted' }));
     } else {
-      // Denied or undetermined -- mark skipped and tell the user what they miss.
       setStates((s) => ({ ...s, [perm.key]: 'skipped' }));
       Alert.alert(
         'Notifications off',
@@ -123,11 +115,7 @@ export default function PermissionsScreen() {
 
   const handleSkip = (perm: Perm) => {
     if (perm.required) {
-      Alert.alert(
-        `${perm.title} is required`,
-        perm.ifDenied,
-        [{ text: 'OK' }],
-      );
+      Alert.alert(`${perm.title} is required`, perm.ifDenied, [{ text: 'OK' }]);
       return;
     }
     setStates((s) => ({ ...s, [perm.key]: 'skipped' }));
@@ -137,14 +125,14 @@ export default function PermissionsScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
@@ -163,54 +151,39 @@ export default function PermissionsScreen() {
             const state = states[p.key];
             return (
               <View key={p.key} style={styles.permCard}>
-                {/* TOP */}
                 <View style={styles.permTop}>
                   <View style={[styles.permIcon, state === 'granted' && styles.permIconGranted]}>
                     <Ionicons
                       name={p.icon}
                       size={22}
-                      color={state === 'granted' ? '#000' : '#ffffff'}
+                      color={state === 'granted' ? colors.white : colors.textPrimary}
                     />
                   </View>
                   <View style={styles.permLabels}>
                     <Text style={styles.permTitle}>{p.title}</Text>
-                    <View
-                      style={[
-                        styles.permTag,
-                        p.required ? styles.permTagRequired : styles.permTagOptional,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.permTagText,
-                          p.required ? styles.permTagTextRequired : styles.permTagTextOptional,
-                        ]}
-                      >
+                    <View style={[styles.permTag, p.required ? styles.permTagRequired : styles.permTagOptional]}>
+                      <Text style={[styles.permTagText, p.required ? styles.permTagTextRequired : styles.permTagTextOptional]}>
                         {p.required ? 'REQUIRED' : 'RECOMMENDED'}
                       </Text>
                     </View>
                   </View>
                 </View>
 
-                {/* WHY */}
                 <Text style={styles.permWhy}>{p.why}</Text>
 
-                {/* iOS NOTE */}
                 <View style={styles.iosNote}>
-                  <Ionicons name="logo-apple" size={12} color="rgba(255,255,255,0.6)" />
+                  <Ionicons name="logo-apple" size={12} color={colors.textSecondary} />
                   <Text style={styles.iosNoteText}>{p.iosDescription}</Text>
                 </View>
 
-                {/* IF DENIED */}
                 <View style={styles.deniedNote}>
-                  <Ionicons name="alert-circle-outline" size={12} color="#FFCB47" />
+                  <Ionicons name="alert-circle-outline" size={12} color={colors.amber} />
                   <Text style={styles.deniedText}>{p.ifDenied}</Text>
                 </View>
 
-                {/* CTA ROW */}
                 {state === 'granted' ? (
                   <View style={[styles.permBtn, styles.permBtnGranted]}>
-                    <Ionicons name="checkmark" size={14} color="#000" />
+                    <Ionicons name="checkmark" size={14} color={colors.white} />
                     <Text style={[styles.permBtnText, styles.permBtnTextGranted]}>ALLOWED</Text>
                   </View>
                 ) : state === 'skipped' ? (
@@ -218,29 +191,17 @@ export default function PermissionsScreen() {
                     <View style={[styles.permBtn, styles.permBtnSkipped]}>
                       <Text style={[styles.permBtnText, styles.permBtnTextSkipped]}>SKIPPED</Text>
                     </View>
-                    <TouchableOpacity
-                      style={styles.permBtnGhost}
-                      onPress={() => handleAllow(p)}
-                      activeOpacity={0.85}
-                    >
+                    <TouchableOpacity style={styles.permBtnGhost} onPress={() => handleAllow(p)} activeOpacity={0.85}>
                       <Text style={styles.permBtnGhostText}>CHANGE MY MIND</Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
                   <View style={styles.permActionRow}>
-                    <TouchableOpacity
-                      style={styles.permBtn}
-                      onPress={() => handleAllow(p)}
-                      activeOpacity={0.85}
-                    >
+                    <TouchableOpacity style={styles.permBtn} onPress={() => handleAllow(p)} activeOpacity={0.85}>
                       <Text style={styles.permBtnText}>ALLOW</Text>
                     </TouchableOpacity>
                     {!p.required && (
-                      <TouchableOpacity
-                        style={styles.permBtnGhost}
-                        onPress={() => handleSkip(p)}
-                        activeOpacity={0.7}
-                      >
+                      <TouchableOpacity style={styles.permBtnGhost} onPress={() => handleSkip(p)} activeOpacity={0.7}>
                         <Text style={styles.permBtnGhostText}>NOT NOW</Text>
                       </TouchableOpacity>
                     )}
@@ -250,14 +211,11 @@ export default function PermissionsScreen() {
             );
           })}
 
-          {/* WHAT WE DO WITH IT */}
-          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>
-            WHAT WE DO WITH IT
-          </Text>
+          <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>WHAT WE DO WITH IT</Text>
           <View style={styles.privacyCard}>
             {PRIVACY_BULLETS.map((b, i) => (
               <View key={i} style={styles.privacyRow}>
-                <Ionicons name="shield-checkmark" size={14} color="#00FF7F" />
+                <Ionicons name="shield-checkmark" size={14} color={colors.verified} />
                 <Text style={styles.privacyText}>{b}</Text>
               </View>
             ))}
@@ -266,37 +224,30 @@ export default function PermissionsScreen() {
               activeOpacity={0.7}
               style={styles.settingsLinkRow}
             >
-              <Ionicons name="settings-outline" size={14} color="#00FF7F" />
+              <Ionicons name="settings-outline" size={14} color={colors.red} />
               <Text style={styles.settingsLink}>Open iOS Settings → Let Me Check</Text>
             </TouchableOpacity>
           </View>
 
-          {/* APPROX-LOCATION NOTE -- shown when we fell back to IP city detection */}
           {approxCity && (
             <View style={styles.approxNote}>
-              <Ionicons name="navigate-circle-outline" size={14} color="#00FF7F" />
+              <Ionicons name="navigate-circle-outline" size={14} color={colors.verified} />
               <Text style={styles.approxText}>
                 Using your approximate area ({approxCity}) from your connection.{' '}
-                <Text
-                  style={styles.approxLink}
-                  onPress={() => router.push('/onboarding/city')}
-                >
+                <Text style={styles.approxLink} onPress={() => router.push('/onboarding/city')}>
                   Set city manually
                 </Text>
               </Text>
             </View>
           )}
 
-          {/* CTA */}
           <TouchableOpacity
             style={[styles.primaryBtn, !canContinue && styles.primaryBtnDisabled]}
             disabled={!canContinue}
             onPress={() => router.replace(continueTo as never)}
             activeOpacity={0.85}
           >
-            <Text
-              style={[styles.primaryBtnText, !canContinue && styles.primaryBtnTextDisabled]}
-            >
+            <Text style={[styles.primaryBtnText, !canContinue && styles.primaryBtnTextDisabled]}>
               {canContinue ? 'CONTINUE' : 'ALLOW LOCATION TO CONTINUE'}
             </Text>
           </TouchableOpacity>
@@ -311,7 +262,7 @@ export default function PermissionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
@@ -324,36 +275,36 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
-  dotDone: { backgroundColor: '#00FF7F' },
+  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },
+  dotDone: { backgroundColor: 'rgba(218,37,29,0.4)' },
   scroll: { paddingHorizontal: 26, paddingBottom: 48 },
 
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 6,
   },
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 20,
     marginBottom: 22,
   },
 
   permCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     padding: 16,
     marginBottom: 14,
   },
@@ -367,18 +318,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   permIconGranted: {
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
   },
   permLabels: { flex: 1 },
   permTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 4,
   },
@@ -390,25 +341,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   permTagRequired: {
-    backgroundColor: 'rgba(255,107,0,0.12)',
-    borderColor: 'rgba(255,107,0,0.4)',
+    backgroundColor: 'rgba(218,37,29,0.07)',
+    borderColor: 'rgba(218,37,29,0.25)',
   },
   permTagOptional: {
-    backgroundColor: 'rgba(0,255,127,0.12)',
-    borderColor: 'rgba(0,255,127,0.4)',
+    backgroundColor: 'rgba(22,163,74,0.07)',
+    borderColor: 'rgba(22,163,74,0.25)',
   },
   permTagText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
     letterSpacing: 1.4,
   },
-  permTagTextRequired: { color: '#FF6B00' },
-  permTagTextOptional: { color: '#00FF7F' },
+  permTagTextRequired: { color: colors.red },
+  permTagTextOptional: { color: colors.verified },
 
   permWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.75)',
+    color: colors.textSecondary,
     lineHeight: 18,
     marginBottom: 10,
   },
@@ -422,7 +373,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 16,
   },
   deniedNote: {
@@ -440,7 +391,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 16,
   },
 
@@ -457,24 +408,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
   },
   permBtnGranted: {
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
   },
   permBtnSkipped: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
   },
   permBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#000000',
+    color: colors.onRed,
     letterSpacing: 1.5,
   },
-  permBtnTextGranted: { color: '#000' },
-  permBtnTextSkipped: { color: 'rgba(255,255,255,0.7)' },
+  permBtnTextGranted: { color: colors.white },
+  permBtnTextSkipped: { color: colors.textTertiary },
   permBtnGhost: {
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -482,23 +433,23 @@ const styles = StyleSheet.create({
   permBtnGhostText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 1.4,
   },
 
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 12,
   },
   sectionLabelGap: { marginTop: 12 },
 
   privacyCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     marginBottom: 24,
@@ -513,7 +464,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   settingsLinkRow: {
@@ -523,40 +474,40 @@ const styles = StyleSheet.create({
     marginTop: 4,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
+    borderTopColor: colors.border,
   },
   settingsLink: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11.5,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 0.4,
   },
 
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 12,
   },
   primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.border,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
   primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     letterSpacing: 2,
   },
 
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
   },
@@ -565,9 +516,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: 'rgba(0,255,127,0.08)',
+    backgroundColor: 'rgba(22,163,74,0.07)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.25)',
+    borderColor: 'rgba(22,163,74,0.2)',
     borderRadius: 12,
     padding: 12,
     marginBottom: 14,
@@ -576,12 +527,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.75)',
+    color: colors.textSecondary,
     lineHeight: 17,
   },
   approxLink: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.red,
     textDecorationLine: 'underline',
   },
 });

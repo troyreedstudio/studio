@@ -19,6 +19,7 @@ import {
   verifyPhoneOtp,
   PHONE_AUTH_ENABLED,
 } from '../lib/auth';
+import { colors } from '../lib/theme';
 
 type Step = 'method' | 'phone' | 'otp';
 
@@ -36,8 +37,6 @@ export default function SignInScreen() {
     else setStep('phone');
   };
 
-  // On success the session gate (BootGate in _layout) routes to the right hub,
-  // so we only need to clear any error here.
   const runAuth = async (fn: () => Promise<void>) => {
     setError(null);
     setBusy(true);
@@ -52,7 +51,7 @@ export default function SignInScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -63,7 +62,7 @@ export default function SignInScreen() {
               onPress={goBack}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <Text style={styles.backText}>‹ Back</Text>
+              <Text style={styles.backText}>Back</Text>
             </TouchableOpacity>
           </View>
 
@@ -79,24 +78,26 @@ export default function SignInScreen() {
                 </Text>
 
                 <View style={styles.methodList}>
+                  {/* Apple — platform-mandated black button */}
                   <TouchableOpacity
-                    style={styles.methodBtn}
+                    style={styles.methodBtnApple}
                     onPress={() => runAuth(signInWithApple)}
                     disabled={busy}
                     activeOpacity={0.85}
                   >
-                    <Text style={styles.methodIcon}></Text>
-                    <Text style={styles.methodLabel}>Continue with Apple</Text>
+                    <Text style={styles.methodIconApple}></Text>
+                    <Text style={styles.methodLabelApple}>Continue with Apple</Text>
                   </TouchableOpacity>
 
+                  {/* Google — platform-mandated white button with brand colors */}
                   <TouchableOpacity
-                    style={styles.methodBtn}
+                    style={styles.methodBtnGoogle}
                     onPress={() => runAuth(signInWithGoogle)}
                     disabled={busy}
                     activeOpacity={0.85}
                   >
-                    <Text style={[styles.methodIcon, styles.methodIconG]}>G</Text>
-                    <Text style={styles.methodLabel}>Continue with Google</Text>
+                    <Text style={styles.methodIconG}>G</Text>
+                    <Text style={styles.methodLabelGoogle}>Continue with Google</Text>
                   </TouchableOpacity>
 
                   {PHONE_AUTH_ENABLED ? (
@@ -122,7 +123,7 @@ export default function SignInScreen() {
 
                 <View style={styles.divider}>
                   <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>NEW TO LMC?</Text>
+                  <Text style={styles.dividerText}>NEW TO LET ME CHECK?</Text>
                   <View style={styles.dividerLine} />
                 </View>
 
@@ -154,7 +155,7 @@ export default function SignInScreen() {
                     value={phone}
                     onChangeText={setPhone}
                     placeholder="(305) 555-0100"
-                    placeholderTextColor="rgba(255,255,255,0.25)"
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="phone-pad"
                     autoFocus
                   />
@@ -171,12 +172,7 @@ export default function SignInScreen() {
                   }
                   activeOpacity={0.85}
                 >
-                  <Text
-                    style={[
-                      styles.primaryBtnText,
-                      phone.length < 10 && styles.primaryBtnTextDisabled,
-                    ]}
-                  >
+                  <Text style={[styles.primaryBtnText, phone.length < 10 && styles.primaryBtnTextDisabled]}>
                     SEND CODE
                   </Text>
                 </TouchableOpacity>
@@ -196,7 +192,7 @@ export default function SignInScreen() {
                   value={otp}
                   onChangeText={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
-                  placeholderTextColor="rgba(255,255,255,0.25)"
+                  placeholderTextColor={colors.textTertiary}
                   keyboardType="number-pad"
                   maxLength={6}
                   autoFocus
@@ -211,12 +207,7 @@ export default function SignInScreen() {
                   }
                   activeOpacity={0.85}
                 >
-                  <Text
-                    style={[
-                      styles.primaryBtnText,
-                      otp.length < 6 && styles.primaryBtnTextDisabled,
-                    ]}
-                  >
+                  <Text style={[styles.primaryBtnText, otp.length < 6 && styles.primaryBtnTextDisabled]}>
                     VERIFY + SIGN IN
                   </Text>
                 </TouchableOpacity>
@@ -234,19 +225,18 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 12,
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -258,7 +248,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 8,
     textAlign: 'center',
@@ -266,7 +256,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 20,
     textAlign: 'center',
@@ -274,14 +264,68 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   methodList: { gap: 10, marginBottom: 24 },
+
+  // Apple — platform-mandated black button
+  methodBtnApple: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: '#000000',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+  },
+  methodIconApple: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 18,
+    color: '#ffffff',
+    width: 22,
+    textAlign: 'center',
+  },
+  methodLabelApple: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 14,
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
+
+  // Google — platform-mandated white button
+  methodBtnGoogle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+  },
+  methodIconG: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 18,
+    color: '#EA4335',
+    width: 22,
+    textAlign: 'center',
+  },
+  methodLabelGoogle: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 14,
+    color: colors.textPrimary,
+    letterSpacing: 0.3,
+  },
+
+  // Phone — neutral surface button
   methodBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 18,
@@ -289,27 +333,23 @@ const styles = StyleSheet.create({
   methodIcon: {
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
-    color: '#ffffff',
+    color: colors.textPrimary,
     width: 22,
     textAlign: 'center',
   },
-  methodIconG: { color: '#ffffff' },
   methodLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
-  methodBtnDisabled: {
-    opacity: 0.45,
-  },
-  methodLabelDisabled: {
-    color: 'rgba(255,255,255,0.5)',
-  },
+  methodBtnDisabled: { opacity: 0.45 },
+  methodLabelDisabled: { color: colors.textTertiary },
+
   errorText: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12.5,
-    color: '#FF6B6B',
+    color: colors.danger,
     textAlign: 'center',
     letterSpacing: 0.2,
     lineHeight: 18,
@@ -323,23 +363,23 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 16,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.12)' },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
   dividerText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 2,
   },
   signUpRow: { alignItems: 'center', paddingVertical: 10 },
   signUpText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   signUpBold: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.red,
   },
 
   phoneRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
@@ -347,9 +387,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 14,
@@ -358,16 +398,16 @@ const styles = StyleSheet.create({
   countryCode: {
     fontFamily: 'Inter_700Bold',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
   phoneInput: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 17,
-    color: '#ffffff',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    color: colors.textPrimary,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 16,
     letterSpacing: 0.5,
@@ -376,10 +416,10 @@ const styles = StyleSheet.create({
   otpInput: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 32,
-    color: '#ffffff',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    color: colors.textPrimary,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingVertical: 18,
     letterSpacing: 8,
@@ -389,27 +429,23 @@ const styles = StyleSheet.create({
   resendText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12.5,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 0.4,
   },
 
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 12,
   },
-  primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
+  primaryBtnDisabled: { backgroundColor: colors.border },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
-  primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
-  },
+  primaryBtnTextDisabled: { color: colors.textTertiary },
 });

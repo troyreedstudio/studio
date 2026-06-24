@@ -10,17 +10,18 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../lib/theme';
 
 export default function PaymentCheckoutScreen() {
   const router = useRouter();
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
         </View>
 
@@ -55,6 +56,7 @@ export default function PaymentCheckoutScreen() {
               <Text style={styles.cardOrText}>OR</Text>
               <View style={styles.cardDivider} />
             </View>
+            {/* Apple Pay button — platform-mandated black button, do not recolor */}
             <View style={styles.applePayBtn}>
               <Ionicons name="logo-apple" size={18} color="#ffffff" />
               <Text style={styles.applePayText}>Pay</Text>
@@ -79,7 +81,7 @@ export default function PaymentCheckoutScreen() {
           </TouchableOpacity>
 
           <Text style={styles.privacy}>
-            By paying, you agree to LMC&apos;s service terms. Refunded if Scout fails to deliver in 15 min.
+            By paying, you agree to Let Me Check's service terms. Refunded if Scout fails to deliver in 15 min.
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -88,19 +90,18 @@ export default function PaymentCheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 32,
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 10,
     textAlign: 'center',
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 21,
     textAlign: 'center',
@@ -124,37 +125,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   cardPreview: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     padding: 16,
     marginBottom: 22,
   },
   cardLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 12,
   },
   cardField: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.bg,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 12,
     marginBottom: 10,
   },
   cardFieldLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     letterSpacing: 1.5,
     marginBottom: 5,
   },
   cardFieldText: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
   },
   cardRow: {
@@ -169,14 +172,15 @@ const styles = StyleSheet.create({
   cardDivider: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.border,
   },
   cardOrText: {
     fontFamily: 'Inter_500Medium',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     letterSpacing: 2,
   },
+  // Apple Pay — platform-mandated black button. Do not recolor.
   applePayBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -185,8 +189,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 14,
     gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
   },
   applePayText: {
     fontFamily: 'Inter_700Bold',
@@ -204,20 +206,20 @@ const styles = StyleSheet.create({
   orderLabel: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.75)',
+    color: colors.textSecondary,
   },
   orderValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
   orderValueSub: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
   },
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
@@ -226,14 +228,14 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 3,
   },
   privacy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
     paddingHorizontal: 8,

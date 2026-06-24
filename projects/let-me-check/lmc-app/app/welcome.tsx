@@ -3,14 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Animated, Statu
 import { useRouter } from 'expo-router';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
-// TEMP: color audition — remove after color is chosen
-import { useDevBg } from './state/dev-bg';
-import DevBgPill from './components/DevBgPill';
+import { colors } from './lib/theme';
 
 const LMC_SIZE = 60;
 const LMC_MASK_W = 332;
 const LMC_MASK_H = LMC_SIZE * 1.3;
 
+// LOCKED: WHITE canvas + red accents. Chrome wordmark reads on white.
 const CHROME_STOPS: [string, string, ...string[]] = [
   '#a8a8a8',
   '#ffffff',
@@ -25,8 +24,6 @@ const CHROME_LOCATIONS: [number, number, ...number[]] = [0, 0.22, 0.5, 0.58, 0.6
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  // TEMP: color audition — remove after color is chosen
-  const devBg = useDevBg();
   const fade = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(20)).current;
 
@@ -46,11 +43,8 @@ export default function WelcomeScreen() {
   }, [fade, slideUp]);
 
   return (
-    <View style={[styles.bg, { backgroundColor: devBg.hex }]}>
-      <StatusBar barStyle="light-content" />
-
-      {/* TEMP: color audition — remove after color is chosen */}
-      <DevBgPill />
+    <View style={styles.bg}>
+      <StatusBar barStyle="dark-content" />
 
       <SafeAreaView style={styles.safe}>
         <Animated.View style={[styles.topBlock, { opacity: fade }]}>
@@ -131,7 +125,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.bg,
   },
   safe: {
     flex: 1,
@@ -164,16 +158,9 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
   },
-  wordmark: {
-    fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.75)',
-    fontSize: 12,
-    letterSpacing: 6,
-    marginTop: 14,
-  },
   tagline: {
     fontFamily: 'Inter_300Light',
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     fontSize: 11,
     letterSpacing: 4,
     marginTop: 18,
@@ -183,7 +170,7 @@ const styles = StyleSheet.create({
   },
   welcomeSub: {
     fontFamily: 'Inter_300Light',
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 22,
     textAlign: 'center',
@@ -191,7 +178,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
@@ -199,7 +186,7 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 3,
   },
@@ -209,13 +196,13 @@ const styles = StyleSheet.create({
   },
   signInText: {
     fontFamily: 'Inter_400Regular',
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     fontSize: 13,
     letterSpacing: 0.3,
   },
   signInBold: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.red,
   },
   proofRow: {
     flexDirection: 'row',
@@ -229,17 +216,17 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
   },
   proofText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     fontSize: 11.5,
     letterSpacing: 0.3,
   },
   legal: {
     fontFamily: 'Inter_400Regular',
-    color: 'rgba(255,255,255,0.35)',
+    color: colors.textTertiary,
     fontSize: 11,
     textAlign: 'center',
     lineHeight: 16,
@@ -248,6 +235,6 @@ const styles = StyleSheet.create({
   },
   legalLink: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
   },
 });

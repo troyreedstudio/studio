@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../lib/theme';
 
 export default function PersonalInfoScreen() {
   const router = useRouter();
@@ -24,14 +25,14 @@ export default function PersonalInfoScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
@@ -57,7 +58,6 @@ export default function PersonalInfoScreen() {
             Just the basics — what we need to set up your account. We never share it.
           </Text>
 
-          {/* YOUR NAME */}
           <Text style={styles.sectionLabel}>YOUR NAME</Text>
           <View style={styles.field}>
             <Text style={styles.label}>FIRST NAME</Text>
@@ -66,7 +66,7 @@ export default function PersonalInfoScreen() {
               value={first}
               onChangeText={setFirst}
               placeholder="Troy"
-              placeholderTextColor="rgba(255,255,255,0.25)"
+              placeholderTextColor={colors.textTertiary}
               autoCapitalize="words"
               autoCorrect={false}
             />
@@ -79,13 +79,12 @@ export default function PersonalInfoScreen() {
               value={last}
               onChangeText={setLast}
               placeholder="Reed"
-              placeholderTextColor="rgba(255,255,255,0.25)"
+              placeholderTextColor={colors.textTertiary}
               autoCapitalize="words"
               autoCorrect={false}
             />
           </View>
 
-          {/* CONTACT */}
           <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>CONTACT</Text>
           <View style={styles.field}>
             <Text style={styles.label}>EMAIL</Text>
@@ -94,28 +93,27 @@ export default function PersonalInfoScreen() {
               value={email}
               onChangeText={setEmail}
               placeholder="you@email.com"
-              placeholderTextColor="rgba(255,255,255,0.25)"
+              placeholderTextColor={colors.textTertiary}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
             />
             {email.length > 0 && !emailOk && (
-              <Text style={styles.fieldError}>Hmm — that email doesn’t look right.</Text>
+              <Text style={styles.fieldError}>Hmm — that email doesn't look right.</Text>
             )}
           </View>
 
           <View style={styles.phoneRow}>
             <View style={styles.phoneIconWrap}>
-              <Ionicons name="phone-portrait-outline" size={18} color="#00FF7F" />
+              <Ionicons name="phone-portrait-outline" size={18} color={colors.verified} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.phoneTitle}>Phone verified</Text>
               <Text style={styles.phoneWhy}>From your sign-up. Update it in profile later if it changes.</Text>
             </View>
-            <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
+            <Ionicons name="checkmark-circle" size={18} color={colors.verified} />
           </View>
 
-          {/* AGE + CONSENT (single bundled gate — Seeker is light) */}
           <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>ONE LAST STEP</Text>
           <TouchableOpacity
             style={styles.consentRow}
@@ -123,37 +121,27 @@ export default function PersonalInfoScreen() {
             onPress={() => setConsented((v) => !v)}
           >
             <View style={[styles.checkbox, consented && styles.checkboxOn]}>
-              {consented && <Ionicons name="checkmark" size={14} color="#000" />}
+              {consented && <Ionicons name="checkmark" size={14} color={colors.white} />}
             </View>
             <Text style={styles.consentText}>
-              <Text style={styles.consentBold}>I am 18 or older</Text> and I agree to LMC&apos;s{' '}
-              <Text
-                style={styles.consentLink}
-                onPress={() => router.push('/legal/terms')}
-              >
+              <Text style={styles.consentBold}>I am 18 or older</Text> and I agree to Let Me Check's{' '}
+              <Text style={styles.consentLink} onPress={() => router.push('/legal/terms')}>
                 Terms
               </Text>
               ,{' '}
-              <Text
-                style={styles.consentLink}
-                onPress={() => router.push('/legal/privacy')}
-              >
+              <Text style={styles.consentLink} onPress={() => router.push('/legal/privacy')}>
                 Privacy Policy
               </Text>
               , and{' '}
-              <Text
-                style={styles.consentLink}
-                onPress={() => router.push('/legal/aup')}
-              >
+              <Text style={styles.consentLink} onPress={() => router.push('/legal/aup')}>
                 Acceptable Use Policy
               </Text>
               .
             </Text>
           </TouchableOpacity>
 
-          {/* TRUST */}
           <View style={styles.trustCard}>
-            <Ionicons name="lock-closed-outline" size={16} color="#00FF7F" />
+            <Ionicons name="lock-closed-outline" size={16} color={colors.verified} />
             <View style={{ flex: 1 }}>
               <Text style={styles.trustTitle}>How we use this</Text>
               <Text style={styles.trustWhy}>
@@ -162,16 +150,13 @@ export default function PersonalInfoScreen() {
             </View>
           </View>
 
-          {/* CTA */}
           <TouchableOpacity
             style={[styles.primaryBtn, !ready && styles.primaryBtnDisabled]}
             disabled={!ready}
             onPress={() => router.push('/onboarding/permissions')}
             activeOpacity={0.85}
           >
-            <Text
-              style={[styles.primaryBtnText, !ready && styles.primaryBtnTextDisabled]}
-            >
+            <Text style={[styles.primaryBtnText, !ready && styles.primaryBtnTextDisabled]}>
               CONTINUE
             </Text>
           </TouchableOpacity>
@@ -186,7 +171,7 @@ export default function PersonalInfoScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
@@ -199,27 +184,27 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
-  dotDone: { backgroundColor: 'rgba(0,255,127,0.55)' },
-  dotActive: { backgroundColor: '#00FF7F' },
+  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },
+  dotDone: { backgroundColor: 'rgba(218,37,29,0.35)' },
+  dotActive: { backgroundColor: colors.red },
   scroll: { paddingHorizontal: 26, paddingBottom: 48 },
 
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 6,
   },
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 20,
     marginBottom: 22,
@@ -228,45 +213,36 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 12,
   },
   sectionLabelGap: { marginTop: 20 },
 
-  field: {
-    marginBottom: 14,
-  },
+  field: { marginBottom: 14 },
   label: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 1.5,
     marginBottom: 6,
   },
   input: {
     fontFamily: 'Inter_500Medium',
     fontSize: 16,
-    color: '#ffffff',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    color: colors.textPrimary,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     letterSpacing: 0.3,
   },
-  fieldHint: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 11.5,
-    color: 'rgba(0,255,127,0.85)',
-    marginTop: 6,
-    paddingHorizontal: 4,
-  },
   fieldError: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11.5,
-    color: '#FF6B6B',
+    color: colors.danger,
     marginTop: 6,
     paddingHorizontal: 4,
   },
@@ -275,9 +251,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(0,255,127,0.08)',
+    backgroundColor: 'rgba(22,163,74,0.07)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.25)',
+    borderColor: 'rgba(22,163,74,0.2)',
     borderRadius: 12,
     padding: 14,
     marginBottom: 4,
@@ -286,21 +262,21 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(22,163,74,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   phoneTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   phoneWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 16,
   },
 
@@ -316,30 +292,30 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
   checkboxOn: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+    backgroundColor: colors.red,
+    borderColor: colors.red,
   },
   consentText: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.1,
   },
   consentBold: {
     fontFamily: 'Inter_700Bold',
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
   consentLink: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.red,
     textDecorationLine: 'underline',
   },
   trustCard: {
@@ -347,50 +323,50 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
     padding: 14,
-    backgroundColor: 'rgba(0,255,127,0.08)',
+    backgroundColor: 'rgba(22,163,74,0.07)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.2)',
+    borderColor: 'rgba(22,163,74,0.18)',
     marginTop: 22,
     marginBottom: 16,
   },
   trustTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
     marginBottom: 3,
   },
   trustWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 16,
   },
 
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 14,
   },
   primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.border,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 3,
   },
   primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
   },
 
   privacy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
     paddingHorizontal: 8,

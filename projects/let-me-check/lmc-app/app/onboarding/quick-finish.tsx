@@ -16,6 +16,7 @@ import { recordOnboardingConsents } from '../lib/consent';
 import { supabase } from '../lib/supabase';
 import { setIntendedRoleFlags, updateProfile } from '../lib/api';
 import { applyReferralCode } from '../lib/referrals';
+import { colors } from '../lib/theme';
 
 type AuthSource = 'apple' | 'google' | 'phone';
 
@@ -25,7 +26,6 @@ export default function QuickFinishScreen() {
   const source: AuthSource = from === 'apple' || from === 'google' ? from : 'phone';
   const isAutoFill = source === 'apple' || source === 'google';
 
-  // Start empty — populated from the real session user_metadata below.
   const [first, setFirst] = useState('');
   const [last, setLast] = useState('');
   const [email, setEmail] = useState('');
@@ -34,17 +34,13 @@ export default function QuickFinishScreen() {
   const [consented, setConsented] = useState(false);
   const [smsOptIn, setSmsOptIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  // Referral code: pre-populated from deep-link ?ref= param, or entered manually.
   const [referralCode, setReferralCode] = useState(
     typeof refCode === 'string' ? refCode.trim().toUpperCase() : '',
   );
 
-  // Prefill from the real signed-in user's metadata (Apple/Google provide
-  // name + email; phone users have neither so fields stay empty).
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const meta = data?.user?.user_metadata ?? {};
-      // Apple: full_name is an object { firstName, lastName }; Google: name is a string.
       const rawFull: string =
         (meta.full_name as string | undefined) ??
         (meta.name as string | undefined) ??
@@ -73,13 +69,10 @@ export default function QuickFinishScreen() {
         setEmail(rawEmail);
         setAutoFilledEmail(true);
       }
-    }).catch(() => {
-      // Signed-out / network error — leave fields empty for manual entry.
-    });
+    }).catch(() => {});
   }, []);
 
   const sourceLabel = source === 'apple' ? 'FROM APPLE' : source === 'google' ? 'FROM GOOGLE' : '';
-  // nameAutoFilled / emailAutoFilled drive the green-tint + checkmark UI.
   const nameAutoFilled = isAutoFill && autoFilledName;
   const emailAutoFilled = isAutoFill && autoFilledEmail;
 
@@ -90,37 +83,25 @@ export default function QuickFinishScreen() {
     if (submitting) return;
     setSubmitting(true);
     try {
-      // AUTH-03: persist the role the user chose during onboarding (is_seeker /
-      // is_scout / current_role). Real persistence happens here, after the session
-      // exists. setIntendedRole on role.tsx only updated the in-memory cache.
       const role = getIntendedRole();
       if (role) {
         await setIntendedRoleFlags(role);
       }
 
-      // DATA-01: save display_name from the confirmed name fields.
       const displayName = `${first.trim()} ${last.trim()}`.trim();
       if (displayName) {
         await updateProfile({ displayName });
       }
 
-      // SAFE-02: record 18+/Terms/Privacy/AUP acceptance to the consents table +
-      // event log. Best-effort and non-blocking — the box was a hard gate (`ready`).
       void recordOnboardingConsents();
 
-      // REF-03: attribute the new user to a referrer if a code was supplied.
-      // Best-effort — a failed attribution must never block account creation.
-      // 'already_attributed' and 'self_referral' are silently dropped (no retry).
       if (referralCode.length >= 1) {
         void applyReferralCode(referralCode);
       }
     } catch {
       // Non-blocking — a transient network error should not strand the user.
-      // The role/name write will be retried by BootGate on next launch.
     } finally {
       setSubmitting(false);
-      // Scout-only users go straight into Scout-specific onboarding.
-      // Seeker + Both users see Seeker rules first.
       const next = getIntendedRole() === 'scout' ? '/scout/become' : '/seeker/rules';
       router.replace(next);
     }
@@ -128,14 +109,14 @@ export default function QuickFinishScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
@@ -171,7 +152,7 @@ export default function QuickFinishScreen() {
                 <Ionicons
                   name={source === 'apple' ? 'logo-apple' : 'logo-google'}
                   size={10}
-                  color={source === 'apple' ? '#ffffff' : '#FFD56B'}
+                  color={source === 'apple' ? colors.textPrimary : '#EA4335'}
                 />
                 <Text style={styles.sourcePillText}>{sourceLabel}</Text>
               </View>
@@ -186,17 +167,12 @@ export default function QuickFinishScreen() {
                   value={first}
                   onChangeText={setFirst}
                   placeholder="Troy"
-                  placeholderTextColor="rgba(255,255,255,0.25)"
+                  placeholderTextColor={colors.textTertiary}
                   autoCapitalize="words"
                   autoCorrect={false}
                 />
                 {nameAutoFilled && (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={16}
-                    color="#00FF7F"
-                    style={styles.inputCheck}
-                  />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.verified} style={styles.inputCheck} />
                 )}
               </View>
             </View>
@@ -208,17 +184,12 @@ export default function QuickFinishScreen() {
                   value={last}
                   onChangeText={setLast}
                   placeholder="Reed"
-                  placeholderTextColor="rgba(255,255,255,0.25)"
+                  placeholderTextColor={colors.textTertiary}
                   autoCapitalize="words"
                   autoCorrect={false}
                 />
                 {nameAutoFilled && (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={16}
-                    color="#00FF7F"
-                    style={styles.inputCheck}
-                  />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.verified} style={styles.inputCheck} />
                 )}
               </View>
             </View>
@@ -232,7 +203,7 @@ export default function QuickFinishScreen() {
                 <Ionicons
                   name={source === 'apple' ? 'logo-apple' : 'logo-google'}
                   size={10}
-                  color={source === 'apple' ? '#ffffff' : '#FFD56B'}
+                  color={source === 'apple' ? colors.textPrimary : '#EA4335'}
                 />
                 <Text style={styles.sourcePillText}>{sourceLabel}</Text>
               </View>
@@ -245,18 +216,13 @@ export default function QuickFinishScreen() {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="you@email.com"
-                placeholderTextColor="rgba(255,255,255,0.25)"
+                placeholderTextColor={colors.textTertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
               />
               {emailAutoFilled && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={16}
-                  color="#00FF7F"
-                  style={styles.inputCheck}
-                />
+                <Ionicons name="checkmark-circle" size={16} color={colors.verified} style={styles.inputCheck} />
               )}
             </View>
             {email.length > 0 && !emailOk && (
@@ -269,17 +235,16 @@ export default function QuickFinishScreen() {
             )}
           </View>
 
-          {/* PHONE VERIFIED PILL — only shown for phone-OTP sign-ups */}
           {source === 'phone' && (
             <View style={styles.phoneRow}>
               <View style={styles.phoneIconWrap}>
-                <Ionicons name="phone-portrait-outline" size={18} color="#00FF7F" />
+                <Ionicons name="phone-portrait-outline" size={18} color={colors.verified} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.phoneTitle}>Phone verified</Text>
                 <Text style={styles.phoneWhy}>From your sign-up. You can update it later in profile.</Text>
               </View>
-              <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
+              <Ionicons name="checkmark-circle" size={18} color={colors.verified} />
             </View>
           )}
 
@@ -291,50 +256,34 @@ export default function QuickFinishScreen() {
             onPress={() => setConsented((v) => !v)}
           >
             <View style={[styles.checkbox, consented && styles.checkboxOn]}>
-              {consented && <Ionicons name="checkmark" size={14} color="#000" />}
+              {consented && <Ionicons name="checkmark" size={14} color={colors.white} />}
             </View>
             <Text style={styles.consentText}>
-              <Text style={styles.consentBold}>I am 18 or older</Text> and I agree to LMC&apos;s{' '}
-              <Text
-                style={styles.consentLink}
-                onPress={() => router.push('/legal/terms')}
-              >
-                Terms
-              </Text>
+              <Text style={styles.consentBold}>I am 18 or older</Text> and I agree to Let Me Check's{' '}
+              <Text style={styles.consentLink} onPress={() => router.push('/legal/terms')}>Terms</Text>
               ,{' '}
-              <Text
-                style={styles.consentLink}
-                onPress={() => router.push('/legal/privacy')}
-              >
-                Privacy Policy
-              </Text>
+              <Text style={styles.consentLink} onPress={() => router.push('/legal/privacy')}>Privacy Policy</Text>
               , and{' '}
-              <Text
-                style={styles.consentLink}
-                onPress={() => router.push('/legal/aup')}
-              >
-                Acceptable Use Policy
-              </Text>
+              <Text style={styles.consentLink} onPress={() => router.push('/legal/aup')}>Acceptable Use Policy</Text>
               .
             </Text>
           </TouchableOpacity>
 
-          {/* OPTIONAL SMS MARKETING — separate, unchecked by default, doesn't gate the CTA */}
           <TouchableOpacity
             style={styles.consentRow}
             activeOpacity={0.75}
             onPress={() => setSmsOptIn((v) => !v)}
           >
             <View style={[styles.checkbox, smsOptIn && styles.checkboxOn]}>
-              {smsOptIn && <Ionicons name="checkmark" size={14} color="#000" />}
+              {smsOptIn && <Ionicons name="checkmark" size={14} color={colors.white} />}
             </View>
             <Text style={styles.consentText}>
               Send me SMS updates about new venues, promos, and check-completion alerts.{' '}
-              <Text style={styles.consentOptional}>(Optional · You can opt out anytime)</Text>
+              <Text style={styles.consentOptional}>(Optional, you can opt out anytime)</Text>
             </Text>
           </TouchableOpacity>
 
-          {/* REFERRAL CODE — optional, pre-filled from deep-link ?ref= param */}
+          {/* REFERRAL CODE */}
           <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>HAVE A REFERRAL CODE?</Text>
           <View style={[styles.field, { marginBottom: 18 }]}>
             <View style={styles.inputWrap}>
@@ -343,18 +292,13 @@ export default function QuickFinishScreen() {
                 value={referralCode}
                 onChangeText={(v) => setReferralCode(v.trim().toUpperCase())}
                 placeholder="e.g. ABC1234"
-                placeholderTextColor="rgba(255,255,255,0.25)"
+                placeholderTextColor={colors.textTertiary}
                 autoCapitalize="characters"
                 autoCorrect={false}
                 maxLength={12}
               />
               {referralCode.length > 0 && (
-                <Ionicons
-                  name="gift-outline"
-                  size={16}
-                  color="#FFCB47"
-                  style={styles.inputCheck}
-                />
+                <Ionicons name="gift-outline" size={16} color={colors.amber} style={styles.inputCheck} />
               )}
             </View>
             <Text style={styles.fieldHint}>
@@ -366,7 +310,7 @@ export default function QuickFinishScreen() {
 
           {/* TRUST */}
           <View style={styles.trustCard}>
-            <Ionicons name="lock-closed-outline" size={16} color="#00FF7F" />
+            <Ionicons name="lock-closed-outline" size={16} color={colors.verified} />
             <View style={{ flex: 1 }}>
               <Text style={styles.trustTitle}>How we use this</Text>
               <Text style={styles.trustWhy}>
@@ -375,20 +319,14 @@ export default function QuickFinishScreen() {
             </View>
           </View>
 
-          {/* CTA */}
           <TouchableOpacity
             style={[styles.primaryBtn, (!ready || submitting) && styles.primaryBtnDisabled]}
             disabled={!ready || submitting}
             onPress={handleFinish}
             activeOpacity={0.85}
           >
-            <Text
-              style={[
-                styles.primaryBtnText,
-                (!ready || submitting) && styles.primaryBtnTextDisabled,
-              ]}
-            >
-              {submitting ? 'CREATING ACCOUNT…' : 'FINISH SIGN-UP'}
+            <Text style={[styles.primaryBtnText, (!ready || submitting) && styles.primaryBtnTextDisabled]}>
+              {submitting ? 'CREATING ACCOUNT...' : 'FINISH SIGN-UP'}
             </Text>
           </TouchableOpacity>
 
@@ -402,7 +340,7 @@ export default function QuickFinishScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
@@ -415,27 +353,27 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.12)' },
-  dotDone: { backgroundColor: 'rgba(0,255,127,0.55)' },
-  dotActive: { backgroundColor: '#00FF7F' },
+  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },
+  dotDone: { backgroundColor: 'rgba(218,37,29,0.35)' },
+  dotActive: { backgroundColor: colors.red },
   scroll: { paddingHorizontal: 26, paddingBottom: 48 },
 
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 6,
   },
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 20,
     marginBottom: 22,
@@ -444,7 +382,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 12,
   },
@@ -468,17 +406,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   sourcePillApple: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   sourcePillGoogle: {
-    backgroundColor: 'rgba(255,213,107,0.1)',
-    borderColor: 'rgba(255,213,107,0.4)',
+    backgroundColor: 'rgba(234,67,53,0.07)',
+    borderColor: 'rgba(234,67,53,0.25)',
   },
   sourcePillText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     letterSpacing: 1.4,
   },
 
@@ -493,7 +431,7 @@ const styles = StyleSheet.create({
   fieldHint: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: '#00FF7F',
+    color: colors.textTertiary,
     marginTop: 6,
     paddingHorizontal: 4,
     lineHeight: 16,
@@ -503,17 +441,17 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 1.5,
     marginBottom: 6,
   },
   input: {
     fontFamily: 'Inter_500Medium',
     fontSize: 16,
-    color: '#ffffff',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    color: colors.textPrimary,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -521,13 +459,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   inputAutoFilled: {
-    backgroundColor: 'rgba(0,255,127,0.08)',
-    borderColor: 'rgba(0,255,127,0.4)',
+    backgroundColor: 'rgba(22,163,74,0.07)',
+    borderColor: 'rgba(22,163,74,0.3)',
   },
   fieldError: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11.5,
-    color: '#FF6B6B',
+    color: colors.danger,
     marginTop: 6,
     paddingHorizontal: 4,
   },
@@ -536,9 +474,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(0,255,127,0.08)',
+    backgroundColor: 'rgba(22,163,74,0.07)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.3)',
+    borderColor: 'rgba(22,163,74,0.2)',
     borderRadius: 12,
     padding: 14,
     marginBottom: 4,
@@ -547,21 +485,21 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,255,127,0.15)',
+    backgroundColor: 'rgba(22,163,74,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   phoneTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   phoneWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 16,
   },
 
@@ -577,35 +515,35 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
   checkboxOn: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+    backgroundColor: colors.red,
+    borderColor: colors.red,
   },
   consentText: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.1,
   },
   consentBold: {
     fontFamily: 'Inter_700Bold',
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
   consentLink: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.red,
     textDecorationLine: 'underline',
   },
   consentOptional: {
     fontFamily: 'Inter_400Regular',
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     fontSize: 12,
   },
 
@@ -614,51 +552,51 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
     padding: 14,
-    backgroundColor: 'rgba(0,255,127,0.08)',
+    backgroundColor: 'rgba(22,163,74,0.07)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.3)',
+    borderColor: 'rgba(22,163,74,0.18)',
     marginTop: 18,
     marginBottom: 16,
   },
   trustTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
     marginBottom: 3,
   },
   trustWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     lineHeight: 16,
   },
 
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 14,
   },
   primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.border,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
   primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     letterSpacing: 2,
   },
 
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
     paddingHorizontal: 8,

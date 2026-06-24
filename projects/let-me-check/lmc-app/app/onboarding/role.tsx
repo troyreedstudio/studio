@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { setIntendedRole, getIntendedRole } from '../state/intended-role';
+import { colors } from '../lib/theme';
 
 type Role = 'seeker' | 'scout' | 'both';
 
@@ -22,8 +23,6 @@ const BOTH_PERKS = [
 
 export default function RoleScreen() {
   const router = useRouter();
-  // Default to 'both' (recommended hero) — unless they leaned a way on the
-  // how-it-works videos, in which case start on that side.
   const [selected, setSelected] = useState<Role>(getIntendedRole() ?? 'both');
 
   const handleContinue = () => {
@@ -33,7 +32,7 @@ export default function RoleScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <View style={styles.progressRow}>
@@ -62,13 +61,13 @@ export default function RoleScreen() {
               <View style={styles.roleTop}>
                 <View style={styles.heroIcons}>
                   <View style={styles.roleIconWrap}>
-                    <Ionicons name="eye-outline" size={22} color="#ffffff" />
+                    <Ionicons name="eye-outline" size={22} color={colors.white} />
                   </View>
                   <View style={styles.roleIconWrap}>
-                    <Ionicons name="videocam-outline" size={22} color="#ffffff" />
+                    <Ionicons name="videocam-outline" size={22} color={colors.white} />
                   </View>
                 </View>
-                {selected === 'both' && <Ionicons name="checkmark-circle" size={24} color="#00FF7F" />}
+                {selected === 'both' && <Ionicons name="checkmark-circle" size={24} color={colors.verified} />}
               </View>
               <Text style={styles.heroTitle}>Seeker + Scout</Text>
               <Text style={styles.heroSub}>
@@ -77,7 +76,7 @@ export default function RoleScreen() {
               <View style={styles.perkList}>
                 {BOTH_PERKS.map((p, i) => (
                   <View key={i} style={styles.perkRow}>
-                    <Ionicons name="checkmark" size={14} color="#00FF7F" />
+                    <Ionicons name="checkmark" size={14} color={colors.verified} />
                     <Text style={styles.perkText}>{p}</Text>
                   </View>
                 ))}
@@ -100,14 +99,14 @@ export default function RoleScreen() {
           >
             <View style={styles.roleTop}>
               <View style={styles.roleIconWrap}>
-                <Ionicons name="eye-outline" size={26} color="#ffffff" />
+                <Ionicons name="eye-outline" size={26} color={colors.white} />
               </View>
-              {selected === 'seeker' && <Ionicons name="checkmark-circle" size={22} color="#00FF7F" />}
+              {selected === 'seeker' && <Ionicons name="checkmark-circle" size={22} color={colors.verified} />}
             </View>
             <View style={styles.roleTitleRow}>
               <Text style={styles.roleHeadline}>Know before you go</Text>
               <View style={[styles.tagPill, styles.tagPillSeeker]}>
-                <Ionicons name="eye" size={10} color="#88B4FF" />
+                <Ionicons name="eye" size={10} color={colors.red} />
                 <Text style={[styles.tagPillText, styles.tagPillSeekerText]}>SEEKER</Text>
               </View>
             </View>
@@ -124,14 +123,14 @@ export default function RoleScreen() {
           >
             <View style={styles.roleTop}>
               <View style={styles.roleIconWrap}>
-                <Ionicons name="videocam-outline" size={26} color="#ffffff" />
+                <Ionicons name="videocam-outline" size={26} color={colors.white} />
               </View>
-              {selected === 'scout' && <Ionicons name="checkmark-circle" size={22} color="#00FF7F" />}
+              {selected === 'scout' && <Ionicons name="checkmark-circle" size={22} color={colors.verified} />}
             </View>
             <View style={styles.roleTitleRow}>
               <Text style={styles.roleHeadline}>Be the eyes for the city</Text>
               <View style={[styles.tagPill, styles.tagPillScout]}>
-                <Ionicons name="videocam" size={10} color="#00FF7F" />
+                <Ionicons name="videocam" size={10} color={colors.red} />
                 <Text style={[styles.tagPillText, styles.tagPillScoutText]}>SCOUT</Text>
               </View>
             </View>
@@ -144,12 +143,12 @@ export default function RoleScreen() {
           <TouchableOpacity style={styles.primaryBtn} onPress={handleContinue} activeOpacity={0.85}>
             <View style={styles.primaryBtnInner}>
               <Text style={styles.primaryBtnText}>CONTINUE</Text>
-              <Ionicons name="arrow-forward" size={16} color="#000" />
+              <Ionicons name="arrow-forward" size={16} color={colors.onRed} />
             </View>
           </TouchableOpacity>
 
           <Text style={styles.foot}>
-            You can change your mind — Seeker ↔ Scout toggle lives in your profile.
+            You can change your mind — Seeker and Scout toggle lives in your profile.
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -158,49 +157,36 @@ export default function RoleScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 16,
   },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 14,
-    letterSpacing: 0.5,
-  },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.12)' },
-  dotDone: { backgroundColor: 'rgba(0,255,127,0.55)' },
-  dotActive: { backgroundColor: '#00FF7F' },
+  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },
+  dotDone: { backgroundColor: 'rgba(218,37,29,0.35)' },
+  dotActive: { backgroundColor: colors.red },
   scroll: { paddingHorizontal: 22, paddingBottom: 40 },
 
-  title: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 26,
-    color: '#ffffff',
-    letterSpacing: 0.2,
-    marginBottom: 6,
-  },
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 20,
     marginBottom: 26,
   },
 
-  // Shared selected state — light BLUE tint so black text stays readable
+  // Selected: red border + faint red tint
   cardActive: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.6)',
+    backgroundColor: 'rgba(218,37,29,0.06)',
+    borderColor: colors.red,
   },
 
   // HERO (Both)
@@ -216,7 +202,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: '#FFCB47',
+    backgroundColor: colors.amber,
     borderWidth: 1,
     borderColor: '#C99A1F',
   },
@@ -227,9 +213,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1.6,
   },
   heroCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.textPrimary,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: colors.textPrimary,
     borderRadius: 18,
     padding: 20,
     paddingTop: 22,
@@ -238,14 +224,14 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 22,
-    color: '#ffffff',
+    color: colors.white,
     letterSpacing: 0.2,
     marginBottom: 6,
   },
   heroSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.75)',
     lineHeight: 19,
     marginBottom: 16,
   },
@@ -255,25 +241,25 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.88)',
     lineHeight: 18,
   },
 
   // Divider
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.12)' },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
   dividerText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     letterSpacing: 2,
   },
 
-  // Secondary role cards (Seeker / Scout) — full width, with descriptions
+  // Secondary role cards
   roleCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 16,
     padding: 18,
     marginBottom: 14,
@@ -288,7 +274,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.textPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -302,13 +288,13 @@ const styles = StyleSheet.create({
   roleHeadline: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   roleDesc: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     lineHeight: 19,
   },
   tagPill: {
@@ -321,23 +307,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   tagPillSeeker: {
-    backgroundColor: 'rgba(60,110,200,0.18)',
-    borderColor: 'rgba(136,180,255,0.5)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderColor: 'rgba(218,37,29,0.3)',
   },
   tagPillScout: {
-    backgroundColor: 'rgba(0,255,127,0.12)',
-    borderColor: 'rgba(0,255,127,0.45)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderColor: 'rgba(218,37,29,0.3)',
   },
   tagPillText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
     letterSpacing: 1.8,
   },
-  tagPillSeekerText: { color: '#88B4FF' },
-  tagPillScoutText: { color: '#00FF7F' },
+  tagPillSeekerText: { color: colors.red },
+  tagPillScoutText: { color: colors.red },
 
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
@@ -347,7 +333,7 @@ const styles = StyleSheet.create({
   primaryBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
@@ -355,7 +341,7 @@ const styles = StyleSheet.create({
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
   },

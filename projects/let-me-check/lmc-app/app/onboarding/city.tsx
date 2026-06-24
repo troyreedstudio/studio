@@ -22,15 +22,11 @@ import {
 } from '../data/markets';
 import { getIntendedRole } from '../state/intended-role';
 import { setManualLocation } from '../state/location';
+import { colors } from '../lib/theme';
 
 type Status = MarketStatus;
 type City = Market & { scouts: number; status: MarketStatus };
 
-/**
- * Detect the user's city from IP (ipwho.is) and return the best-match market
- * id from the provided city list. Returns null if no match or on failure.
- * Never defaults to Miami or any hard-coded market.
- */
 async function detectCityId(cities: City[]): Promise<string | null> {
   try {
     const res = await fetch('https://ipwho.is/');
@@ -39,7 +35,6 @@ async function detectCityId(cities: City[]): Promise<string | null> {
     const ipCity: string = ((data.city as string | undefined) ?? '').toLowerCase();
     const ipRegion: string = ((data.region as string | undefined) ?? '').toLowerCase();
     if (!ipCity) return null;
-    // Match against live markets first, then soon markets (never waitlist).
     const match = cities.find(
       (c) =>
         (c.status === 'live' || c.status === 'soon') &&
@@ -58,22 +53,15 @@ export default function CityPickerScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ country?: string; from?: string }>();
   const countryCode = params.country || DEFAULT_COUNTRY_CODE;
-  // 'home' means the user is already authenticated and opened the picker from
-  // the Seeker home location pill — Continue must update their city and return
-  // to home, NOT route to sign-up (which would bounce them into the scout hub).
   const isPostAuth = params.from === 'home';
   const country = getCountryByCode(countryCode) || getCountryByCode(DEFAULT_COUNTRY_CODE)!;
 
   const [query, setQuery] = useState('');
-  // No hardcoded default — resolved from real IP detection below.
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detectedId, setDetectedId] = useState<string | null>(null);
 
   const allCitiesInCountry: City[] = getMarketsForCountry(countryCode) as City[];
 
-  // Detect the user's real city on mount via IP. Never default to Miami.
-  // If detection fails or finds no matching market, the banner stays hidden
-  // and the user picks manually.
   useEffect(() => {
     let cancelled = false;
     detectCityId(allCitiesInCountry).then((id) => {
@@ -95,11 +83,6 @@ export default function CityPickerScreen() {
     { label: 'WAITLIST', status: 'waitlist' },
   ];
 
-  // Two paths:
-  //   Post-auth (from=home): user tapped the location pill on the Seeker home
-  //     screen. Persist the new city into location state and go straight back to
-  //     home with the chosen marketId. Never touch sign-up from this path.
-  //   Pre-auth (onboarding): carry the market choice into sign-up as before.
   const handleContinue = () => {
     if (!selectedId) return;
 
@@ -122,22 +105,20 @@ export default function CityPickerScreen() {
     });
   };
 
-  // The "detected" banner shows only when we matched a real city from IP.
   const detected = detectedId
     ? allCitiesInCountry.find((c) => c.id === detectedId && c.status === 'live')
     : null;
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
@@ -151,26 +132,24 @@ export default function CityPickerScreen() {
           {country.flag} {country.name} · {allCitiesInCountry.length} cities. Scouts where we&apos;ve launched, waitlist for the rest.
         </Text>
 
-        {/* Search */}
         <View style={styles.searchWrap}>
-          <Ionicons name="search" size={16} color="rgba(255,255,255,0.55)" />
+          <Ionicons name="search" size={16} color={colors.textTertiary} />
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Search city or country"
-            placeholderTextColor="rgba(255,255,255,0.25)"
+            placeholderTextColor={colors.textTertiary}
             style={styles.searchInput}
             autoCapitalize="words"
             autoCorrect={false}
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close-circle" size={16} color="rgba(255,255,255,0.45)" />
+              <Ionicons name="close-circle" size={16} color={colors.textTertiary} />
             </TouchableOpacity>
           )}
         </View>
 
-        {/* Detected banner */}
         {detected && query.length === 0 && (
           <TouchableOpacity
             style={styles.detectedRow}
@@ -178,7 +157,7 @@ export default function CityPickerScreen() {
             onPress={() => setSelectedId(detected.id)}
           >
             <View style={styles.detectedIconWrap}>
-              <Ionicons name="locate" size={14} color="#00FF7F" />
+              <Ionicons name="locate" size={14} color={colors.verified} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.detectedLabel}>DETECTED LOCATION</Text>
@@ -208,7 +187,6 @@ export default function CityPickerScreen() {
                       if (city.status === 'live' || city.status === 'soon') {
                         setSelectedId(city.id);
                       } else {
-                        // Waitlist sign-up API not yet built — inform honestly.
                         Alert.alert(
                           `${city.name} — Not live yet`,
                           `${city.name} isn't a Let Me Check market yet. Waitlist sign-up is coming soon.`,
@@ -228,7 +206,6 @@ export default function CityPickerScreen() {
               <Text style={styles.emptySub}>
                 We&apos;ll let you know when Let Me Check launches in your city.
               </Text>
-              {/* Waitlist sign-up API not yet built — non-interactive label */}
               <View style={styles.waitlistBtn}>
                 <Text style={styles.waitlistBtnText}>WAITLIST COMING SOON</Text>
               </View>
@@ -236,7 +213,6 @@ export default function CityPickerScreen() {
           )}
         </ScrollView>
 
-        {/* Bottom CTA */}
         <View style={styles.footer}>
           <TouchableOpacity
             style={[styles.cta, !selectedId && styles.ctaDisabled]}
@@ -244,9 +220,7 @@ export default function CityPickerScreen() {
             onPress={handleContinue}
             activeOpacity={0.85}
           >
-            <Text
-              style={[styles.ctaText, !selectedId && styles.ctaTextDisabled]}
-            >
+            <Text style={[styles.ctaText, !selectedId && styles.ctaTextDisabled]}>
               CONTINUE
             </Text>
           </TouchableOpacity>
@@ -268,8 +242,8 @@ function CityCard({
   const isLive = city.status === 'live';
   const isSoon = city.status === 'soon';
   const monogram = city.name.charAt(0);
-
   const tappable = isLive || isSoon;
+
   return (
     <TouchableOpacity
       style={[
@@ -280,13 +254,10 @@ function CityCard({
       activeOpacity={0.75}
       onPress={onPress}
     >
-      <View
-        style={[
-          styles.monoWrap,
-          selected && tappable && styles.monoWrapSelected,
-        ]}
-      >
-        <Text style={styles.monoText}>{monogram}</Text>
+      <View style={[styles.monoWrap, selected && tappable && styles.monoWrapSelected]}>
+        <Text style={[styles.monoText, selected && tappable && styles.monoTextSelected]}>
+          {monogram}
+        </Text>
       </View>
 
       <View style={styles.cardBody}>
@@ -325,11 +296,8 @@ function CityCard({
   );
 }
 
-const INDIGO = '#143782';
-const INDIGO_LIGHT = 'rgba(20,55,130,0.5)';
-
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
@@ -342,18 +310,18 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
-  dotDone: { backgroundColor: '#00FF7F' },
+  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },
+  dotDone: { backgroundColor: 'rgba(218,37,29,0.4)' },
 
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     paddingHorizontal: 22,
     marginBottom: 6,
     letterSpacing: 0.2,
@@ -361,7 +329,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     paddingHorizontal: 22,
     marginBottom: 18,
     lineHeight: 20,
@@ -374,9 +342,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 11,
@@ -385,7 +353,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     padding: 0,
   },
@@ -396,9 +364,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(0,255,127,0.08)',
+    backgroundColor: 'rgba(22,163,74,0.07)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.25)',
+    borderColor: 'rgba(22,163,74,0.25)',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -407,27 +375,27 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(22,163,74,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   detectedLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 1.8,
     marginBottom: 2,
   },
   detectedCity: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   detectedAction: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 1.6,
   },
 
@@ -438,7 +406,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 10,
   },
@@ -447,72 +415,73 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 8,
   },
   cardSelected: {
-    backgroundColor: INDIGO_LIGHT,
-    borderColor: 'rgba(60,110,200,0.6)',
+    backgroundColor: 'rgba(218,37,29,0.06)',
+    borderColor: colors.red,
   },
-  cardDimmed: {
-    opacity: 0.6,
-  },
+  cardDimmed: { opacity: 0.5 },
 
   monoWrap: {
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: INDIGO,
+    backgroundColor: colors.textPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   monoWrapSelected: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
   },
   monoText: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.white,
     letterSpacing: 1,
+  },
+  monoTextSelected: {
+    color: colors.white,
   },
 
   cardBody: { flex: 1 },
   cityName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 3,
   },
-  cityNameDimmed: { color: 'rgba(255,255,255,0.7)' },
+  cityNameDimmed: { color: colors.textSecondary },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   cityRegion: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 0.2,
   },
   metaDot: {
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: colors.border,
   },
   scoutCount: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 12,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 0.4,
   },
   scoutLabel: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 0.3,
   },
 
@@ -526,24 +495,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statusLive: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderColor: 'rgba(0,255,127,0.55)',
+    backgroundColor: 'rgba(22,163,74,0.08)',
+    borderColor: 'rgba(22,163,74,0.35)',
   },
   statusDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.verified,
   },
   statusLiveText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#ffffff',
+    color: colors.verified,
     letterSpacing: 1,
   },
   statusSoon: {
-    backgroundColor: 'rgba(255,107,0,0.12)',
-    borderColor: 'rgba(255,107,0,0.4)',
+    backgroundColor: 'rgba(255,107,0,0.08)',
+    borderColor: 'rgba(255,107,0,0.3)',
   },
   statusSoonText: {
     fontFamily: 'Inter_700Bold',
@@ -552,13 +521,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   statusWait: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   statusWaitText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textTertiary,
     letterSpacing: 1.2,
   },
 
@@ -569,14 +538,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#ffffff',
+    color: colors.textPrimary,
     marginBottom: 6,
     letterSpacing: 0.2,
   },
   emptySub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 18,
@@ -587,13 +556,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.4)',
-    backgroundColor: 'rgba(0,255,127,0.08)',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   waitlistBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.textTertiary,
     letterSpacing: 2,
   },
 
@@ -602,24 +571,24 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 24,
     borderTopWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: colors.border,
   },
   cta: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
   },
   ctaDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.border,
   },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 3,
   },
   ctaTextDisabled: {
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
   },
 });
