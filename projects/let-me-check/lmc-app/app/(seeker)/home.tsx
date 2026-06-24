@@ -395,9 +395,9 @@ function SearchOverlay({
       // If playback fails (silent mode, simulator, etc.) just continue
     }
 
-    // 3. Brief delay so the beep's attack plays before the mic opens (snappy — the
-    //    short cue's quiet tail rings out while listening; it won't be transcribed).
-    await new Promise<void>((resolve) => setTimeout(resolve, 130));
+    // 3. Tiny delay — just the chime's attack plays before the mic opens; the quiet
+    //    tail rings out while listening (a musical tone isn't transcribed as speech).
+    await new Promise<void>((resolve) => setTimeout(resolve, 70));
 
     // 4. Now arm the microphone — user hears beep, then speaks
     setListening(true);
