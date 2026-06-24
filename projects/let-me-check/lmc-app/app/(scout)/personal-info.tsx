@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
   TextInput,
   ActivityIndicator,
   Alert,
@@ -16,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { getProfile, updateProfile } from '../lib/api';
+import { colors } from '../lib/theme';
 
 export default function PersonalInfoScreen() {
   const router = useRouter();
@@ -92,6 +94,7 @@ export default function PersonalInfoScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -120,7 +123,7 @@ export default function PersonalInfoScreen() {
 
           {loading ? (
             <View style={styles.centerWrap}>
-              <ActivityIndicator color="#00FF7F" />
+              <ActivityIndicator color={colors.red} />
               <Text style={styles.loadingText}>Loading profile...</Text>
             </View>
           ) : loadError ? (
@@ -142,7 +145,7 @@ export default function PersonalInfoScreen() {
                     value={displayName}
                     onChangeText={setDisplayName}
                     placeholder="Your name"
-                    placeholderTextColor="rgba(255,255,255,0.25)"
+                    placeholderTextColor={colors.textTertiary}
                     autoCapitalize="words"
                     autoCorrect={false}
                     returnKeyType="next"
@@ -159,7 +162,7 @@ export default function PersonalInfoScreen() {
                     value={phone}
                     onChangeText={setPhone}
                     placeholder="+1 555 000 0000"
-                    placeholderTextColor="rgba(255,255,255,0.25)"
+                    placeholderTextColor={colors.textTertiary}
                     keyboardType="phone-pad"
                     autoCorrect={false}
                     returnKeyType="done"
@@ -173,7 +176,7 @@ export default function PersonalInfoScreen() {
                   <View style={styles.fieldLabelRow}>
                     <Text style={styles.fieldLabel}>EMAIL</Text>
                     <View style={styles.readOnlyBadge}>
-                      <Ionicons name="lock-closed-outline" size={10} color="rgba(255,255,255,0.4)" />
+                      <Ionicons name="lock-closed-outline" size={10} color={colors.textTertiary} />
                       <Text style={styles.readOnlyText}>READ ONLY</Text>
                     </View>
                   </View>
@@ -195,7 +198,7 @@ export default function PersonalInfoScreen() {
                 activeOpacity={0.85}
               >
                 {saving ? (
-                  <ActivityIndicator color="#000" size="small" />
+                  <ActivityIndicator color={colors.onRed} size="small" />
                 ) : (
                   <Text style={[styles.saveBtnText, !isDirty && styles.saveBtnTextDim]}>
                     {isDirty ? 'SAVE CHANGES' : 'NO CHANGES'}
@@ -213,7 +216,7 @@ export default function PersonalInfoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
 
   topBar: {
@@ -223,7 +226,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -236,19 +239,19 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   titleRule: {
     height: 2,
     width: 32,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     marginTop: 8,
   },
   subtitle: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     marginTop: 8,
     letterSpacing: 0.2,
   },
@@ -262,37 +265,37 @@ const styles = StyleSheet.create({
   loadingText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   errorText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,100,100,0.9)',
+    color: colors.danger,
     textAlign: 'center',
     lineHeight: 18,
   },
   retryBtn: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: colors.border,
   },
   retryBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 2,
   },
 
   fieldsCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.bg,
     borderRadius: 16,
     marginHorizontal: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
     paddingHorizontal: 18,
     marginBottom: 22,
   },
@@ -301,7 +304,7 @@ const styles = StyleSheet.create({
   },
   fieldDivider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: colors.border,
   },
   fieldLabelRow: {
     flexDirection: 'row',
@@ -312,7 +315,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 1.8,
     marginBottom: 8,
   },
@@ -320,42 +323,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.surface,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 3,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   readOnlyText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 8,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     letterSpacing: 1.2,
   },
   fieldInput: {
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     padding: 0,
   },
   fieldInputReadOnly: {
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 0.2,
   },
   fieldNote: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.35)',
+    color: colors.textTertiary,
     lineHeight: 16,
     letterSpacing: 0.2,
     marginTop: 6,
   },
 
   saveBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     marginHorizontal: 22,
     paddingVertical: 17,
@@ -364,15 +369,17 @@ const styles = StyleSheet.create({
     minHeight: 54,
   },
   saveBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   saveBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 12.5,
     letterSpacing: 2.5,
   },
   saveBtnTextDim: {
-    color: 'rgba(255,255,255,0.3)',
+    color: colors.textTertiary,
   },
 });
