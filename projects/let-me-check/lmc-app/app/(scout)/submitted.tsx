@@ -142,7 +142,7 @@ export default function SubmittedScreen() {
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={24} color={colors.textSecondary} />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <ScrollView
           contentContainerStyle={styles.scroll}
