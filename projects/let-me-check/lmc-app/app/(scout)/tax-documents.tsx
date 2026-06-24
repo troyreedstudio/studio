@@ -5,15 +5,18 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../lib/theme';
 
 export default function TaxDocumentsScreen() {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Top bar */}
         <View style={styles.topBar}>
@@ -34,7 +37,7 @@ export default function TaxDocumentsScreen() {
 
         {/* Main message card */}
         <View style={styles.infoCard}>
-          <Ionicons name="document-text-outline" size={36} color="rgba(255,255,255,0.35)" />
+          <Ionicons name="document-text-outline" size={36} color={colors.textTertiary} />
           <Text style={styles.infoTitle}>No documents yet</Text>
           <Text style={styles.infoBody}>
             Your 1099-NEC tax document will appear here after you earn $600 in a calendar year.
@@ -71,7 +74,7 @@ export default function TaxDocumentsScreen() {
               style={[styles.row, i > 0 && styles.rowBorder]}
             >
               <View style={styles.rowIcon}>
-                <Ionicons name={item.icon} size={18} color="rgba(255,255,255,0.6)" />
+                <Ionicons name={item.icon} size={18} color={colors.textSecondary} />
               </View>
               <View style={styles.rowBody}>
                 <Text style={styles.rowTitle}>{item.title}</Text>
@@ -91,7 +94,7 @@ export default function TaxDocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
 
   topBar: {
@@ -101,7 +104,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -114,30 +117,30 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   titleRule: {
     height: 2,
     width: 32,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     marginTop: 8,
   },
   subtitle: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     marginTop: 8,
     letterSpacing: 0.2,
   },
 
   infoCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 22,
     padding: 28,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
     alignItems: 'center',
     gap: 14,
     marginBottom: 28,
@@ -145,14 +148,14 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     textAlign: 'center',
   },
   infoBody: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 21,
     textAlign: 'center',
     letterSpacing: 0.2,
@@ -161,18 +164,18 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     paddingHorizontal: 22,
     marginBottom: 12,
   },
 
   explainerCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.bg,
     borderRadius: 14,
     marginHorizontal: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
     paddingHorizontal: 16,
     marginBottom: 24,
   },
@@ -184,13 +187,13 @@ const styles = StyleSheet.create({
   },
   rowBorder: {
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.07)',
+    borderTopColor: colors.border,
   },
   rowIcon: {
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -200,14 +203,14 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13.5,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 4,
   },
   rowText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.2,
   },
@@ -215,7 +218,7 @@ const styles = StyleSheet.create({
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.35)',
+    color: colors.textTertiary,
     textAlign: 'center',
     paddingHorizontal: 32,
     lineHeight: 16,
