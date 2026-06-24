@@ -1,4 +1,4 @@
-// TODO(phase-7): extract the HUD/steps/trouble UI out of filming.tsx — file is >500 lines; refactor BEFORE any further Phase-7 edits.
+// TODO(phase-7): extract the HUD/steps/trouble UI out of filming.tsx - file is >500 lines; refactor BEFORE any further Phase-7 edits.
 import {
   View,
   Text,
@@ -31,14 +31,14 @@ import { colors } from '../lib/theme';
 const TROUBLE_REASONS = [
   'Line is gone / venue empty',
   'Hostile staff or bouncer',
-  "Can’t safely enter the area",
+  "Can't safely enter the area",
   'Venue closed / not operating',
 ];
 
 // Pre-flight film-fence (metres). Matches the server film_fence_max_m (30m). The
-// Scout can't start recording until their live GPS is within this of the venue —
+// Scout can't start recording until their live GPS is within this of the venue -
 // so they never waste a take filming off-location. The server verify-clip gate
-// remains the authoritative reject (defence in depth vs spoofing — Phase 6).
+// remains the authoritative reject (defence in depth vs spoofing - Phase 6).
 const FILM_FENCE_M = 30;
 
 // Haversine distance in metres between two lat/lng points (client pre-flight only).
@@ -65,7 +65,7 @@ export default function FilmingScreen() {
   const totalSeconds = isPriority ? 420 : 600;
   // Guard so 'assigned -> filming' fires exactly once (the first capture start).
   const filmingMarked = useRef(false);
-  // True between the Scout tapping Record and the camera reporting it's ready —
+  // True between the Scout tapping Record and the camera reporting it's ready -
   // startRecording() only fires once the camera is initialized (onInitialized).
   const pendingStart = useRef(false);
   // The ONLY clip source is the live recorder's path (fresh-capture, VID-01),
@@ -74,12 +74,12 @@ export default function FilmingScreen() {
   const [capturedPath, setCapturedPath] = useState<string | null>(null);
   const capturedGps = useRef<{ lat: number; lng: number; accuracyM?: number } | null>(null);
   // Phase 6 (FRAUD-03): fraud signal bag collected at GPS-stamp time (Record press).
-  // Best-effort: null if GPS or collectFraudSignals fails — fraud-eval degrades gracefully.
+  // Best-effort: null if GPS or collectFraudSignals fails - fraud-eval degrades gracefully.
   const capturedFraud = useRef<FraudSignals | null>(null);
 
   // Real camera (vision-camera). Audio is never opened (audio={false} in the
   // viewfinder, VID-02). Back device, permission requested on mount. The camera
-  // can be absent on a simulator — the screen degrades gracefully.
+  // can be absent on a simulator - the screen degrades gracefully.
   const camera = useRef<Camera>(null);
   const device = useCameraDevice('back');
   const { hasPermission, requestPermission } = useCameraPermission();
@@ -147,7 +147,7 @@ export default function FilmingScreen() {
   const [takesCount, setTakesCount] = useState(0);
   const MAX_TAKES = 3;
   // Real upload orchestration (extracted to lib/clips). Drives the progress UI
-  // from progress/status; never marks the check delivered — webhook owns that.
+  // from progress/status; never marks the check delivered - webhook owns that.
   const clipUpload = useClipUpload();
   // 'securing' (08-05) = the brief on-device face-blur step before upload (flag ON
   // only). We treat it like the upload/processing states so the record button is
@@ -160,7 +160,7 @@ export default function FilmingScreen() {
   const uploadPct = Math.round(clipUpload.progress * 100);
   const haloPulse = useRef(new Animated.Value(1)).current;
 
-  // Breathing halo on the idle record button — subtle futuristic pulse
+  // Breathing halo on the idle record button - subtle futuristic pulse
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
@@ -209,7 +209,7 @@ export default function FilmingScreen() {
   };
 
   // Begin a live recording on the back camera. The ONLY clip source is
-  // onRecordingFinished's path — there is no gallery/import path (VID-01).
+  // onRecordingFinished's path - there is no gallery/import path (VID-01).
   const startRecording = () => {
     console.log(`[LMC-CAM] startRecording called, camera.current=${!!camera.current}`);
     camera.current?.startRecording({
@@ -225,7 +225,7 @@ export default function FilmingScreen() {
     });
   };
 
-  // GPS stamp at record time. Phase 5: uses Accuracy.Highest (Pitfall 3 — maximize
+  // GPS stamp at record time. Phase 5: uses Accuracy.Highest (Pitfall 3 - maximize
   // fix quality so the 30 m film-fence check in verify-clip has the best possible
   // coordinate) and captures accuracyM alongside lat/lng so verify-clip can
   // distinguish a genuine on-site fix from a low-accuracy reading. Best-effort:
@@ -246,7 +246,7 @@ export default function FilmingScreen() {
       // instant. Best-effort: never blocks recording if this throws.
       capturedFraud.current = collectFraudSignals(pos.coords.accuracy ?? undefined);
     } catch {
-      // best-effort — never block recording on GPS failure
+      // best-effort - never block recording on GPS failure
     }
   };
 
@@ -261,10 +261,10 @@ export default function FilmingScreen() {
       stampGps();
       // Defer the actual recorder start until the camera reports it is active and
       // ready (handleCameraInitialized). Calling startRecording() before the
-      // camera is awake produced no file — the silent-Submit bug.
+      // camera is awake produced no file - the silent-Submit bug.
       pendingStart.current = true;
     } else {
-      // Manual stop before the 15s cap — stop the real recorder too.
+      // Manual stop before the 15s cap - stop the real recorder too.
       camera.current?.stopRecording().catch(() => {});
     }
     if (starting && checkId && !filmingMarked.current) {
@@ -288,7 +288,7 @@ export default function FilmingScreen() {
   };
 
   // SUBMIT: run the REAL upload through the lib helper. The client never marks
-  // delivered — the Mux webhook owns it (VID-03). On success (upload PUT landed,
+  // delivered - the Mux webhook owns it (VID-03). On success (upload PUT landed,
   // check "processing") route to the success screen; the Seeker's Realtime watch
   // flips to delivered when the webhook fires. On failure, stay so the Scout can
   // retry.
@@ -298,7 +298,7 @@ export default function FilmingScreen() {
       // No file was captured (e.g. the recorder never produced one). Tell the
       // Scout instead of silently doing nothing, and let them retake.
       console.error('[LMC-CAM] submit blocked: capturedPath is null');
-      Alert.alert('No video captured', 'That take didn’t record. Please film the video again.');
+      Alert.alert('No video captured', "That take didn't record. Please film the video again.");
       return;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -382,16 +382,16 @@ export default function FilmingScreen() {
             <Text style={styles.venueAddress}>Brickell, Miami, 0.3 mi</Text>
           </View>
 
-          {/* Pre-flight proximity banner — prominent, live amber→green. Shows the
+          {/* Pre-flight proximity banner - prominent, live amber→green. Shows the
               Scout how far they are and counts down as they approach; flips green
-              and unlocks the record button when they’re within the film-fence. */}
+              and unlocks the record button when they're within the film-fence. */}
           {venuePt != null && distanceM != null && (
             <View
               style={{
-                flexDirection: ‘row’,
-                alignItems: ‘center’,
+                flexDirection: 'row',
+                alignItems: 'center',
                 gap: 10,
-                backgroundColor: outOfRange ? ‘rgba(255,203,71,0.08)’ : ‘rgba(22,163,74,0.08)’,
+                backgroundColor: outOfRange ? 'rgba(255,203,71,0.08)' : 'rgba(22,163,74,0.08)',
                 borderColor: outOfRange ? colors.amber : colors.verified,
                 borderWidth: 1,
                 borderRadius: 14,
@@ -401,14 +401,14 @@ export default function FilmingScreen() {
               }}
             >
               <Ionicons
-                name={outOfRange ? ‘walk’ : ‘checkmark-circle’}
+                name={outOfRange ? 'walk' : 'checkmark-circle'}
                 size={22}
                 color={outOfRange ? colors.amber : colors.verified}
               />
-              <Text style={{ flex: 1, color: colors.textPrimary, fontSize: 14, fontWeight: ‘700’, lineHeight: 19 }}>
+              <Text style={{ flex: 1, color: colors.textPrimary, fontSize: 14, fontWeight: '700', lineHeight: 19 }}>
                 {outOfRange
-                  ? `Outside filming range — you’re ~${Math.round(distanceM)} m from the venue. Move within ${FILM_FENCE_M} m to start recording.`
-                  : `In filming range — tap the record button to film.`}
+                  ? `Outside filming range - you are ~${Math.round(distanceM)} m from the venue. Move within ${FILM_FENCE_M} m to start recording.`
+                  : `In filming range - tap the record button to film.`}
               </Text>
             </View>
           )}
@@ -467,7 +467,7 @@ export default function FilmingScreen() {
           {/* GPS */}
           <View style={styles.gpsPill}>
             <Ionicons name="location" size={11} color={colors.verified} />
-            <Text style={styles.gpsText}>GPS Verified, you’re at the right place</Text>
+            <Text style={styles.gpsText}>GPS Verified, you're at the right place</Text>
           </View>
 
           {/* Record button OR Upload progress */}
@@ -498,12 +498,12 @@ export default function FilmingScreen() {
                 {securing
                   ? 'Securing your video… blurring faces on your device before upload.'
                   : clipUpload.status === 'processing'
-                  ? 'Upload complete. We’re finishing your video, the Seeker gets it when it’s ready.'
-                  : 'Encrypted upload in progress. Don’t close the app.'}
+                  ? "Upload complete. We're finishing your video, the Seeker gets it when it's ready."
+                  : "Encrypted upload in progress. Don't close the app."}
               </Text>
             </View>
           ) : recordSecs >= 15 ? (
-            // Decision card — Retake (if takes left) or Submit
+            // Decision card - Retake (if takes left) or Submit
             <View style={styles.decisionCard}>
               <View style={styles.decisionTopRow}>
                 <Text style={styles.decisionTakeLabel}>
@@ -523,7 +523,7 @@ export default function FilmingScreen() {
               <Text style={styles.decisionSub}>
                 {takesCount >= MAX_TAKES
                   ? 'This is your final take. Submit when ready.'
-                  : 'Submit to send, or retake if it didn’t come out right.'}
+                  : "Submit to send, or retake if it didn't come out right."}
               </Text>
 
               <View style={styles.decisionButtonRow}>
@@ -595,18 +595,18 @@ export default function FilmingScreen() {
 
           {/* Earnings note */}
           <Text style={styles.earnNote}>
-            You’ll earn ${payout} on delivery once the video is accepted
+            You'll earn ${payout} on delivery once the video is accepted
           </Text>
 
-          {/* Trouble Here — secondary fallback, moved below the primary record
+          {/* Trouble Here - secondary fallback, moved below the primary record
               flow so it never competes with the proximity / record instruction. */}
           {troubleReason ? (
             <View style={[styles.troubleBase, styles.troubleReported]}>
               <Ionicons name="checkmark-circle" size={18} color={colors.verified} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.troubleTitle}>REPORTED, SEEKER REFUNDED, YOU’RE COVERED</Text>
+                <Text style={styles.troubleTitle}>REPORTED, SEEKER REFUNDED, YOU'RE COVERED</Text>
                 <Text style={styles.troubleSub}>
-                  {troubleReason}. You’ll still be paid for travel.
+                  {troubleReason}. You'll still be paid for travel.
                 </Text>
               </View>
             </View>
@@ -618,16 +618,16 @@ export default function FilmingScreen() {
             >
               <Ionicons name="warning" size={16} color="#FFCB47" />
               <View style={{ flex: 1 }}>
-                <Text style={styles.troubleTitle}>TROUBLE HERE — REPORT VENUE</Text>
+                <Text style={styles.troubleTitle}>TROUBLE HERE - REPORT VENUE</Text>
                 <Text style={styles.troubleSub}>
-                  Tap if you can’t safely complete this check. Seeker auto-refunded.
+                  Tap if you can't safely complete this check. Seeker auto-refunded.
                 </Text>
               </View>
             </TouchableOpacity>
           ) : (
             <View style={[styles.troubleBase, styles.troubleExpanded]}>
               <View style={styles.troubleHeader}>
-                <Text style={styles.troubleHeaderLabel}>WHAT’S THE ISSUE?</Text>
+                <Text style={styles.troubleHeaderLabel}>WHAT'S THE ISSUE?</Text>
                 <TouchableOpacity
                   onPress={() => setTroubleOpen(false)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -671,7 +671,7 @@ export default function FilmingScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* LIVE CAMERA VIEWFINDER — opens when recording, auto-closes at 15s.
+      {/* LIVE CAMERA VIEWFINDER - opens when recording, auto-closes at 15s.
           Faces are blurred AFTER recording by the lmc-blur native module
           (post-record path), not in this live viewfinder. */}
       <CameraViewfinder
