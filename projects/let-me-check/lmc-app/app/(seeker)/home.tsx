@@ -1112,6 +1112,327 @@ const overlayStyles = StyleSheet.create({
   },
 });
 
+// ── RequestSheet ──────────────────────────────────────────────────────────────
+// Shown in the bottom sheet when a pin is dropped. Replaces the old two-step
+// "IS THIS YOUR SPOT? YES → venue screen" with a single inline sheet.
+
+type RequestSheetProps = {
+  pinName: string | null;
+  market: Market;
+  isPartner: boolean;
+  onCancel: () => void;
+  onRequest: (params: {
+    venue: string;
+    city: string;
+    tier: 'standard' | 'priority';
+    price: string;
+    time: string;
+    interior: string;
+  }) => void;
+};
+
+function RequestSheet({ pinName, market, isPartner, onCancel, onRequest }: RequestSheetProps) {
+  const [selectedTier, setSelectedTier] = useState<'standard' | 'priority'>('standard');
+  const [interior, setInterior] = useState(false);
+
+  const displayName = pinName || 'This location';
+  const basePrice = selectedTier === 'standard' ? 15 : 20;
+  const interiorAdd = interior && isPartner ? 5 : 0;
+  const totalPrice = basePrice + interiorAdd;
+  const priceStr = `$${totalPrice}`;
+  const timeStr = selectedTier === 'standard' ? '10 min' : '7 min';
+
+  const handleRequest = () => {
+    onRequest({
+      venue: displayName,
+      city: market.name,
+      tier: selectedTier,
+      price: priceStr,
+      time: timeStr,
+      interior: interior && isPartner ? '1' : '0',
+    });
+  };
+
+  return (
+    <View style={reqStyles.container}>
+      {/* Place name + cancel */}
+      <View style={reqStyles.header}>
+        <View style={reqStyles.headerLeft}>
+          <Text style={reqStyles.placeName} numberOfLines={1}>{displayName}</Text>
+          <Text style={reqStyles.placeCity}>{market.name}</Text>
+        </View>
+        <TouchableOpacity
+          style={reqStyles.cancelBtn}
+          onPress={onCancel}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={reqStyles.cancelGlyph}>✕</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Tier selector */}
+      <Text style={reqStyles.sectionLabel}>SELECT TIER</Text>
+      <View style={reqStyles.tierRow}>
+        {/* Standard */}
+        <TouchableOpacity
+          style={[reqStyles.tierCard, selectedTier === 'standard' && reqStyles.tierCardActive]}
+          onPress={() => setSelectedTier('standard')}
+          activeOpacity={0.8}
+        >
+          <Text style={reqStyles.tierLabel}>Standard</Text>
+          <Text style={reqStyles.tierPrice}>$15</Text>
+          <Text style={reqStyles.tierTime}>~10 min</Text>
+          {selectedTier === 'standard' && (
+            <View style={reqStyles.selectedBadge}>
+              <Text style={reqStyles.selectedBadgeText}>✓</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* Priority */}
+        <TouchableOpacity
+          style={[reqStyles.tierCard, selectedTier === 'priority' && reqStyles.tierCardPriorityActive]}
+          onPress={() => setSelectedTier('priority')}
+          activeOpacity={0.8}
+        >
+          <View style={reqStyles.priorityBadge}>
+            <Text style={reqStyles.priorityBadgeText}>PRIORITY</Text>
+          </View>
+          <Text style={reqStyles.tierLabel}>Priority</Text>
+          <Text style={reqStyles.tierPrice}>$20</Text>
+          <Text style={reqStyles.tierTime}>~7 min</Text>
+          {selectedTier === 'priority' && (
+            <View style={[reqStyles.selectedBadge, reqStyles.selectedBadgeAmber]}>
+              <Text style={reqStyles.selectedBadgeText}>✓</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Partner interior add-on (only for known partner venues) */}
+      {isPartner && (
+        <TouchableOpacity
+          style={[reqStyles.interiorCard, interior && reqStyles.interiorCardActive]}
+          activeOpacity={0.85}
+          onPress={() => setInterior(!interior)}
+        >
+          <View style={[reqStyles.interiorCheck, interior && reqStyles.interiorCheckActive]}>
+            {interior && <Text style={reqStyles.interiorCheckGlyph}>✓</Text>}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={reqStyles.interiorEyebrow}>✦ PARTNER VENUE</Text>
+            <View style={reqStyles.interiorTitleRow}>
+              <Text style={reqStyles.interiorTitle}>Include interior</Text>
+              <Text style={reqStyles.interiorBadge}>+$5</Text>
+            </View>
+            <Text style={reqStyles.interiorSub}>30-sec video inside the venue</Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
+      {/* Request check CTA */}
+      <TouchableOpacity
+        style={reqStyles.ctaBtn}
+        onPress={handleRequest}
+        activeOpacity={0.85}
+      >
+        <Text style={reqStyles.ctaBtnText}>{`REQUEST CHECK · ${priceStr}`}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const reqStyles = StyleSheet.create({
+  container: {
+    // Sits inside the sheet — no extra background needed
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+    gap: 12,
+  },
+  headerLeft: { flex: 1 },
+  placeName: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 18,
+    color: '#fff',
+    letterSpacing: 0.2,
+    marginBottom: 2,
+  },
+  placeCity: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.3,
+  },
+  cancelBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  cancelGlyph: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+  },
+  sectionLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 2,
+    marginBottom: 10,
+  },
+  tierRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  tierCard: {
+    flex: 1,
+    backgroundColor: '#111',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#222',
+    minHeight: 110,
+  },
+  tierCardActive: {
+    borderColor: '#fff',
+    backgroundColor: '#151515',
+  },
+  tierCardPriorityActive: {
+    borderColor: '#FFCB47',
+    backgroundColor: '#151200',
+  },
+  priorityBadge: {
+    backgroundColor: '#FFCB47',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    alignSelf: 'flex-start',
+    marginBottom: 6,
+  },
+  priorityBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 8,
+    color: '#000',
+    letterSpacing: 1,
+  },
+  tierLabel: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 13,
+    color: '#fff',
+    marginBottom: 4,
+  },
+  tierPrice: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 22,
+    color: '#fff',
+    marginBottom: 2,
+  },
+  tierTime: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12,
+    color: '#00FF7F',
+  },
+  selectedBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedBadgeAmber: { backgroundColor: '#FFCB47' },
+  selectedBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: '#000',
+  },
+  interiorCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: 'rgba(20,55,130,0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(60,110,200,0.5)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    marginBottom: 14,
+  },
+  interiorCardActive: {
+    borderColor: 'rgba(60,110,200,0.9)',
+  },
+  interiorCheck: {
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+    flexShrink: 0,
+  },
+  interiorCheckActive: { backgroundColor: '#00FF7F', borderColor: '#00FF7F' },
+  interiorCheckGlyph: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: '#000',
+  },
+  interiorEyebrow: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: '#E8A0B0',
+    letterSpacing: 2,
+    marginBottom: 3,
+  },
+  interiorTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 3,
+  },
+  interiorTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13,
+    color: '#fff',
+  },
+  interiorBadge: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 12,
+    color: '#00FF7F',
+  },
+  interiorSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  ctaBtn: {
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  ctaBtnText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 14,
+    color: '#000',
+    letterSpacing: 1.5,
+  },
+});
+
 // ── HomeScreen ────────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
@@ -1180,19 +1501,6 @@ export default function HomeScreen() {
 
   // ── Search overlay state ──────────────────────────────────────────────────
   const [searchOpen, setSearchOpen] = useState(false);
-
-  const currentPinSavedId = droppedPin && pinName ? `${pinName}-${droppedPin[0].toFixed(4)}` : null;
-  const isCurrentPinSaved = currentPinSavedId ? saved.isSaved(currentPinSavedId) : false;
-
-  const handleToggleSave = () => {
-    if (!droppedPin || !pinName || !currentPinSavedId) return;
-    saved.toggle({
-      id: currentPinSavedId,
-      name: pinName,
-      coord: droppedPin,
-      marketId,
-    });
-  };
 
   // When marketId changes → fly camera to that market's center
   useEffect(() => {
@@ -1471,7 +1779,7 @@ export default function HomeScreen() {
           </Mapbox.ShapeSource>
         )}
 
-        {/* Dropped pin — user-selected exact spot */}
+        {/* Dropped pin — user-selected exact spot (stem + dot only; sheet handles confirm) */}
         {droppedPin && (
           <Mapbox.MarkerView
             id="dropped-pin"
@@ -1480,58 +1788,6 @@ export default function HomeScreen() {
             anchor={{ x: 0.5, y: 1 }}
           >
             <View style={pinStyles.wrap}>
-              <View style={pinStyles.card}>
-                <Text style={pinStyles.cardLabel}>IS THIS YOUR SPOT?</Text>
-                {pinName && <Text style={pinStyles.cardVenue}>{pinName}</Text>}
-                {isPartnerVenue(pinName) && (
-                  <View style={pinStyles.partnerBadge}>
-                    <Text style={pinStyles.partnerGlyph}>✦</Text>
-                    <Text style={pinStyles.partnerText}>PARTNER · INTERIOR AVAILABLE</Text>
-                  </View>
-                )}
-                <View style={pinStyles.cardActions}>
-                  <TouchableOpacity
-                    style={pinStyles.cardConfirm}
-                    activeOpacity={0.85}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/(seeker)/venue',
-                        params: {
-                          ...(pinName ? { name: pinName } : {}),
-                          marketId,
-                          city: market.name,
-                        },
-                      })
-                    }
-                  >
-                    <Text style={pinStyles.cardConfirmText}>YES</Text>
-                  </TouchableOpacity>
-                  {pinName && (
-                    <TouchableOpacity
-                      style={[
-                        pinStyles.cardHeart,
-                        isCurrentPinSaved && pinStyles.cardHeartActive,
-                      ]}
-                      activeOpacity={0.7}
-                      onPress={handleToggleSave}
-                    >
-                      <Text style={pinStyles.cardHeartGlyph}>
-                        {isCurrentPinSaved ? '♥' : '♡'}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity
-                    style={pinStyles.cardCancel}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setDroppedPin(null);
-                      setPinName(null);
-                    }}
-                  >
-                    <Text style={pinStyles.cardCancelText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
               <View style={pinStyles.stem} />
               <View style={pinStyles.dot} />
             </View>
@@ -1606,114 +1862,135 @@ export default function HomeScreen() {
         <View style={styles.sheetTint} pointerEvents="none" />
         <View style={styles.sheetHandle} />
 
-        <Text style={styles.sheetTitle}>Where do you need eyes?</Text>
-        <Text style={styles.sheetHint}>Search below, or tap any spot on the map.</Text>
-
-        {/* Search tap-target — opens the slide-up SearchOverlay */}
-        <TouchableOpacity
-          style={styles.searchTapTarget}
-          activeOpacity={0.85}
-          onPress={() => setSearchOpen(true)}
-        >
-          <Text style={styles.searchIcon}>🔍</Text>
-          <Text style={styles.searchPlaceholder}>Any place. Any address.</Text>
-        </TouchableOpacity>
-
-        {/* Search overlay — slide-up Modal with keyboard-safe layout */}
-        <SearchOverlay
-          visible={searchOpen}
-          marketCenter={market.center as [number, number]}
-          recents={recents}
-          saved={saved.list}
-          onClose={() => setSearchOpen(false)}
-          onSelect={handleOverlaySelect}
-        />
-
-        {/* Saved chips */}
-        {saved.list.length > 0 && (
+        {droppedPin ? (
+          /* ── Request check sheet — appears when a pin is dropped ── */
+          <RequestSheet
+            pinName={pinName}
+            market={market}
+            isPartner={isPartnerVenue(pinName)}
+            onCancel={() => {
+              setDroppedPin(null);
+              setPinName(null);
+            }}
+            onRequest={({ venue, city, tier, price, time, interior }) => {
+              router.push({
+                pathname: '/(seeker)/payment',
+                params: { venue, city, tier, price, time, interior },
+              });
+            }}
+          />
+        ) : (
           <>
-            <View style={styles.savedRow}>
-              <Text style={styles.recentLabel}>SAVED · {saved.list.length}</Text>
-              <TouchableOpacity
-                onPress={() => router.push('/(seeker)/saved')}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.savedSeeAll}>SEE ALL ›</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.savedChipsRow}>
-              {saved.list.slice(0, 4).map((p) => (
-                <TouchableOpacity
-                  key={p.id}
-                  style={styles.savedChip}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    setDroppedPin(p.coord);
-                    setPinName(p.name);
-                    cameraRef.current?.setCamera({
-                      centerCoordinate: p.coord,
-                      zoomLevel: 17,
-                      pitch: 55,
-                      animationDuration: 1200,
-                    });
-                  }}
-                >
-                  <Text style={styles.savedChipGlyph}>♥</Text>
-                  <Text style={styles.savedChipText} numberOfLines={1}>
-                    {p.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <Text style={styles.sheetTitle}>Where do you need eyes?</Text>
+            <Text style={styles.sheetHint}>Search below, or tap any spot on the map.</Text>
+
+            {/* Search tap-target — opens the slide-up SearchOverlay */}
+            <TouchableOpacity
+              style={styles.searchTapTarget}
+              activeOpacity={0.85}
+              onPress={() => setSearchOpen(true)}
+            >
+              <Text style={styles.searchIcon}>🔍</Text>
+              <Text style={styles.searchPlaceholder}>Any place. Any address.</Text>
+            </TouchableOpacity>
+
+            {/* Search overlay — slide-up Modal with keyboard-safe layout */}
+            <SearchOverlay
+              visible={searchOpen}
+              marketCenter={market.center as [number, number]}
+              recents={recents}
+              saved={saved.list}
+              onClose={() => setSearchOpen(false)}
+              onSelect={handleOverlaySelect}
+            />
+
+            {/* Saved chips */}
+            {saved.list.length > 0 && (
+              <>
+                <View style={styles.savedRow}>
+                  <Text style={styles.recentLabel}>SAVED · {saved.list.length}</Text>
+                  <TouchableOpacity
+                    onPress={() => router.push('/(seeker)/saved')}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.savedSeeAll}>SEE ALL ›</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.savedChipsRow}>
+                  {saved.list.slice(0, 4).map((p) => (
+                    <TouchableOpacity
+                      key={p.id}
+                      style={styles.savedChip}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        setDroppedPin(p.coord);
+                        setPinName(p.name);
+                        cameraRef.current?.setCamera({
+                          centerCoordinate: p.coord,
+                          zoomLevel: 17,
+                          pitch: 55,
+                          animationDuration: 1200,
+                        });
+                      }}
+                    >
+                      <Text style={styles.savedChipGlyph}>♥</Text>
+                      <Text style={styles.savedChipText} numberOfLines={1}>
+                        {p.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+
+            {/* Recent — the user's last 2 confirmed checks, newest first */}
+            {recents.length > 0 && (
+              <>
+                <Text style={styles.recentLabel}>RECENT</Text>
+                {recents.slice(0, 2).map((r) => (
+                  <TouchableOpacity
+                    key={r.name}
+                    style={styles.recentRow}
+                    activeOpacity={0.7}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(seeker)/search',
+                        params: { marketId },
+                      })
+                    }
+                  >
+                    <View style={styles.recentIconWrap}>
+                      <Text style={styles.recentIcon}>🕐</Text>
+                    </View>
+                    <View style={styles.recentText}>
+                      <Text style={styles.recentName}>{r.name}</Text>
+                      <Text style={styles.recentSub}>{r.city} · {relativeTime(r.ts)}</Text>
+                    </View>
+                    <Text style={styles.recentArrow}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+
+            {/* Scout invitation */}
+            <TouchableOpacity
+              style={scoutInviteStyles.card}
+              activeOpacity={0.85}
+              onPress={() => router.push('/scout/become')}
+            >
+              <View style={scoutInviteStyles.left}>
+                <View style={scoutInviteStyles.iconWrap}>
+                  <View style={scoutInviteStyles.iconDot} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={scoutInviteStyles.label}>BECOME A SCOUT</Text>
+                  <Text style={scoutInviteStyles.title}>Be the eyes for your city</Text>
+                </View>
+              </View>
+              <Text style={scoutInviteStyles.arrow}>›</Text>
+            </TouchableOpacity>
           </>
         )}
-
-        {/* Recent — the user's last 2 confirmed checks, newest first */}
-        {recents.length > 0 && (
-          <>
-            <Text style={styles.recentLabel}>RECENT</Text>
-            {recents.slice(0, 2).map((r) => (
-              <TouchableOpacity
-                key={r.name}
-                style={styles.recentRow}
-                activeOpacity={0.7}
-                onPress={() =>
-                  router.push({
-                    pathname: '/(seeker)/search',
-                    params: { marketId },
-                  })
-                }
-              >
-                <View style={styles.recentIconWrap}>
-                  <Text style={styles.recentIcon}>🕐</Text>
-                </View>
-                <View style={styles.recentText}>
-                  <Text style={styles.recentName}>{r.name}</Text>
-                  <Text style={styles.recentSub}>{r.city} · {relativeTime(r.ts)}</Text>
-                </View>
-                <Text style={styles.recentArrow}>›</Text>
-              </TouchableOpacity>
-            ))}
-          </>
-        )}
-
-        {/* Scout invitation */}
-        <TouchableOpacity
-          style={scoutInviteStyles.card}
-          activeOpacity={0.85}
-          onPress={() => router.push('/scout/become')}
-        >
-          <View style={scoutInviteStyles.left}>
-            <View style={scoutInviteStyles.iconWrap}>
-              <View style={scoutInviteStyles.iconDot} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={scoutInviteStyles.label}>BECOME A SCOUT</Text>
-              <Text style={scoutInviteStyles.title}>Be the eyes for your city</Text>
-            </View>
-          </View>
-          <Text style={scoutInviteStyles.arrow}>›</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -1722,103 +1999,6 @@ export default function HomeScreen() {
 const pinStyles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-  },
-  card: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: 'rgba(20,55,130,0.5)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)',
-    marginBottom: 3,
-    minWidth: 130,
-    alignItems: 'center',
-  },
-  cardLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.85)',
-    letterSpacing: 1.4,
-    marginBottom: 4,
-  },
-  cardVenue: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 13,
-    color: '#ffffff',
-    letterSpacing: 0.3,
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  partnerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    alignSelf: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255,138,168,0.18)',
-    borderWidth: 1,
-    borderColor: '#FF8AA8',
-    marginBottom: 8,
-  },
-  partnerGlyph: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 11,
-    color: '#ffffff',
-  },
-  partnerText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: '#ffffff',
-    letterSpacing: 1.3,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  cardConfirm: {
-    backgroundColor: '#00FF7F',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 5,
-  },
-  cardConfirmText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 10,
-    color: '#000000',
-    letterSpacing: 1.2,
-  },
-  cardCancel: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardHeart: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardHeartActive: {
-    backgroundColor: '#E8A0B0',
-  },
-  cardHeartGlyph: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 12,
-    color: '#ffffff',
-    lineHeight: 14,
-  },
-  cardCancelText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 11,
-    color: '#ffffff',
   },
   stem: {
     width: 1.5,
