@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../lib/theme';
 
 // Identity verification for Scouts is handled by Stripe Identity during the
 // Stripe Connect Express onboarding (the payout step). Stripe collects the
@@ -25,7 +26,7 @@ const WHY_ITEMS = [
   {
     icon: 'shield-checkmark-outline' as const,
     title: 'Keeps the network trustworthy',
-    detail: 'One real human per account means Seekers can trust every clip.',
+    detail: 'One real human per account means Seekers can trust every video.',
   },
   {
     icon: 'card-outline' as const,
@@ -62,7 +63,7 @@ export default function ScoutIdentityScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
@@ -85,11 +86,11 @@ export default function ScoutIdentityScreen() {
           {/* Hero */}
           <View style={styles.heroWrap}>
             <View style={styles.iconCircle}>
-              <Ionicons name="shield-checkmark-outline" size={36} color="#00FF7F" />
+              <Ionicons name="shield-checkmark-outline" size={36} color={colors.verified} />
             </View>
             <Text style={styles.title}>Identity verification</Text>
             <Text style={styles.subtitle}>
-              Your identity is verified by our payment partner, Stripe, as part of setting up payouts — not by a separate camera step.
+              Your identity is verified by our payment partner, Stripe, as part of setting up payouts, not by a separate camera step.
             </Text>
           </View>
 
@@ -102,7 +103,7 @@ export default function ScoutIdentityScreen() {
                 style={[styles.listRow, i < WHY_ITEMS.length - 1 && styles.listRowDivider]}
               >
                 <View style={styles.iconWrap}>
-                  <Ionicons name={item.icon} size={20} color="#00FF7F" />
+                  <Ionicons name={item.icon} size={20} color={colors.verified} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.listTitle}>{item.title}</Text>
@@ -128,7 +129,7 @@ export default function ScoutIdentityScreen() {
 
           {/* Privacy note */}
           <View style={styles.privacyCard}>
-            <Ionicons name="lock-closed-outline" size={16} color="#00FF7F" />
+            <Ionicons name="lock-closed-outline" size={16} color={colors.verified} />
             <View style={{ flex: 1 }}>
               <Text style={styles.privacyTitle}>Privacy</Text>
               <Text style={styles.privacyText}>
@@ -144,7 +145,7 @@ export default function ScoutIdentityScreen() {
             activeOpacity={0.85}
           >
             <View style={styles.primaryBtnInner}>
-              <Ionicons name="arrow-forward" size={16} color="#000" />
+              <Ionicons name="arrow-forward" size={16} color={colors.onRed} />
               <Text style={styles.primaryBtnText}>CONTINUE TO PAYOUT SETUP</Text>
             </View>
           </TouchableOpacity>
@@ -159,7 +160,7 @@ export default function ScoutIdentityScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
@@ -172,13 +173,13 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
-  dotActive: { backgroundColor: '#00FF7F' },
+  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },
+  dotActive: { backgroundColor: colors.red },
   scroll: { paddingHorizontal: 26, paddingBottom: 64 },
 
   heroWrap: {
@@ -190,9 +191,9 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(22,163,74,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.35)',
+    borderColor: 'rgba(22,163,74,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 18,
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 10,
     textAlign: 'center',
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13.5,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 20,
     textAlign: 'center',
@@ -218,16 +219,16 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 12,
   },
   sectionLabelGap: { marginTop: 22 },
 
   listCard: {
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
   },
@@ -239,13 +240,13 @@ const styles = StyleSheet.create({
   },
   listRowDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
+    borderBottomColor: colors.border,
   },
   iconWrap: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,255,127,0.10)',
+    backgroundColor: 'rgba(22,163,74,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
@@ -253,14 +254,14 @@ const styles = StyleSheet.create({
   listTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13.5,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 3,
   },
   listDetail: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 17,
   },
 
@@ -273,16 +274,16 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.4)',
+    borderColor: 'rgba(218,37,29,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepNumText: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 12,
-    color: '#00FF7F',
+    color: colors.red,
   },
 
   privacyCard: {
@@ -290,28 +291,28 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
     padding: 14,
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(22,163,74,0.05)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.25)',
+    borderColor: 'rgba(22,163,74,0.2)',
     marginTop: 22,
     marginBottom: 24,
   },
   privacyTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
     marginBottom: 3,
   },
   privacyText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     lineHeight: 17,
   },
 
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
@@ -332,7 +333,7 @@ const styles = StyleSheet.create({
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
   },
