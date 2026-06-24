@@ -136,7 +136,7 @@ export default function HowItWorksScreen() {
           activeOpacity={0.85}
         >
           <Text style={styles.primaryBtnText}>Choose your profile</Text>
-          <Ionicons name="arrow-forward" size={16} color={colors.red} />
+          <Ionicons name="arrow-forward" size={16} color={INK} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -241,14 +241,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 16,
+    paddingVertical: 15,
     marginBottom: 8,
-    backgroundColor: colors.white,
+    marginHorizontal: 26, // narrower, not edge-to-edge
+    backgroundColor: 'rgba(255,255,255,0.08)', // more transparent inside
     borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.red,
+    color: INK,
     fontSize: 16,
     letterSpacing: 0.3,
   },
