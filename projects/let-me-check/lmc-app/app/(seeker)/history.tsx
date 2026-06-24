@@ -1,7 +1,8 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
 import { listMyChecks, listMyRatings, type CheckRow } from '../lib/checks';
+import { colors } from '../lib/theme';
 
 // Seeker-paid total per tier (the pricing model). Used for the price label +
 // "Total Spent". Currency-aware display is a later refinement; symbol from row.
@@ -66,6 +67,7 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -95,7 +97,7 @@ export default function HistoryScreen() {
 
         {checks === null ? (
           <View style={styles.stateWrap}>
-            <ActivityIndicator size="small" color="#00FF7F" />
+            <ActivityIndicator size="small" color={colors.red} />
           </View>
         ) : error ? (
           <View style={styles.stateWrap}>
@@ -169,49 +171,49 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#ffffff', fontSize: 15, marginBottom: 14 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 30, color: '#ffffff', letterSpacing: 0.4 },
+  backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 14 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 30, color: colors.textPrimary, letterSpacing: 0.4 },
   statsRow: {
-    flexDirection: 'row', backgroundColor: '#0d0d0d', borderRadius: 16, marginHorizontal: 20,
-    marginVertical: 16, padding: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', alignItems: 'center',
+    flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 16, marginHorizontal: 20,
+    marginVertical: 16, padding: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center',
   },
   statCard: { flex: 1, alignItems: 'center' },
-  statValue: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 24, color: '#ffffff', letterSpacing: 0.3, marginBottom: 4 },
-  statLabel: { fontFamily: 'Inter_700Bold', fontSize: 9, color: '#666', letterSpacing: 1.5, textTransform: 'uppercase' },
-  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.12)' },
+  statValue: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 24, color: colors.textPrimary, letterSpacing: 0.3, marginBottom: 4 },
+  statLabel: { fontFamily: 'Inter_700Bold', fontSize: 9, color: colors.textTertiary, letterSpacing: 1.5, textTransform: 'uppercase' },
+  statDivider: { width: 1, height: 36, backgroundColor: colors.border },
   sectionLabel: {
-    fontFamily: 'Inter_700Bold', fontSize: 11, color: '#00FF7F', letterSpacing: 3,
+    fontFamily: 'Inter_700Bold', fontSize: 11, color: colors.textTertiary, letterSpacing: 3,
     paddingHorizontal: 20, marginBottom: 12, textTransform: 'uppercase',
   },
   stateWrap: { alignItems: 'center', paddingVertical: 48, gap: 8 },
-  stateText: { fontFamily: 'Inter_600SemiBold', color: '#888', fontSize: 14 },
-  stateSub: { fontFamily: 'Inter_400Regular', color: '#555', fontSize: 12 },
-  retryBtn: { marginTop: 8, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 100, borderWidth: 1, borderColor: '#333' },
-  retryText: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 12, letterSpacing: 1 },
+  stateText: { fontFamily: 'Inter_600SemiBold', color: colors.textSecondary, fontSize: 14 },
+  stateSub: { fontFamily: 'Inter_400Regular', color: colors.textTertiary, fontSize: 12 },
+  retryBtn: { marginTop: 8, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 100, borderWidth: 1, borderColor: colors.border },
+  retryText: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 12, letterSpacing: 1 },
   checkCard: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0d0d0d',
-    borderRadius: 14, marginHorizontal: 20, marginBottom: 8, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.bg,
+    borderRadius: 14, marginHorizontal: 20, marginBottom: 8, padding: 16, borderWidth: 1, borderColor: colors.border,
   },
   checkLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   venueAvatar: {
-    width: 44, height: 44, borderRadius: 12, backgroundColor: '#0d0d0d', borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)', justifyContent: 'center', alignItems: 'center', marginRight: 12,
+    width: 44, height: 44, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1,
+    borderColor: colors.border, justifyContent: 'center', alignItems: 'center', marginRight: 12,
   },
-  venueAvatarText: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 22, color: '#666', letterSpacing: 0.3 },
+  venueAvatarText: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 22, color: colors.textTertiary, letterSpacing: 0.3 },
   checkInfo: { flex: 1 },
-  checkVenue: { fontFamily: 'Inter_700Bold', fontSize: 17, color: '#ffffff', letterSpacing: 0.3, marginBottom: 3 },
-  checkCity: { fontFamily: 'Inter_400Regular', fontSize: 11, color: '#888', letterSpacing: 0.3, marginBottom: 5 },
+  checkVenue: { fontFamily: 'Inter_700Bold', fontSize: 17, color: colors.textPrimary, letterSpacing: 0.3, marginBottom: 3 },
+  checkCity: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.textSecondary, letterSpacing: 0.3, marginBottom: 5 },
   starsRow: { flexDirection: 'row' },
-  star: { fontSize: 12, color: 'rgba(255,255,255,0.12)' },
-  starActive: { color: '#FFCB47' },
-  watchHint: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: '#00FF7F', letterSpacing: 0.3 },
+  star: { fontSize: 12, color: colors.border },
+  starActive: { color: colors.amber },
+  watchHint: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: colors.red, letterSpacing: 0.3 },
   checkRight: { alignItems: 'flex-end', gap: 6 },
-  tierPill: { backgroundColor: '#0d0d0d', borderRadius: 100, paddingHorizontal: 9, paddingVertical: 3 },
-  tierPillPriority: { backgroundColor: 'rgba(245,158,11,0.15)' },
-  tierPillText: { fontFamily: 'Inter_700Bold', fontSize: 9, color: '#888', letterSpacing: 1.5 },
-  tierPillTextPriority: { color: '#FFCB47' },
-  checkPrice: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 16, color: '#ffffff', letterSpacing: 0.3 },
+  tierPill: { backgroundColor: colors.surface, borderRadius: 100, paddingHorizontal: 9, paddingVertical: 3 },
+  tierPillPriority: { backgroundColor: 'rgba(255,203,71,0.12)' },
+  tierPillText: { fontFamily: 'Inter_700Bold', fontSize: 9, color: colors.textTertiary, letterSpacing: 1.5 },
+  tierPillTextPriority: { color: colors.amber },
+  checkPrice: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 16, color: colors.textPrimary, letterSpacing: 0.3 },
 });
