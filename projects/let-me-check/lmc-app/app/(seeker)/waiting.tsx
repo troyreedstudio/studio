@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert, AppState } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Alert, AppState, StatusBar } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import Mapbox from '@rnmapbox/maps';
@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getCheck, cancelCheck, type CheckRow } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
 import { getUserCoords } from '../state/location';
+import { colors } from '../lib/theme';
 
 function PulsingMarker({ coordinate }: { coordinate: [number, number] }) {
   const pulse = useRef(new Animated.Value(0)).current;
@@ -194,10 +195,11 @@ export default function WaitingScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Edge-to-edge Mapbox satellite canvas */}
+      <StatusBar barStyle="dark-content" />
+      {/* Edge-to-edge Mapbox light canvas */}
       <Mapbox.MapView
         style={StyleSheet.absoluteFillObject}
-        styleURL="mapbox://styles/mapbox/satellite-streets-v12"
+        styleURL="mapbox://styles/mapbox/light-v11"
         compassEnabled={false}
         scaleBarEnabled={false}
         logoEnabled
@@ -228,7 +230,7 @@ export default function WaitingScreen() {
 
       {/* Top gradient for floating bar */}
       <LinearGradient
-        colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0)']}
+        colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0)']}
         style={styles.topGradient}
         pointerEvents="none"
       />
@@ -368,9 +370,9 @@ export default function WaitingScreen() {
 
 function Step({ label, state }: { label: string; state: 'done' | 'active' | 'pending' }) {
   const dotColor =
-    state === 'done' ? '#00FF7F' : state === 'active' ? '#FF6B00' : 'rgba(255,255,255,0.35)';
+    state === 'done' ? colors.verified : state === 'active' ? colors.red : colors.border;
   const labelColor =
-    state === 'pending' ? 'rgba(255,255,255,0.6)' : '#fff';
+    state === 'pending' ? colors.textTertiary : colors.textPrimary;
   return (
     <View style={stepStyles.col}>
       <View style={[stepStyles.dot, { backgroundColor: dotColor }]}>
@@ -383,7 +385,7 @@ function Step({ label, state }: { label: string; state: 'done' | 'active' | 'pen
 
 function StepLine({ state }: { state: 'done' | 'active' | 'pending' }) {
   const color =
-    state === 'done' ? '#00FF7F' : state === 'active' ? '#FF6B00' : 'rgba(255,255,255,0.25)';
+    state === 'done' ? colors.verified : state === 'active' ? colors.red : colors.border;
   return <View style={[stepStyles.line, { backgroundColor: color }]} />;
 }
 
@@ -399,15 +401,15 @@ const userStyles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FF6B00',
+    backgroundColor: colors.red,
   },
   core: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#FF6B00',
-    shadowColor: '#FF6B00',
-    shadowOpacity: 1,
+    backgroundColor: colors.red,
+    shadowColor: colors.red,
+    shadowOpacity: 0.7,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 0 },
   },
@@ -418,16 +420,14 @@ const userStyles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: '#FF6B00',
-    shadowColor: '#FF6B00',
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 },
+    backgroundColor: colors.red,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.85)',
   },
   youText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#ffffff',
+    color: colors.onRed,
     letterSpacing: 1.2,
   },
 });
@@ -439,15 +439,15 @@ const pulseStyles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
   },
   core: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#00FF7F',
-    shadowColor: '#00FF7F',
-    shadowOpacity: 1,
+    backgroundColor: colors.red,
+    shadowColor: colors.red,
+    shadowOpacity: 0.7,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 0 },
   },
@@ -461,22 +461,20 @@ const pulseStyles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: '#000000',
-    shadowColor: '#00FF7F',
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 },
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   recDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.danger,
   },
   recText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 1.2,
   },
 });
@@ -492,9 +490,9 @@ const venuePinStyles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#FF6B00',
-    shadowColor: '#FF6B00',
-    shadowOpacity: 1,
+    backgroundColor: colors.red,
+    shadowColor: colors.red,
+    shadowOpacity: 0.6,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 0 },
   },
@@ -505,16 +503,16 @@ const venuePinStyles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 5,
-    backgroundColor: '#FF6B00',
-    shadowColor: '#FF6B00',
-    shadowOpacity: 0.8,
+    backgroundColor: colors.red,
+    shadowColor: colors.red,
+    shadowOpacity: 0.5,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 0 },
   },
   text: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#ffffff',
+    color: colors.onRed,
     letterSpacing: 1,
   },
 });
@@ -532,7 +530,7 @@ const stepStyles = StyleSheet.create({
   check: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#000',
+    color: colors.onRed,
   },
   label: {
     fontFamily: 'JetBrainsMono_500Medium',
@@ -544,7 +542,7 @@ const stepStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   topGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 160 },
   topBar: {
     position: 'absolute',
@@ -560,16 +558,20 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(10,10,10,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.94)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: colors.black,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   iconChevron: {
     fontFamily: 'Inter_500Medium',
     fontSize: 24,
-    color: '#fff',
+    color: colors.textPrimary,
     marginTop: -2,
     marginLeft: -2,
   },
@@ -577,18 +579,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(10,10,10,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.96)',
     borderRadius: 22,
     paddingHorizontal: 14,
     paddingVertical: 11,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: colors.border,
+    shadowColor: colors.black,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
-  pillDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ffffff' },
+  pillDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.verified },
   pillLabel: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 11,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 2,
   },
 
@@ -599,20 +605,20 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(20,55,130,0.85)',
+    backgroundColor: colors.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#143782',
-    shadowOpacity: 0.6,
+    shadowColor: colors.black,
+    shadowOpacity: 0.12,
     shadowRadius: 8,
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: { width: 0, height: 2 },
   },
   recenterGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
 
   // Bottom sheet
@@ -621,7 +627,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(20,55,130,0.5)',
+    backgroundColor: colors.bg,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 24,
@@ -630,17 +636,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: 'rgba(60,110,200,0.5)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.5,
+    borderColor: colors.border,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
     shadowRadius: 24,
   },
   sheetHandle: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: colors.border,
     alignSelf: 'center',
     marginBottom: 10,
   },
@@ -649,7 +655,7 @@ const styles = StyleSheet.create({
   brandMonogram: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: 18,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 2,
     textAlign: 'center',
     marginBottom: 8,
@@ -659,7 +665,7 @@ const styles = StyleSheet.create({
   etaLabel: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 10,
-    color: '#ffffff',
+    color: colors.textSecondary,
     letterSpacing: 2.8,
     textAlign: 'center',
     marginBottom: 4,
@@ -667,7 +673,7 @@ const styles = StyleSheet.create({
   statusHero: {
     fontFamily: 'Inter_700Bold',
     fontSize: 24,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     textAlign: 'center',
     lineHeight: 30,
@@ -686,19 +692,19 @@ const styles = StyleSheet.create({
   metaPrimary: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
   metaStatus: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   metaDot: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textTertiary,
     lineHeight: 14,
   },
 
@@ -715,33 +721,31 @@ const styles = StyleSheet.create({
 
   // Tier badges
   tierBadgePriority: {
-    backgroundColor: '#FFCB47',
+    backgroundColor: colors.amber,
     borderRadius: 100,
     paddingHorizontal: 16,
     paddingVertical: 9,
     alignSelf: 'center',
     marginBottom: 10,
-    shadowColor: '#FFCB47',
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  tierBadgeStandard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    alignSelf: 'center',
-    marginBottom: 10,
-    shadowColor: '#ffffff',
+    shadowColor: colors.amber,
     shadowOpacity: 0.35,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
   },
+  tierBadgeStandard: {
+    backgroundColor: colors.surface,
+    borderRadius: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    alignSelf: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   tierBadgeText: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 11,
-    color: '#000000',
+    color: colors.black,
     letterSpacing: 2,
   },
 
@@ -752,7 +756,7 @@ const styles = StyleSheet.create({
   cancelLinkText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textSecondary,
     letterSpacing: 0.5,
   },
 });
