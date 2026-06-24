@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { startConnectOnboarding, getConnectStatus } from '../lib/payments';
 import type { PayoutSpeed } from '../lib/payments';
+import { colors } from '../lib/theme';
 
 const WHAT_STRIPE_NEEDS = [
   {
@@ -41,7 +42,7 @@ const WHAT_STRIPE_NEEDS = [
 const TRUST_BULLETS = [
   'Payouts handled by Stripe Connect Express',
   'Bank-level encryption (256-bit) + PCI DSS Level 1 compliance',
-  'Let Me Check never stores your SSN or bank credentials — Stripe does',
+  'Let Me Check never stores your SSN or bank credentials, Stripe does',
   'You can update bank or close the account from your Scout dashboard',
 ];
 
@@ -102,16 +103,16 @@ export default function ScoutPayoutScreen() {
   };
 
   const btnLabel = verifying
-    ? 'CHECKING STATUS…'
+    ? 'CHECKING STATUS...'
     : loading
-    ? 'OPENING STRIPE…'
+    ? 'OPENING STRIPE...'
     : authorized
     ? 'OPEN STRIPE CONNECT'
     : 'AUTHORIZE TO CONTINUE';
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
@@ -156,10 +157,10 @@ export default function ScoutPayoutScreen() {
             <View style={styles.earnCell}>
               <Text style={styles.earnAmount}>$3</Text>
               <Text style={styles.earnLabel}>No-fault pay</Text>
-              <Text style={styles.earnWhy}>Couldn't film for a valid reason, GPS verified</Text>
+              <Text style={styles.earnWhy}>Could not film for a valid reason, GPS verified</Text>
             </View>
             <View style={styles.earnCell}>
-              <Text style={[styles.earnAmount, { color: '#FFCB47' }]}>$80–$200</Text>
+              <Text style={[styles.earnAmount, { color: colors.amber }]}>$80–$200</Text>
               <Text style={styles.earnLabel}>Typical week</Text>
               <Text style={styles.earnWhy}>Active hours in a live market</Text>
             </View>
@@ -183,7 +184,7 @@ export default function ScoutPayoutScreen() {
               <View style={styles.speedTop}>
                 <Text style={styles.speedTitle}>Standard</Text>
                 {speed === 'standard' && (
-                  <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
+                  <Ionicons name="checkmark-circle" size={18} color={colors.verified} />
                 )}
               </View>
               <Text style={styles.speedTime}>1–2 days</Text>
@@ -199,7 +200,7 @@ export default function ScoutPayoutScreen() {
               <View style={styles.speedTop}>
                 <Text style={styles.speedTitle}>Instant</Text>
                 {speed === 'instant' && (
-                  <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
+                  <Ionicons name="checkmark-circle" size={18} color={colors.verified} />
                 )}
               </View>
               <Text style={styles.speedTime}>~30 min</Text>
@@ -215,7 +216,7 @@ export default function ScoutPayoutScreen() {
           {WHAT_STRIPE_NEEDS.map((item, i) => (
             <View key={i} style={styles.row}>
               <View style={styles.rowIcon}>
-                <Ionicons name={item.icon} size={18} color="#ffffff" />
+                <Ionicons name={item.icon} size={18} color={colors.textPrimary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowTitle}>{item.title}</Text>
@@ -231,7 +232,7 @@ export default function ScoutPayoutScreen() {
           <View style={styles.contractCard}>
             <Bullet text="You complete a W-9 inside Stripe during onboarding (~30 seconds)." />
             <Bullet text="We mail you a 1099-NEC each January if you earn $600+ in a calendar year." />
-            <Bullet text="You're an independent contractor — responsible for your own quarterly taxes." />
+            <Bullet text="You're an independent contractor, responsible for your own quarterly taxes." />
           </View>
 
           {/* TRUST */}
@@ -254,10 +255,10 @@ export default function ScoutPayoutScreen() {
             onPress={() => setAuthorized((v) => !v)}
           >
             <View style={[styles.checkbox, authorized && styles.checkboxOn]}>
-              {authorized && <Ionicons name="checkmark" size={14} color="#000" />}
+              {authorized && <Ionicons name="checkmark" size={14} color={colors.onRed} />}
             </View>
             <Text style={styles.gateText}>
-              <Text style={styles.gateBold}>I AUTHORIZE</Text> Let Me Check to create a Stripe Connect Express account on my behalf to receive payouts. I will complete identity + tax verification with Stripe.
+              <Text style={styles.gateBold}>I AUTHORIZE</Text> Let Me Check to create a Stripe Connect Express account on my behalf to receive payouts. I will complete identity and tax verification with Stripe.
             </Text>
           </TouchableOpacity>
 
@@ -271,7 +272,7 @@ export default function ScoutPayoutScreen() {
               <Ionicons
                 name="open-outline"
                 size={16}
-                color={(authorized && !loading && !verifying) ? '#000' : 'rgba(255,255,255,0.35)'}
+                color={(authorized && !loading && !verifying) ? colors.onRed : colors.textTertiary}
               />
               <Text
                 style={[styles.primaryBtnText, (!authorized || loading || verifying) && styles.primaryBtnTextDisabled]}
@@ -282,7 +283,7 @@ export default function ScoutPayoutScreen() {
           </TouchableOpacity>
 
           <Text style={styles.foot}>
-            Stripe handles onboarding in about 5 minutes. Your data goes directly to them — Let Me Check never sees it.
+            Stripe handles onboarding in about 5 minutes. Your data goes directly to them. Let Me Check never sees it.
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -300,7 +301,7 @@ function Bullet({ text }: { text: string }) {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
@@ -313,27 +314,27 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
-  dotDone: { backgroundColor: 'rgba(255,255,255,0.55)' },
-  dotActive: { backgroundColor: '#00FF7F' },
+  dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },
+  dotDone: { backgroundColor: colors.borderStrong },
+  dotActive: { backgroundColor: colors.red },
   scroll: { paddingHorizontal: 26, paddingBottom: 64 },
 
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 6,
   },
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 20,
     marginBottom: 22,
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 12,
   },
@@ -354,15 +355,15 @@ const styles = StyleSheet.create({
   },
   speedCard: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     padding: 14,
   },
   speedCardActive: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.6)',
+    backgroundColor: colors.bg,
+    borderColor: colors.red,
   },
   speedTop: {
     flexDirection: 'row',
@@ -373,25 +374,25 @@ const styles = StyleSheet.create({
   speedTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   speedTime: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 13,
-    color: '#00FF7F',
+    color: colors.verified,
     marginBottom: 2,
   },
   speedFee: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   speedNote: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     lineHeight: 15,
   },
 
@@ -404,21 +405,23 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rowTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   rowWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 17,
   },
 
@@ -430,37 +433,37 @@ const styles = StyleSheet.create({
   earnCell: {
     flexBasis: '48%',
     flexGrow: 1,
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 10,
     padding: 12,
   },
   earnAmount: {
     fontFamily: 'Inter_700Bold',
     fontSize: 22,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 0.2,
     marginBottom: 4,
   },
   earnLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   earnWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     lineHeight: 15,
   },
 
   contractCard: {
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
   },
@@ -471,7 +474,7 @@ const styles = StyleSheet.create({
   },
   contractBullet: {
     fontFamily: 'Inter_700Bold',
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     fontSize: 14,
     lineHeight: 18,
   },
@@ -479,7 +482,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 18,
   },
 
@@ -495,31 +498,31 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
   checkboxOn: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+    backgroundColor: colors.red,
+    borderColor: colors.red,
   },
   gateText: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.1,
   },
   gateBold: {
     fontFamily: 'Inter_700Bold',
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 1,
   },
 
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
@@ -527,7 +530,9 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   primaryBtnInner: {
     flexDirection: 'row',
@@ -536,19 +541,19 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
   primaryBtnTextDisabled: {
-    color: 'rgba(255,255,255,0.35)',
+    color: colors.textTertiary,
     letterSpacing: 2,
   },
 
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
   },
