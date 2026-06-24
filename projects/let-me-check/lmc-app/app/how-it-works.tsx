@@ -24,6 +24,16 @@ const WORD_SIZE = 30;
 const WORD_MASK_W = 300;
 const WORD_MASK_H = WORD_SIZE * 1.35;
 
+// Fade the video into whatever the current background color is (white -> white,
+// red -> red) so there is no hard cut line. Converts the bg hex to rgba.
+function hexToRgba(hex: string, a: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
 // Netflix-style concept landing (between the splash and the role picker).
 // ONE combined 10–15s clip showing both the Seeker and Scout experience, playing
 // in a framed window up top with LMC branding overlaid. A single CTA — "Choose
@@ -106,11 +116,7 @@ export default function HowItWorksScreen() {
 
         {/* Bottom fade — blends video into the CTA block; adapts to audition bg */}
         <LinearGradient
-          colors={
-            devBg.isLight
-              ? ['rgba(255,255,255,0)', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0.95)']
-              : ['rgba(0,0,0,0)', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.95)']
-          }
+          colors={[hexToRgba(devBg.hex, 0), hexToRgba(devBg.hex, 0.55), hexToRgba(devBg.hex, 0.98)]}
           locations={[0, 0.6, 1]}
           style={styles.frameFade}
         />
@@ -131,18 +137,13 @@ export default function HowItWorksScreen() {
                 adjustsFontSizeToFit
                 minimumFontScale={0.5}
               >
-                LET ME CHECK
+                LMC
               </Text>
             </View>
           }
         >
-          <LinearGradient
-            colors={CHROME_STOPS}
-            locations={CHROME_LOCATIONS}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={StyleSheet.absoluteFillObject}
-          />
+          {/* Solid bold ink (white on red/blue, black on white) — premium, crisp */}
+          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: ink }]} />
         </MaskedView>
         <Text style={[styles.brandTag, { color: inkMuted }]}>Know Before You Go</Text>
 

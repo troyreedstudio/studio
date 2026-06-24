@@ -12,15 +12,15 @@ const MASK_WIDTH = 320;
 const MASK_HEIGHT = SIZE * 1.3;
 const SHINE_WIDTH = 120;
 
-// Black wordmark for the white splash — near-black with a faint metallic sheen.
+// Pure flat white wordmark for the red splash (Supreme-crisp, no sheen).
 const LIQUID_CHROME_STOPS: [string, string, ...string[]] = [
-  '#3a3a3a',
-  '#000000',
-  '#000000',
-  '#1a1a1a',
-  '#000000',
-  '#2a2a2a',
-  '#000000',
+  '#ffffff',
+  '#ffffff',
+  '#ffffff',
+  '#ffffff',
+  '#ffffff',
+  '#ffffff',
+  '#ffffff',
 ];
 
 const LIQUID_CHROME_LOCATIONS: [number, number, ...number[]] = [0, 0.22, 0.5, 0.58, 0.68, 0.88, 1];
@@ -116,7 +116,7 @@ export default function BootSplash() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
 
       <Animated.View style={[styles.heroGroup, { transform: [{ scale: composedScale }] }]}>
         <MaskedView
@@ -129,7 +129,7 @@ export default function BootSplash() {
                 adjustsFontSizeToFit
                 minimumFontScale={0.4}
               >
-                LET ME CHECK
+                LMC
               </Text>
             </View>
           }
@@ -163,6 +163,7 @@ export default function BootSplash() {
             </Animated.View>
           </View>
         </MaskedView>
+        <Text style={styles.wordmark}>LET ME CHECK</Text>
       </Animated.View>
 
       <Animated.View
@@ -177,7 +178,7 @@ export default function BootSplash() {
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#DA251D',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -186,10 +187,11 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 11,
-    letterSpacing: 6,
-    marginTop: 6,
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 12,
+    letterSpacing: 5,
+    paddingLeft: 5, // balance the trailing letter-spacing so it centers under LMC
+    marginTop: 3,
   },
   maskWrap: {
     width: MASK_WIDTH,
@@ -220,6 +222,6 @@ const styles = StyleSheet.create({
     width: SHINE_WIDTH,
   },
   overlay: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#DA251D',
   },
 });

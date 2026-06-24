@@ -19,11 +19,11 @@ export interface BgCandidate {
 
 export const PALETTE: BgCandidate[] = [
   { name: 'White', hex: '#FFFFFF', isLight: true  },
-  { name: 'Red',   hex: '#FF3B30', isLight: false },
+  { name: 'Red',   hex: '#DA251D', isLight: false }, // Supreme red
   { name: 'Blue',  hex: '#1652F0', isLight: false },
 ];
 
-let _index = 0;
+let _index = 1;
 let _listeners: (() => void)[] = [];
 
 function notify() {
