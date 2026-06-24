@@ -6,11 +6,13 @@ import {
   SafeAreaView,
   ScrollView,
   TextInput,
+  StatusBar,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { requestPayout } from '../lib/payments';
+import { colors } from '../lib/theme';
 
 export default function WithdrawScreen() {
   const router = useRouter();
@@ -62,6 +64,7 @@ export default function WithdrawScreen() {
   if (success) {
     return (
       <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
         <View style={styles.successWrap}>
           <View style={styles.successCircle}>
             <Text style={styles.successCheck}>✓</Text>
@@ -83,6 +86,7 @@ export default function WithdrawScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -111,7 +115,7 @@ export default function WithdrawScreen() {
             value={amount}
             onChangeText={setAmount}
             placeholder="0.00"
-            placeholderTextColor="#444"
+            placeholderTextColor={colors.textTertiary}
             keyboardType="decimal-pad"
             autoFocus
           />
@@ -139,7 +143,7 @@ export default function WithdrawScreen() {
           </View>
           <View style={styles.bankInfo}>
             <Text style={styles.bankName}>Chase Checking</Text>
-            <Text style={styles.bankNumber}>···· ···· ···· 6193 · Troy R.</Text>
+            <Text style={styles.bankNumber}>···· ···· ···· 6193, Troy R.</Text>
           </View>
           <TouchableOpacity onPress={() => router.push('/(scout)/payout-method' as never)}>
             <Text style={styles.changeText}>CHANGE</Text>
@@ -171,8 +175,8 @@ export default function WithdrawScreen() {
           {processing
             ? 'Securely transferring via Stripe Connect...'
             : speed === 'instant'
-            ? 'Powered by Stripe Connect · ~30 min · 1.5% fee'
-            : 'Powered by Stripe Connect · 1 to 2 business days · No fees'}
+            ? 'Powered by Stripe Connect, ~30 min, 1.5% fee'
+            : 'Powered by Stripe Connect, 1 to 2 business days, no fees'}
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -180,47 +184,68 @@ export default function WithdrawScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#fff', fontSize: 15, marginBottom: 16 },
-  title: { fontFamily: 'BodoniModa_700Bold', fontSize: 28, color: '#fff', letterSpacing: 0.4, marginBottom: 5 },
-  subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#888', letterSpacing: 0.3 },
+  backText: {
+    fontFamily: 'Inter_500Medium',
+    color: colors.red,
+    fontSize: 15,
+    marginBottom: 16,
+  },
+  title: {
+    fontFamily: 'BodoniModa_700Bold',
+    fontSize: 28,
+    color: colors.textPrimary,
+    letterSpacing: 0.4,
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: colors.textSecondary,
+    letterSpacing: 0.3,
+  },
   balanceCard: {
-    backgroundColor: '#0d1a0d',
+    backgroundColor: 'rgba(22,163,74,0.06)',
     borderRadius: 18,
     marginHorizontal: 20,
     padding: 22,
     borderWidth: 1,
-    borderColor: '#1a3a1a',
+    borderColor: 'rgba(22,163,74,0.25)',
     marginBottom: 26,
   },
   balanceLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#22c55e',
+    color: colors.verified,
     letterSpacing: 3,
     marginBottom: 8,
   },
   balanceValue: {
     fontFamily: 'GFSDidot_400Regular',
     fontSize: 44,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
     marginBottom: 10,
   },
   balanceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22c55e' },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.verified,
+  },
   balanceStatus: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11,
-    color: '#22c55e',
+    color: colors.verified,
     letterSpacing: 0.3,
   },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#FF8533',
+    color: colors.textTertiary,
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -229,34 +254,34 @@ const styles = StyleSheet.create({
   amountWrap: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 20,
     paddingHorizontal: 22,
     paddingVertical: 18,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     marginBottom: 14,
   },
   dollarSign: {
     fontFamily: 'GFSDidot_400Regular',
     fontSize: 32,
-    color: '#666',
+    color: colors.textTertiary,
     marginRight: 6,
   },
   amountInput: {
     flex: 1,
     fontFamily: 'GFSDidot_400Regular',
     fontSize: 36,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
     padding: 0,
   },
   quickRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 8, flexWrap: 'wrap' },
   quickChip: {
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     borderRadius: 100,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -264,26 +289,28 @@ const styles = StyleSheet.create({
   quickChipText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 1,
   },
   bankCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     marginHorizontal: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     gap: 12,
   },
   bankIcon: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -292,49 +319,50 @@ const styles = StyleSheet.create({
   bankName: {
     fontFamily: 'CormorantGaramond_700Bold',
     fontSize: 17,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 3,
   },
   bankNumber: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: '#888',
+    color: colors.textSecondary,
     letterSpacing: 0.5,
   },
   changeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#FF8533',
+    color: colors.red,
     letterSpacing: 1.5,
   },
   withdrawBtn: {
-    backgroundColor: '#FAF6F0',
+    backgroundColor: colors.red,
     borderRadius: 14,
     marginHorizontal: 20,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: colors.red,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 12,
-    elevation: 8,
+    elevation: 4,
   },
   withdrawBtnDisabled: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: colors.border,
     shadowOpacity: 0,
+    elevation: 0,
   },
   withdrawBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
   disclaimer: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: '#666',
+    color: colors.textTertiary,
     paddingHorizontal: 32,
     textAlign: 'center',
     lineHeight: 16,
@@ -350,9 +378,9 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: 'rgba(34,197,94,0.15)',
+    backgroundColor: 'rgba(22,163,74,0.10)',
     borderWidth: 2,
-    borderColor: '#22c55e',
+    borderColor: colors.verified,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 22,
@@ -360,26 +388,26 @@ const styles = StyleSheet.create({
   successCheck: {
     fontFamily: 'Inter_700Bold',
     fontSize: 40,
-    color: '#22c55e',
+    color: colors.verified,
   },
   successTitle: {
     fontFamily: 'BodoniModa_700Bold',
     fontSize: 26,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.4,
     marginBottom: 14,
   },
   successAmount: {
     fontFamily: 'GFSDidot_400Regular',
     fontSize: 44,
-    color: '#22c55e',
+    color: colors.verified,
     letterSpacing: 0.5,
     marginBottom: 14,
   },
   successSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: '#888',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 19,
     letterSpacing: 0.3,
