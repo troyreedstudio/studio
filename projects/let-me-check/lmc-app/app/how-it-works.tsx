@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 220,
+    height: 150,
   },
   brandOverlay: {
     position: 'absolute',
