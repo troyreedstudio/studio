@@ -10,6 +10,7 @@ import {
 import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { recordDocConsent } from '../lib/consent';
+import { colors } from '../lib/theme';
 
 type DocKey = 'terms' | 'privacy' | 'aup' | 'code';
 
@@ -25,17 +26,17 @@ const DOCS: Record<DocKey, DocContent> = {
     title: 'Terms of Service',
     effectiveDate: 'Effective 2026-06-08',
     intro:
-      'These terms govern your use of Let Me Check (“LMC”). By using the app you agree to them. Plain English, no legalese.',
+      'These terms govern your use of Let Me Check. By using the app you agree to them. Plain English, no legalese.',
     sections: [
       {
         heading: '1. The Service',
         body:
-          'LMC connects Seekers (people who pay for a location check) with Scouts (people on the ground who film a 15-second clip). LMC operates the platform; we do not own the venues filmed and do not employ Scouts as staff.',
+          'Let Me Check connects Seekers (people who pay for a location check) with Scouts (people on the ground who film a 15-second video). Let Me Check operates the platform; we do not own the venues filmed and do not employ Scouts as staff.',
       },
       {
         heading: '2. Eligibility',
         body:
-          'You must be 18 or older to use LMC. You agree to the Acceptable Use Policy and Privacy Policy. We may suspend accounts that violate these terms.',
+          'You must be 18 or older to use Let Me Check. You agree to the Acceptable Use Policy and Privacy Policy. We may suspend accounts that violate these terms.',
       },
       {
         heading: '3. Pricing + Fees',
@@ -45,17 +46,17 @@ const DOCS: Record<DocKey, DocContent> = {
       {
         heading: '4. Refunds',
         body:
-          'Auto-refund: no clip delivered · Scout off-fence · venue closed · GPS failure · wrong venue. Partial refund: clip missing a key flagged element. No refund: clip is legitimate and shows reality.',
+          'Auto-refund: no video delivered, Scout off-fence, venue closed, GPS failure, wrong venue. Partial refund: video missing a key flagged element. No refund: video is legitimate and shows reality.',
       },
       {
         heading: '5. Scout Independent Contractor',
         body:
-          'Scouts are independent contractors, not LMC employees. Scouts set their own hours, choose which checks to accept, and are responsible for their own taxes. LMC issues a 1099-NEC each January for Scouts earning $600+ in a calendar year.',
+          'Scouts are independent contractors, not Let Me Check employees. Scouts set their own hours, choose which checks to accept, and are responsible for their own taxes. Let Me Check issues a 1099-NEC each January for Scouts earning $600+ in a calendar year.',
       },
       {
         heading: '6. Liability',
         body:
-          'LMC is not liable for venue access disputes, third-party privacy claims arising from misuse, or losses incurred by Scouts performing checks. Use the app at your own risk.',
+          'Let Me Check is not liable for venue access disputes, third-party privacy claims arising from misuse, or losses incurred by Scouts performing checks. Use the app at your own risk.',
       },
       {
         heading: '7. Changes',
@@ -72,7 +73,7 @@ const DOCS: Record<DocKey, DocContent> = {
     title: 'Privacy Policy',
     effectiveDate: 'Effective 2026-06-08',
     intro:
-      'This explains what data LMC collects, how we use it, and what control you have over it.',
+      'This explains what data Let Me Check collects, how we use it, and what control you have over it.',
     sections: [
       {
         heading: '1. What we collect',
@@ -80,19 +81,19 @@ const DOCS: Record<DocKey, DocContent> = {
           'Account: name, email, phone, auth credential. Scouts also: full DOB, SSN (via Stripe, never on our servers), bank info (via Stripe Connect Express), home address (for 1099 mailing), gov ID (via Stripe Identity).',
       },
       {
-        heading: '2. What we capture from clips',
+        heading: '2. What we capture from videos',
         body:
-          'GPS coordinates of where the clip was filmed (verification). Venue metadata (OCR + signage match). Clip itself (encrypted, delivered via Mux). No audio is ever recorded — the camera mic is muted by default.',
+          'GPS coordinates of where the video was filmed (verification). Venue metadata (OCR + signage match). Video itself (encrypted, delivered via Mux). No audio is ever recorded, the camera mic is muted by default.',
       },
       {
         heading: '3. How we use it',
         body:
-          'Account: deliver service, send receipts, comply with law. Scout payouts: file 1099 with IRS. Clips: deliver to the Seeker who paid, then auto-delete from CDN after 30 days unless flagged for legal hold.',
+          'Account: deliver service, send receipts, comply with law. Scout payouts: file 1099 with IRS. Videos: deliver to the Seeker who paid, then auto-delete from CDN after 30 days unless flagged for legal hold.',
       },
       {
         heading: '4. Who sees it',
         body:
-          'Seeker who requested the check sees the delivered clip. LMC ops sees venue metadata for dispatch + verification. Stripe holds payment + identity data. We do not sell or rent personal data to advertisers.',
+          'Seeker who requested the check sees the delivered video. Let Me Check ops sees venue metadata for dispatch and verification. Stripe holds payment and identity data. We do not sell or rent personal data to advertisers.',
       },
       {
         heading: '5. Your rights',
@@ -102,12 +103,12 @@ const DOCS: Record<DocKey, DocContent> = {
       {
         heading: '6. Cookies + tracking',
         body:
-          'In-app: minimal analytics for product reliability. No third-party advertising trackers. iOS App Tracking Transparency: we don\'t request the IDFA.',
+          "In-app: minimal analytics for product reliability. No third-party advertising trackers. iOS App Tracking Transparency: we don't request the IDFA.",
       },
       {
         heading: '7. Security',
         body:
-          'All sensitive data (SSN, bank) is held by Stripe, not LMC. Our servers store auth tokens + clip metadata only, all at rest encrypted (AES-256).',
+          'All sensitive data (SSN, bank) is held by Stripe, not Let Me Check. Our servers store auth tokens and video metadata only, all at rest encrypted (AES-256).',
       },
       {
         heading: '8. Contact',
@@ -119,32 +120,32 @@ const DOCS: Record<DocKey, DocContent> = {
     title: 'Acceptable Use Policy',
     effectiveDate: 'Effective 2026-06-08',
     intro:
-      'Rules for how you can — and cannot — use LMC. Violations lead to account suspension or termination.',
+      'Rules for how you can, and cannot, use Let Me Check. Violations lead to account suspension or termination.',
     sections: [
       {
-        heading: '1. What LMC IS for',
+        heading: '1. What Let Me Check IS for',
         body:
-          'Knowing what\'s happening at a public-facing location right now: line length, wait time, vibe, queue status, opening status. Public venues, public-facing interiors (with venue policy), public events.',
+          "Knowing what's happening at a public-facing location right now: line length, wait time, vibe, queue status, opening status. Public venues, public-facing interiors (with venue policy), public events.",
       },
       {
-        heading: '2. What LMC IS NOT for',
+        heading: '2. What Let Me Check IS NOT for',
         body:
           'Stalking. Surveilling. Tracking a specific person. Monitoring an ex-partner, family member, coworker, or anyone you have no public-access right to observe. Planning or scouting for illegal activity.',
       },
       {
         heading: '3. As a Seeker',
         body:
-          'You may not request clips that target a specific individual. You may not request clips of private property without permission. You may not use delivered clips for advertising, public broadcast, or commercial use without LMC authorization.',
+          'You may not request videos that target a specific individual. You may not request videos of private property without permission. You may not use delivered videos for advertising, public broadcast, or commercial use without Let Me Check authorization.',
       },
       {
         heading: '4. As a Scout',
         body:
-          'You agree to The Scout Code in full: no faces, no audio, no private property, no children, no hospitals/schools/courts/police, no staging. Quality Standards apply — rejection = no payment.',
+          'You agree to The Scout Code in full: no faces, no audio, no private property, no children, no hospitals/schools/courts/police, no staging. Quality Standards apply, rejection means no payment.',
       },
       {
         heading: '5. Violations',
         body:
-          'First violation: warning. Second: 7-day suspension. Third: permanent account termination. Severe violations (stalking, illegal use, fake clips): immediate permanent termination and we may cooperate with law enforcement.',
+          'First violation: warning. Second: 7-day suspension. Third: permanent account termination. Severe violations (stalking, illegal use, fake videos): immediate permanent termination and we may cooperate with law enforcement.',
       },
       {
         heading: '6. Reporting',
@@ -165,19 +166,19 @@ const DOCS: Record<DocKey, DocContent> = {
           'Public sidewalks, streets, parking lots, plazas. The line, queue, or entry area of a venue from a public vantage point. Public-facing interiors (GREEN-tier venues) per category guidelines. Partner Interior (+$5) when the venue is marked PARTNER.',
       },
       {
-        heading: 'What we don\'t capture',
+        heading: "What we don't capture",
         body:
-          'Close-ups of strangers\' faces (auto-blurred regardless). Children in frame. Anyone who explicitly objects. Areas marked "No Photography". Airport security, gates, customs. Hospitals, schools, courts, police, military. Bathrooms, locker rooms, dressing rooms — ever. Private homes / private property. Audio of any kind (mic stays muted).',
+          "Close-ups of strangers' faces (auto-blurred regardless). Children in frame. Anyone who explicitly objects. Areas marked \"No Photography\". Airport security, gates, customs. Hospitals, schools, courts, police, military. Bathrooms, locker rooms, dressing rooms, ever. Private homes / private property. Audio of any kind (mic stays muted).",
       },
       {
         heading: 'Quality standards',
         body:
-          'Rejection = no payment. A clip can be rejected for: blurry/shaky/out-of-focus footage, venue not visible, GPS mismatch, lens covered, faces in frame that couldn\'t be auto-blurred, audio detected, clip shorter than required. You get up to 3 takes per check — use them.',
+          "Rejection = no payment. A video can be rejected for: blurry/shaky/out-of-focus footage, venue not visible, GPS mismatch, lens covered, faces in frame that couldn't be auto-blurred, audio detected, video shorter than required. You get up to 3 takes per check, use them.",
       },
       {
         heading: 'Conduct',
         body:
-          'Be unobtrusive. If asked what you\'re doing: "I\'m using LMC, an app that does location checks. I can leave right now if that\'s a problem." If asked to stop, stop immediately and hit TROUBLE HERE. Don\'t provoke a reaction. No staging or re-shoots — one take, real-time.',
+          'Be unobtrusive. If asked what you\'re doing: "I\'m using Let Me Check, an app that does location checks. I can leave right now if that\'s a problem." If asked to stop, stop immediately and hit TROUBLE HERE. Do not provoke a reaction. No staging or re-shoots, one take, real-time.',
       },
       {
         heading: 'Pay',
@@ -187,7 +188,7 @@ const DOCS: Record<DocKey, DocContent> = {
       {
         heading: 'Independent Contractor',
         body:
-          'You\'re an independent contractor, not an LMC employee. You set your own hours, choose which checks to accept, and are responsible for your own taxes. 1099-NEC mailed each January if you earn $600+. LMC may deactivate your account at any time for violations.',
+          "You're an independent contractor, not a Let Me Check employee. You set your own hours, choose which checks to accept, and are responsible for your own taxes. 1099-NEC mailed each January if you earn $600+. Let Me Check may deactivate your account at any time for violations.",
       },
     ],
   },
@@ -209,7 +210,7 @@ export default function LegalDocScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
@@ -258,7 +259,7 @@ export default function LegalDocScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -280,28 +281,28 @@ const styles = StyleSheet.create({
   docLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2.5,
     marginBottom: 8,
   },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 4,
   },
   effective: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     letterSpacing: 0.3,
     marginBottom: 20,
   },
   intro: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13.5,
-    color: 'rgba(255,255,255,0.75)',
+    color: colors.textSecondary,
     lineHeight: 21,
     letterSpacing: 0.2,
     marginBottom: 24,
@@ -313,20 +314,20 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 6,
   },
   body: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.2,
   },
 
   acceptBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -334,24 +335,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   acceptBtnDone: {
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(22,163,74,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.45)',
+    borderColor: 'rgba(22,163,74,0.35)',
   },
   acceptBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 12,
     letterSpacing: 2.5,
   },
   acceptBtnTextDone: {
-    color: '#00FF7F',
+    color: colors.verified,
   },
 
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     lineHeight: 17,
     textAlign: 'center',
     marginTop: 12,
