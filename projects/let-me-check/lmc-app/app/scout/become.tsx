@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../lib/theme';
 
 const STEPS = [
   { icon: 'card-outline', title: 'Verify your identity', time: '2 min', why: 'Photo of your gov ID + selfie. Handled by Stripe Identity.', route: '/scout/identity' as const },
@@ -23,7 +24,7 @@ export default function BecomeScoutScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace('/(scout)/dashboard'))} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
@@ -33,12 +34,12 @@ export default function BecomeScoutScreen() {
 
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.heroIcon}>
-            <Ionicons name="videocam-outline" size={56} color="#00FF7F" />
+            <Ionicons name="videocam-outline" size={56} color={colors.red} />
           </View>
 
           <Text style={styles.title}>Be the eyes for the city</Text>
           <Text style={styles.subtitle}>
-            Capture 15-second moments around town. Discreet, brief, and paid directly to your bank, $8–$12 per check.
+            Capture 15-second moments around town. Discreet, brief, and paid directly to your bank, $8 to $12 per check.
           </Text>
 
           <View style={styles.section}>
@@ -51,7 +52,7 @@ export default function BecomeScoutScreen() {
                 onPress={() => router.push(s.route)}
               >
                 <View style={styles.stepIcon}>
-                  <Ionicons name={s.icon as keyof typeof Ionicons.glyphMap} size={20} color="#ffffff" />
+                  <Ionicons name={s.icon as keyof typeof Ionicons.glyphMap} size={20} color={colors.red} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={styles.stepTopRow}>
@@ -60,7 +61,7 @@ export default function BecomeScoutScreen() {
                   </View>
                   <Text style={styles.stepWhy}>{s.why}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.35)" style={styles.stepChevron} />
+                <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} style={styles.stepChevron} />
               </TouchableOpacity>
             ))}
           </View>
@@ -74,7 +75,7 @@ export default function BecomeScoutScreen() {
           </TouchableOpacity>
 
           <Text style={styles.foot}>
-            Average Scout earnings: $80–$200/week in active hours.
+            Average Scout earnings: $80 to $200 per week in active hours.
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -83,7 +84,7 @@ export default function BecomeScoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 10,
     textAlign: 'center',
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 21,
     textAlign: 'center',
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 14,
   },
@@ -138,6 +139,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     marginBottom: 14,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   stepChevron: {
     marginLeft: 4,
@@ -146,7 +153,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -159,22 +166,22 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   stepTime: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.red,
   },
   stepWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 17,
   },
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
@@ -182,14 +189,14 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 3,
   },
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
   },
