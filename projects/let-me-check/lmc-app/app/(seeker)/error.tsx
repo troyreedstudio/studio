@@ -1,6 +1,7 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../lib/theme';
 
 type ErrorType = 'no-scouts' | 'payment-declined' | 'connection' | 'missed-window';
 
@@ -53,13 +54,14 @@ export default function ErrorScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <TouchableOpacity
         style={styles.backFab}
         onPress={() => router.replace('/(seeker)/home')}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         activeOpacity={0.7}
       >
-        <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+        <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
       </TouchableOpacity>
       <View style={styles.inner}>
         {/* Icon */}
@@ -94,7 +96,7 @@ export default function ErrorScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   backFab: {
     position: 'absolute',
     top: 6,
@@ -116,9 +118,9 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: '#333',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 26,
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#fff',
+    color: colors.textPrimary,
     textAlign: 'center',
     letterSpacing: 0.4,
     marginBottom: 14,
@@ -135,7 +137,7 @@ const styles = StyleSheet.create({
   message: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13.5,
-    color: '#888',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
     letterSpacing: 0.2,
@@ -146,19 +148,19 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   primaryBtn: {
-    backgroundColor: '#FAF6F0',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.red,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.28,
     shadowRadius: 12,
     elevation: 8,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
@@ -168,7 +170,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     fontFamily: 'Inter_500Medium',
-    color: '#888',
+    color: colors.textSecondary,
     fontSize: 13,
     letterSpacing: 0.5,
   },
