@@ -203,6 +203,26 @@ export default function ProfileScreen() {
           ))}
         </View>
 
+        {/* Referral banner — routes to the real invite screen */}
+        <TouchableOpacity
+          style={styles.referralBanner}
+          onPress={() => router.push('/(seeker)/invite' as never)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.referralLeft}>
+            <View style={styles.referralIconWrap}>
+              <Ionicons name="gift-outline" size={20} color="#FFCB47" />
+            </View>
+            <View>
+              <Text style={styles.referralTitle}>Invite friends</Text>
+              <Text style={styles.referralSub}>Give credits, get credits</Text>
+            </View>
+          </View>
+          <View style={styles.referralBtn}>
+            <Text style={styles.referralBtnText}>INVITE</Text>
+          </View>
+        </TouchableOpacity>
+
         {/* Switch Mode */}
         <TouchableOpacity
           style={styles.switchModeBtn}

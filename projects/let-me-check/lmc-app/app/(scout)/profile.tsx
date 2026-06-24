@@ -15,6 +15,25 @@ import { switchRole, signOut } from '../lib/auth';
 import { deleteMyAccount } from '../lib/account';
 import { getProfile } from '../lib/api';
 import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
+import { supabase } from '../lib/supabase';
+
+/**
+ * Derive a stable, human-readable Scout ID from the user's Supabase auth UUID.
+ * Same algorithm as scout/approved.tsx — deterministic "SCT-XXXX-XXX" from
+ * the last 7 hex digits of the UUID.
+ */
+function stableScoutId(uid: string): string {
+  const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const hex = uid.replace(/-/g, '').slice(-7);
+  const n = parseInt(hex, 16);
+  let out = '';
+  let v = n;
+  for (let i = 0; i < 7; i++) {
+    out = CHARS[v % 32] + out;
+    v = Math.floor(v / 32);
+  }
+  return `SCT-${out.slice(0, 4)}-${out.slice(4)}`;
+}
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -26,6 +45,7 @@ const SCOUT_ITEMS: { icon: IconName; label: string; route: string }[] = [
   { icon: 'shield-checkmark-outline', label: 'Identity & verification', route: '/(scout)/verification' },
   { icon: 'document-text-outline', label: 'Tax documents (1099)', route: '/(scout)/tax-documents' },
   { icon: 'reader-outline', label: 'The Scout Code', route: '/(scout)/scout-code' },
+  { icon: 'gift-outline', label: 'Invite friends', route: '/(seeker)/invite' },
 ];
 
 const ACCOUNT_ITEMS: { icon: IconName; label: string; route: string }[] = [
@@ -42,15 +62,17 @@ export default function ScoutProfileScreen() {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [earningsData, setEarningsData] = useState<ScoutEarnings | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [scoutId, setScoutId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setStatsLoading(true);
-    Promise.all([getProfile(), getScoutEarnings()])
-      .then(([profile, earnings]) => {
+    Promise.all([getProfile(), getScoutEarnings(), supabase.auth.getUser()])
+      .then(([profile, earnings, { data: u }]) => {
         if (cancelled) return;
         setDisplayName(profile?.display_name ?? null);
         setEarningsData(earnings);
+        if (u.user?.id) setScoutId(stableScoutId(u.user.id));
       })
       .catch(() => {
         // Stats fail silently -- show zeros rather than crash
@@ -176,6 +198,31 @@ export default function ScoutProfileScreen() {
             <Text style={styles.verifiedText}>VERIFIED SCOUT</Text>
           </View>
         </View>
+
+        {/* Scout ID card -- tappable, routes to invite screen */}
+        <TouchableOpacity
+          style={styles.scoutIdCard}
+          onPress={() => router.push('/(seeker)/invite' as never)}
+          activeOpacity={0.75}
+        >
+          <View style={styles.scoutIdLeft}>
+            <View style={styles.scoutIdIconWrap}>
+              <Ionicons name="finger-print-outline" size={18} color="#00FF7F" />
+            </View>
+            <View>
+              <Text style={styles.scoutIdLabel}>YOUR SCOUT ID</Text>
+              {statsLoading ? (
+                <ActivityIndicator color="#00FF7F" size="small" style={{ marginTop: 2 }} />
+              ) : (
+                <Text style={styles.scoutIdValue}>{scoutId ?? 'SCT-••••-•••'}</Text>
+              )}
+            </View>
+          </View>
+          <View style={styles.scoutIdRight}>
+            <Text style={styles.inviteHint}>Invite friends</Text>
+            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.3)" />
+          </View>
+        </TouchableOpacity>
 
         {/* Stats Row -- real data, real zeros on a fresh account */}
         <View style={styles.statsRow}>
@@ -379,6 +426,48 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
+  scoutIdCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,255,127,0.06)',
+    borderRadius: 16,
+    marginHorizontal: 22,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,127,0.25)',
+  },
+  scoutIdLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  scoutIdIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,255,127,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoutIdLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 1.6,
+    marginBottom: 3,
+  },
+  scoutIdValue: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 16,
+    color: '#00FF7F',
+    letterSpacing: 1.5,
+  },
+  scoutIdRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  inviteHint: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 0.3,
+  },
   switchModeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
