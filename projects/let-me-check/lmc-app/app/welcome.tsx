@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Animated, Statu
 import { useRouter } from 'expo-router';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
+// TEMP: color audition — remove after color is chosen
+import { useDevBg } from './state/dev-bg';
+import DevBgPill from './components/DevBgPill';
 
 const LMC_SIZE = 60;
 const LMC_MASK_W = 332;
@@ -22,6 +25,8 @@ const CHROME_LOCATIONS: [number, number, ...number[]] = [0, 0.22, 0.5, 0.58, 0.6
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  // TEMP: color audition — remove after color is chosen
+  const devBg = useDevBg();
   const fade = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(20)).current;
 
@@ -41,8 +46,11 @@ export default function WelcomeScreen() {
   }, [fade, slideUp]);
 
   return (
-    <View style={styles.bg}>
+    <View style={[styles.bg, { backgroundColor: devBg.hex }]}>
       <StatusBar barStyle="light-content" />
+
+      {/* TEMP: color audition — remove after color is chosen */}
+      <DevBgPill />
 
       <SafeAreaView style={styles.safe}>
         <Animated.View style={[styles.topBlock, { opacity: fade }]}>

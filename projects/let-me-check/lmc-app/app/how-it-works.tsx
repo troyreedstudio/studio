@@ -12,6 +12,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useVideoPlayer, VideoView } from 'expo-video';
+// TEMP: color audition — remove after color is chosen
+import { useDevBg } from './state/dev-bg';
+import DevBgPill from './components/DevBgPill';
 
 const CHROME_STOPS: [string, string, ...string[]] = [
   '#a8a8a8', '#ffffff', '#ffffff', '#f2f2f2', '#8c8c8c', '#363636', '#161616',
@@ -32,6 +35,8 @@ const WORD_MASK_H = WORD_SIZE * 1.35;
 
 export default function HowItWorksScreen() {
   const router = useRouter();
+  // TEMP: color audition — remove after color is chosen
+  const devBg = useDevBg();
 
   // Placeholder combined trailer — autoplays, loops, muted (Netflix-hero style).
   const player = useVideoPlayer(require('../assets/concept-demo.mp4'), (p) => {
@@ -57,7 +62,7 @@ export default function HowItWorksScreen() {
   }, [player]);
 
   return (
-    <View style={styles.bg}>
+    <View style={[styles.bg, { backgroundColor: devBg.hex }]}>
       <StatusBar barStyle="light-content" />
 
       {/* Back to splash */}
@@ -101,6 +106,9 @@ export default function HowItWorksScreen() {
           style={styles.frameFade}
         />
       </View>
+
+      {/* TEMP: color audition — remove after color is chosen */}
+      <DevBgPill />
 
       {/* Choose-your-profile CTA */}
       <SafeAreaView style={styles.bottom}>
@@ -248,7 +256,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 16,
     paddingTop: 34,
-    backgroundColor: '#000000',
+    // TEMP: backgroundColor driven by devBg on the parent — remove hardcode with audition tool
+    backgroundColor: 'transparent',
   },
   chooseEyebrow: {
     fontFamily: 'Inter_700Bold',

@@ -4,6 +4,9 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAudioPlayer } from 'expo-audio';
 import { useRouter } from 'expo-router';
+// TEMP: color audition — remove after color is chosen
+import { useDevBg } from './state/dev-bg';
+import DevBgPill from './components/DevBgPill';
 
 const bootChime = require('../assets/sounds/boot-deep.wav');
 
@@ -31,6 +34,8 @@ export default function BootSplash() {
   const breath = useRef(new Animated.Value(1)).current;
   const player = useAudioPlayer(bootChime);
   const router = useRouter();
+  // TEMP: color audition — remove after color is chosen
+  const devBg = useDevBg();
 
   useEffect(() => {
     scale.setValue(1.15);
@@ -114,7 +119,7 @@ export default function BootSplash() {
   const composedScale = Animated.multiply(scale, breath);
 
   return (
-    <View style={styles.bg}>
+    <View style={[styles.bg, { backgroundColor: devBg.hex }]}>
       <StatusBar barStyle="light-content" />
 
       <Animated.View style={[styles.heroGroup, { transform: [{ scale: composedScale }] }]}>
@@ -168,6 +173,9 @@ export default function BootSplash() {
         pointerEvents="none"
         style={[StyleSheet.absoluteFillObject, styles.overlay, { opacity: overlayOpacity }]}
       />
+
+      {/* TEMP: color audition — remove after color is chosen */}
+      <DevBgPill />
     </View>
   );
 }
