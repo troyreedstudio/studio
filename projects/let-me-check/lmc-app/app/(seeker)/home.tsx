@@ -395,11 +395,9 @@ function SearchOverlay({
       // If playback fails (silent mode, simulator, etc.) just continue
     }
 
-    // 3. Let the SHORT chime finish fully before the mic opens — opening the mic
-    //    switches the audio session to record and would otherwise clip the chime's
-    //    tail (sounds bad). The chime is ~0.26s, so wait ~280ms = clean ending, no
-    //    dead air (the chime fills the wait), then listen.
-    await new Promise<void>((resolve) => setTimeout(resolve, 280));
+    // 3. Tiny delay — just the chime's attack plays before the mic opens; the quiet
+    //    tail rings out while listening (a musical tone isn't transcribed as speech).
+    await new Promise<void>((resolve) => setTimeout(resolve, 70));
 
     // 4. Now arm the microphone — user hears beep, then speaks
     setListening(true);
