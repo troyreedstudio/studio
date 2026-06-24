@@ -11,6 +11,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { addRecurring, type RecurringFreq } from '../state/recurring';
+import { colors } from '../lib/theme';
 
 const FREQS: { key: RecurringFreq; label: string; sub: string }[] = [
   { key: 'daily', label: 'Daily', sub: 'Every day' },
@@ -54,7 +55,7 @@ export default function RecurringSetupScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         {/* Header */}
         <View style={styles.header}>
@@ -73,7 +74,7 @@ export default function RecurringSetupScreen() {
           <Text style={styles.sectionLabel}>PLACE</Text>
           <View style={styles.placeCard}>
             <View style={styles.placeIconWrap}>
-              <Ionicons name="location" size={18} color="#00FF7F" />
+              <Ionicons name="location" size={18} color={colors.red} />
             </View>
             <View style={styles.placeBody}>
               <Text style={styles.placeName} numberOfLines={1}>{pinName}</Text>
@@ -134,7 +135,7 @@ export default function RecurringSetupScreen() {
 
           {/* Billing note — charge happens at each run, never upfront */}
           <View style={styles.billNote}>
-            <Ionicons name="card-outline" size={15} color="#00FF7F" />
+            <Ionicons name="card-outline" size={15} color={colors.red} />
             <Text style={styles.billNoteText}>
               Your card on file is charged each time a check runs, not now. Cancel or pause anytime.
             </Text>
@@ -144,7 +145,7 @@ export default function RecurringSetupScreen() {
         {/* CTA */}
         <View style={styles.ctaWrap}>
           <TouchableOpacity style={styles.cta} activeOpacity={0.85} onPress={schedule}>
-            <Ionicons name="repeat" size={16} color="#000" />
+            <Ionicons name="repeat" size={16} color={colors.onRed} />
             <Text style={styles.ctaText}>SCHEDULE THIS CHECK</Text>
           </TouchableOpacity>
         </View>
@@ -154,7 +155,7 @@ export default function RecurringSetupScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -163,10 +164,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
     width: 50,
@@ -174,17 +177,18 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
-  scroll: { paddingHorizontal: 22, paddingBottom: 24, paddingTop: 8 },
+  scroll: { paddingHorizontal: 22, paddingBottom: 24, paddingTop: 16 },
 
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 12,
+    textTransform: 'uppercase',
   },
   sectionGap: { marginTop: 26 },
 
@@ -192,18 +196,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   placeIconWrap: {
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(218,37,29,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -211,81 +222,81 @@ const styles = StyleSheet.create({
   placeName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   placeAddr: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
   },
   changeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 0.3,
   },
 
   freqRow: { flexDirection: 'row', gap: 10 },
   freqChip: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
   freqChipActive: {
-    backgroundColor: 'rgba(0,255,127,0.1)',
-    borderColor: '#00FF7F',
+    backgroundColor: 'rgba(218,37,29,0.06)',
+    borderColor: colors.red,
   },
   freqLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
-  freqLabelActive: { color: '#00FF7F' },
+  freqLabelActive: { color: colors.red },
   freqSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 10.5,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textTertiary,
     letterSpacing: 0.2,
   },
-  freqSubActive: { color: 'rgba(0,255,127,0.8)' },
+  freqSubActive: { color: 'rgba(218,37,29,0.7)' },
 
   timeWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   timeChip: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 11,
     paddingHorizontal: 16,
   },
   timeChipActive: {
-    backgroundColor: 'rgba(0,255,127,0.1)',
-    borderColor: '#00FF7F',
+    backgroundColor: 'rgba(218,37,29,0.06)',
+    borderColor: colors.red,
   },
   timeText: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
+    color: colors.textSecondary,
     letterSpacing: 0.4,
   },
-  timeTextActive: { color: '#00FF7F' },
+  timeTextActive: { color: colors.red },
 
   billNote: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 9,
-    backgroundColor: 'rgba(0,255,127,0.08)',
+    backgroundColor: 'rgba(218,37,29,0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.3)',
+    borderColor: 'rgba(218,37,29,0.18)',
     borderRadius: 12,
     paddingHorizontal: 13,
     paddingVertical: 12,
@@ -295,7 +306,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 17,
     letterSpacing: 0.1,
   },
@@ -304,19 +315,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 24,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   cta: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 9,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 17,
   },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
