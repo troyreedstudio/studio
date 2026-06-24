@@ -61,9 +61,14 @@ export default function HowItWorksScreen() {
     };
   }, [player]);
 
+  // Derive ink color from the audition background: black on white, white on red/blue.
+  const ink = devBg.isLight ? '#000000' : '#ffffff';
+  const inkMuted = devBg.isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)';
+  const inkFaint = devBg.isLight ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.45)';
+
   return (
     <View style={[styles.bg, { backgroundColor: devBg.hex }]}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={devBg.isLight ? 'dark-content' : 'light-content'} />
 
       {/* Back to splash */}
       <SafeAreaView style={styles.backHeader} pointerEvents="box-none">
@@ -73,7 +78,7 @@ export default function HowItWorksScreen() {
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+          <Ionicons name="chevron-back" size={24} color={ink} />
         </TouchableOpacity>
       </SafeAreaView>
 
@@ -99,9 +104,13 @@ export default function HowItWorksScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Bottom fade — seamless blend from video into the black CTA block */}
+        {/* Bottom fade — blends video into the CTA block; adapts to audition bg */}
         <LinearGradient
-          colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.95)']}
+          colors={
+            devBg.isLight
+              ? ['rgba(255,255,255,0)', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0.95)']
+              : ['rgba(0,0,0,0)', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.95)']
+          }
           locations={[0, 0.6, 1]}
           style={styles.frameFade}
         />
@@ -135,14 +144,21 @@ export default function HowItWorksScreen() {
             style={StyleSheet.absoluteFillObject}
           />
         </MaskedView>
-        <Text style={styles.brandTag}>Know Before You Go</Text>
+        <Text style={[styles.brandTag, { color: inkMuted }]}>Know Before You Go</Text>
 
         <TouchableOpacity
-          style={styles.primaryBtn}
+          style={[
+            styles.primaryBtn,
+            devBg.isLight
+              ? { backgroundColor: '#000000', borderRadius: 14 }
+              : { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
+          ]}
           onPress={() => router.push('/onboarding/role')}
           activeOpacity={0.85}
         >
-          <Text style={styles.primaryBtnText}>Choose your profile</Text>
+          <Text style={[styles.primaryBtnText, { color: devBg.isLight ? '#ffffff' : '#ffffff' }]}>
+            Choose your profile
+          </Text>
           <Ionicons name="arrow-forward" size={16} color="#ffffff" />
         </TouchableOpacity>
 
@@ -151,8 +167,11 @@ export default function HowItWorksScreen() {
           onPress={() => router.push('/auth/sign-in')}
           activeOpacity={0.7}
         >
-          <Text style={styles.signInText}>
-            Already have an account? <Text style={styles.signInBold}>Sign in</Text>
+          <Text style={[styles.signInText, { color: inkMuted }]}>
+            Already have an account?{' '}
+            <Text style={[styles.signInBold, { color: devBg.isLight ? '#007AFF' : '#00FF7F' }]}>
+              Sign in
+            </Text>
           </Text>
         </TouchableOpacity>
       </SafeAreaView>

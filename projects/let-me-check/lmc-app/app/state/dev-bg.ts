@@ -14,18 +14,13 @@ import { useEffect, useState } from 'react';
 export interface BgCandidate {
   name: string;
   hex: string;
+  isLight: boolean;
 }
 
 export const PALETTE: BgCandidate[] = [
-  { name: 'Pure Black',       hex: '#000000' },
-  { name: 'Soft Black',       hex: '#0A0A0C' },
-  { name: 'Ink Navy',         hex: '#0B0E14' },
-  { name: 'Deep Aubergine',   hex: '#0C0A12' },
-  { name: 'Forest Black',     hex: '#07120F' },
-  { name: 'Graphite',         hex: '#101012' },
-  { name: 'Midnight Slate',   hex: '#0A0F12' },
-  { name: 'Warm Black',       hex: '#120A0A' },
-  { name: 'Gunmetal',         hex: '#0E1116' },
+  { name: 'White', hex: '#FFFFFF', isLight: true  },
+  { name: 'Red',   hex: '#FF3B30', isLight: false },
+  { name: 'Blue',  hex: '#1652F0', isLight: false },
 ];
 
 let _index = 0;
