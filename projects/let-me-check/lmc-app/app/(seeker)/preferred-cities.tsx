@@ -1,8 +1,9 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getProfile } from '../lib/api';
+import { colors } from '../lib/theme';
 
 const CITIES = [
   { id: 'mia', name: 'Miami', region: 'Florida, USA' },
@@ -60,6 +61,7 @@ export default function PreferredCitiesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -104,16 +106,16 @@ export default function PreferredCitiesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#ffffff', fontSize: 15, marginBottom: 16 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#ffffff', letterSpacing: 0.4, marginBottom: 5 },
-  subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#888', letterSpacing: 0.3 },
+  backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 16 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: colors.textPrimary, letterSpacing: 0.4, marginBottom: 5 },
+  subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.textSecondary, letterSpacing: 0.3 },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.textTertiary,
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -123,18 +125,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.bg,
     borderRadius: 14,
     marginHorizontal: 20,
     marginBottom: 8,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
   },
   cityRowActive: {
-    borderColor: '#00FF7F',
-    backgroundColor: 'rgba(255,133,51,0.05)',
+    borderColor: colors.red,
+    backgroundColor: 'rgba(218,37,29,0.03)',
   },
   cityLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
   cityPin: { fontSize: 16 },
@@ -142,14 +144,14 @@ const styles = StyleSheet.create({
   cityName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 2,
   },
   cityRegion: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: '#888',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   cityRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -158,23 +160,23 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 1.5,
-    borderColor: '#444',
+    borderColor: colors.borderStrong,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxActive: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+    backgroundColor: colors.red,
+    borderColor: colors.red,
   },
   checkboxCheck: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#000',
+    color: colors.onRed,
   },
   disclaimer: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: '#666',
+    color: colors.textTertiary,
     paddingHorizontal: 32,
     lineHeight: 16,
     letterSpacing: 0.3,
