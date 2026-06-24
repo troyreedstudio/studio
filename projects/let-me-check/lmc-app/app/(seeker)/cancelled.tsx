@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../lib/theme';
 
 const SUPPORT_EMAIL = 'support@letmecheck.app';
 
@@ -49,7 +50,7 @@ export default function CancelledScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <TouchableOpacity
           style={styles.backFab}
@@ -57,7 +58,7 @@ export default function CancelledScreen() {
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.center}>
           <Animated.View style={[styles.glyphCircle, { transform: [{ scale }] }]}>
@@ -116,7 +117,7 @@ export default function CancelledScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1, paddingHorizontal: 22 },
   backFab: {
     position: 'absolute',
@@ -133,9 +134,9 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.surface,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 26,
@@ -143,19 +144,19 @@ const styles = StyleSheet.create({
   glyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 44,
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
   eyebrow: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textTertiary,
     letterSpacing: 2.4,
     marginBottom: 10,
   },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 22,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     textAlign: 'center',
     marginBottom: 10,
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 22,
@@ -172,13 +173,17 @@ const styles = StyleSheet.create({
   },
   receipt: {
     width: '100%',
-    backgroundColor: 'rgba(20,55,130,0.5)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.6)',
+    borderColor: colors.border,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 4,
     marginBottom: 16,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
   },
   receiptRow: {
     flexDirection: 'row',
@@ -189,56 +194,62 @@ const styles = StyleSheet.create({
   receiptLabel: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
   },
   receiptLabelBold: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   receiptValue: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
+  // Cancellation fee: colors.danger — destructive/cost is a distinct error state
   receiptFee: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 14,
-    color: '#FF6B00',
+    color: colors.danger,
     letterSpacing: 0.3,
   },
+  // Refund amount: colors.verified — money coming back is a positive/success state
   receiptRefund: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 16,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 0.4,
   },
-  receiptDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
+  receiptDivider: { height: 1, backgroundColor: colors.border },
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
     paddingHorizontal: 10,
   },
   footLink: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.red,
   },
   ctaWrap: { paddingBottom: 16 },
   cta: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
+    shadowColor: colors.red,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
   },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 3,
   },
