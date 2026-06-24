@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { setIntendedRoleFlags } from '../lib/api';
+import { colors } from '../lib/theme';
 
 /**
  * Derive a stable, human-readable Scout ID from the user's Supabase auth UUID.
@@ -24,7 +25,6 @@ import { setIntendedRoleFlags } from '../lib/api';
  */
 function stableScoutId(uid: string): string {
   const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  // Strip hyphens and take the last 7 hex digits.
   const hex = uid.replace(/-/g, '').slice(-7);
   const n = parseInt(hex, 16);
   let out = '';
@@ -50,16 +50,15 @@ const UNLOCKED = [
 ];
 
 const FIRST_STEPS = [
-  { title: 'Open your Scout dashboard', detail: 'Set availability + go online when you’re ready to earn.' },
-  { title: 'Allow location & notifications', detail: 'You can only be dispatched when location is on.' },
-  { title: 'Take a practice clip', detail: 'A free 15-second test so you’re calibrated for your first paid check.' },
+  { title: 'Open your Scout dashboard', detail: 'Set availability and go online when you are ready to earn.' },
+  { title: 'Allow location and notifications', detail: 'You can only be dispatched when location is on.' },
+  { title: 'Take a practice video', detail: 'A free 15-second test so you are calibrated for your first paid check.' },
 ];
 
 export default function ScoutApprovedScreen() {
   const router = useRouter();
   const fade = useRef(new Animated.Value(0)).current;
   const breath = useRef(new Animated.Value(1)).current;
-  // Stable Scout ID derived from the auth UID — never regenerates on re-mount.
   const [scoutId, setScoutId] = useState('SCT-••••-•••');
   const today = new Date().toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
@@ -70,7 +69,6 @@ export default function ScoutApprovedScreen() {
     // Best-effort — a transient failure must not block the confirmation screen.
     setIntendedRoleFlags('scout').catch(() => {});
 
-    // Resolve the stable Scout ID from the real auth UID.
     supabase.auth.getUser().then(({ data }) => {
       const uid = data?.user?.id;
       if (uid) setScoutId(stableScoutId(uid));
@@ -89,7 +87,7 @@ export default function ScoutApprovedScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
@@ -114,7 +112,7 @@ export default function ScoutApprovedScreen() {
             <View style={styles.hero}>
               <View style={styles.checkWrap}>
                 <Animated.View
-                  style={[styles.ring, { opacity: 0.22, transform: [{ scale: breath }] }]}
+                  style={[styles.ring, { opacity: 0.18, transform: [{ scale: breath }] }]}
                 />
                 <Animated.View
                   style={[styles.checkCircle, { transform: [{ scale: breath }] }]}
@@ -160,7 +158,7 @@ export default function ScoutApprovedScreen() {
                   style={[styles.listRow, i < ON_FILE.length - 1 && styles.listRowDivider]}
                 >
                   <View style={styles.greenCheck}>
-                    <Ionicons name="checkmark" size={14} color="#000" />
+                    <Ionicons name="checkmark" size={14} color={colors.white} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.listTitle}>{row.title}</Text>
@@ -177,7 +175,7 @@ export default function ScoutApprovedScreen() {
             {UNLOCKED.map((item, i) => (
               <View key={i} style={styles.unlockRow}>
                 <View style={styles.unlockIcon}>
-                  <Ionicons name={item.icon} size={18} color="#ffffff" />
+                  <Ionicons name={item.icon} size={18} color={colors.red} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.listTitle}>{item.title}</Text>
@@ -208,14 +206,14 @@ export default function ScoutApprovedScreen() {
               activeOpacity={0.7}
               style={styles.codeLinkRow}
             >
-              <Ionicons name="document-text-outline" size={14} color="#00FF7F" />
+              <Ionicons name="document-text-outline" size={14} color={colors.red} />
               <Text style={styles.rulesLink}>Read the full Code of Conduct</Text>
             </TouchableOpacity>
 
             {/* SUPPORT */}
             <Text style={[styles.sectionLabel, styles.sectionLabelGap]}>NEED HELP</Text>
             <View style={styles.supportCard}>
-              <Ionicons name="chatbubble-ellipses-outline" size={18} color="#ffffff" />
+              <Ionicons name="chatbubble-ellipses-outline" size={18} color={colors.textPrimary} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.listTitle}>support@letmecheck.app</Text>
                 <Text style={styles.listWhy}>
@@ -241,7 +239,7 @@ export default function ScoutApprovedScreen() {
               activeOpacity={0.85}
             >
               <View style={styles.primaryBtnInner}>
-                <Ionicons name="play" size={14} color="#000" />
+                <Ionicons name="play" size={14} color={colors.onRed} />
                 <Text style={styles.primaryBtnText}>OPEN SCOUT DASHBOARD</Text>
               </View>
             </TouchableOpacity>
@@ -263,7 +261,7 @@ export default function ScoutApprovedScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
@@ -276,13 +274,13 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
   dot: { width: 24, height: 3, borderRadius: 2 },
-  dotDone: { backgroundColor: '#00FF7F' },
+  dotDone: { backgroundColor: colors.red },
   scrollWrap: { flex: 1 },
   scroll: { paddingHorizontal: 26, paddingBottom: 64 },
 
@@ -297,30 +295,30 @@ const styles = StyleSheet.create({
     width: 108,
     height: 108,
     borderRadius: 54,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
   },
   checkCircle: {
     width: 92,
     height: 92,
     borderRadius: 46,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#00FF7F',
-    shadowOpacity: 0.6,
+    shadowColor: colors.verified,
+    shadowOpacity: 0.35,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 0 },
   },
   checkGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 48,
-    color: '#ffffff',
+    color: colors.white,
     marginTop: 2,
   },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 6,
     textAlign: 'center',
@@ -328,20 +326,18 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
     lineHeight: 20,
     textAlign: 'center',
   },
 
-  // SCOUT CARD
+  // SCOUT CARD — red brand surface
   scoutCard: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
+    backgroundColor: colors.red,
     borderRadius: 16,
     padding: 18,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.6)',
   },
   scoutCardTop: {
     flexDirection: 'row',
@@ -362,26 +358,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.4)',
+    borderColor: 'rgba(255,255,255,0.35)',
   },
   verifiedDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.white,
   },
   verifiedPillText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#00FF7F',
+    color: colors.white,
     letterSpacing: 1.4,
   },
   scoutCardId: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
-    color: '#ffffff',
+    color: colors.white,
     letterSpacing: 2,
     marginBottom: 14,
   },
@@ -393,30 +389,30 @@ const styles = StyleSheet.create({
   scoutCardMetaLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(255,255,255,0.65)',
     letterSpacing: 1.4,
     marginBottom: 3,
   },
   scoutCardMetaValue: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12.5,
-    color: '#ffffff',
+    color: colors.white,
     letterSpacing: 0.2,
   },
 
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 12,
   },
   sectionLabelGap: { marginTop: 22 },
 
   listCard: {
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
   },
@@ -428,13 +424,13 @@ const styles = StyleSheet.create({
   },
   listRowDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.12)',
+    borderBottomColor: colors.border,
   },
   greenCheck: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
@@ -442,44 +438,15 @@ const styles = StyleSheet.create({
   listTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13.5,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   listWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 17,
-  },
-
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.035)',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    paddingVertical: 16,
-  },
-  stat: { flex: 1, alignItems: 'center' },
-  statValue: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 15,
-    color: '#ffffff',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 1.5,
-  },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: 'rgba(255,255,255,0.12)',
   },
 
   unlockRow: {
@@ -491,7 +458,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -505,58 +472,18 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.4)',
+    borderColor: 'rgba(218,37,29,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepNumText: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 12,
-    color: '#00FF7F',
+    color: colors.red,
   },
 
-  remindCard: {
-    backgroundColor: 'rgba(255,255,255,0.035)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 12,
-    padding: 14,
-  },
-  remindRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 6,
-  },
-  remindBullet: {
-    fontFamily: 'Inter_700Bold',
-    color: 'rgba(255,255,255,0.55)',
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  remindText: {
-    flex: 1,
-    fontFamily: 'Inter_400Regular',
-    fontSize: 12.5,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 18,
-  },
-  rulesLinkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.12)',
-  },
-  rulesLink: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 12,
-    color: '#00FF7F',
-    letterSpacing: 0.4,
-  },
   codeLinkRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -564,14 +491,20 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 20,
   },
+  rulesLink: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 12,
+    color: colors.red,
+    letterSpacing: 0.4,
+  },
 
   supportCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     marginBottom: 24,
@@ -579,12 +512,12 @@ const styles = StyleSheet.create({
   supportEmail: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 1.6,
   },
 
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
@@ -597,7 +530,7 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
@@ -605,11 +538,11 @@ const styles = StyleSheet.create({
   swapText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   swapBold: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.red,
   },
 });
