@@ -9,6 +9,7 @@ import {
   Easing,
   Alert,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
@@ -25,6 +26,7 @@ import { useClipUpload } from '../lib/clips';
 import { collectFraudSignals, FraudSignals } from '../lib/fraud-signals';
 import { CameraViewfinder } from './_filming-viewfinder';
 import { styles } from './_filming-styles';
+import { colors } from '../lib/theme';
 
 const TROUBLE_REASONS = [
   'Line is gone / venue empty',
@@ -343,6 +345,7 @@ export default function FilmingScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <ScrollView
           contentContainerStyle={styles.scroll}
@@ -361,7 +364,7 @@ export default function FilmingScreen() {
           {/* Accepted pill */}
           <View style={styles.acceptedRow}>
             <View style={styles.acceptedPill}>
-              <Ionicons name="checkmark-circle" size={12} color="#00FF7F" />
+              <Ionicons name="checkmark-circle" size={12} color={colors.verified} />
               <Text style={styles.acceptedText}>REQUEST ACCEPTED</Text>
             </View>
             {isPriority && (
@@ -375,21 +378,21 @@ export default function FilmingScreen() {
           {/* Venue */}
           <Text style={styles.venueName}>{venue}</Text>
           <View style={styles.venueMetaRow}>
-            <Ionicons name="location" size={11} color="rgba(255,255,255,0.6)" />
-            <Text style={styles.venueAddress}>Brickell · Miami · 0.3 mi</Text>
+            <Ionicons name="location" size={11} color={colors.textSecondary} />
+            <Text style={styles.venueAddress}>Brickell, Miami, 0.3 mi</Text>
           </View>
 
           {/* Pre-flight proximity banner — prominent, live amber→green. Shows the
               Scout how far they are and counts down as they approach; flips green
-              and unlocks the record button when they're within the film-fence. */}
+              and unlocks the record button when they’re within the film-fence. */}
           {venuePt != null && distanceM != null && (
             <View
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
+                flexDirection: ‘row’,
+                alignItems: ‘center’,
                 gap: 10,
-                backgroundColor: outOfRange ? 'rgba(255,203,71,0.16)' : 'rgba(0,255,127,0.14)',
-                borderColor: outOfRange ? '#FFCB47' : '#00FF7F',
+                backgroundColor: outOfRange ? ‘rgba(255,203,71,0.08)’ : ‘rgba(22,163,74,0.08)’,
+                borderColor: outOfRange ? colors.amber : colors.verified,
                 borderWidth: 1,
                 borderRadius: 14,
                 paddingVertical: 14,
@@ -398,11 +401,11 @@ export default function FilmingScreen() {
               }}
             >
               <Ionicons
-                name={outOfRange ? 'walk' : 'checkmark-circle'}
+                name={outOfRange ? ‘walk’ : ‘checkmark-circle’}
                 size={22}
-                color={outOfRange ? '#FFCB47' : '#00FF7F'}
+                color={outOfRange ? colors.amber : colors.verified}
               />
-              <Text style={{ flex: 1, color: '#fff', fontSize: 14, fontWeight: '700', lineHeight: 19 }}>
+              <Text style={{ flex: 1, color: colors.textPrimary, fontSize: 14, fontWeight: ‘700’, lineHeight: 19 }}>
                 {outOfRange
                   ? `Outside filming range — you’re ~${Math.round(distanceM)} m from the venue. Move within ${FILM_FENCE_M} m to start recording.`
                   : `In filming range — tap the record button to film.`}
@@ -463,8 +466,8 @@ export default function FilmingScreen() {
 
           {/* GPS */}
           <View style={styles.gpsPill}>
-            <Ionicons name="location" size={11} color="#00FF7F" />
-            <Text style={styles.gpsText}>GPS Verified — you’re at the right place</Text>
+            <Ionicons name="location" size={11} color={colors.verified} />
+            <Text style={styles.gpsText}>GPS Verified, you’re at the right place</Text>
           </View>
 
           {/* Record button OR Upload progress */}
@@ -481,7 +484,7 @@ export default function FilmingScreen() {
                 {/* While securing, the blur is on-device with no byte progress;
                     show a spinner instead of a misleading 0%. */}
                 {securing ? (
-                  <ActivityIndicator size="small" color="#22c55e" />
+                  <ActivityIndicator size="small" color={colors.verified} />
                 ) : (
                   <Text style={styles.uploadPct}>{uploadPct}%</Text>
                 )}
@@ -599,7 +602,7 @@ export default function FilmingScreen() {
               flow so it never competes with the proximity / record instruction. */}
           {troubleReason ? (
             <View style={[styles.troubleBase, styles.troubleReported]}>
-              <Ionicons name="checkmark-circle" size={18} color="#00FF7F" />
+              <Ionicons name="checkmark-circle" size={18} color={colors.verified} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.troubleTitle}>REPORTED, SEEKER REFUNDED, YOU’RE COVERED</Text>
                 <Text style={styles.troubleSub}>
@@ -629,7 +632,7 @@ export default function FilmingScreen() {
                   onPress={() => setTroubleOpen(false)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="close" size={16} color="rgba(255,255,255,0.6)" />
+                  <Ionicons name="close" size={16} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
               {TROUBLE_REASONS.map((r) => (
@@ -660,7 +663,7 @@ export default function FilmingScreen() {
                   <Text style={styles.troubleReasonText}>
                     {troubleBusy ? 'Reporting...' : r}
                   </Text>
-                  <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
+                  <Ionicons name="chevron-forward" size={14} color={colors.textTertiary} />
                 </TouchableOpacity>
               ))}
             </View>
