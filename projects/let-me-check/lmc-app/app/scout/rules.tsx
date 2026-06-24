@@ -14,56 +14,54 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { recordDocConsent } from '../lib/consent';
+import { colors } from '../lib/theme';
 
 // Source of truth: docs/SCOUT-CONDUCT.md + docs/FILMING-POLICY.md.
 // Binding legal text lives in the full Scout Agreement (/legal/code) — these
 // cards are the plain-English summary, so copy is kept short on purpose.
 
-const ACCENT = '#00FF7F';
-const ACCENT_CHIP = 'rgba(0,255,127,0.12)';
-
 type IconName = keyof typeof Ionicons.glyphMap;
 
 const WHERE: { icon: IconName; title: string; why: string }[] = [
   { icon: 'walk-outline', title: 'Public ground', why: 'Sidewalks, streets, plazas, parking lots, any public vantage point.' },
-  { icon: 'people-outline', title: 'The queue & entrance', why: 'Wide shots of the door, the wait, the staff, from where the public stands.' },
+  { icon: 'people-outline', title: 'The queue and entrance', why: 'Wide shots of the door, the wait, the staff, from where the public stands.' },
   { icon: 'business-outline', title: 'Public interiors (GREEN venues)', why: 'Dining rooms, lobbies, retail floors, waiting rooms. Wide shots only.' },
   { icon: 'add-circle-outline', title: 'Partner interiors (+$5)', why: 'Only when the venue is a PARTNER and the Seeker paid for it. Otherwise stay outside.' },
 ];
 
 const NEVER: { icon: IconName; title: string; why: string }[] = [
-  { icon: 'eye-off-outline', title: 'Faces & close-ups', why: 'Wide shots only. A face filling the frame won’t deliver.' },
+  { icon: 'eye-off-outline', title: 'Faces and close-ups', why: 'Wide shots only. A face filling the frame will not deliver.' },
   { icon: 'happy-outline', title: 'Children', why: 'If kids are in shot, reposition, or stop and report it.' },
   { icon: 'hand-left-outline', title: 'Anyone who objects', why: 'Someone says stop? Stop. No argument.' },
-  { icon: 'camera-outline', title: '“No Photography” zones', why: 'See a sign, stop and report it.' },
+  { icon: 'camera-outline', title: '"No Photography" zones', why: 'See a sign, stop and report it.' },
   { icon: 'medkit-outline', title: 'Red venues', why: 'Hospitals, schools, courts, police, military. Refuse the job.' },
-  { icon: 'lock-closed-outline', title: 'Bathrooms & changing rooms', why: 'Ever. Any venue. No exceptions.' },
+  { icon: 'lock-closed-outline', title: 'Bathrooms and changing rooms', why: 'Ever. Any venue. No exceptions.' },
   { icon: 'ban-outline', title: 'Past security / private property', why: 'No airport gates, no trespassing. Public access only.' },
   { icon: 'mic-off-outline', title: 'Audio', why: 'Mic stays muted for two-party consent laws.' },
 ];
 
 const CONDUCT: { icon: IconName; title: string; why: string }[] = [
-  { icon: 'eye-outline', title: 'Be discreet', why: 'Hold the phone like you’re watching a video. In, get the shot, out.' },
-  { icon: 'chatbubble-outline', title: 'If asked what you’re doing', why: 'Say you’re doing an LMC location check, and offer to leave.' },
-  { icon: 'hand-right-outline', title: 'If asked to stop', why: 'Stop immediately, report it, walk away. You’re still paid for the trip.' },
-  { icon: 'warning-outline', title: 'Don’t provoke', why: 'No fights, no drama, no distressed people. When in doubt, stop.' },
+  { icon: 'eye-outline', title: 'Be discreet', why: 'Hold the phone like you are watching a video. In, get the shot, out.' },
+  { icon: 'chatbubble-outline', title: 'If asked what you are doing', why: 'Say you are doing an LMC location check, and offer to leave.' },
+  { icon: 'hand-right-outline', title: 'If asked to stop', why: 'Stop immediately, report it, walk away. You are still paid for the trip.' },
+  { icon: 'warning-outline', title: 'Do not provoke', why: 'No fights, no drama, no distressed people. When in doubt, stop.' },
   { icon: 'shield-checkmark-outline', title: 'Never fake it', why: 'One real take. Staging or faking = instant removal + clawback.' },
 ];
 
 const REJECT: { icon: IconName; text: string }[] = [
   { icon: 'close-circle-outline', text: 'Blurry, shaky, or out of focus' },
   { icon: 'close-circle-outline', text: 'Wrong venue, or venue not visible' },
-  { icon: 'close-circle-outline', text: 'GPS doesn’t match the venue' },
+  { icon: 'close-circle-outline', text: 'GPS does not match the venue' },
   { icon: 'close-circle-outline', text: 'Finger or lens blocking the shot' },
-  { icon: 'close-circle-outline', text: 'Faces that couldn’t be auto-blurred' },
-  { icon: 'close-circle-outline', text: 'Audio detected, or clip cut too short' },
+  { icon: 'close-circle-outline', text: 'Faces that could not be auto-blurred' },
+  { icon: 'close-circle-outline', text: 'Audio detected, or video cut too short' },
 ];
 
 const AGREEMENT: { icon: IconName; text: string }[] = [
-  { icon: 'cloud-upload-outline', text: 'Clips upload straight to LMC, no local copies you keep.' },
-  { icon: 'shield-checkmark-outline', text: 'Faces are auto-blurred, the clip stays private to the Seeker, and it’s deleted after 30 days.' },
-  { icon: 'briefcase-outline', text: 'You’re an independent contractor: your own hours, your own taxes (we send a 1099 each January).' },
-  { icon: 'time-outline', text: 'LMC can deactivate for violations. Any earnings owed are paid within 7 business days.' },
+  { icon: 'cloud-upload-outline', text: 'Videos upload straight to Let Me Check, no local copies you keep.' },
+  { icon: 'shield-checkmark-outline', text: 'Faces are auto-blurred, the video stays private to the Seeker, and it is deleted after 30 days.' },
+  { icon: 'briefcase-outline', text: 'You are an independent contractor: your own hours, your own taxes (we send a 1099 each January).' },
+  { icon: 'time-outline', text: 'Let Me Check can deactivate for violations. Any earnings owed are paid within 7 business days.' },
 ];
 
 const TOTAL_CARDS = 5;
@@ -89,7 +87,7 @@ export default function ScoutRulesScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         {/* Header */}
         <View style={styles.header}>
@@ -108,7 +106,6 @@ export default function ScoutRulesScreen() {
               />
             ))}
           </View>
-
         </View>
 
         <ScrollView
@@ -154,7 +151,7 @@ export default function ScoutRulesScreen() {
             <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContentGate} showsVerticalScrollIndicator={false}>
               <Text style={styles.subEmphasis}>REJECTION = NO PAYMENT</Text>
               <Text style={styles.lead}>
-                A clip that misses the bar gets rejected by the Seeker or our system, and a rejected clip isn’t paid. So nail it. Common reasons:
+                A video that misses the bar gets rejected by the Seeker or our system, and a rejected video is not paid. So nail it. Common reasons:
               </Text>
               {REJECT.map((r, i) => (
                 <SimpleRow key={i} icon={r.icon} text={r.text} />
@@ -181,7 +178,7 @@ export default function ScoutRulesScreen() {
 
               <TouchableOpacity style={styles.gateRow} activeOpacity={0.75} onPress={() => setConsented((v) => !v)}>
                 <View style={[styles.checkbox, consented && styles.checkboxOn]}>
-                  {consented && <Ionicons name="checkmark" size={14} color="#000" />}
+                  {consented && <Ionicons name="checkmark" size={14} color={colors.onRed} />}
                 </View>
                 <Text style={styles.gateText}>
                   <Text style={styles.gateBold}>I understand</Text> the filming rules and will only film as described: no faces, kids, audio, or no-go zones.
@@ -190,10 +187,10 @@ export default function ScoutRulesScreen() {
 
               <TouchableOpacity style={styles.gateRow} activeOpacity={0.75} onPress={() => setAgreed((v) => !v)}>
                 <View style={[styles.checkbox, agreed && styles.checkboxOn]}>
-                  {agreed && <Ionicons name="checkmark" size={14} color="#000" />}
+                  {agreed && <Ionicons name="checkmark" size={14} color={colors.onRed} />}
                 </View>
                 <Text style={styles.gateText}>
-                  <Text style={styles.gateBold}>I agree</Text> to the Scout Agreement and confirm I’m an independent contractor, not an employee.
+                  <Text style={styles.gateBold}>I agree</Text> to the Scout Agreement and confirm I am an independent contractor, not an employee.
                 </Text>
               </TouchableOpacity>
             </ScrollView>
@@ -233,7 +230,7 @@ function DetailRow({ icon, title, why }: { icon: IconName; title: string; why: s
   return (
     <View style={styles.row}>
       <View style={styles.rowIcon}>
-        <Ionicons name={icon} size={22} color={ACCENT} />
+        <Ionicons name={icon} size={22} color={colors.red} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowTitle}>{title}</Text>
@@ -247,7 +244,7 @@ function SimpleRow({ icon, text }: { icon: IconName; text: string }) {
   return (
     <View style={styles.row}>
       <View style={styles.rowIcon}>
-        <Ionicons name={icon} size={22} color={ACCENT} />
+        <Ionicons name={icon} size={22} color={colors.red} />
       </View>
       <Text style={styles.simpleText}>{text}</Text>
     </View>
@@ -258,13 +255,13 @@ function NextButton({ onPress, label = 'NEXT' }: { onPress: () => void; label?: 
   return (
     <TouchableOpacity style={styles.nextBtn} onPress={onPress} activeOpacity={0.85}>
       <Text style={styles.nextBtnText}>{label}</Text>
-      <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+      <Ionicons name="arrow-forward" size={16} color={colors.onRed} />
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
 
   header: {
@@ -277,15 +274,15 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
     width: 80,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
-  dot: { width: 20, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)' },
-  dotDone: { backgroundColor: 'rgba(0,255,127,0.5)' },
-  dotActive: { backgroundColor: ACCENT },
+  dot: { width: 20, height: 3, borderRadius: 2, backgroundColor: colors.border },
+  dotDone: { backgroundColor: 'rgba(218,37,29,0.35)' },
+  dotActive: { backgroundColor: colors.red },
   pager: { flex: 1 },
   card: {
     flex: 1,
@@ -296,7 +293,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     lineHeight: 34,
     textAlign: 'center',
@@ -325,28 +322,28 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 14,
-    backgroundColor: ACCENT_CHIP,
+    backgroundColor: 'rgba(218,37,29,0.07)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   rowTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 3,
   },
   rowWhy: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   simpleText: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: 'rgba(255,255,255,0.9)',
+    color: colors.textPrimary,
     lineHeight: 21,
     letterSpacing: 0.1,
   },
@@ -354,35 +351,35 @@ const styles = StyleSheet.create({
   subEmphasis: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#FFCB47',
+    color: colors.amber,
     letterSpacing: 2,
     textAlign: 'center',
   },
   lead: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.2,
   },
   foot: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12,
-    color: ACCENT,
+    color: colors.red,
     lineHeight: 17,
     letterSpacing: 0.2,
   },
   link: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 0.2,
   },
 
   gateDivider: {
     height: 1,
     width: 220,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.border,
     alignSelf: 'center',
     marginVertical: 4,
   },
@@ -397,54 +394,56 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
-  checkboxOn: { backgroundColor: '#ffffff', borderColor: '#ffffff' },
+  checkboxOn: { backgroundColor: colors.red, borderColor: colors.red },
   gateText: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.1,
   },
-  gateBold: { fontFamily: 'Inter_700Bold', color: '#ffffff' },
+  gateBold: { fontFamily: 'Inter_700Bold', color: colors.textPrimary },
 
   nextBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 16,
     marginTop: 12,
   },
   nextBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#ffffff',
+    color: colors.onRed,
     fontSize: 12,
     letterSpacing: 2,
   },
 
   primaryBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginTop: 12,
   },
-  primaryBtnDisabled: { backgroundColor: 'rgba(255,255,255,0.12)' },
+  primaryBtnDisabled: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
-  primaryBtnTextDisabled: { color: 'rgba(255,255,255,0.35)', letterSpacing: 2 },
+  primaryBtnTextDisabled: { color: colors.textTertiary, letterSpacing: 2 },
 });
