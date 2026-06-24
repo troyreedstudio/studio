@@ -3,6 +3,8 @@ import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
+import { useAudioPlayer } from 'expo-audio';
+import * as Haptics from 'expo-haptics';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -305,6 +307,8 @@ function SearchOverlay({
   const micPulse = useRef(new Animated.Value(0)).current;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<TextInput>(null);
+  // Beep sound — loaded once when SearchOverlay mounts, played before each recognition session
+  const beepPlayer = useAudioPlayer(require('../../assets/sounds/voice-start.wav'));
 
   // Pulse animation — plays while listening
   useEffect(() => {
@@ -330,8 +334,10 @@ function SearchOverlay({
       setVoiceTranscript(transcript);
       setQuery(transcript);
     }
-    // isFinal: true means recognition ended naturally (end-of-speech)
+    // isFinal: true means the user finished speaking a complete phrase.
+    // Stop recognition now so continuous mode doesn't keep waiting indefinitely.
     if (ev.isFinal) {
+      ExpoSpeechRecognitionModule.stop();
       setListening(false);
       setVoiceTranscript('');
     }
@@ -351,10 +357,10 @@ function SearchOverlay({
     }
   });
 
-  // Start voice recognition — request permission first, then start
+  // Start voice recognition — voicemail style: haptic + beep FIRST, then record
   const handleMicPress = async () => {
     if (listening) {
-      // Tap mic again while listening → stop
+      // Tap mic again while listening → stop immediately
       ExpoSpeechRecognitionModule.stop();
       setListening(false);
       setVoiceTranscript('');
@@ -376,12 +382,29 @@ function SearchOverlay({
     // Dismiss keyboard so the listening UI has space
     Keyboard.dismiss();
     setVoiceTranscript('');
+    setQuery('');
+
+    // 1. Haptic — immediate tactile "go" signal
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+
+    // 2. Beep — audible "speak now" cue (voicemail style)
+    try {
+      beepPlayer.seekTo(0);
+      beepPlayer.play();
+    } catch {
+      // If playback fails (silent mode, simulator, etc.) just continue
+    }
+
+    // 3. Short delay so the beep plays before the mic opens — beep must not be captured as speech
+    await new Promise<void>((resolve) => setTimeout(resolve, 300));
+
+    // 4. Now arm the microphone — user hears beep, then speaks
     setListening(true);
     ExpoSpeechRecognitionModule.start({
       lang: 'en-US',
-      interimResults: true,   // partial results as the user speaks
+      interimResults: true,    // partial results stream into query while speaking
       maxAlternatives: 1,
-      continuous: false,      // auto-stops after end-of-speech
+      continuous: true,        // keep listening patiently — no early 2-3s cutoff
     });
   };
 
@@ -788,7 +811,7 @@ function SearchOverlay({
                 ]}
               />
               <Text style={overlayStyles.listeningText} numberOfLines={1}>
-                {voiceTranscript ? voiceTranscript : 'Listening…'}
+                {voiceTranscript ? voiceTranscript : 'Speak now'}
               </Text>
               <TouchableOpacity
                 onPress={handleMicPress}
