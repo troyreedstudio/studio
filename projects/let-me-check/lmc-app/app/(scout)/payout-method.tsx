@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -13,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { getConnectStatus, startConnectOnboarding } from '../lib/payments';
+import { colors } from '../lib/theme';
 
 type ConnectState =
   | { phase: 'loading' }
@@ -75,6 +77,7 @@ export default function PayoutMethodScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Top bar */}
         <View style={styles.topBar}>
@@ -95,7 +98,7 @@ export default function PayoutMethodScreen() {
 
         {state.phase === 'loading' && (
           <View style={styles.centerWrap}>
-            <ActivityIndicator color="#00FF7F" />
+            <ActivityIndicator color={colors.red} />
             <Text style={styles.loadingText}>Checking payout status...</Text>
           </View>
         )}
@@ -112,7 +115,7 @@ export default function PayoutMethodScreen() {
         {state.phase === 'not_onboarded' && (
           <>
             <View style={styles.infoCard}>
-              <Ionicons name="card-outline" size={28} color="rgba(255,255,255,0.4)" />
+              <Ionicons name="card-outline" size={28} color={colors.textTertiary} />
               <Text style={styles.infoTitle}>No payout method set up</Text>
               <Text style={styles.infoBody}>
                 Connect a bank account via Stripe to receive your earnings. Takes about 5 minutes. Let Me Check never stores your banking details — Stripe handles everything securely.
@@ -126,7 +129,7 @@ export default function PayoutMethodScreen() {
                 'Your banking details go directly to Stripe',
               ].map((item) => (
                 <View key={item} style={styles.trustRow}>
-                  <Ionicons name="shield-checkmark-outline" size={14} color="#00FF7F" />
+                  <Ionicons name="shield-checkmark-outline" size={14} color={colors.verified} />
                   <Text style={styles.trustText}>{item}</Text>
                 </View>
               ))}
@@ -138,7 +141,7 @@ export default function PayoutMethodScreen() {
               disabled={opening}
               activeOpacity={0.85}
             >
-              <Ionicons name="open-outline" size={16} color={opening ? 'rgba(255,255,255,0.35)' : '#000'} />
+              <Ionicons name="open-outline" size={16} color={opening ? colors.textTertiary : colors.onRed} />
               <Text style={[styles.primaryBtnText, opening && styles.primaryBtnTextDim]}>
                 {opening ? 'OPENING STRIPE...' : 'SET UP PAYOUTS'}
               </Text>
@@ -161,7 +164,7 @@ export default function PayoutMethodScreen() {
                       : 'Standard payouts (1 to 2 business days, no fee)'}
                   </Text>
                 </View>
-                <Ionicons name="checkmark-circle" size={22} color="#00FF7F" />
+                <Ionicons name="checkmark-circle" size={22} color={colors.verified} />
               </View>
             </View>
 
@@ -194,7 +197,7 @@ export default function PayoutMethodScreen() {
               disabled={opening}
               activeOpacity={0.85}
             >
-              <Ionicons name="open-outline" size={15} color={opening ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)'} />
+              <Ionicons name="open-outline" size={15} color={opening ? colors.textTertiary : colors.textPrimary} />
               <Text style={[styles.secondaryBtnText, opening && styles.secondaryBtnTextDim]}>
                 {opening ? 'OPENING STRIPE...' : 'MANAGE IN STRIPE'}
               </Text>
@@ -205,7 +208,7 @@ export default function PayoutMethodScreen() {
         {state.phase === 'action_needed' && (
           <>
             <View style={styles.warningCard}>
-              <Ionicons name="warning-outline" size={24} color="#FFCB47" />
+              <Ionicons name="warning-outline" size={24} color={colors.amber} />
               <Text style={styles.warningTitle}>Action needed</Text>
               <Text style={styles.warningBody}>
                 Stripe needs additional information to enable your payouts. Open your Stripe dashboard to complete the required steps.
@@ -218,7 +221,7 @@ export default function PayoutMethodScreen() {
               disabled={opening}
               activeOpacity={0.85}
             >
-              <Ionicons name="open-outline" size={16} color={opening ? 'rgba(255,255,255,0.35)' : '#000'} />
+              <Ionicons name="open-outline" size={16} color={opening ? colors.textTertiary : colors.onRed} />
               <Text style={[styles.primaryBtnText, opening && styles.primaryBtnTextDim]}>
                 {opening ? 'OPENING STRIPE...' : 'COMPLETE IN STRIPE'}
               </Text>
@@ -236,7 +239,7 @@ export default function PayoutMethodScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
 
   topBar: {
@@ -246,7 +249,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -259,19 +262,19 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   titleRule: {
     height: 2,
     width: 32,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     marginTop: 8,
   },
   subtitle: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     marginTop: 8,
     letterSpacing: 0.2,
   },
@@ -285,38 +288,38 @@ const styles = StyleSheet.create({
   loadingText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   errorText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,100,100,0.9)',
+    color: colors.danger,
     textAlign: 'center',
     lineHeight: 18,
   },
   retryBtn: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: colors.border,
   },
   retryBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 2,
   },
 
   infoCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 22,
     padding: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: colors.border,
     alignItems: 'center',
     gap: 12,
     marginBottom: 22,
@@ -324,14 +327,14 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     textAlign: 'center',
   },
   infoBody: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     lineHeight: 20,
     textAlign: 'center',
     letterSpacing: 0.2,
@@ -350,17 +353,17 @@ const styles = StyleSheet.create({
   trustText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
   },
 
   statusCard: {
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(22,163,74,0.06)',
     borderRadius: 16,
     marginHorizontal: 22,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.25)',
+    borderColor: 'rgba(22,163,74,0.25)',
     marginBottom: 14,
   },
   statusRow: {
@@ -378,30 +381,30 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
   },
   statusBody: { flex: 1 },
   statusTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 3,
   },
   statusSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
   },
 
   detailCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     marginHorizontal: 22,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
     marginBottom: 22,
   },
   detailRow: {
@@ -413,25 +416,25 @@ const styles = StyleSheet.create({
   detailRowBorder: {
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
   },
   detailLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 1.8,
   },
   detailValue: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
 
   manageNote: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     marginHorizontal: 22,
     marginBottom: 16,
     lineHeight: 18,
@@ -444,7 +447,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 22,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.28)',
+    borderColor: 'rgba(255,203,71,0.35)',
     alignItems: 'center',
     gap: 10,
     marginBottom: 24,
@@ -452,14 +455,14 @@ const styles = StyleSheet.create({
   warningTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#FFCB47',
+    color: colors.amber,
     letterSpacing: 0.2,
     textAlign: 'center',
   },
   warningBody: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     lineHeight: 20,
     textAlign: 'center',
     letterSpacing: 0.2,
@@ -470,23 +473,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     marginHorizontal: 22,
     paddingVertical: 17,
     marginBottom: 14,
   },
   primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 12.5,
     letterSpacing: 2.5,
   },
   primaryBtnTextDim: {
-    color: 'rgba(255,255,255,0.35)',
+    color: colors.textTertiary,
   },
 
   secondaryBtn: {
@@ -494,12 +499,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     marginHorizontal: 22,
     paddingVertical: 17,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: colors.border,
     marginBottom: 14,
   },
   secondaryBtnDisabled: {
@@ -507,18 +512,18 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.textPrimary,
     fontSize: 12.5,
     letterSpacing: 2.5,
   },
   secondaryBtnTextDim: {
-    color: 'rgba(255,255,255,0.3)',
+    color: colors.textTertiary,
   },
 
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.35)',
+    color: colors.textTertiary,
     textAlign: 'center',
     paddingHorizontal: 32,
     lineHeight: 16,
