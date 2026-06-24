@@ -54,7 +54,7 @@ export default function RoleScreen() {
               <Text style={styles.recommendedPillText}>RECOMMENDED</Text>
             </View>
             <TouchableOpacity
-              style={[styles.heroCard, selected === 'both' && styles.cardActive]}
+              style={[styles.heroCard, selected === 'both' && styles.heroCardActive]}
               onPress={() => setSelected('both')}
               activeOpacity={0.9}
             >
@@ -183,10 +183,15 @@ const styles = StyleSheet.create({
     marginBottom: 26,
   },
 
-  // Selected: red border + faint red tint
+  // Selected (light surface cards): red border + faint red tint
   cardActive: {
     backgroundColor: 'rgba(218,37,29,0.06)',
     borderColor: colors.red,
+  },
+  // Selected (DARK hero card): keep the dark bg (white text stays readable), red border only
+  heroCardActive: {
+    borderColor: colors.red,
+    borderWidth: 2,
   },
 
   // HERO (Both)
