@@ -169,15 +169,8 @@ export default function SignUpScreen() {
               </View>
             }
           >
-            <View style={styles.gradientWrap}>
-              <LinearGradient
-                colors={CHROME_STOPS}
-                locations={CHROME_LOCATIONS}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
-                style={StyleSheet.absoluteFillObject}
-              />
-            </View>
+            {/* Flat subtle wordmark on white (no chrome) — a quiet header mark */}
+            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(17,24,39,0.4)' }]} />
           </MaskedView>
         </View>
 
@@ -528,9 +521,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   methodSubtitle: {
-    fontFamily: 'Inter_300Light',
+    fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: colors.textSecondary,
+    color: '#4B5563', // a notch darker for presence (matches role subtitle)
     letterSpacing: 0.3,
     lineHeight: 20,
     textAlign: 'center',
