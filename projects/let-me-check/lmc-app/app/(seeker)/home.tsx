@@ -21,6 +21,7 @@ import { getUserCoords, getUserCity, useUserLocation, requestUserLocation } from
 import { useRecents, addRecent, relativeTime } from '../state/recents';
 import { getProfile } from '../lib/api';
 import { searchPlaces, getPlaceCoords, placeToAppCoord, type PlaceSuggestion } from '../lib/places';
+import { colors } from '../lib/theme';
 
 // ── SearchState ───────────────────────────────────────────────────────────────
 // Used by SearchOverlay below.
@@ -110,6 +111,21 @@ function scoutsToGeoJSON(scouts: [number, number][]) {
   };
 }
 
+function conesToGeoJSON(scouts: [number, number][]) {
+  return {
+  type: 'FeatureCollection' as const,
+  features: scouts.map((coords, i) => ({
+    type: 'Feature' as const,
+    id: i,
+    geometry: {
+      type: 'Polygon' as const,
+      coordinates: [makeCone(coords, (i * 47) % 360, 180, 55)],
+    },
+    properties: {},
+  })),
+  };
+}
+
 function makeCone(
   center: [number, number],
   bearingDeg: number,
@@ -153,21 +169,6 @@ function makeRing(
     ]);
   }
   return pts;
-}
-
-function conesToGeoJSON(scouts: [number, number][]) {
-  return {
-  type: 'FeatureCollection' as const,
-  features: scouts.map((coords, i) => ({
-    type: 'Feature' as const,
-    id: i,
-    geometry: {
-      type: 'Polygon' as const,
-      coordinates: [makeCone(coords, (i * 47) % 360, 180, 55)],
-    },
-    properties: {},
-  })),
-  };
 }
 
 function UserPin({ coordinate }: { coordinate: [number, number] }) {
@@ -592,7 +593,7 @@ function SearchOverlay({
         >
           <View style={overlayStyles.checkHereIconWrap}>
             {locating ? (
-              <ActivityIndicator size="small" color="#000" />
+              <ActivityIndicator size="small" color={colors.onRed} />
             ) : (
               <Text style={overlayStyles.checkHerePin}>📍</Text>
             )}
@@ -767,7 +768,7 @@ function SearchOverlay({
                 ref={inputRef}
                 style={overlayStyles.input}
                 placeholder={PLACEHOLDER_HINTS[hintIdx]}
-                placeholderTextColor="#666"
+                placeholderTextColor={colors.textTertiary}
                 value={query}
                 onChangeText={setQuery}
                 autoFocus
@@ -776,7 +777,7 @@ function SearchOverlay({
                 autoCapitalize="none"
               />
               {isLoading && !listening ? (
-                <ActivityIndicator size="small" color="#00FF7F" style={overlayStyles.spinner} />
+                <ActivityIndicator size="small" color={colors.red} style={overlayStyles.spinner} />
               ) : query.length > 0 && !listening ? (
                 <TouchableOpacity
                   onPress={() => setQuery('')}
@@ -850,7 +851,7 @@ function SearchOverlay({
 const overlayStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.bg,
   },
   safeArea: {
     flex: 1,
@@ -863,7 +864,7 @@ const overlayStyles = StyleSheet.create({
     paddingBottom: 12,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: colors.border,
   },
   cancelBtn: {
     paddingVertical: 4,
@@ -871,18 +872,18 @@ const overlayStyles = StyleSheet.create({
   cancelText: {
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: '#00FF7F',
+    color: colors.red,
   },
   inputWrap: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 11,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     gap: 10,
   },
   inputIcon: { fontSize: 15 },
@@ -890,13 +891,13 @@ const overlayStyles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 15,
-    color: '#fff',
+    color: colors.textPrimary,
     paddingVertical: 0,
   },
   spinner: { marginHorizontal: 2 },
   clearIcon: {
     fontSize: 14,
-    color: '#888',
+    color: colors.textSecondary,
     paddingHorizontal: 2,
   },
   micBtn: {
@@ -907,9 +908,9 @@ const overlayStyles = StyleSheet.create({
     alignItems: 'center',
   },
   micBtnActive: {
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(218,37,29,0.10)',
     borderWidth: 1,
-    borderColor: '#00FF7F',
+    borderColor: colors.red,
   },
   micIcon: {
     fontSize: 15,
@@ -924,28 +925,28 @@ const overlayStyles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     gap: 10,
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(218,37,29,0.05)',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,255,127,0.15)',
+    borderBottomColor: 'rgba(218,37,29,0.15)',
   },
   listeningDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     flexShrink: 0,
   },
   listeningText: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 14,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.1,
   },
   listeningStop: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: '#00FF7F',
+    color: colors.red,
     paddingHorizontal: 4,
   },
   list: {
@@ -957,7 +958,7 @@ const overlayStyles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.textTertiary,
     letterSpacing: 3,
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -973,7 +974,7 @@ const overlayStyles = StyleSheet.create({
   promptText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 16,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 8,
     textAlign: 'center',
@@ -981,7 +982,7 @@ const overlayStyles = StyleSheet.create({
   promptSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: '#555',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
   },
@@ -992,15 +993,15 @@ const overlayStyles = StyleSheet.create({
     paddingVertical: 14,
     gap: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#0d0d0d',
+    borderBottomColor: colors.border,
   },
   resultIconWrap: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1009,25 +1010,25 @@ const overlayStyles = StyleSheet.create({
   resultName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 15,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 1,
   },
   resultAddress: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: '#888',
+    color: colors.textSecondary,
     marginBottom: 3,
   },
   priceChip: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 0.4,
   },
   resultArrow: {
     fontSize: 22,
-    color: '#00FF7F',
+    color: colors.red,
     fontFamily: 'Inter_500Medium',
   },
   feedbackWrap: {
@@ -1037,13 +1038,13 @@ const overlayStyles = StyleSheet.create({
   feedbackTitle: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 15,
-    color: '#fff',
+    color: colors.textPrimary,
     marginBottom: 6,
   },
   feedbackSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: '#888',
+    color: colors.textSecondary,
     lineHeight: 19,
     marginBottom: 16,
   },
@@ -1052,22 +1053,22 @@ const overlayStyles = StyleSheet.create({
     marginTop: 4,
     padding: 18,
     borderRadius: 14,
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     borderStyle: 'dashed',
   },
   emptySavedTitle: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 14,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 4,
   },
   emptySavedSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: '#888',
+    color: colors.textSecondary,
     lineHeight: 17,
   },
   // "Check where I am right now" — primary shortcut row at top of idle state
@@ -1080,14 +1081,14 @@ const overlayStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 14,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     gap: 14,
   },
   checkHereIconWrap: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(0,0,0,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1096,18 +1097,18 @@ const overlayStyles = StyleSheet.create({
   checkHereName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 15,
-    color: '#000',
+    color: colors.onRed,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   checkHereSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(0,0,0,0.55)',
+    color: 'rgba(255,255,255,0.72)',
   },
   checkHereArrow: {
     fontSize: 22,
-    color: '#000',
+    color: colors.onRed,
     fontFamily: 'Inter_500Medium',
   },
 });
@@ -1245,7 +1246,7 @@ function RequestSheet({ pinName, market, isPartner, onCancel, onRequest }: Reque
 
 const reqStyles = StyleSheet.create({
   container: {
-    // Sits inside the sheet — no extra background needed
+    // Sits inside the light sheet — no extra background needed
   },
   header: {
     flexDirection: 'row',
@@ -1258,21 +1259,23 @@ const reqStyles = StyleSheet.create({
   placeName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   placeCity: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   cancelBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
@@ -1280,12 +1283,12 @@ const reqStyles = StyleSheet.create({
   cancelGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
   },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 10,
   },
@@ -1296,23 +1299,23 @@ const reqStyles = StyleSheet.create({
   },
   tierCard: {
     flex: 1,
-    backgroundColor: '#111',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1.5,
-    borderColor: '#222',
+    borderColor: colors.border,
     minHeight: 110,
   },
   tierCardActive: {
-    borderColor: '#fff',
-    backgroundColor: '#151515',
+    borderColor: colors.textPrimary,
+    backgroundColor: colors.bg,
   },
   tierCardPriorityActive: {
-    borderColor: '#FFCB47',
-    backgroundColor: '#151200',
+    borderColor: colors.amber,
+    backgroundColor: '#FFFDF0',
   },
   priorityBadge: {
-    backgroundColor: '#FFCB47',
+    backgroundColor: colors.amber,
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -1322,25 +1325,25 @@ const reqStyles = StyleSheet.create({
   priorityBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 8,
-    color: '#000',
+    color: colors.black,
     letterSpacing: 1,
   },
   tierLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: '#fff',
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   tierPrice: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
-    color: '#fff',
+    color: colors.textPrimary,
     marginBottom: 2,
   },
   tierTime: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12,
-    color: '#00FF7F',
+    color: colors.textSecondary,
   },
   selectedBadge: {
     position: 'absolute',
@@ -1349,52 +1352,53 @@ const reqStyles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#fff',
+    backgroundColor: colors.textPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  selectedBadgeAmber: { backgroundColor: '#FFCB47' },
+  selectedBadgeAmber: { backgroundColor: colors.amber },
   selectedBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#000',
+    color: colors.bg,
   },
   interiorCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    backgroundColor: 'rgba(20,55,130,0.4)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.5)',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 11,
     marginBottom: 14,
   },
   interiorCardActive: {
-    borderColor: 'rgba(60,110,200,0.9)',
+    borderColor: colors.red,
+    backgroundColor: 'rgba(218,37,29,0.04)',
   },
   interiorCheck: {
     width: 20,
     height: 20,
     borderRadius: 5,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: colors.borderStrong,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
     flexShrink: 0,
   },
-  interiorCheckActive: { backgroundColor: '#00FF7F', borderColor: '#00FF7F' },
+  interiorCheckActive: { backgroundColor: colors.red, borderColor: colors.red },
   interiorCheckGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#000',
+    color: colors.onRed,
   },
   interiorEyebrow: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#E8A0B0',
+    color: colors.red,
     letterSpacing: 2,
     marginBottom: 3,
   },
@@ -1407,20 +1411,20 @@ const reqStyles = StyleSheet.create({
   interiorTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#fff',
+    color: colors.textPrimary,
   },
   interiorBadge: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 12,
-    color: '#00FF7F',
+    color: colors.red,
   },
   interiorSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
   },
   ctaBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -1428,7 +1432,7 @@ const reqStyles = StyleSheet.create({
   ctaBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#000',
+    color: colors.onRed,
     letterSpacing: 1.5,
   },
 });
@@ -1665,10 +1669,10 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      {/* Edge-to-edge map — the canvas (Mapbox dark, Uber/Grab quality) */}
+      {/* Edge-to-edge map — the canvas (Mapbox light, Uber/Apple quality) */}
       <Mapbox.MapView
         style={StyleSheet.absoluteFillObject}
-        styleURL="mapbox://styles/mapbox/satellite-streets-v12"
+        styleURL="mapbox://styles/mapbox/light-v11"
         compassEnabled={false}
         scaleBarEnabled={false}
         logoEnabled
@@ -1711,8 +1715,8 @@ export default function HomeScreen() {
               <Mapbox.FillLayer
                 id="cones-fill"
                 style={{
-                  fillColor: '#00FF7F',
-                  fillOpacity: 0.28,
+                  fillColor: colors.red,
+                  fillOpacity: 0.12,
                 }}
               />
             </Mapbox.ShapeSource>
@@ -1722,18 +1726,18 @@ export default function HomeScreen() {
               <Mapbox.CircleLayer
                 id="scouts-glow"
                 style={{
-                  circleColor: '#00FF7F',
+                  circleColor: colors.red,
                   circleRadius: 9,
-                  circleOpacity: 0.22,
+                  circleOpacity: 0.18,
                   circleBlur: 0.9,
                 }}
               />
               <Mapbox.CircleLayer
                 id="scouts-core"
                 style={{
-                  circleColor: '#00FF7F',
+                  circleColor: colors.red,
                   circleRadius: 3,
-                  circleStrokeColor: '#ffffff',
+                  circleStrokeColor: colors.white,
                   circleStrokeWidth: 1,
                 }}
               />
@@ -1766,14 +1770,14 @@ export default function HomeScreen() {
           >
             <Mapbox.FillLayer
               id="geofence-fill"
-              style={{ fillColor: '#143782', fillOpacity: 0.22 }}
+              style={{ fillColor: colors.red, fillOpacity: 0.10 }}
             />
             <Mapbox.LineLayer
               id="geofence-line"
               style={{
-                lineColor: '#ffffff',
+                lineColor: colors.red,
                 lineWidth: 1.5,
-                lineOpacity: 0.8,
+                lineOpacity: 0.6,
               }}
             />
           </Mapbox.ShapeSource>
@@ -1795,16 +1799,16 @@ export default function HomeScreen() {
         )}
       </Mapbox.MapView>
 
-      {/* Top gradient overlay — dark fade for satellite contrast */}
+      {/* Top gradient overlay — subtle fade for light map readability */}
       <LinearGradient
-        colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0)']}
-        locations={[0, 0.5, 1]}
+        colors={['rgba(255,255,255,0.72)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        locations={[0, 0.45, 1]}
         style={styles.topGradient}
         pointerEvents="none"
       />
 
 
-      {/* Top overlay — floating glass elements */}
+      {/* Top overlay — floating pill + profile */}
       <SafeAreaView style={styles.topSafe} pointerEvents="box-none">
         <View style={styles.topRow}>
           <TouchableOpacity
@@ -1826,7 +1830,7 @@ export default function HomeScreen() {
             <Text style={styles.locPin}>📍</Text>
             <Text style={styles.locCity}>{displayCity}</Text>
             <View style={[styles.scoutDot, outOfCoverage && styles.scoutDotOff]} />
-            <Text style={styles.locScouts}>{displayStatusText}</Text>
+            <Text style={[styles.locScouts, outOfCoverage && styles.locScoutsOff]}>{displayStatusText}</Text>
             <Text style={styles.locChevron}>▾</Text>
           </TouchableOpacity>
 
@@ -1857,9 +1861,8 @@ export default function HomeScreen() {
         )}
       </SafeAreaView>
 
-      {/* Bottom sheet — translucent over satellite */}
+      {/* Bottom sheet — white card over light map */}
       <View style={styles.sheet}>
-        <View style={styles.sheetTint} pointerEvents="none" />
         <View style={styles.sheetHandle} />
 
         {droppedPin ? (
@@ -2003,17 +2006,17 @@ const pinStyles = StyleSheet.create({
   stem: {
     width: 1.5,
     height: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
   },
   dot: {
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#143782',
+    backgroundColor: colors.red,
     borderWidth: 2,
-    borderColor: '#ffffff',
-    shadowColor: '#143782',
-    shadowOpacity: 0.9,
+    borderColor: colors.white,
+    shadowColor: colors.red,
+    shadowOpacity: 0.6,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
   },
@@ -2034,20 +2037,20 @@ const hudStyles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 4,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(255,255,255,0.88)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.35)',
+    borderColor: colors.border,
   },
   telemetryDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
   },
   telemetryText: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.textPrimary,
     letterSpacing: 0.6,
   },
   reticleWrap: {
@@ -2065,26 +2068,26 @@ const hudStyles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.55)',
+    borderColor: 'rgba(10,10,10,0.35)',
   },
   reticleCrossH: {
     position: 'absolute',
     width: 14,
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: 'rgba(10,10,10,0.45)',
   },
   reticleCrossV: {
     position: 'absolute',
     width: 1,
     height: 14,
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: 'rgba(10,10,10,0.45)',
   },
   reticleCenter: {
     position: 'absolute',
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
   },
   recenterBtn: {
     position: 'absolute',
@@ -2093,20 +2096,20 @@ const hudStyles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(20,55,130,0.85)',
+    backgroundColor: colors.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#143782',
-    shadowOpacity: 0.6,
+    shadowColor: colors.black,
+    shadowOpacity: 0.12,
     shadowRadius: 8,
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: { width: 0, height: 2 },
   },
   recenterGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
   hintWrap: {
     position: 'absolute',
@@ -2122,19 +2125,19 @@ const hudStyles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(20,55,130,0.85)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: colors.border,
   },
   hintGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
   hintText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 1.5,
   },
 });
@@ -2151,15 +2154,15 @@ const userStyles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#FF6B00',
+    backgroundColor: colors.red,
   },
   core: {
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#FF6B00',
-    shadowColor: '#FF6B00',
-    shadowOpacity: 0.9,
+    backgroundColor: colors.red,
+    shadowColor: colors.red,
+    shadowOpacity: 0.7,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
   },
@@ -2170,14 +2173,14 @@ const userStyles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    backgroundColor: '#FF6B00',
+    backgroundColor: colors.red,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.85)',
   },
   youText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 8,
-    color: '#ffffff',
+    color: colors.onRed,
     letterSpacing: 1,
   },
 });
@@ -2190,31 +2193,31 @@ const venueStyles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 5,
-    backgroundColor: 'rgba(15,15,15,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.94)',
     borderWidth: 1,
-    borderColor: 'rgba(232,160,176,0.55)',
+    borderColor: 'rgba(218,37,29,0.35)',
     marginBottom: 2,
   },
   labelText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#E8A0B0',
+    color: colors.red,
     letterSpacing: 1.2,
   },
   stem: {
     width: 1.5,
     height: 6,
-    backgroundColor: '#E8A0B0',
+    backgroundColor: colors.red,
   },
   dot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#E8A0B0',
+    backgroundColor: colors.red,
     borderWidth: 1.5,
-    borderColor: '#ffffff',
-    shadowColor: '#E8A0B0',
-    shadowOpacity: 0.8,
+    borderColor: colors.white,
+    shadowColor: colors.red,
+    shadowOpacity: 0.5,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 0 },
   },
@@ -2232,13 +2235,13 @@ const pulseStyles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
   },
   core: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
   },
   recBadge: {
     position: 'absolute',
@@ -2250,18 +2253,20 @@ const pulseStyles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    backgroundColor: '#000000',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   recDot: {
     width: 4.5,
     height: 4.5,
     borderRadius: 2.25,
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.danger,
   },
   recText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 1,
   },
 });
@@ -2271,9 +2276,9 @@ const scoutInviteStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(20,55,130,0.5)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.5)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 14,
@@ -2285,7 +2290,7 @@ const scoutInviteStyles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2293,30 +2298,30 @@ const scoutInviteStyles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
   },
   label: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 2,
     marginBottom: 2,
   },
   title: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   arrow: {
     fontFamily: 'Inter_400Regular',
     fontSize: 22,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
   },
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: colors.bg },
 
   topGradient: {
     position: 'absolute',
@@ -2345,16 +2350,16 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(10,10,10,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.94)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconChevron: {
     fontFamily: 'Inter_500Medium',
     fontSize: 24,
-    color: '#fff',
+    color: colors.textPrimary,
     marginTop: -2,
     marginLeft: -2,
   },
@@ -2362,31 +2367,44 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(10,10,10,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.96)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 22,
     paddingHorizontal: 14,
     paddingVertical: 11,
     gap: 8,
     justifyContent: 'center',
+    shadowColor: colors.black,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   locPin: { fontSize: 13 },
   locCity: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
   scoutDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
     marginHorizontal: 2,
   },
   scoutDotOff: {
-    backgroundColor: '#FFCB47',
+    backgroundColor: colors.amber,
+  },
+  locScouts: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12,
+    color: colors.verified,
+    letterSpacing: 0.3,
+  },
+  locScoutsOff: {
+    color: colors.textSecondary,
   },
   waitlistBanner: {
     flexDirection: 'row',
@@ -2397,70 +2415,72 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.72)',
+    backgroundColor: 'rgba(255,255,255,0.96)',
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.4)',
+    borderColor: colors.amber,
+    shadowColor: colors.black,
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
   waitlistPin: { fontSize: 13 },
   waitlistText: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 12.5,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   waitlistBtn: {
     paddingVertical: 7,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: '#FFCB47',
+    backgroundColor: colors.amber,
   },
   waitlistBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#000000',
+    color: colors.black,
     letterSpacing: 1,
-  },
-  locScouts: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 12,
-    color: '#00FF7F',
-    letterSpacing: 0.3,
   },
   locChevron: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     marginLeft: 2,
   },
   cityIconWrap: {
-    backgroundColor: '#143782',
+    backgroundColor: colors.red,
     borderColor: 'rgba(255,255,255,0.25)',
   },
   cityMono: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.onRed,
     letterSpacing: 1,
   },
   profileBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(10,10,10,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.96)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: colors.black,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   profileInitials: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
   },
 
-  // Bottom sheet — frosted glass
+  // Bottom sheet — white card
   sheet: {
     position: 'absolute',
     bottom: 0,
@@ -2474,43 +2494,40 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.5,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
     shadowRadius: 24,
-  },
-  sheetTint: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(20,55,130,0.5)',
   },
   sheetHandle: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#333',
+    backgroundColor: colors.border,
     alignSelf: 'center',
     marginBottom: 12,
   },
   sheetEyebrow: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textTertiary,
     letterSpacing: 5,
     marginBottom: 10,
   },
   sheetTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 22,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 4,
   },
   sheetHint: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
     marginBottom: 14,
   },
@@ -2519,19 +2536,21 @@ const styles = StyleSheet.create({
   searchTapTarget: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 13,
     gap: 12,
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   searchIcon: { fontSize: 16 },
   searchPlaceholder: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: 'rgba(0,0,0,0.4)',
+    color: colors.textTertiary,
     letterSpacing: 0.2,
   },
   // Saved
@@ -2544,7 +2563,7 @@ const styles = StyleSheet.create({
   savedSeeAll: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#E8A0B0',
+    color: colors.red,
     letterSpacing: 1.6,
   },
   savedChipsRow: {
@@ -2560,20 +2579,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 10,
-    backgroundColor: 'rgba(232,160,176,0.12)',
+    backgroundColor: 'rgba(218,37,29,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(232,160,176,0.35)',
+    borderColor: 'rgba(218,37,29,0.22)',
     maxWidth: '48%',
   },
   savedChipGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#E8A0B0',
+    color: colors.red,
   },
   savedChipText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 12,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
 
@@ -2581,7 +2600,7 @@ const styles = StyleSheet.create({
   recentLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 8,
   },
@@ -2595,9 +2614,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#141414',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2613,7 +2632,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontFamily: 'Inter_600SemiBold',
     fontSize: 15,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   partnerChip: {
@@ -2623,30 +2642,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    backgroundColor: 'rgba(255,138,168,0.16)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     borderWidth: 1,
-    borderColor: '#FF8AA8',
+    borderColor: colors.red,
   },
   partnerChipGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#ffffff',
+    color: colors.red,
   },
   partnerChipText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#ffffff',
+    color: colors.red,
     letterSpacing: 1.3,
   },
   recentSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: '#888',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
   },
   recentArrow: {
     fontSize: 20,
-    color: '#555',
+    color: colors.textTertiary,
     fontFamily: 'Inter_500Medium',
   },
 });
