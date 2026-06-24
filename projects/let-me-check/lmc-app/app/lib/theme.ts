@@ -31,8 +31,8 @@ export const colors = {
 
   // ── Text ───────────────────────────────────────────────────────────────────
   textPrimary: '#0A0A0A',   // Titles, body copy
-  textSecondary: '#6B7280', // Supporting labels, meta
-  textTertiary: '#9CA3AF',  // Hints, placeholders, timestamps
+  textSecondary: '#4B5563', // Supporting labels, meta (refined darker grey — more present)
+  textTertiary: '#6B7280',  // Hints, placeholders, timestamps (bumped a notch for readability)
 
   // ── Borders ────────────────────────────────────────────────────────────────
   border: '#E5E7EB',        // Default dividers and card borders

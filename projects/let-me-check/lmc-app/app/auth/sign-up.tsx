@@ -202,6 +202,7 @@ export default function SignUpScreen() {
                   >
                     <Text style={styles.methodIconApple}></Text>
                     <Text style={styles.methodLabelApple}>Continue with Apple</Text>
+                    <View style={styles.methodSpacer} />
                   </TouchableOpacity>
 
                   {/* Google — platform-mandated white button */}
@@ -217,6 +218,7 @@ export default function SignUpScreen() {
                   >
                     <Text style={styles.methodIconG}>G</Text>
                     <Text style={styles.methodLabelGoogle}>Continue with Google</Text>
+                    <View style={styles.methodSpacer} />
                   </TouchableOpacity>
 
                   {PHONE_AUTH_ENABLED ? (
@@ -227,6 +229,7 @@ export default function SignUpScreen() {
                     >
                       <Text style={styles.methodIcon}>✆</Text>
                       <Text style={styles.methodLabel}>Continue with Phone</Text>
+                      <View style={styles.methodSpacer} />
                     </TouchableOpacity>
                   ) : (
                     <View style={[styles.methodBtn, styles.methodBtnDisabled]}>
@@ -234,6 +237,7 @@ export default function SignUpScreen() {
                       <Text style={[styles.methodLabel, styles.methodLabelDisabled]}>
                         Phone — coming soon
                       </Text>
+                      <View style={styles.methodSpacer} />
                     </View>
                   )}
                 </View>
@@ -592,6 +596,8 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     letterSpacing: 0.3,
   },
+  // Right spacer = icon width, so the label centers in the button (icon left, text dead-center)
+  methodSpacer: { width: 22 },
 
   // Phone — neutral surface button
   methodBtn: {
