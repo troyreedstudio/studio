@@ -4,9 +4,6 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAudioPlayer } from 'expo-audio';
 import { useRouter } from 'expo-router';
-// TEMP: color audition — remove after color is chosen
-import { useDevBg } from './state/dev-bg';
-import DevBgPill from './components/DevBgPill';
 
 const bootChime = require('../assets/sounds/boot-deep.wav');
 
@@ -15,14 +12,15 @@ const MASK_WIDTH = 320;
 const MASK_HEIGHT = SIZE * 1.3;
 const SHINE_WIDTH = 120;
 
+// Black wordmark for the white splash — near-black with a faint metallic sheen.
 const LIQUID_CHROME_STOPS: [string, string, ...string[]] = [
-  '#a8a8a8',
-  '#ffffff',
-  '#ffffff',
-  '#f2f2f2',
-  '#8c8c8c',
-  '#363636',
-  '#161616',
+  '#3a3a3a',
+  '#000000',
+  '#000000',
+  '#1a1a1a',
+  '#000000',
+  '#2a2a2a',
+  '#000000',
 ];
 
 const LIQUID_CHROME_LOCATIONS: [number, number, ...number[]] = [0, 0.22, 0.5, 0.58, 0.68, 0.88, 1];
@@ -34,8 +32,6 @@ export default function BootSplash() {
   const breath = useRef(new Animated.Value(1)).current;
   const player = useAudioPlayer(bootChime);
   const router = useRouter();
-  // TEMP: color audition — remove after color is chosen
-  const devBg = useDevBg();
 
   useEffect(() => {
     scale.setValue(1.15);
@@ -119,8 +115,8 @@ export default function BootSplash() {
   const composedScale = Animated.multiply(scale, breath);
 
   return (
-    <View style={[styles.bg, { backgroundColor: devBg.hex }]}>
-      <StatusBar barStyle="light-content" />
+    <View style={styles.bg}>
+      <StatusBar barStyle="dark-content" />
 
       <Animated.View style={[styles.heroGroup, { transform: [{ scale: composedScale }] }]}>
         <MaskedView
@@ -174,8 +170,6 @@ export default function BootSplash() {
         style={[StyleSheet.absoluteFillObject, styles.overlay, { opacity: overlayOpacity }]}
       />
 
-      {/* TEMP: color audition — remove after color is chosen */}
-      <DevBgPill />
     </View>
   );
 }
@@ -183,7 +177,7 @@ export default function BootSplash() {
 const styles = StyleSheet.create({
   bg: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -226,6 +220,6 @@ const styles = StyleSheet.create({
     width: SHINE_WIDTH,
   },
   overlay: {
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
   },
 });
