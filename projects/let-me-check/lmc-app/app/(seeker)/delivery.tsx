@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Modal, TextInput, ActivityIndicator, Dimensions, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Modal, TextInput, ActivityIndicator, Dimensions, Animated, Easing, StatusBar } from 'react-native';
 
 // Hero video height — the clip is portrait, so let it dominate the screen
 // (Netflix-style) instead of a small thumbnail. Caps so a sliver of the details
@@ -12,6 +12,7 @@ import { getCheck, getCheckClip, rateCheck, type CheckRow, type ClipRow } from '
 import { getPlaybackToken } from '../lib/clips';
 import { requestRefund, type RefundReason } from '../lib/payments';
 import { supabase } from '../lib/supabase';
+import { colors } from '../lib/theme';
 
 const REFUND_REASONS: { code: RefundReason; label: string }[] = [
   { code: 'blurry', label: 'Too blurry to use' },
@@ -79,7 +80,7 @@ function ReportSheet({ checkId, onClose }: { checkId: string; onClose: () => voi
           <TextInput
             style={s.noteInput}
             placeholder="Add a note (optional)"
-            placeholderTextColor="#555"
+            placeholderTextColor={colors.textTertiary}
             value={note}
             onChangeText={setNote}
             multiline
@@ -95,7 +96,7 @@ function ReportSheet({ checkId, onClose }: { checkId: string; onClose: () => voi
               disabled={!selected || submitting}
               activeOpacity={0.8}
             >
-              {submitting ? <ActivityIndicator size="small" color="#000" /> : <Text style={s.submitTxt}>SUBMIT</Text>}
+              {submitting ? <ActivityIndicator size="small" color={colors.onRed} /> : <Text style={s.submitTxt}>SUBMIT</Text>}
             </TouchableOpacity>
           </View>
         </>
@@ -189,8 +190,9 @@ export default function DeliveryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <TouchableOpacity style={styles.backFab} onPress={() => router.replace('/(seeker)/home')} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} activeOpacity={0.7}>
-        <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.92)" />
+        <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
       </TouchableOpacity>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.successHeader}>
@@ -268,62 +270,68 @@ export default function DeliveryScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   backFab: { position: 'absolute', top: 6, left: 6, zIndex: 5, width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   scroll: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 32 },
   successHeader: { alignItems: 'center', marginBottom: 28 },
-  checkCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(0,255,127,0.55)', borderWidth: 2, borderColor: '#00FF7F', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  checkMark: { fontFamily: 'Inter_700Bold', fontSize: 36, color: '#00FF7F' },
-  readyTitle: { fontFamily: 'Inter_700Bold', fontSize: 26, color: '#fff', letterSpacing: 0.5, marginBottom: 8 },
-  venueName: { fontFamily: 'Inter_700Bold', fontSize: 18, color: '#cccccc', letterSpacing: 0.4 },
+  // Check circle: verified green — semantic "success / delivered" state
+  checkCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(22,163,74,0.12)', borderWidth: 2, borderColor: colors.verified, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  checkMark: { fontFamily: 'Inter_700Bold', fontSize: 36, color: colors.verified },
+  readyTitle: { fontFamily: 'Inter_700Bold', fontSize: 26, color: colors.textPrimary, letterSpacing: 0.5, marginBottom: 8 },
+  venueName: { fontFamily: 'Inter_700Bold', fontSize: 18, color: colors.textSecondary, letterSpacing: 0.4 },
+  // Video box: stays dark — video content looks best on a dark surface
   videoBox: { height: 220, backgroundColor: '#0d0d0d', borderRadius: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#1e1e1e', marginBottom: 18, position: 'relative', overflow: 'hidden' },
   processingWrap: { alignItems: 'center', justifyContent: 'center', gap: 10 },
   processingText: { fontFamily: 'Inter_500Medium', fontSize: 12.5, color: 'rgba(255,255,255,0.6)', letterSpacing: 0.3 },
   videoBadge: { position: 'absolute', top: 12, right: 12, backgroundColor: '#000000aa', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
+  // Poster: stays dark (sits over the video surface before play)
   poster: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', gap: 22 },
   posterBrand: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 22, letterSpacing: 3, textTransform: 'uppercase' },
-  posterPlay: { width: 76, height: 76, borderRadius: 38, backgroundColor: '#00FF7F', justifyContent: 'center', alignItems: 'center', shadowColor: '#00FF7F', shadowOpacity: 0.5, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } },
+  // Poster play button: colors.red — primary action on the branded poster
+  posterPlay: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.red, justifyContent: 'center', alignItems: 'center', shadowColor: colors.red, shadowOpacity: 0.45, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } },
   posterHint: { fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.6)', fontSize: 12.5, letterSpacing: 0.4 },
   videoBadgeText: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 9, letterSpacing: 1.5 },
   liveTimestamp: { position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 5 },
-  liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#00FF7F' },
-  liveTime: { fontFamily: 'Inter_600SemiBold', color: '#00FF7F', fontSize: 10.5, letterSpacing: 0.4 },
-  sectionLabel: { fontFamily: 'Inter_700Bold', fontSize: 11, color: '#00FF7F', letterSpacing: 3, marginBottom: 12, marginTop: 6, textTransform: 'uppercase' },
+  // Filmed-ago blip: colors.verified — "recently delivered" is a success state
+  liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.verified },
+  liveTime: { fontFamily: 'Inter_600SemiBold', color: colors.textSecondary, fontSize: 10.5, letterSpacing: 0.4 },
+  sectionLabel: { fontFamily: 'Inter_700Bold', fontSize: 11, color: colors.textTertiary, letterSpacing: 3, marginBottom: 12, marginTop: 6, textTransform: 'uppercase' },
   starsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  star: { fontSize: 36, color: '#222' },
-  starActive: { color: '#FFCB47' },
-  ratingFeedback: { fontFamily: 'Inter_400Regular', color: '#888', fontSize: 12.5, marginBottom: 22, letterSpacing: 0.3 },
-  scoutCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0d0d0d', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#1e1e1e', marginBottom: 26, marginTop: 8 },
-  scoutAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: '#1e1e1e', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  scoutAvatarText: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 16, letterSpacing: 0.3 },
+  star: { fontSize: 36, color: colors.border },
+  starActive: { color: colors.amber },
+  ratingFeedback: { fontFamily: 'Inter_400Regular', color: colors.textSecondary, fontSize: 12.5, marginBottom: 22, letterSpacing: 0.3 },
+  scoutCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 26, marginTop: 8 },
+  scoutAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.border, borderWidth: 1, borderColor: colors.borderStrong, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  scoutAvatarText: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 16, letterSpacing: 0.3 },
   scoutInfo: { flex: 1 },
-  scoutName: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 17, letterSpacing: 0.3, marginBottom: 3 },
-  scoutRating: { fontFamily: 'Inter_400Regular', color: '#888', fontSize: 11.5, letterSpacing: 0.3 },
-  verifiedBadge: { backgroundColor: 'rgba(34,197,94,0.15)', borderRadius: 100, paddingHorizontal: 9, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(34,197,94,0.4)' },
-  verifiedText: { fontFamily: 'Inter_700Bold', color: '#00FF7F', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase' },
-  primaryBtn: { backgroundColor: '#FAF6F0', borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 8 },
-  primaryBtnText: { fontFamily: 'Inter_700Bold', color: '#000', fontSize: 13, letterSpacing: 2.5 },
+  scoutName: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 17, letterSpacing: 0.3, marginBottom: 3 },
+  scoutRating: { fontFamily: 'Inter_400Regular', color: colors.textSecondary, fontSize: 11.5, letterSpacing: 0.3 },
+  // Verified badge: colors.verified — semantic GPS-verified checkmark
+  verifiedBadge: { backgroundColor: 'rgba(22,163,74,0.08)', borderRadius: 100, paddingHorizontal: 9, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(22,163,74,0.35)' },
+  verifiedText: { fontFamily: 'Inter_700Bold', color: colors.verified, fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase' },
+  primaryBtn: { backgroundColor: colors.red, borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginBottom: 10, shadowColor: colors.red, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.28, shadowRadius: 12, elevation: 8 },
+  primaryBtnText: { fontFamily: 'Inter_700Bold', color: colors.onRed, fontSize: 13, letterSpacing: 2.5 },
   reportLink: { alignItems: 'center', paddingVertical: 14 },
-  reportLinkText: { fontFamily: 'Inter_400Regular', color: '#555', fontSize: 12, textDecorationLine: 'underline' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.78)', justifyContent: 'flex-end' },
+  reportLinkText: { fontFamily: 'Inter_400Regular', color: colors.textTertiary, fontSize: 12, textDecorationLine: 'underline' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.72)', justifyContent: 'flex-end' },
 });
 
 // Sheet-specific styles kept separate so the main StyleSheet stays scannable.
 const s = StyleSheet.create({
-  card: { backgroundColor: '#111', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 36, borderWidth: 1, borderColor: '#222' },
-  cardTitle: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 16, letterSpacing: 0.3, marginBottom: 18 },
-  reasonRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, paddingHorizontal: 12, borderRadius: 10, marginBottom: 4, borderWidth: 1, borderColor: '#1e1e1e' },
-  reasonRowSel: { borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.08)' },
-  radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: '#444', marginRight: 12 },
-  radioSel: { borderColor: '#22c55e', backgroundColor: '#22c55e' },
-  reasonLbl: { fontFamily: 'Inter_400Regular', color: '#ccc', fontSize: 13.5 },
-  noteInput: { marginTop: 12, backgroundColor: '#0d0d0d', borderRadius: 10, borderWidth: 1, borderColor: '#1e1e1e', color: '#fff', fontFamily: 'Inter_400Regular', fontSize: 13, padding: 12, minHeight: 64, textAlignVertical: 'top' },
+  card: { backgroundColor: colors.bg, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 36, borderWidth: 1, borderColor: colors.border },
+  cardTitle: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 16, letterSpacing: 0.3, marginBottom: 18 },
+  reasonRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, paddingHorizontal: 12, borderRadius: 10, marginBottom: 4, borderWidth: 1, borderColor: colors.border },
+  reasonRowSel: { borderColor: colors.red, backgroundColor: 'rgba(218,37,29,0.04)' },
+  radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: colors.borderStrong, marginRight: 12 },
+  radioSel: { borderColor: colors.red, backgroundColor: colors.red },
+  reasonLbl: { fontFamily: 'Inter_400Regular', color: colors.textPrimary, fontSize: 13.5 },
+  noteInput: { marginTop: 12, backgroundColor: colors.surface, borderRadius: 10, borderWidth: 1, borderColor: colors.border, color: colors.textPrimary, fontFamily: 'Inter_400Regular', fontSize: 13, padding: 12, minHeight: 64, textAlignVertical: 'top' },
   rowBtns: { flexDirection: 'row', gap: 10, marginTop: 16 },
-  cancelBtn: { flex: 1, borderWidth: 1, borderColor: '#333', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  cancelTxt: { fontFamily: 'Inter_600SemiBold', color: '#888', fontSize: 12.5, letterSpacing: 1 },
-  submitBtn: { backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  cancelBtn: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  cancelTxt: { fontFamily: 'Inter_600SemiBold', color: colors.textSecondary, fontSize: 12.5, letterSpacing: 1 },
+  submitBtn: { backgroundColor: colors.red, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   submitBtnFlex: { flex: 2 },
   disabledBtn: { opacity: 0.4 },
-  submitTxt: { fontFamily: 'Inter_700Bold', color: '#000', fontSize: 12.5, letterSpacing: 2 },
-  outcomeText: { fontFamily: 'Inter_400Regular', color: '#ccc', fontSize: 14, lineHeight: 22, marginBottom: 8 },
+  submitTxt: { fontFamily: 'Inter_700Bold', color: colors.onRed, fontSize: 12.5, letterSpacing: 2 },
+  outcomeText: { fontFamily: 'Inter_400Regular', color: colors.textSecondary, fontSize: 14, lineHeight: 22, marginBottom: 8 },
 });
