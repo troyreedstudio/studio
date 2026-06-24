@@ -422,13 +422,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   statusSoon: {
-    backgroundColor: 'rgba(255,107,0,0.08)',
-    borderColor: 'rgba(255,107,0,0.3)',
+    backgroundColor: 'rgba(107,114,128,0.08)', // muted grey = "coming soon" (off-palette orange retired)
+    borderColor: 'rgba(107,114,128,0.3)',
   },
   statusSoonText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#FF6B00',
+    color: colors.textTertiary,
     letterSpacing: 1.2,
   },
   statusWait: {
