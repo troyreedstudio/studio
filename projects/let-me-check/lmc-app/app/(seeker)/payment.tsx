@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -14,6 +15,7 @@ import { addRecurring } from '../state/recurring';
 import { usePaymentMethod } from '../state/payment-method';
 import { createPaymentHold, recordHold } from '../lib/payments';
 import { createCheck } from '../lib/checks';
+import { colors } from '../lib/theme';
 
 export default function PaymentScreen() {
   const router = useRouter();
@@ -138,6 +140,7 @@ export default function PaymentScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backText}>‹ Back</Text>
@@ -265,7 +268,7 @@ export default function PaymentScreen() {
         ) : (
           <>
             <Text style={styles.paymentMethodLabel}>+ Add payment method</Text>
-            <Ionicons name="chevron-forward" size={16} color="#888" />
+            <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
           </>
         )}
       </TouchableOpacity>
@@ -296,39 +299,43 @@ export default function PaymentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', paddingHorizontal: 20 },
+  container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 20 },
   header: { paddingTop: 12, paddingBottom: 22 },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: '#fff',
+    color: colors.red,
     fontSize: 15,
     marginBottom: 18,
   },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 24,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 6,
   },
   subtitle: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: '#888',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   card: {
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     marginBottom: 12,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
   },
   cardTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 16,
     textTransform: 'uppercase',
@@ -342,73 +349,73 @@ const styles = StyleSheet.create({
   rowLabel: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: '#888',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   rowValue: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   totalLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
   },
   totalValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.4,
   },
-  divider: { height: 1, backgroundColor: '#1a1a1a' },
+  divider: { height: 1, backgroundColor: colors.border },
   tierBadge: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.border,
     borderRadius: 100,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  tierBadgePriority: { backgroundColor: 'rgba(255,107,0,0.15)' },
+  tierBadgePriority: { backgroundColor: 'rgba(255,203,71,0.18)' },
   tierBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 1.5,
   },
-  tierBadgeTextPriority: { color: '#FF6B00' },
+  tierBadgeTextPriority: { color: colors.amber },
   shareCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 12,
   },
   shareCardActive: {
-    backgroundColor: 'rgba(20,55,130,0.5)',
-    borderColor: 'rgba(60,110,200,0.7)',
+    backgroundColor: 'rgba(218,37,29,0.04)',
+    borderColor: colors.red,
   },
   shareCheck: {
     width: 22,
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: colors.borderStrong,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
   },
-  shareCheckActive: { backgroundColor: '#00FF7F', borderColor: '#00FF7F' },
+  shareCheckActive: { backgroundColor: colors.red, borderColor: colors.red },
   shareCheckGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#000',
+    color: colors.onRed,
   },
   shareTitleRow: {
     flexDirection: 'row',
@@ -419,27 +426,27 @@ const styles = StyleSheet.create({
   shareTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   shareSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 17,
     letterSpacing: 0.2,
   },
   recBadge: {
     fontFamily: 'Inter_700Bold',
     fontSize: 8,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 1.2,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    backgroundColor: 'rgba(0,255,127,0.1)',
+    backgroundColor: 'rgba(22,163,74,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.35)',
+    borderColor: 'rgba(22,163,74,0.3)',
     overflow: 'hidden',
   },
   recControls: {
@@ -453,53 +460,57 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 7,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: colors.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: colors.borderStrong,
   },
   recChipActive: {
-    backgroundColor: '#00FF7F',
-    borderColor: '#00FF7F',
+    backgroundColor: colors.red,
+    borderColor: colors.red,
   },
   recChipText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     letterSpacing: 1.2,
   },
-  recChipTextActive: { color: '#000000' },
+  recChipTextActive: { color: colors.onRed },
   recTimePill: {
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 7,
-    backgroundColor: 'rgba(20,55,130,0.6)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.5)',
+    borderColor: colors.border,
   },
   recTimeText: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 11,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.5,
   },
   deliveryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(20,55,130,0.5)',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.6)',
+    borderColor: colors.border,
     marginBottom: 12,
     gap: 12,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
   },
   deliveryIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(218,37,29,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -507,7 +518,7 @@ const styles = StyleSheet.create({
   deliveryTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 3,
     textTransform: 'uppercase',
@@ -515,7 +526,7 @@ const styles = StyleSheet.create({
   deliveryTime: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 18,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
   liveBlipContainer: {
@@ -524,63 +535,63 @@ const styles = StyleSheet.create({
     gap: 5,
     marginLeft: 'auto',
   },
-  liveBlip: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#00FF7F' },
+  liveBlip: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.verified },
   liveLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 1.5,
   },
   paymentMethod: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: colors.border,
     marginBottom: 24,
   },
   paymentMethodLabel: {
     fontFamily: 'Inter_500Medium',
-    color: '#fff',
+    color: colors.textPrimary,
     fontSize: 13.5,
     letterSpacing: 0.3,
   },
   changeText: {
     fontFamily: 'Inter_700Bold',
-    color: '#00FF7F',
+    color: colors.red,
     fontSize: 11,
     letterSpacing: 1.5,
   },
   ctaContainer: { marginTop: 'auto', paddingBottom: 8 },
   ctaButton: {
-    backgroundColor: '#FAF6F0',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: colors.red,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.28,
     shadowRadius: 12,
     elevation: 8,
   },
   ctaButtonProcessing: {
-    backgroundColor: '#cccccc',
+    backgroundColor: colors.borderStrong,
     opacity: 0.85,
   },
   ctaButtonText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000',
+    color: colors.onRed,
     fontSize: 13,
     letterSpacing: 2.5,
   },
   disclaimer: {
     fontFamily: 'Inter_500Medium',
     textAlign: 'center',
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     fontSize: 12,
     letterSpacing: 0.4,
   },
