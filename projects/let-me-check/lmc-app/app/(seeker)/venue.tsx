@@ -1,9 +1,9 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { isPartnerVenue, getMarketById, DEFAULT_MARKET_ID } from '../data/markets';
+import { colors } from '../lib/theme';
 
 export default function VenueScreen() {
   const router = useRouter();
@@ -35,6 +35,7 @@ export default function VenueScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -74,7 +75,7 @@ export default function VenueScreen() {
         {/* Live Status */}
         <View style={styles.liveStatus}>
           <View style={[styles.liveBlip, !isLive && styles.liveBlipSoon]} />
-          <Text style={styles.liveText}>
+          <Text style={[styles.liveText, !isLive && styles.liveTextSoon]}>
             {isLive ? 'LIVE CHECKS AVAILABLE' : 'RECRUITING SCOUTS IN ' + city.toUpperCase()}
           </Text>
         </View>
@@ -130,7 +131,7 @@ export default function VenueScreen() {
 
         {isPartner && (
           <TouchableOpacity
-            style={styles.interiorCard}
+            style={[styles.interiorCard, interior && styles.interiorCardActive]}
             activeOpacity={0.85}
             onPress={() => setInterior(!interior)}
           >
@@ -145,7 +146,7 @@ export default function VenueScreen() {
               </View>
               <Text style={styles.interiorSub}>
                 {interior
-                  ? `${name} is an LMC Partner. Scout films exterior + inside the venue. 30-sec video.`
+                  ? `${name} is a Let Me Check Partner. Scout films exterior + inside the venue. 30-sec video.`
                   : `${name} is a Partner — add inside footage to your check. 30-sec video.`}
               </Text>
             </View>
@@ -182,11 +183,16 @@ export default function VenueScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backBtn: { marginBottom: 12 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#fff', fontSize: 15 },
-  venueName: { fontSize: 28, fontWeight: '800', color: '#fff', marginBottom: 4 },
+  backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15 },
+  venueName: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
   venueCityRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -195,26 +201,26 @@ const styles = StyleSheet.create({
   venueCity: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   venueDot: {
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: colors.border,
   },
   venueScoutDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.verified,
     marginRight: -3,
   },
   venueScouts: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 0.3,
   },
   photoArea: {
@@ -224,24 +230,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     justifyContent: 'flex-end',
-    backgroundColor: '#111',
+    backgroundColor: colors.surface,
     marginTop: 4,
-  },
-  photoGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    borderRadius: 16,
   },
   photoBadge: {
     position: 'absolute',
     top: 10,
     left: 10,
-    backgroundColor: 'rgba(20,55,130,0.85)',
-    borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.85)',
+    backgroundColor: colors.textPrimary,
     borderRadius: 100,
     paddingVertical: 4,
     paddingHorizontal: 10,
@@ -249,55 +245,8 @@ const styles = StyleSheet.create({
   photoBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#ffffff',
+    color: colors.bg,
     letterSpacing: 1.5,
-  },
-  photoCloseBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoCloseIcon: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  photoPlayWrap: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoPlayCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoPlayIcon: {
-    fontSize: 26,
-    color: '#000',
-    marginLeft: 4,
-  },
-  photoSub: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.85)',
-    letterSpacing: 0.5,
-    textAlign: 'center',
-    paddingBottom: 14,
-    paddingHorizontal: 18,
   },
   liveStatus: {
     flexDirection: 'row',
@@ -307,9 +256,15 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
-  liveBlip: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#00FF7F' },
-  liveBlipSoon: { backgroundColor: '#FF6B00' },
-  liveText: { fontSize: 13, color: '#00FF7F', fontWeight: '700', letterSpacing: 1.5 },
+  liveBlip: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.verified },
+  liveBlipSoon: { backgroundColor: colors.amber },
+  liveText: {
+    fontSize: 13,
+    color: colors.verified,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+  },
+  liveTextSoon: { color: colors.amber },
   infoRow: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -317,21 +272,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   infoChip: {
-    backgroundColor: '#111',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: colors.border,
   },
-  infoChipText: { color: '#888', fontSize: 12 },
+  infoChipText: { color: colors.textSecondary, fontSize: 12 },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#555',
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: colors.textTertiary,
     letterSpacing: 2,
     paddingHorizontal: 20,
     marginBottom: 12,
+    textTransform: 'uppercase',
   },
   tierRow: {
     flexDirection: 'row',
@@ -340,34 +296,59 @@ const styles = StyleSheet.create({
   },
   tierCard: {
     flex: 1,
-    backgroundColor: '#111',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#222',
+    borderColor: colors.border,
     minHeight: 160,
   },
   tierCardActive: {
-    borderColor: '#fff',
-    backgroundColor: '#151515',
+    borderColor: colors.textPrimary,
+    backgroundColor: colors.bg,
   },
   tierCardPriorityActive: {
-    borderColor: '#FFCB47',
-    backgroundColor: '#151200',
+    borderColor: colors.amber,
+    backgroundColor: '#FFFDF0',
   },
   priorityBadge: {
-    backgroundColor: '#FFCB47',
+    backgroundColor: colors.amber,
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
     alignSelf: 'flex-start',
     marginBottom: 8,
   },
-  priorityBadgeText: { fontSize: 9, fontWeight: '800', color: '#000', letterSpacing: 1 },
-  tierLabel: { fontSize: 15, fontWeight: '700', color: '#fff', marginBottom: 6 },
-  tierPrice: { fontSize: 28, fontWeight: '900', color: '#fff', marginBottom: 2 },
-  tierTime: { fontSize: 13, color: '#00FF7F', fontWeight: '600', marginBottom: 8 },
-  tierDesc: { fontSize: 11, color: '#666', lineHeight: 16 },
+  priorityBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: colors.black,
+    letterSpacing: 1,
+  },
+  tierLabel: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 15,
+    color: colors.textPrimary,
+    marginBottom: 6,
+  },
+  tierPrice: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 28,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  tierTime: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  tierDesc: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 11,
+    color: colors.textTertiary,
+    lineHeight: 16,
+  },
   selectedBadge: {
     position: 'absolute',
     top: 12,
@@ -375,19 +356,23 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#fff',
+    backgroundColor: colors.textPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  selectedBadgeAmber: { backgroundColor: '#FFCB47' },
-  selectedBadgeText: { fontSize: 12, fontWeight: '800', color: '#000' },
+  selectedBadgeAmber: { backgroundColor: colors.amber },
+  selectedBadgeText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 12,
+    color: colors.bg,
+  },
   interiorCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    backgroundColor: 'rgba(20,55,130,0.5)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(60,110,200,0.6)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 13,
@@ -395,30 +380,32 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   interiorCardActive: {
-    borderColor: 'rgba(60,110,200,0.9)',
-  },
-  interiorEyebrow: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 9,
-    color: '#E8A0B0',
-    letterSpacing: 2,
-    marginBottom: 4,
+    borderColor: colors.red,
+    backgroundColor: 'rgba(218,37,29,0.04)',
   },
   interiorCheck: {
     width: 22,
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: colors.borderStrong,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
+    flexShrink: 0,
   },
-  interiorCheckActive: { backgroundColor: '#00FF7F', borderColor: '#00FF7F' },
+  interiorCheckActive: { backgroundColor: colors.red, borderColor: colors.red },
   interiorCheckGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: '#000',
+    color: colors.onRed,
+  },
+  interiorEyebrow: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9,
+    color: colors.red,
+    letterSpacing: 2,
+    marginBottom: 4,
   },
   interiorTitleRow: {
     flexDirection: 'row',
@@ -429,60 +416,43 @@ const styles = StyleSheet.create({
   interiorTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#fff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   interiorBadge: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 13,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 0.4,
   },
   interiorSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     lineHeight: 17,
     letterSpacing: 0.2,
-  },
-  partnerStar: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(232,160,176,0.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(232,160,176,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  partnerStarText: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 12,
-    color: '#E8A0B0',
   },
   ctaContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#000',
+    backgroundColor: colors.bg,
     borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
+    borderTopColor: colors.border,
     padding: 20,
     paddingBottom: 36,
   },
-  ctaSummary: { marginBottom: 10 },
-  ctaSummaryText: { color: '#888', fontSize: 13, textAlign: 'center' },
   ctaButton: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
   },
   ctaButtonText: {
-    color: '#000',
+    color: colors.onRed,
+    fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    fontWeight: '800',
     letterSpacing: 1.5,
   },
 });
