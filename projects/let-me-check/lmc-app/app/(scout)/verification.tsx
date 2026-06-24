@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  StatusBar,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -13,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { getConnectStatus, startConnectOnboarding } from '../lib/payments';
+import { colors } from '../lib/theme';
 
 type VerifyState =
   | { phase: 'loading' }
@@ -71,6 +73,7 @@ export default function VerificationScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Top bar */}
         <View style={styles.topBar}>
@@ -91,7 +94,7 @@ export default function VerificationScreen() {
 
         {state.phase === 'loading' && (
           <View style={styles.centerWrap}>
-            <ActivityIndicator color="#00FF7F" />
+            <ActivityIndicator color={colors.red} />
             <Text style={styles.loadingText}>Checking verification status...</Text>
           </View>
         )}
@@ -108,7 +111,7 @@ export default function VerificationScreen() {
         {state.phase === 'verified' && (
           <>
             <View style={styles.verifiedCard}>
-              <Ionicons name="shield-checkmark" size={36} color="#00FF7F" />
+              <Ionicons name="shield-checkmark" size={36} color={colors.verified} />
               <Text style={styles.verifiedTitle}>Identity verified</Text>
               <Text style={styles.verifiedSub}>
                 Your identity was confirmed during Scout onboarding via Stripe's secure verification process.
@@ -135,7 +138,7 @@ export default function VerificationScreen() {
         {state.phase === 'pending' && (
           <>
             <View style={styles.pendingCard}>
-              <Ionicons name="time-outline" size={32} color="#FFCB47" />
+              <Ionicons name="time-outline" size={32} color={colors.amber} />
               <Text style={styles.pendingTitle}>Verification pending</Text>
               <Text style={styles.pendingSub}>
                 Stripe is reviewing your details. This usually completes within a few minutes. You can go online once verification is confirmed.
@@ -143,7 +146,7 @@ export default function VerificationScreen() {
             </View>
 
             <TouchableOpacity style={styles.refreshBtn} onPress={load} activeOpacity={0.7}>
-              <Ionicons name="refresh-outline" size={15} color="rgba(255,255,255,0.7)" />
+              <Ionicons name="refresh-outline" size={15} color={colors.textSecondary} />
               <Text style={styles.refreshBtnText}>CHECK AGAIN</Text>
             </TouchableOpacity>
           </>
@@ -152,7 +155,7 @@ export default function VerificationScreen() {
         {state.phase === 'action_needed' && (
           <>
             <View style={styles.warningCard}>
-              <Ionicons name="alert-circle-outline" size={32} color="#FFCB47" />
+              <Ionicons name="alert-circle-outline" size={32} color={colors.amber} />
               <Text style={styles.warningTitle}>Action needed</Text>
               <Text style={styles.warningBody}>
                 Stripe has flagged a verification requirement for your account. Open Stripe to review and complete the required steps.
@@ -168,7 +171,7 @@ export default function VerificationScreen() {
               <Ionicons
                 name="open-outline"
                 size={16}
-                color={opening ? 'rgba(255,255,255,0.35)' : '#000'}
+                color={opening ? colors.textTertiary : colors.onRed}
               />
               <Text style={[styles.primaryBtnText, opening && styles.primaryBtnTextDim]}>
                 {opening ? 'OPENING STRIPE...' : 'COMPLETE VERIFICATION'}
@@ -187,7 +190,7 @@ export default function VerificationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
 
   topBar: {
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -210,19 +213,19 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   titleRule: {
     height: 2,
     width: 32,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
     marginTop: 8,
   },
   subtitle: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     marginTop: 8,
     letterSpacing: 0.2,
   },
@@ -236,38 +239,38 @@ const styles = StyleSheet.create({
   loadingText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   errorText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,100,100,0.9)',
+    color: colors.danger,
     textAlign: 'center',
     lineHeight: 18,
   },
   retryBtn: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: colors.border,
   },
   retryBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 2,
   },
 
   verifiedCard: {
-    backgroundColor: 'rgba(0,255,127,0.06)',
+    backgroundColor: 'rgba(22,163,74,0.06)',
     borderRadius: 16,
     marginHorizontal: 22,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,127,0.25)',
+    borderColor: 'rgba(22,163,74,0.25)',
     alignItems: 'center',
     gap: 12,
     marginBottom: 22,
@@ -275,32 +278,32 @@ const styles = StyleSheet.create({
   verifiedTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 20,
-    color: '#00FF7F',
+    color: colors.verified,
     letterSpacing: 0.2,
     textAlign: 'center',
   },
   verifiedSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     lineHeight: 20,
     textAlign: 'center',
     letterSpacing: 0.2,
   },
 
   explainerCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     marginHorizontal: 22,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: colors.border,
     gap: 14,
   },
   explainerLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: 'rgba(255,255,255,0.45)',
+    color: colors.textTertiary,
     letterSpacing: 2,
     marginBottom: 2,
   },
@@ -313,7 +316,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: colors.borderStrong,
     marginTop: 7,
     flexShrink: 0,
   },
@@ -321,7 +324,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     lineHeight: 19,
     letterSpacing: 0.2,
   },
@@ -332,7 +335,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 22,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.25)',
+    borderColor: 'rgba(255,203,71,0.35)',
     alignItems: 'center',
     gap: 12,
     marginBottom: 22,
@@ -340,14 +343,14 @@ const styles = StyleSheet.create({
   pendingTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
-    color: '#FFCB47',
+    color: colors.amber,
     letterSpacing: 0.2,
     textAlign: 'center',
   },
   pendingSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     lineHeight: 20,
     textAlign: 'center',
     letterSpacing: 0.2,
@@ -362,14 +365,14 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     marginBottom: 14,
   },
   refreshBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     letterSpacing: 2,
   },
 
@@ -379,7 +382,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 22,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.28)',
+    borderColor: 'rgba(255,203,71,0.35)',
     alignItems: 'center',
     gap: 10,
     marginBottom: 24,
@@ -387,14 +390,14 @@ const styles = StyleSheet.create({
   warningTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#FFCB47',
+    color: colors.amber,
     letterSpacing: 0.2,
     textAlign: 'center',
   },
   warningBody: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     lineHeight: 20,
     textAlign: 'center',
     letterSpacing: 0.2,
@@ -405,29 +408,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 14,
     marginHorizontal: 22,
     paddingVertical: 17,
     marginBottom: 14,
   },
   primaryBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 12.5,
     letterSpacing: 2.5,
   },
   primaryBtnTextDim: {
-    color: 'rgba(255,255,255,0.35)',
+    color: colors.textTertiary,
   },
 
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.35)',
+    color: colors.textTertiary,
     textAlign: 'center',
     paddingHorizontal: 32,
     lineHeight: 16,
