@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../lib/theme';
 
 type Tier = {
   id: 'free' | 'plus' | 'pro';
@@ -96,7 +97,7 @@ export default function MembershipScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
@@ -107,7 +108,7 @@ export default function MembershipScreen() {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <View style={styles.heroIconWrap}>
             <View style={styles.heroIcon}>
-              <Ionicons name="eye" size={28} color="#143782" />
+              <Ionicons name="eye" size={28} color={colors.red} />
             </View>
           </View>
           <Text style={styles.title}>Upgrade your eyes.</Text>
@@ -150,7 +151,7 @@ export default function MembershipScreen() {
                     <Ionicons
                       name={f.included ? 'checkmark-circle' : 'close-circle-outline'}
                       size={16}
-                      color={f.included ? '#00FF7F' : 'rgba(255,255,255,0.25)'}
+                      color={f.included ? colors.verified : colors.border}
                     />
                     <Text
                       style={[
@@ -190,11 +191,8 @@ export default function MembershipScreen() {
   );
 }
 
-const INDIGO = '#143782';
-const INDIGO_LIGHT = 'rgba(20,55,130,0.5)';
-
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -206,7 +204,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
   },
@@ -216,14 +214,14 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: 'rgba(20,55,130,0.5)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 28,
-    color: '#ffffff',
+    color: colors.textPrimary,
     textAlign: 'center',
     letterSpacing: 0.2,
     marginBottom: 8,
@@ -231,16 +229,16 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 21,
     marginBottom: 28,
     paddingHorizontal: 16,
   },
   tierCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 18,
@@ -248,11 +246,11 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   tierCardSelected: {
-    borderColor: 'rgba(20,55,130,0.5)',
-    backgroundColor: INDIGO_LIGHT,
+    borderColor: colors.red,
+    backgroundColor: 'rgba(218,37,29,0.03)',
   },
   tierCardFeatured: {
-    borderColor: 'rgba(0,255,127,0.45)',
+    borderColor: colors.red,
   },
   popularBadge: {
     position: 'absolute',
@@ -261,12 +259,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: '#00FF7F',
+    backgroundColor: colors.red,
   },
   popularBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: '#ffffff',
+    color: colors.onRed,
     letterSpacing: 1.5,
   },
   tierHeader: {
@@ -278,31 +276,31 @@ const styles = StyleSheet.create({
   tierName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
   priceRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 3 },
   price: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: 22,
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
   per: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textSecondary,
     marginBottom: 3,
   },
   tagline: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
     marginBottom: 14,
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.border,
     marginBottom: 12,
   },
   featureRow: {
@@ -315,30 +313,30 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.textPrimary,
     letterSpacing: 0.1,
     lineHeight: 17,
   },
-  featureTextDisabled: { color: 'rgba(255,255,255,0.35)' },
+  featureTextDisabled: { color: colors.textTertiary },
   cta: {
     marginTop: 14,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  ctaFree: { backgroundColor: 'rgba(255,255,255,0.08)' },
+  ctaFree: { backgroundColor: colors.surface },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 12,
     letterSpacing: 2,
   },
-  ctaTextFree: { color: 'rgba(255,255,255,0.5)' },
+  ctaTextFree: { color: colors.textTertiary },
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textTertiary,
     textAlign: 'center',
     lineHeight: 16,
     marginTop: 12,
