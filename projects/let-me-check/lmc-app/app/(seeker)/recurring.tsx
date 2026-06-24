@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecurring, type RecurringFreq } from '../state/recurring';
+import { colors } from '../lib/theme';
 
 function freqLabel(freq: RecurringFreq): string {
   return freq === 'daily' ? 'Every day' : freq === 'weekly' ? 'Every week' : 'Every month';
@@ -23,7 +24,7 @@ export default function RecurringScreen() {
 
   return (
     <View style={styles.bg}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity
@@ -39,7 +40,7 @@ export default function RecurringScreen() {
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             activeOpacity={0.7}
           >
-            <Ionicons name="add" size={16} color="#00FF7F" />
+            <Ionicons name="add" size={16} color={colors.red} />
             <Text style={styles.newBtnText}>New</Text>
           </TouchableOpacity>
         </View>
@@ -52,7 +53,7 @@ export default function RecurringScreen() {
           {list.length === 0 ? (
             <View style={styles.emptyWrap}>
               <View style={styles.emptyIcon}>
-                <Ionicons name="time-outline" size={36} color="rgba(255,255,255,0.4)" />
+                <Ionicons name="time-outline" size={36} color={colors.textTertiary} />
               </View>
               <Text style={styles.emptyTitle}>No recurring checks yet</Text>
               <Text style={styles.emptySub}>
@@ -63,18 +64,18 @@ export default function RecurringScreen() {
                 activeOpacity={0.85}
                 onPress={() => router.push({ pathname: '/(seeker)/search', params: { mode: 'recurring' } })}
               >
-                <Ionicons name="add" size={16} color="#000" />
+                <Ionicons name="add" size={16} color={colors.onRed} />
                 <Text style={styles.ctaText}>NEW RECURRING CHECK</Text>
               </TouchableOpacity>
             </View>
           ) : (
             list.map((r) => (
               <View key={r.id} style={styles.card}>
-                <View style={styles.cardIconWrap}>
+                <View style={[styles.cardIconWrap, !r.active && styles.cardIconWrapInactive]}>
                   <Ionicons
                     name="repeat"
                     size={18}
-                    color={r.active ? '#00FF7F' : 'rgba(255,255,255,0.4)'}
+                    color={r.active ? colors.red : colors.textTertiary}
                   />
                 </View>
                 <View style={styles.cardBody}>
@@ -88,8 +89,8 @@ export default function RecurringScreen() {
                   <Switch
                     value={r.active}
                     onValueChange={() => toggle(r.id)}
-                    trackColor={{ false: 'rgba(255,255,255,0.12)', true: '#00FF7F' }}
-                    thumbColor="#ffffff"
+                    trackColor={{ false: colors.border, true: colors.red }}
+                    thumbColor={colors.bg}
                   />
                   <TouchableOpacity
                     style={styles.removeBtn}
@@ -97,7 +98,7 @@ export default function RecurringScreen() {
                     activeOpacity={0.7}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Ionicons name="close" size={14} color="rgba(255,255,255,0.55)" />
+                    <Ionicons name="close" size={14} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -110,7 +111,7 @@ export default function RecurringScreen() {
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: '#000000' },
+  bg: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -119,10 +120,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   backText: {
     fontFamily: 'Inter_500Medium',
-    color: 'rgba(255,255,255,0.85)',
+    color: colors.red,
     fontSize: 14,
     letterSpacing: 0.5,
     width: 50,
@@ -130,14 +133,15 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
   },
   subtitle: {
     fontFamily: 'Inter_300Light',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     paddingHorizontal: 22,
+    paddingTop: 14,
     marginBottom: 14,
     letterSpacing: 0.2,
   },
@@ -147,7 +151,9 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -155,14 +161,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: '#ffffff',
+    color: colors.textPrimary,
     marginBottom: 6,
     letterSpacing: 0.3,
   },
   emptySub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 22,
@@ -178,21 +184,21 @@ const styles = StyleSheet.create({
   newBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: '#00FF7F',
+    color: colors.red,
     letterSpacing: 0.2,
   },
   cta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.red,
     borderRadius: 12,
     paddingHorizontal: 22,
     paddingVertical: 14,
   },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: '#000000',
+    color: colors.onRed,
     fontSize: 12,
     letterSpacing: 2,
   },
@@ -200,41 +206,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   cardIconWrap: {
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,255,127,0.12)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(218,37,29,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  cardIconWrapInactive: {
+    backgroundColor: colors.bg,
+    borderColor: colors.border,
   },
   cardBody: { flex: 1 },
   cardName: {
     fontFamily: 'Inter_700Bold',
     fontSize: 15,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   cardSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textSecondary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   cardSchedule: {
     fontFamily: 'JetBrainsMono_500Medium',
     fontSize: 11,
-    color: '#00FF7F',
+    color: colors.textSecondary,
     letterSpacing: 0.4,
   },
   cardActions: {
@@ -246,7 +263,9 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
