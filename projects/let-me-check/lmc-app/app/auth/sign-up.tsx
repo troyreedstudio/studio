@@ -112,7 +112,12 @@ export default function SignUpScreen() {
   }, [step, fade, slide]);
 
   const goNext = (next: Step) => setStep(next);
-  const goBack = () => (step === 'method' ? router.back() : setStep(prevStep(step)));
+  const goBack = () =>
+    step === 'method'
+      ? router.canGoBack()
+        ? router.back()
+        : router.replace('/onboarding/role') // reached via replace from role — no back-history
+      : setStep(prevStep(step));
 
   const handleFinish = () => {
     setSubmitting(true);
