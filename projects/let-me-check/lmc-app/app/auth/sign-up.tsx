@@ -169,8 +169,8 @@ export default function SignUpScreen() {
               </View>
             }
           >
-            {/* Flat subtle wordmark on white (no chrome) — a quiet header mark */}
-            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(17,24,39,0.4)' }]} />
+            {/* Wordmark rule: BLACK on white (mirrors white-on-red elsewhere) */}
+            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#000000' }]} />
           </MaskedView>
         </View>
 

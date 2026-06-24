@@ -63,15 +63,8 @@ export default function WelcomeScreen() {
               </View>
             }
           >
-            <View style={styles.gradientWrap}>
-              <LinearGradient
-                colors={CHROME_STOPS}
-                locations={CHROME_LOCATIONS}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
-                style={StyleSheet.absoluteFillObject}
-              />
-            </View>
+            {/* Wordmark rule: BLACK on white (mirrors white-on-red elsewhere) */}
+            <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#000000' }]} />
           </MaskedView>
 
           <Text style={styles.tagline}>KNOW BEFORE YOU GO</Text>
