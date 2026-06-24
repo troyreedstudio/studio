@@ -172,7 +172,7 @@ export default function QuickFinishScreen() {
                   autoCorrect={false}
                 />
                 {nameAutoFilled && (
-                  <Ionicons name="checkmark-circle" size={16} color={colors.verified} style={styles.inputCheck} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.textTertiary} style={styles.inputCheck} />
                 )}
               </View>
             </View>
@@ -189,7 +189,7 @@ export default function QuickFinishScreen() {
                   autoCorrect={false}
                 />
                 {nameAutoFilled && (
-                  <Ionicons name="checkmark-circle" size={16} color={colors.verified} style={styles.inputCheck} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.textTertiary} style={styles.inputCheck} />
                 )}
               </View>
             </View>
@@ -222,7 +222,7 @@ export default function QuickFinishScreen() {
                 autoCorrect={false}
               />
               {emailAutoFilled && (
-                <Ionicons name="checkmark-circle" size={16} color={colors.verified} style={styles.inputCheck} />
+                <Ionicons name="checkmark-circle" size={16} color={colors.textTertiary} style={styles.inputCheck} />
               )}
             </View>
             {email.length > 0 && !emailOk && (
@@ -310,7 +310,7 @@ export default function QuickFinishScreen() {
 
           {/* TRUST */}
           <View style={styles.trustCard}>
-            <Ionicons name="lock-closed-outline" size={16} color={colors.verified} />
+            <Ionicons name="lock-closed-outline" size={16} color={colors.red} />
             <View style={{ flex: 1 }}>
               <Text style={styles.trustTitle}>How we use this</Text>
               <Text style={styles.trustWhy}>
@@ -459,8 +459,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   inputAutoFilled: {
-    backgroundColor: 'rgba(22,163,74,0.07)',
-    borderColor: 'rgba(22,163,74,0.3)',
+    backgroundColor: colors.surface,      // subtle neutral "filled" cue (was green)
+    borderColor: colors.borderStrong,
   },
   fieldError: {
     fontFamily: 'Inter_500Medium',
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
     padding: 14,
-    backgroundColor: 'rgba(22,163,74,0.07)',
+    backgroundColor: 'rgba(218,37,29,0.06)', // faint red highlight (was green; green = verified only)
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(22,163,74,0.18)',
