@@ -560,9 +560,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5E7EB', // grey backdrop (Troy's call — see OUTSTANDING: verify Apple-button compliance before submission)
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    backgroundColor: '#000000', // Apple = primary, bold black (also App-Store compliant)
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 18,
@@ -571,14 +569,14 @@ const styles = StyleSheet.create({
   methodIconApple: {
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
-    color: '#000000',
+    color: '#ffffff',
     width: 22,
     textAlign: 'center',
   },
   methodLabelApple: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
-    color: '#000000',
+    color: '#ffffff',
     letterSpacing: 0.3,
   },
 
