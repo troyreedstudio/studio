@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getIntendedRole } from '../state/intended-role';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 // Source of truth: docs/FILMING-POLICY.md, mirrored to the Seeker (requester) perspective.
 // The binding legal text lives in the full Terms / Privacy / AUP (linked at sign-up);
@@ -174,11 +175,12 @@ export default function SeekerRulesScreen() {
             </ScrollView>
 
             <TouchableOpacity
-              style={[styles.primaryBtn, !bothGated && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, ctaGlowShadow, !bothGated && styles.primaryBtnDisabled]}
               disabled={!bothGated}
               onPress={finish}
               activeOpacity={0.85}
             >
+              {bothGated && <CtaGlow radius={14} />}
               <Text style={[styles.primaryBtnText, !bothGated && styles.primaryBtnTextDisabled]}>
                 {bothGated ? 'CONTINUE' : 'TICK BOTH TO CONTINUE'}
               </Text>

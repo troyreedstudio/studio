@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { setIntendedRoleFlags } from '../lib/api';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 /**
  * Derive a stable, human-readable Scout ID from the user's Supabase auth UUID.
@@ -234,10 +235,11 @@ export default function ScoutApprovedScreen() {
 
             {/* CTAs */}
             <TouchableOpacity
-              style={styles.primaryBtn}
+              style={[styles.primaryBtn, ctaGlowShadow]}
               onPress={() => router.replace('/(scout)/dashboard')}
               activeOpacity={0.85}
             >
+              <CtaGlow radius={14} />
               <View style={styles.primaryBtnInner}>
                 <Ionicons name="play" size={14} color={colors.onRed} />
                 <Text style={styles.primaryBtnText}>OPEN SCOUT DASHBOARD</Text>

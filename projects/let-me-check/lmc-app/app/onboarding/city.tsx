@@ -23,6 +23,7 @@ import {
 import { getIntendedRole } from '../state/intended-role';
 import { setManualLocation } from '../state/location';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type Status = MarketStatus;
 type City = Market & { scouts: number; status: MarketStatus };
@@ -215,11 +216,12 @@ export default function CityPickerScreen() {
 
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.cta, !selectedId && styles.ctaDisabled]}
+            style={[styles.cta, ctaGlowShadow, !selectedId && styles.ctaDisabled]}
             disabled={!selectedId}
             onPress={handleContinue}
             activeOpacity={0.85}
           >
+            {!!selectedId && <CtaGlow radius={14} />}
             <Text style={[styles.ctaText, !selectedId && styles.ctaTextDisabled]}>
               CONTINUE
             </Text>

@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { requestUserLocation, detectCityByIP, getUserCity } from '../state/location';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type PermKey = 'location' | 'notif';
 type PermState = 'pending' | 'granted' | 'skipped';
@@ -242,11 +243,12 @@ export default function PermissionsScreen() {
           )}
 
           <TouchableOpacity
-            style={[styles.primaryBtn, !canContinue && styles.primaryBtnDisabled]}
+            style={[styles.primaryBtn, ctaGlowShadow, !canContinue && styles.primaryBtnDisabled]}
             disabled={!canContinue}
             onPress={() => router.replace(continueTo as never)}
             activeOpacity={0.85}
           >
+            {canContinue && <CtaGlow radius={14} />}
             <Text style={[styles.primaryBtnText, !canContinue && styles.primaryBtnTextDisabled]}>
               {canContinue ? 'CONTINUE' : 'ALLOW LOCATION TO CONTINUE'}
             </Text>

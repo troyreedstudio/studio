@@ -13,6 +13,7 @@ import { getPlaybackToken } from '../lib/clips';
 import { requestRefund, type RefundReason } from '../lib/payments';
 import { supabase } from '../lib/supabase';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 const REFUND_REASONS: { code: RefundReason; label: string }[] = [
   { code: 'blurry', label: 'Too blurry to use' },
@@ -249,7 +250,8 @@ export default function DeliveryScreen() {
           )}
         </View>
 
-        <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/(seeker)/home')} activeOpacity={0.85}>
+        <TouchableOpacity style={[styles.primaryBtn, ctaGlowShadow]} onPress={() => router.replace('/(seeker)/home')} activeOpacity={0.85}>
+          <CtaGlow radius={14} />
           <Text style={styles.primaryBtnText}>DONE · BACK TO HOME</Text>
         </TouchableOpacity>
 
@@ -309,7 +311,7 @@ const styles = StyleSheet.create({
   // Verified badge: colors.verified — semantic GPS-verified checkmark
   verifiedBadge: { backgroundColor: 'rgba(22,163,74,0.08)', borderRadius: 100, paddingHorizontal: 9, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(22,163,74,0.35)' },
   verifiedText: { fontFamily: 'Inter_700Bold', color: colors.verified, fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase' },
-  primaryBtn: { backgroundColor: colors.red, borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginBottom: 10, shadowColor: colors.red, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.28, shadowRadius: 12, elevation: 8 },
+  primaryBtn: { backgroundColor: colors.red, borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginBottom: 10 },
   primaryBtnText: { fontFamily: 'Inter_700Bold', color: colors.onRed, fontSize: 13, letterSpacing: 2.5 },
   reportLink: { alignItems: 'center', paddingVertical: 14 },
   reportLinkText: { fontFamily: 'Inter_400Regular', color: colors.textTertiary, fontSize: 12, textDecorationLine: 'underline' },

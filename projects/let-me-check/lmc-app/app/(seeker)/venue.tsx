@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { isPartnerVenue, getMarketById, DEFAULT_MARKET_ID } from '../data/markets';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 export default function VenueScreen() {
   const router = useRouter();
@@ -159,7 +160,7 @@ export default function VenueScreen() {
       {/* CTA */}
       <View style={styles.ctaContainer}>
         <TouchableOpacity
-          style={styles.ctaButton}
+          style={[styles.ctaButton, ctaGlowShadow]}
           onPress={() => {
             router.push({
               pathname: '/(seeker)/payment',
@@ -175,6 +176,7 @@ export default function VenueScreen() {
           }}
           activeOpacity={0.85}
         >
+          <CtaGlow radius={14} />
           <Text style={styles.ctaButtonText}>{`REVIEW & PAY · ${tier.price}`}</Text>
         </TouchableOpacity>
       </View>

@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 const STEPS = [
   { icon: 'card-outline', title: 'Verify your identity', time: '2 min', why: 'Photo of your gov ID + selfie. Handled by Stripe Identity.', route: '/scout/identity' as const },
@@ -67,10 +68,11 @@ export default function BecomeScoutScreen() {
           </View>
 
           <TouchableOpacity
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, ctaGlowShadow]}
             onPress={() => router.push('/scout/identity')}
             activeOpacity={0.85}
           >
+            <CtaGlow radius={14} />
             <Text style={styles.primaryBtnText}>START SCOUT SETUP</Text>
           </TouchableOpacity>
 

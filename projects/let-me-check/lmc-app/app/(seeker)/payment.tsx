@@ -16,6 +16,7 @@ import { usePaymentMethod } from '../state/payment-method';
 import { createPaymentHold, recordHold } from '../lib/payments';
 import { createCheck } from '../lib/checks';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 export default function PaymentScreen() {
   const router = useRouter();
@@ -278,12 +279,14 @@ export default function PaymentScreen() {
         <TouchableOpacity
           style={[
             styles.ctaButton,
+            ctaGlowShadow,
             processing && styles.ctaButtonProcessing,
           ]}
           disabled={processing}
           onPress={handleConfirm}
           activeOpacity={0.85}
         >
+          {!processing && <CtaGlow radius={14} />}
           <Text style={styles.ctaButtonText}>
             {processing ? 'AUTHORIZING…' : 'CONFIRM & FIND MY SCOUT'}
           </Text>
@@ -572,11 +575,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 10,
-    shadowColor: colors.red,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.28,
-    shadowRadius: 12,
-    elevation: 8,
   },
   ctaButtonProcessing: {
     backgroundColor: colors.borderStrong,

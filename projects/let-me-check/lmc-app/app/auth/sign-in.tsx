@@ -20,6 +20,7 @@ import {
   PHONE_AUTH_ENABLED,
 } from '../lib/auth';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type Step = 'method' | 'phone' | 'otp';
 
@@ -162,7 +163,7 @@ export default function SignInScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.primaryBtn, (phone.length < 10 || busy) && styles.primaryBtnDisabled]}
+                  style={[styles.primaryBtn, ctaGlowShadow, (phone.length < 10 || busy) && styles.primaryBtnDisabled]}
                   disabled={phone.length < 10 || busy}
                   onPress={() =>
                     runAuth(async () => {
@@ -172,6 +173,7 @@ export default function SignInScreen() {
                   }
                   activeOpacity={0.85}
                 >
+                  {(phone.length >= 10 && !busy) && <CtaGlow radius={14} />}
                   <Text style={[styles.primaryBtnText, phone.length < 10 && styles.primaryBtnTextDisabled]}>
                     SEND CODE
                   </Text>
@@ -200,13 +202,14 @@ export default function SignInScreen() {
                 />
 
                 <TouchableOpacity
-                  style={[styles.primaryBtn, (otp.length < 6 || busy) && styles.primaryBtnDisabled]}
+                  style={[styles.primaryBtn, ctaGlowShadow, (otp.length < 6 || busy) && styles.primaryBtnDisabled]}
                   disabled={otp.length < 6 || busy}
                   onPress={() =>
                     runAuth(() => verifyPhoneOtp('+1' + phone.replace(/\D/g, ''), otp))
                   }
                   activeOpacity={0.85}
                 >
+                  {(otp.length >= 6 && !busy) && <CtaGlow radius={14} />}
                   <Text style={[styles.primaryBtnText, otp.length < 6 && styles.primaryBtnTextDisabled]}>
                     VERIFY + SIGN IN
                   </Text>

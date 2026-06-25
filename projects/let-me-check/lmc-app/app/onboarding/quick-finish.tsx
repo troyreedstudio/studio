@@ -17,6 +17,7 @@ import { supabase } from '../lib/supabase';
 import { setIntendedRoleFlags, updateProfile } from '../lib/api';
 import { applyReferralCode } from '../lib/referrals';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type AuthSource = 'apple' | 'google' | 'phone';
 
@@ -320,11 +321,12 @@ export default function QuickFinishScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.primaryBtn, (!ready || submitting) && styles.primaryBtnDisabled]}
+            style={[styles.primaryBtn, ctaGlowShadow, (!ready || submitting) && styles.primaryBtnDisabled]}
             disabled={!ready || submitting}
             onPress={handleFinish}
             activeOpacity={0.85}
           >
+            {(ready && !submitting) && <CtaGlow radius={14} />}
             <Text style={[styles.primaryBtnText, (!ready || submitting) && styles.primaryBtnTextDisabled]}>
               {submitting ? 'CREATING ACCOUNT...' : 'FINISH SIGN-UP'}
             </Text>

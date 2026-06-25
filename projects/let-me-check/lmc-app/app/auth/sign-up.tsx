@@ -23,6 +23,7 @@ import {
   PHONE_AUTH_ENABLED,
 } from '../lib/auth';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type Step = 'method' | 'phone' | 'otp' | 'terms';
 
@@ -286,7 +287,7 @@ export default function SignUpScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.primaryBtn, (phone.length < 7 || submitting) && styles.primaryBtnDisabled]}
+                  style={[styles.primaryBtn, ctaGlowShadow, (phone.length < 7 || submitting) && styles.primaryBtnDisabled]}
                   disabled={phone.length < 7 || submitting}
                   onPress={() =>
                     runAuth(
@@ -296,6 +297,7 @@ export default function SignUpScreen() {
                   }
                   activeOpacity={0.85}
                 >
+                  {(phone.length >= 7 && !submitting) && <CtaGlow radius={14} />}
                   <Text style={[styles.primaryBtnText, phone.length < 7 && styles.primaryBtnTextDisabled]}>
                     SEND CODE
                   </Text>
@@ -329,7 +331,7 @@ export default function SignUpScreen() {
                 />
 
                 <TouchableOpacity
-                  style={[styles.primaryBtn, (otp.length < 6 || submitting) && styles.primaryBtnDisabled]}
+                  style={[styles.primaryBtn, ctaGlowShadow, (otp.length < 6 || submitting) && styles.primaryBtnDisabled]}
                   disabled={otp.length < 6 || submitting}
                   onPress={() =>
                     runAuth(
@@ -339,6 +341,7 @@ export default function SignUpScreen() {
                   }
                   activeOpacity={0.85}
                 >
+                  {(otp.length >= 6 && !submitting) && <CtaGlow radius={14} />}
                   <Text style={[styles.primaryBtnText, otp.length < 6 && styles.primaryBtnTextDisabled]}>
                     VERIFY
                   </Text>
@@ -400,12 +403,14 @@ export default function SignUpScreen() {
                 <TouchableOpacity
                   style={[
                     styles.primaryBtn,
+                    ctaGlowShadow,
                     (!acceptedRules || !acceptedTerms || submitting) && styles.primaryBtnDisabled,
                   ]}
                   disabled={!acceptedRules || !acceptedTerms || submitting}
                   onPress={handleFinish}
                   activeOpacity={0.85}
                 >
+                  {(acceptedRules && acceptedTerms && !submitting) && <CtaGlow radius={14} />}
                   <Text
                     style={[
                       styles.primaryBtnText,

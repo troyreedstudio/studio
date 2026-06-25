@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from './lib/theme';
+import { CtaGlow, ctaGlowShadow } from './components/CtaGlow';
 
 const LMC_SIZE = 60;
 const LMC_MASK_W = 332;
@@ -81,10 +82,11 @@ export default function WelcomeScreen() {
           ]}
         >
           <TouchableOpacity
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, ctaGlowShadow]}
             onPress={() => router.push('/onboarding/role')}
             activeOpacity={0.85}
           >
+            <CtaGlow radius={14} />
             <Text style={styles.primaryBtnText}>GET STARTED</Text>
           </TouchableOpacity>
 

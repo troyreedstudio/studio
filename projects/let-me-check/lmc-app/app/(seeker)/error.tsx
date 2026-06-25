@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } fro
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type ErrorType = 'no-scouts' | 'payment-declined' | 'connection' | 'missed-window';
 
@@ -75,10 +76,11 @@ export default function ErrorScreen() {
         {/* Buttons */}
         <View style={styles.buttons}>
           <TouchableOpacity
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, ctaGlowShadow]}
             onPress={() => router.replace(err.primaryRoute as any)}
             activeOpacity={0.85}
           >
+            <CtaGlow radius={14} />
             <Text style={styles.primaryBtnText}>{err.primaryLabel}</Text>
           </TouchableOpacity>
 
@@ -152,11 +154,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
-    shadowColor: colors.red,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.28,
-    shadowRadius: 12,
-    elevation: 8,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',

@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { setIntendedRole, getIntendedRole } from '../state/intended-role';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type Role = 'seeker' | 'scout' | 'both';
 
@@ -140,7 +141,8 @@ export default function RoleScreen() {
           </TouchableOpacity>
 
           {/* CTA */}
-          <TouchableOpacity style={styles.primaryBtn} onPress={handleContinue} activeOpacity={0.85}>
+          <TouchableOpacity style={[styles.primaryBtn, ctaGlowShadow]} onPress={handleContinue} activeOpacity={0.85}>
+            <CtaGlow radius={14} />
             <View style={styles.primaryBtnInner}>
               <Text style={styles.primaryBtnText}>CONTINUE</Text>
               <Ionicons name="arrow-forward" size={16} color={colors.onRed} />

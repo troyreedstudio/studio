@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 export default function PersonalInfoScreen() {
   const router = useRouter();
@@ -151,11 +152,12 @@ export default function PersonalInfoScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.primaryBtn, !ready && styles.primaryBtnDisabled]}
+            style={[styles.primaryBtn, ctaGlowShadow, !ready && styles.primaryBtnDisabled]}
             disabled={!ready}
             onPress={() => router.push('/onboarding/permissions')}
             activeOpacity={0.85}
           >
+            {ready && <CtaGlow radius={14} />}
             <Text style={[styles.primaryBtnText, !ready && styles.primaryBtnTextDisabled]}>
               CONTINUE
             </Text>

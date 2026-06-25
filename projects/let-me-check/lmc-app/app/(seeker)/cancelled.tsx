@@ -13,6 +13,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 const SUPPORT_EMAIL = 'support@letmecheck.app';
 
@@ -104,10 +105,11 @@ export default function CancelledScreen() {
 
         <View style={styles.ctaWrap}>
           <TouchableOpacity
-            style={styles.cta}
+            style={[styles.cta, ctaGlowShadow]}
             activeOpacity={0.85}
             onPress={() => router.replace('/(seeker)/home')}
           >
+            <CtaGlow radius={14} />
             <Text style={styles.ctaText}>BACK TO MAP</Text>
           </TouchableOpacity>
         </View>
@@ -242,10 +244,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
-    shadowColor: colors.red,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
   },
   ctaText: {
     fontFamily: 'Inter_700Bold',
