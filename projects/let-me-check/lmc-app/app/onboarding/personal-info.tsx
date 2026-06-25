@@ -358,12 +358,12 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.textPrimary,
+    color: colors.buttonGreyText,
     fontSize: 13,
     letterSpacing: 3,
   },
   primaryBtnTextDisabled: {
-    color: colors.textPrimary,
+    color: colors.buttonGreyText,
   },
 
   privacy: {

@@ -587,11 +587,11 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.textPrimary, // dark text on the grey button
+    color: colors.buttonGreyText, // dark text on the grey button
     fontSize: 13,
     letterSpacing: 3,
   },
   ctaTextDisabled: {
-    color: colors.textPrimary,
+    color: colors.buttonGreyText,
   },
 });

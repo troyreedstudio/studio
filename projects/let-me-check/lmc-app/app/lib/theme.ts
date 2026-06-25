@@ -42,7 +42,9 @@ export const colors = {
   action: '#DA251D',        // Button fill — same as red (alias for semantic clarity)
   actionText: '#FFFFFF',    // Text on red buttons
   onRed: '#FFFFFF',         // Any text or mark placed on a red surface
-  buttonGrey: '#E5E7EB',    // LOCKED grey-button backdrop — use whenever "the grey button" is requested (text = textPrimary)
+  // LOCKED "grey button" pair — ALWAYS use together: buttonGrey backdrop + buttonGreyText label.
+  buttonGrey: '#E5E7EB',     // grey-button backdrop (use whenever "the grey button" is requested)
+  buttonGreyText: '#0A0A0A', // grey-button label colour — black, same in enabled AND disabled states
 
   // ── Semantic states ────────────────────────────────────────────────────────
   verified: '#16A34A',      // ONLY for verified checkmarks, "online", success ticks

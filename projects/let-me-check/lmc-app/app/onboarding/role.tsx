@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   primaryBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.textPrimary,
+    color: colors.buttonGreyText,
     fontSize: 13,
     letterSpacing: 3,
   },
