@@ -152,9 +152,9 @@ const styles = StyleSheet.create({
 
   // Scout card — red fill (action surface)
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#EAECEF', // clearer grey tint so the Seeker card reads off the white page (was washed-out surface)
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderStrong,
     borderRadius: 18,
     padding: 22,
     marginBottom: 16,
