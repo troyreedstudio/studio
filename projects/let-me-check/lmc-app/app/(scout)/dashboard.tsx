@@ -11,6 +11,7 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useScoutEarnings } from '../state/scout-earnings';
 import { acceptCheck, type CheckRow } from '../lib/checks';
@@ -186,6 +187,14 @@ export default function ScoutDashboard() {
 
           {/* Earnings Card */}
           <View style={styles.earningsCard}>
+            {/* Subtle brand sheen: a faint red glow in the corner of the white card */}
+            <LinearGradient
+              colors={['rgba(218,37,29,0.18)', 'rgba(218,37,29,0.05)', 'rgba(255,255,255,0)']}
+              locations={[0, 0.45, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
             <Text style={styles.earningsLabel}>TODAY'S EARNINGS</Text>
             <Text style={styles.earningsValue}>
               ${earnings.earningsToday.toFixed(2)}
@@ -437,30 +446,31 @@ const styles = StyleSheet.create({
   },
 
   earningsCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white, // elevated white card — floats off the canvas
     borderRadius: 18,
+    overflow: 'hidden', // clip the gradient sheen to the rounded corners
     marginHorizontal: 22,
     padding: 22,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 14,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 5,
   },
   earningsLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.textSecondary,
+    color: colors.textSecondary, // grey label on the light card
     letterSpacing: 2.5,
     marginBottom: 10,
   },
   earningsValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 42,
-    color: colors.textPrimary,
+    color: colors.textPrimary, // black $ amount — the focal point
     letterSpacing: 0.5,
     marginBottom: 14,
   },
@@ -473,7 +483,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(22,163,74,0.08)',
+    backgroundColor: 'rgba(22,163,74,0.08)', // green tint reads on the light card
     borderRadius: 999,
     paddingHorizontal: 11,
     paddingVertical: 5,
