@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
+import { CtaGlow } from '../components/CtaGlow';
 
 // Shown to users who picked "Both" at /onboarding/role, after they've completed
 // Seeker-light sign-up + the Service Standards consent.
@@ -43,6 +44,7 @@ export default function BothForkScreen() {
             activeOpacity={0.9}
             onPress={() => router.replace('/scout/become')}
           >
+            <CtaGlow radius={18} />
             <View style={styles.cardTopRow}>
               <View style={styles.cardIconWrap}>
                 <Ionicons name="videocam-outline" size={26} color={colors.white} />
@@ -160,6 +162,7 @@ const styles = StyleSheet.create({
   cardScout: {
     backgroundColor: colors.red,
     borderColor: colors.red,
+    overflow: 'hidden', // clip the CtaGlow gradient to the rounded corners
   },
   cardTopRow: {
     flexDirection: 'row',
