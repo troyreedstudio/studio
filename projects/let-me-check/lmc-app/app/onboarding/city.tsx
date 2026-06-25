@@ -23,7 +23,6 @@ import {
 import { getIntendedRole } from '../state/intended-role';
 import { setManualLocation } from '../state/location';
 import { colors } from '../lib/theme';
-import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type Status = MarketStatus;
 type City = Market & { scouts: number; status: MarketStatus };
@@ -216,12 +215,11 @@ export default function CityPickerScreen() {
 
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.cta, ctaGlowShadow, !selectedId && styles.ctaDisabled]}
+            style={[styles.cta, !selectedId && styles.ctaDisabled]}
             disabled={!selectedId}
             onPress={handleContinue}
             activeOpacity={0.85}
           >
-            {!!selectedId && <CtaGlow radius={14} />}
             <Text style={[styles.ctaText, !selectedId && styles.ctaTextDisabled]}>
               CONTINUE
             </Text>
@@ -576,17 +574,20 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   cta: {
-    backgroundColor: colors.red,
+    backgroundColor: colors.buttonGrey, // locked grey button
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderStrong, // subtle edge so the enabled grey reads as tappable
   },
   ctaDisabled: {
-    backgroundColor: colors.border,
+    backgroundColor: '#F1F2F4', // lighter + faded = clearly "not ready yet" (distinct from enabled grey)
+    borderColor: colors.border,
   },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.onRed,
+    color: colors.textPrimary, // dark text on the grey button
     fontSize: 13,
     letterSpacing: 3,
   },
