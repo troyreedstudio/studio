@@ -74,28 +74,28 @@ export default function BothForkScreen() {
 
           {/* SEEKER CARD — secondary */}
           <TouchableOpacity
-            style={styles.card}
+            style={[styles.card, styles.cardSeeker]}
             activeOpacity={0.9}
             onPress={() => router.replace('/(seeker)/home')}
           >
             <View style={styles.cardTopRow}>
-              <View style={[styles.cardIconWrap, styles.cardIconWrapDark]}>
-                <Ionicons name="eye-outline" size={26} color={colors.textPrimary} />
+              <View style={styles.cardIconWrap}>
+                <Ionicons name="eye-outline" size={26} color={colors.white} />
               </View>
-              <View style={[styles.tagPill, styles.tagPillSeeker]}>
-                <Ionicons name="eye" size={11} color={colors.red} />
-                <Text style={[styles.tagPillText, styles.tagPillSeekerText]}>SEEKER</Text>
+              <View style={[styles.tagPill, styles.tagPillScout]}>
+                <Ionicons name="eye" size={11} color={colors.onRed} />
+                <Text style={[styles.tagPillText, styles.tagPillScoutText]}>SEEKER</Text>
               </View>
             </View>
 
-            <Text style={styles.cardHeadline}>Open Let Me Check as a Seeker first</Text>
-            <Text style={styles.cardLead}>
+            <Text style={styles.cardHeadlineLight}>Open Let Me Check as a Seeker first</Text>
+            <Text style={styles.cardLeadLight}>
               Browse and request checks now. You can activate Scout from your profile any time.
             </Text>
 
-            <View style={styles.cardCtaRow}>
-              <Text style={styles.cardCtaText}>Continue</Text>
-              <Ionicons name="arrow-forward" size={14} color={colors.red} />
+            <View style={styles.cardCtaRowLight}>
+              <Text style={styles.cardCtaTextLight}>Continue</Text>
+              <Ionicons name="arrow-forward" size={14} color={colors.onRed} />
             </View>
           </TouchableOpacity>
 
@@ -163,6 +163,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.red,
     borderColor: colors.red,
     overflow: 'hidden', // clip the CtaGlow gradient to the rounded corners
+  },
+  cardSeeker: {
+    backgroundColor: colors.textPrimary, // black — distinct from the red Scout card
+    borderColor: colors.textPrimary,
   },
   cardTopRow: {
     flexDirection: 'row',
