@@ -482,5 +482,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 3,
   },
-  ctaTextDisabled: { color: colors.textTertiary },
+  ctaTextDisabled: { color: colors.textPrimary },
 });

@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
   },
   primaryBtnTextDisabled: {
-    color: colors.textTertiary,
+    color: colors.textPrimary,
   },
 
   foot: {

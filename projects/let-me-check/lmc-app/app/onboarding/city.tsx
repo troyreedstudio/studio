@@ -592,6 +592,6 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
   },
   ctaTextDisabled: {
-    color: colors.textTertiary,
+    color: colors.textPrimary,
   },
 });

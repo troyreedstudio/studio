@@ -406,5 +406,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 3,
   },
-  primaryBtnTextDisabled: { color: colors.textTertiary },
+  primaryBtnTextDisabled: { color: colors.textPrimary },
 });
