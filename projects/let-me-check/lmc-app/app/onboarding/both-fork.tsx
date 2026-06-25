@@ -74,28 +74,28 @@ export default function BothForkScreen() {
 
           {/* SEEKER CARD — secondary */}
           <TouchableOpacity
-            style={[styles.card, styles.cardSeeker]}
+            style={styles.card}
             activeOpacity={0.9}
             onPress={() => router.replace('/(seeker)/home')}
           >
             <View style={styles.cardTopRow}>
-              <View style={styles.cardIconWrap}>
-                <Ionicons name="eye-outline" size={26} color={colors.white} />
+              <View style={[styles.cardIconWrap, styles.cardIconWrapDark]}>
+                <Ionicons name="eye-outline" size={26} color={colors.textPrimary} />
               </View>
-              <View style={[styles.tagPill, styles.tagPillScout]}>
+              <View style={[styles.tagPill, styles.tagPillSeeker]}>
                 <Ionicons name="eye" size={11} color={colors.onRed} />
-                <Text style={[styles.tagPillText, styles.tagPillScoutText]}>SEEKER</Text>
+                <Text style={[styles.tagPillText, styles.tagPillSeekerText]}>SEEKER</Text>
               </View>
             </View>
 
-            <Text style={styles.cardHeadlineLight}>Open Let Me Check as a Seeker first</Text>
-            <Text style={styles.cardLeadLight}>
+            <Text style={styles.cardHeadline}>Open Let Me Check as a Seeker first</Text>
+            <Text style={styles.cardLead}>
               Browse and request checks now. You can activate Scout from your profile any time.
             </Text>
 
-            <View style={styles.cardCtaRowLight}>
-              <Text style={styles.cardCtaTextLight}>Continue</Text>
-              <Ionicons name="arrow-forward" size={14} color={colors.onRed} />
+            <View style={styles.cardCtaRow}>
+              <Text style={styles.cardCtaText}>Continue</Text>
+              <Ionicons name="arrow-forward" size={14} color={colors.red} />
             </View>
           </TouchableOpacity>
 
@@ -163,10 +163,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.red,
     borderColor: colors.red,
     overflow: 'hidden', // clip the CtaGlow gradient to the rounded corners
-  },
-  cardSeeker: {
-    backgroundColor: colors.textPrimary, // black — distinct from the red Scout card
-    borderColor: colors.textPrimary,
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -283,8 +279,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   tagPillSeeker: {
-    backgroundColor: 'rgba(218,37,29,0.08)',
-    borderColor: 'rgba(218,37,29,0.3)',
+    backgroundColor: colors.red, // solid red badge — highlights SEEKER on the light card
+    borderColor: colors.red,
   },
   tagPillScout: {
     backgroundColor: 'rgba(255,255,255,0.18)',
@@ -295,7 +291,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 2.2,
   },
-  tagPillSeekerText: { color: colors.red },
+  tagPillSeekerText: { color: colors.onRed }, // white on the solid red SEEKER badge
   tagPillScoutText: { color: colors.onRed },
 
   foot: {
