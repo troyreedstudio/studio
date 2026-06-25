@@ -59,16 +59,17 @@ export default function RoleScreen() {
               onPress={() => setSelected('both')}
               activeOpacity={0.9}
             >
+              <CtaGlow radius={18} />
               <View style={styles.roleTop}>
                 <View style={styles.heroIcons}>
-                  <View style={styles.roleIconWrap}>
+                  <View style={styles.heroIconWrap}>
                     <Ionicons name="eye-outline" size={22} color={colors.white} />
                   </View>
-                  <View style={styles.roleIconWrap}>
+                  <View style={styles.heroIconWrap}>
                     <Ionicons name="videocam-outline" size={22} color={colors.white} />
                   </View>
                 </View>
-                {selected === 'both' && <Ionicons name="checkmark-circle" size={24} color={colors.verified} />}
+                {selected === 'both' && <Ionicons name="checkmark-circle" size={24} color={colors.white} />}
               </View>
               <Text style={styles.heroTitle}>Seeker + Scout</Text>
               <Text style={styles.heroSub}>
@@ -77,7 +78,7 @@ export default function RoleScreen() {
               <View style={styles.perkList}>
                 {BOTH_PERKS.map((p, i) => (
                   <View key={i} style={styles.perkRow}>
-                    <Ionicons name="checkmark" size={14} color={colors.verified} />
+                    <Ionicons name="checkmark" size={14} color={colors.white} />
                     <Text style={styles.perkText}>{p}</Text>
                   </View>
                 ))}
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
   // Selected (DARK hero card): seamless — keep the dark bg + dark border (no red ring);
   // selection is shown by the green check. (Swap borderColor to colors.red to bring the ring back.)
   heroCardActive: {
-    borderColor: colors.textPrimary,
+    borderColor: 'rgba(255,255,255,0.6)', // white-ish border when selected (reads on red)
   },
 
   // HERO (Both)
@@ -220,12 +221,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1.6,
   },
   heroCard: {
-    backgroundColor: colors.textPrimary,
+    backgroundColor: colors.red, // red gradient hero (matches the CONTINUE button) — seamless red bookend
     borderWidth: 1.5,
-    borderColor: colors.textPrimary,
+    borderColor: colors.red,
     borderRadius: 18,
     padding: 20,
     paddingTop: 22,
+    overflow: 'hidden', // clip the CtaGlow gradient to the rounded corners
   },
   heroIcons: { flexDirection: 'row', gap: 8 },
   heroTitle: {
@@ -282,6 +284,14 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     backgroundColor: colors.textPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.18)', // translucent white circle on the red hero card
     alignItems: 'center',
     justifyContent: 'center',
   },
