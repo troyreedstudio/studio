@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   legal: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: colors.textTertiary,
+    color: colors.textSecondary, // one notch darker so the legal line is legible
     textAlign: 'center',
     paddingHorizontal: 16,
     lineHeight: 16,
