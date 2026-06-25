@@ -12,7 +12,6 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
-import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 export default function PersonalInfoScreen() {
   const router = useRouter();
@@ -152,12 +151,11 @@ export default function PersonalInfoScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.primaryBtn, ctaGlowShadow, !ready && styles.primaryBtnDisabled]}
+            style={[styles.primaryBtn, !ready && styles.primaryBtnDisabled]}
             disabled={!ready}
             onPress={() => router.push('/onboarding/permissions')}
             activeOpacity={0.85}
           >
-            {ready && <CtaGlow radius={14} />}
             <Text style={[styles.primaryBtnText, !ready && styles.primaryBtnTextDisabled]}>
               CONTINUE
             </Text>
@@ -346,18 +344,21 @@ const styles = StyleSheet.create({
   },
 
   primaryBtn: {
-    backgroundColor: colors.red,
+    backgroundColor: colors.buttonGrey,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
   },
   primaryBtnDisabled: {
-    backgroundColor: colors.border,
+    backgroundColor: '#F1F2F4',
+    borderColor: colors.border,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.onRed,
+    color: colors.textPrimary,
     fontSize: 13,
     letterSpacing: 3,
   },

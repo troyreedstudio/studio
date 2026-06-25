@@ -14,7 +14,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COUNTRIES, type Country } from '../data/markets';
 import { colors } from '../lib/theme';
-import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 /**
  * Detect the user's country code via IP geolocation (ipwho.is).
@@ -171,12 +170,11 @@ export default function CountryPickerScreen() {
 
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.cta, ctaGlowShadow, !selectedCode && styles.ctaDisabled]}
+            style={[styles.cta, !selectedCode && styles.ctaDisabled]}
             disabled={!selectedCode}
             onPress={handleContinue}
             activeOpacity={0.85}
           >
-            {!!selectedCode && <CtaGlow radius={14} />}
             <Text style={[styles.ctaText, !selectedCode && styles.ctaTextDisabled]}>
               CONTINUE
             </Text>
@@ -467,15 +465,20 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   cta: {
-    backgroundColor: colors.red,
+    backgroundColor: colors.buttonGrey,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
   },
-  ctaDisabled: { backgroundColor: colors.border },
+  ctaDisabled: {
+    backgroundColor: '#F1F2F4',
+    borderColor: colors.border,
+  },
   ctaText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.onRed,
+    color: colors.textPrimary,
     fontSize: 13,
     letterSpacing: 3,
   },

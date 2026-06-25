@@ -345,13 +345,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
   },
   primaryBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
     color: colors.textPrimary,
     fontSize: 13,
-    letterSpacing: 2.5,
+    letterSpacing: 3,
   },
 
   foot: {

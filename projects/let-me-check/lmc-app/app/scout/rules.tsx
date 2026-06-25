@@ -15,7 +15,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { recordDocConsent } from '../lib/consent';
 import { colors } from '../lib/theme';
-import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 // Source of truth: docs/SCOUT-CONDUCT.md + docs/FILMING-POLICY.md.
 // Binding legal text lives in the full Scout Agreement (/legal/code) — these
@@ -197,7 +196,7 @@ export default function ScoutRulesScreen() {
             </ScrollView>
 
             <TouchableOpacity
-              style={[styles.primaryBtn, ctaGlowShadow, !bothGated && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, !bothGated && styles.primaryBtnDisabled]}
               disabled={!bothGated}
               onPress={() => {
                 // SAFE-02: record Scout Code of Conduct acceptance before
@@ -207,7 +206,6 @@ export default function ScoutRulesScreen() {
               }}
               activeOpacity={0.85}
             >
-              {bothGated && <CtaGlow radius={14} />}
               <Text style={[styles.primaryBtnText, !bothGated && styles.primaryBtnTextDisabled]}>
                 {bothGated ? 'CONTINUE' : 'TICK BOTH TO CONTINUE'}
               </Text>
@@ -430,22 +428,23 @@ const styles = StyleSheet.create({
   },
 
   primaryBtn: {
-    backgroundColor: colors.red,
+    backgroundColor: colors.buttonGrey,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginTop: 12,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
   },
   primaryBtnDisabled: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
+    backgroundColor: '#F1F2F4',
     borderColor: colors.border,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.onRed,
+    color: colors.textPrimary,
     fontSize: 13,
-    letterSpacing: 2.5,
+    letterSpacing: 3,
   },
-  primaryBtnTextDisabled: { color: colors.textTertiary, letterSpacing: 2 },
+  primaryBtnTextDisabled: { color: colors.textTertiary },
 });
