@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   tagPillScoutText: { color: colors.red },
 
   primaryBtn: {
-    backgroundColor: '#C8CDD3',
+    backgroundColor: colors.buttonGrey,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',

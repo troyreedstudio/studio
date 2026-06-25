@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5E7EB', // grey backdrop to match the Apple button
+    backgroundColor: colors.buttonGrey, // grey-button token (locked standard)
     borderWidth: 1,
     borderColor: '#D1D5DB',
     borderRadius: 14,
