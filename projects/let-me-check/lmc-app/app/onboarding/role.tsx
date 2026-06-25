@@ -142,11 +142,10 @@ export default function RoleScreen() {
           </TouchableOpacity>
 
           {/* CTA */}
-          <TouchableOpacity style={[styles.primaryBtn, ctaGlowShadow]} onPress={handleContinue} activeOpacity={0.85}>
-            <CtaGlow radius={14} />
+          <TouchableOpacity style={styles.primaryBtn} onPress={handleContinue} activeOpacity={0.85}>
             <View style={styles.primaryBtnInner}>
               <Text style={styles.primaryBtnText}>CONTINUE</Text>
-              <Ionicons name="arrow-forward" size={16} color={colors.onRed} />
+              <Ionicons name="arrow-forward" size={16} color={colors.textPrimary} />
             </View>
           </TouchableOpacity>
 
@@ -340,7 +339,7 @@ const styles = StyleSheet.create({
   tagPillScoutText: { color: colors.red },
 
   primaryBtn: {
-    backgroundColor: colors.red,
+    backgroundColor: '#C8CDD3',
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
@@ -350,7 +349,7 @@ const styles = StyleSheet.create({
   primaryBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.onRed,
+    color: colors.textPrimary,
     fontSize: 13,
     letterSpacing: 2.5,
   },
