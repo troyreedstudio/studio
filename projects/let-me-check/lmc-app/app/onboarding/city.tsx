@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: colors.textPrimary,
+    backgroundColor: '#C8CDD3', // medium Uber-grey chip (was black) — blends with the white/grey
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   monoText: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: 17,
-    color: colors.white,
+    color: colors.textPrimary, // dark letter on the grey chip (turns white when selected/red)
     letterSpacing: 1,
   },
   monoTextSelected: {
