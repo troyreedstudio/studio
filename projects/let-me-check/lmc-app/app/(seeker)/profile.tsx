@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, StatusBar, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -161,8 +162,15 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Stats Row */}
+        {/* Stats Row — hero card with brand sheen */}
         <View style={styles.statsRow}>
+          <LinearGradient
+            colors={['rgba(218,37,29,0.18)', 'rgba(218,37,29,0.05)', 'rgba(255,255,255,0)']}
+            locations={[0, 0.45, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{stats.count}</Text>
             <Text style={styles.statLabel}>CHECKS</Text>
@@ -322,8 +330,9 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     borderRadius: 16,
+    overflow: 'hidden',
     marginHorizontal: 22,
     marginTop: 8,
     marginBottom: 24,
@@ -331,6 +340,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 5,
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: {
@@ -363,6 +377,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: 18,
     overflow: 'hidden',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
   },
   settingRow: {
     flexDirection: 'row',
@@ -399,6 +418,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,203,71,0.35)',
     marginBottom: 18,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
   },
   referralLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   referralIconWrap: {

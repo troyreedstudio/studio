@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useScoutEarnings } from '../state/scout-earnings';
 import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
 import { colors } from '../lib/theme';
@@ -122,8 +123,15 @@ export default function EarningsScreen() {
             </View>
           ) : (
             <>
-              {/* Big total card */}
+              {/* Big total card — hero with brand sheen */}
               <View style={styles.totalCard}>
+                <LinearGradient
+                  colors={['rgba(218,37,29,0.18)', 'rgba(218,37,29,0.05)', 'rgba(255,255,255,0)']}
+                  locations={[0, 0.45, 1]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
                 <Text style={styles.totalLabel}>ALL TIME</Text>
                 <Text style={styles.totalValue}>${monthTotal.toFixed(2)}</Text>
                 <View style={styles.totalRow}>
@@ -412,18 +420,19 @@ const styles = StyleSheet.create({
   },
 
   totalCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     borderRadius: 18,
+    overflow: 'hidden',
     marginHorizontal: 22,
     padding: 22,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 22,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 5,
   },
   totalLabel: {
     fontFamily: 'Inter_700Bold',
@@ -504,6 +513,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 22,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
   },
   barsRow: {
     flexDirection: 'row',
@@ -552,6 +566,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: 22,
     alignItems: 'center',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: {
@@ -656,10 +675,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
   },
   balanceRow: {
     flexDirection: 'row',

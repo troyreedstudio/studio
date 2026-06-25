@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
 import { listMyChecks, listMyRatings, type CheckRow } from '../lib/checks';
@@ -77,6 +78,13 @@ export default function HistoryScreen() {
         </View>
 
         <View style={styles.statsRow}>
+          <LinearGradient
+            colors={['rgba(218,37,29,0.18)', 'rgba(218,37,29,0.05)', 'rgba(255,255,255,0)']}
+            locations={[0, 0.45, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{rows.length}</Text>
             <Text style={styles.statLabel}>Total Checks</Text>
@@ -177,8 +185,10 @@ const styles = StyleSheet.create({
   backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 14 },
   title: { fontFamily: 'Inter_700Bold', fontSize: 30, color: colors.textPrimary, letterSpacing: 0.4 },
   statsRow: {
-    flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 16, marginHorizontal: 20,
-    marginVertical: 16, padding: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+    flexDirection: 'row', backgroundColor: colors.white, borderRadius: 16, overflow: 'hidden',
+    marginHorizontal: 20, marginVertical: 16, padding: 18, borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center', shadowColor: colors.black, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12, shadowRadius: 18, elevation: 5,
   },
   statCard: { flex: 1, alignItems: 'center' },
   statValue: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 24, color: colors.textPrimary, letterSpacing: 0.3, marginBottom: 4 },
@@ -196,6 +206,7 @@ const styles = StyleSheet.create({
   checkCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.bg,
     borderRadius: 14, marginHorizontal: 20, marginBottom: 8, padding: 16, borderWidth: 1, borderColor: colors.border,
+    shadowColor: colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 1,
   },
   checkLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   venueAvatar: {
