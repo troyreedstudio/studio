@@ -12,6 +12,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { addRecurring, type RecurringFreq } from '../state/recurring';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 const FREQS: { key: RecurringFreq; label: string; sub: string }[] = [
   { key: 'daily', label: 'Daily', sub: 'Every day' },
@@ -144,7 +145,8 @@ export default function RecurringSetupScreen() {
 
         {/* CTA */}
         <View style={styles.ctaWrap}>
-          <TouchableOpacity style={styles.cta} activeOpacity={0.85} onPress={schedule}>
+          <TouchableOpacity style={[styles.cta, ctaGlowShadow]} activeOpacity={0.85} onPress={schedule}>
+            <CtaGlow radius={14} />
             <Ionicons name="repeat" size={16} color={colors.onRed} />
             <Text style={styles.ctaText}>SCHEDULE THIS CHECK</Text>
           </TouchableOpacity>

@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type Tier = {
   id: 'free' | 'plus' | 'pro';
@@ -168,11 +169,13 @@ export default function MembershipScreen() {
                   style={[
                     styles.cta,
                     tier.id === 'free' && styles.ctaFree,
+                    tier.id !== 'free' && ctaGlowShadow,
                   ]}
                   onPress={() => handleUpgrade(tier)}
                   disabled={tier.id === 'free'}
                   activeOpacity={0.85}
                 >
+                  {tier.id !== 'free' && <CtaGlow radius={12} />}
                   <Text style={[styles.ctaText, tier.id === 'free' && styles.ctaTextFree]}>
                     {tier.cta}
                   </Text>

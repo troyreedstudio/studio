@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecurring, type RecurringFreq } from '../state/recurring';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 function freqLabel(freq: RecurringFreq): string {
   return freq === 'daily' ? 'Every day' : freq === 'weekly' ? 'Every week' : 'Every month';
@@ -60,10 +61,11 @@ export default function RecurringScreen() {
                 Schedule a Scout to check a place on repeat, like your gym on Monday mornings or JFK before every flight.
               </Text>
               <TouchableOpacity
-                style={styles.cta}
+                style={[styles.cta, ctaGlowShadow]}
                 activeOpacity={0.85}
                 onPress={() => router.push({ pathname: '/(seeker)/search', params: { mode: 'recurring' } })}
               >
+                <CtaGlow radius={12} />
                 <Ionicons name="add" size={16} color={colors.onRed} />
                 <Text style={styles.ctaText}>NEW RECURRING CHECK</Text>
               </TouchableOpacity>

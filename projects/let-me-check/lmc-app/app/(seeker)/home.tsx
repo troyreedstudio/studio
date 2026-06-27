@@ -7,6 +7,7 @@ import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
@@ -1234,10 +1235,11 @@ function RequestSheet({ pinName, market, isPartner, onCancel, onRequest }: Reque
 
       {/* Request check CTA */}
       <TouchableOpacity
-        style={reqStyles.ctaBtn}
+        style={[reqStyles.ctaBtn, ctaGlowShadow]}
         onPress={handleRequest}
         activeOpacity={0.85}
       >
+        <CtaGlow radius={14} />
         <Text style={reqStyles.ctaBtnText}>{`REQUEST CHECK · ${priceStr}`}</Text>
       </TouchableOpacity>
     </View>
