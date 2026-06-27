@@ -54,7 +54,7 @@ export default function RecurringScreen() {
           {list.length === 0 ? (
             <View style={styles.emptyWrap}>
               <View style={styles.emptyIcon}>
-                <Ionicons name="time-outline" size={36} color={colors.textTertiary} />
+                <Ionicons name="time-outline" size={36} color={colors.red} />
               </View>
               <Text style={styles.emptyTitle}>No recurring checks yet</Text>
               <Text style={styles.emptySub}>
@@ -153,9 +153,9 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(218,37,29,0.08)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(218,37,29,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
