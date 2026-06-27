@@ -177,8 +177,8 @@ const styles = StyleSheet.create({
     width: 50,
   },
   title: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 17,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 15,
     color: colors.textPrimary,
     letterSpacing: 0.3,
   },

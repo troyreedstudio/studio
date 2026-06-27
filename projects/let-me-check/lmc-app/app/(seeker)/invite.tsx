@@ -178,10 +178,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 28,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 26,
     color: colors.textPrimary,
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   rewardCard: {
     backgroundColor: colors.surface,

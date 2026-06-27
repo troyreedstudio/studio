@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   // Check circle: verified green — semantic "success / delivered" state
   checkCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(22,163,74,0.12)', borderWidth: 2, borderColor: colors.verified, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   checkMark: { fontFamily: 'Inter_700Bold', fontSize: 36, color: colors.verified },
-  readyTitle: { fontFamily: 'Inter_700Bold', fontSize: 26, color: colors.textPrimary, letterSpacing: 0.5, marginBottom: 8 },
+  readyTitle: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 24, color: colors.textPrimary, letterSpacing: 0.3, marginBottom: 8 },
   venueName: { fontFamily: 'Inter_700Bold', fontSize: 18, color: colors.textSecondary, letterSpacing: 0.4 },
   // Video box: stays dark — video content looks best on a dark surface
   videoBox: { height: 220, backgroundColor: '#0d0d0d', borderRadius: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#1e1e1e', marginBottom: 18, position: 'relative', overflow: 'hidden' },

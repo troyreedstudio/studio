@@ -315,8 +315,8 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   title: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 24,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 22,
     color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 6,

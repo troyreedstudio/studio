@@ -285,8 +285,8 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 21,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 19,
     color: colors.textPrimary,
     letterSpacing: 0.2,
     textAlign: 'center',
