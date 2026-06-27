@@ -255,9 +255,9 @@ function CityCard({
       activeOpacity={0.75}
       onPress={onPress}
     >
-      <View style={[styles.monoWrap, selected && tappable && styles.monoWrapSelected]}>
-        <CtaGlow radius={10} />
-        <Text style={[styles.monoText, selected && tappable && styles.monoTextSelected]}>
+      <View style={[styles.monoWrap, !isLive && styles.monoWrapSoon, isLive && selected && styles.monoWrapSelected]}>
+        {isLive && <CtaGlow radius={18} />}
+        <Text style={[styles.monoText, selected && isLive && styles.monoTextSelected]}>
           {monogram}
         </Text>
       </View>
@@ -432,9 +432,9 @@ const styles = StyleSheet.create({
   cardDimmed: { opacity: 0.5 },
 
   monoWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.red, // transitional red gradient avatar (CtaGlow renders on top)
     overflow: 'hidden',
     justifyContent: 'center',
@@ -443,11 +443,14 @@ const styles = StyleSheet.create({
   monoWrapSelected: {
     backgroundColor: colors.red,
   },
+  monoWrapSoon: {
+    backgroundColor: '#9CA3AF', // muted grey avatar for non-live cities (red is reserved for LIVE so it pops)
+  },
   monoText: {
-    fontFamily: 'Orbitron_700Bold',
-    fontSize: 17,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 16,
     color: colors.white, // white initial on the red avatar
-    letterSpacing: 1,
+    letterSpacing: 0,
   },
   monoTextSelected: {
     color: colors.white,
