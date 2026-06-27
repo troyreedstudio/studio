@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
   },
   switchModeBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.textPrimary,
+    color: colors.red,
     fontSize: 12,
     letterSpacing: 2,
   },
