@@ -2416,8 +2416,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.96)',
-    borderWidth: 1,
-    borderColor: colors.amber,
+    borderWidth: 1.5,
+    borderColor: colors.red, // outlined in red (was amber)
     shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowRadius: 6,
@@ -2435,12 +2435,12 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: colors.amber,
+    backgroundColor: colors.red,
   },
   waitlistBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.black,
+    color: colors.onRed,
     letterSpacing: 1,
   },
   locChevron: {
