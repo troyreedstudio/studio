@@ -277,7 +277,7 @@ export default function ScoutProfileScreen() {
           onPress={handleSwitchToSeeker}
           activeOpacity={0.85}
         >
-          <Ionicons name="swap-horizontal" size={16} color={colors.textPrimary} />
+          <Ionicons name="swap-horizontal" size={16} color={colors.red} />
           <Text style={styles.switchModeBtnText}>SWITCH TO SEEKER MODE</Text>
         </TouchableOpacity>
 
