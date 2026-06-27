@@ -110,25 +110,7 @@ export default function HowItWorksScreen() {
 
       {/* Choose-your-profile CTA */}
       <SafeAreaView style={styles.bottom}>
-        <MaskedView
-          style={styles.brandMaskWrap}
-          maskElement={
-            <View style={styles.brandMaskCenter}>
-              <Text
-                style={styles.brandWord}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.5}
-              >
-                LMC
-              </Text>
-            </View>
-          }
-        >
-          {/* Solid white wordmark on red — premium, crisp */}
-          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: INK }]} />
-        </MaskedView>
-        <Text style={[styles.brandTag, { color: INK_MUTED }]}>Know Before You Go</Text>
+        <Text style={[styles.brandTag, { color: INK }]}>Know Before You Go</Text>
 
         <TouchableOpacity
           style={styles.primaryBtn}
@@ -222,11 +204,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   brandTag: {
-    fontFamily: 'Inter_300Light',
-    fontSize: 13,
-    letterSpacing: 2,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 28,
+    letterSpacing: 0.4,
+    lineHeight: 34,
     textAlign: 'center',
-    marginBottom: 14,
+    marginBottom: 18,
   },
 
   // Bottom CTA block — transparent over the red bg
