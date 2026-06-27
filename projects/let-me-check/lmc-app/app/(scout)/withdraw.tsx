@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { requestPayout } from '../lib/payments';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
@@ -139,8 +140,8 @@ export default function WithdrawScreen() {
         {/* Bank destination */}
         <Text style={[styles.sectionLabel, { marginTop: 24 }]}>DEPOSITS TO</Text>
         <View style={styles.bankCard}>
-          <View style={styles.bankIcon}>
-            <Text style={styles.bankEmoji}>🏦</Text>
+          <View style={[styles.bankIcon, styles.bankIconRed]}>
+            <Ionicons name="business-outline" size={20} color={colors.red} />
           </View>
           <View style={styles.bankInfo}>
             <Text style={styles.bankName}>Chase Checking</Text>
@@ -317,7 +318,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  bankEmoji: { fontSize: 20 },
+  bankIconRed: {
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderColor: 'rgba(218,37,29,0.20)',
+  },
   bankInfo: { flex: 1 },
   bankName: {
     fontFamily: 'CormorantGaramond_700Bold',

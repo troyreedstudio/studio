@@ -12,6 +12,7 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COUNTRY_DIAL_CODES, type DialCode } from '../data/markets';
@@ -233,13 +234,13 @@ export default function SignUpScreen() {
                       onPress={() => goNext('phone')}
                       activeOpacity={0.85}
                     >
-                      <Text style={styles.methodIcon}>✆</Text>
+                      <Ionicons name="call-outline" size={18} color={colors.textPrimary} style={styles.methodIconIon} />
                       <Text style={styles.methodLabel}>Continue with Phone</Text>
                       <View style={styles.methodSpacer} />
                     </TouchableOpacity>
                   ) : (
                     <View style={[styles.methodBtn, styles.methodBtnDisabled]}>
-                      <Text style={[styles.methodIcon, styles.methodLabelDisabled]}>✆</Text>
+                      <Ionicons name="call-outline" size={18} color={colors.textTertiary} style={styles.methodIconIon} />
                       <Text style={[styles.methodLabel, styles.methodLabelDisabled]}>
                         Phone — coming soon
                       </Text>
@@ -626,6 +627,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
     color: colors.textPrimary,
+    width: 22,
+    textAlign: 'center',
+  },
+  methodIconIon: {
     width: 22,
     textAlign: 'center',
   },

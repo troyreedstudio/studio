@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import {
   signInWithApple,
   signInWithGoogle,
@@ -107,12 +108,12 @@ export default function SignInScreen() {
                       onPress={() => setStep('phone')}
                       activeOpacity={0.85}
                     >
-                      <Text style={styles.methodIcon}>✆</Text>
+                      <Ionicons name="call-outline" size={18} color={colors.textPrimary} style={styles.methodIconIon} />
                       <Text style={styles.methodLabel}>Continue with Phone</Text>
                     </TouchableOpacity>
                   ) : (
                     <View style={[styles.methodBtn, styles.methodBtnDisabled]}>
-                      <Text style={[styles.methodIcon, styles.methodLabelDisabled]}>✆</Text>
+                      <Ionicons name="call-outline" size={18} color={colors.textTertiary} style={styles.methodIconIon} />
                       <Text style={[styles.methodLabel, styles.methodLabelDisabled]}>
                         Phone — coming soon
                       </Text>
@@ -337,6 +338,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
     color: colors.textPrimary,
+    width: 22,
+    textAlign: 'center',
+  },
+  methodIconIon: {
     width: 22,
     textAlign: 'center',
   },
