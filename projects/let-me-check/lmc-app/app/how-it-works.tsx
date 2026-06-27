@@ -205,10 +205,11 @@ const styles = StyleSheet.create({
   },
   brandTag: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 28,
-    letterSpacing: 0.4,
-    lineHeight: 34,
+    fontSize: 26,
+    letterSpacing: 1.5,
+    lineHeight: 32,
     textAlign: 'center',
+    textTransform: 'uppercase',
     marginBottom: 18,
   },
 
