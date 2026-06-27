@@ -23,6 +23,7 @@ import {
 import { getIntendedRole } from '../state/intended-role';
 import { setManualLocation } from '../state/location';
 import { colors } from '../lib/theme';
+import { CtaGlow } from '../components/CtaGlow';
 
 type Status = MarketStatus;
 type City = Market & { scouts: number; status: MarketStatus };
@@ -255,6 +256,7 @@ function CityCard({
       onPress={onPress}
     >
       <View style={[styles.monoWrap, selected && tappable && styles.monoWrapSelected]}>
+        <CtaGlow radius={10} />
         <Text style={[styles.monoText, selected && tappable && styles.monoTextSelected]}>
           {monogram}
         </Text>
@@ -433,7 +435,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#C8CDD3', // medium Uber-grey chip (was black) — blends with the white/grey
+    backgroundColor: colors.red, // transitional red gradient avatar (CtaGlow renders on top)
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -443,7 +446,7 @@ const styles = StyleSheet.create({
   monoText: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: 17,
-    color: colors.textPrimary, // dark letter on the grey chip (turns white when selected/red)
+    color: colors.white, // white initial on the red avatar
     letterSpacing: 1,
   },
   monoTextSelected: {
