@@ -113,9 +113,6 @@ export default function ScoutApprovedScreen() {
             <View style={styles.hero}>
               <View style={styles.checkWrap}>
                 <Animated.View
-                  style={[styles.ring, { opacity: 0.18, transform: [{ scale: breath }] }]}
-                />
-                <Animated.View
                   style={[styles.checkCircle, { transform: [{ scale: breath }] }]}
                 >
                   <Text style={styles.checkGlyph}>✓</Text>
@@ -159,9 +156,7 @@ export default function ScoutApprovedScreen() {
                   key={i}
                   style={[styles.listRow, i < ON_FILE.length - 1 && styles.listRowDivider]}
                 >
-                  <View style={styles.greenCheck}>
-                    <Ionicons name="checkmark" size={14} color={colors.white} />
-                  </View>
+                  <Ionicons name="checkmark-circle-outline" size={20} color={colors.verified} style={styles.greenCheck} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.listTitle}>{row.title}</Text>
                     <Text style={styles.listWhy}>{row.detail}</Text>
@@ -301,16 +296,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.verified,
   },
   checkCircle: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     backgroundColor: colors.verified,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.verified,
-    shadowOpacity: 0.35,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 0 },
   },
   checkGlyph: {
     fontFamily: 'Inter_700Bold',
@@ -431,12 +422,6 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   greenCheck: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.verified,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginTop: 1,
   },
   listTitle: {
