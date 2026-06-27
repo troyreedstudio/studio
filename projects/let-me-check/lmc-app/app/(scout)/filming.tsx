@@ -392,8 +392,8 @@ export default function FilmingScreen() {
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 10,
-                backgroundColor: outOfRange ? 'rgba(255,203,71,0.08)' : 'rgba(22,163,74,0.08)',
-                borderColor: outOfRange ? colors.amber : colors.verified,
+                backgroundColor: outOfRange ? 'rgba(176,21,27,0.06)' : 'rgba(22,163,74,0.08)',
+                borderColor: outOfRange ? colors.danger : colors.verified,
                 borderWidth: 1,
                 borderRadius: 14,
                 paddingVertical: 14,
@@ -404,7 +404,7 @@ export default function FilmingScreen() {
               <Ionicons
                 name={outOfRange ? 'walk' : 'checkmark-circle'}
                 size={22}
-                color={outOfRange ? colors.amber : colors.verified}
+                color={outOfRange ? colors.danger : colors.verified}
               />
               <Text style={{ flex: 1, color: colors.textPrimary, fontSize: 14, fontWeight: '700', lineHeight: 19 }}>
                 {outOfRange
@@ -583,7 +583,7 @@ export default function FilmingScreen() {
                   </View>
                 </View>
               </TouchableOpacity>
-              <Text style={[styles.recordHint, outOfRange && { color: '#FFCB47' }]}>
+              <Text style={[styles.recordHint, outOfRange && { color: colors.danger }]}>
                 {recording
                   ? `Recording… ${recordSecs}s of 15s`
                   : outOfRange

@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   subEmphasis: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    color: colors.amber,
+    color: colors.danger,
     letterSpacing: 2,
     textAlign: 'center',
   },

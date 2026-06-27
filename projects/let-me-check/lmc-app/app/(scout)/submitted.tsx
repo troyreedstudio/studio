@@ -100,9 +100,9 @@ export default function SubmittedScreen() {
         <SafeAreaView style={styles.safe}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <Animated.View style={[styles.body, { opacity: fade }]}>
-              <View style={[styles.heroCheckRing, { borderColor: colors.amber }]}>
-                <View style={[styles.heroCheckInner, { backgroundColor: colors.amber }]}>
-                  <Ionicons name="alert" size={28} color={colors.black} />
+              <View style={[styles.heroCheckRing, { borderColor: colors.danger }]}>
+                <View style={[styles.heroCheckInner, { backgroundColor: colors.danger }]}>
+                  <Ionicons name="alert" size={28} color={colors.white} />
                 </View>
               </View>
               <Text style={styles.title}>This video couldn't be verified</Text>
@@ -112,7 +112,7 @@ export default function SubmittedScreen() {
                 delivered, and there's no payout for this one.
               </Text>
               <View style={styles.rejectionNote}>
-                <Ionicons name="information-circle" size={14} color={colors.amber} />
+                <Ionicons name="information-circle" size={14} color={colors.danger} />
                 <Text style={styles.rejectionNoteText}>
                   No worries — you haven't lost anything. Just make sure you're at the venue
                   before you start filming.
@@ -225,7 +225,7 @@ export default function SubmittedScreen() {
 
             {/* Quality / rejection note — payment is conditional */}
             <View style={styles.rejectionNote}>
-              <Ionicons name="alert-circle" size={14} color={colors.amber} />
+              <Ionicons name="alert-circle" size={14} color={colors.danger} />
               <Text style={styles.rejectionNoteText}>
                 Payment clears once the Seeker accepts the video. Low-quality footage, wrong venue, or GPS mismatch can lead to rejection and no payout. See{' '}
                 <Text
@@ -532,9 +532,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,203,71,0.10)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.35)',
+    borderColor: colors.red,
   },
   earningStatusPillCleared: {
     backgroundColor: 'rgba(22,163,74,0.10)',
@@ -544,13 +544,13 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: colors.amber,
+    backgroundColor: colors.danger,
   },
   earningStatusDotCleared: { backgroundColor: colors.verified },
   earningStatusText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.amber,
+    color: colors.danger,
     letterSpacing: 1.4,
   },
   earningStatusTextCleared: { color: colors.verified },
@@ -566,12 +566,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: 'rgba(255,203,71,0.06)',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 11,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.3)',
+    borderColor: colors.red,
     marginTop: 12,
   },
   rejectionNoteText: {
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
   },
   rejectionNoteLink: {
     fontFamily: 'Inter_700Bold',
-    color: colors.amber,
+    color: colors.red,
   },
 
   statsRow: {

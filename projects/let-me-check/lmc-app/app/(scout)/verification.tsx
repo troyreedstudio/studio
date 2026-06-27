@@ -138,7 +138,7 @@ export default function VerificationScreen() {
         {state.phase === 'pending' && (
           <>
             <View style={styles.pendingCard}>
-              <Ionicons name="time-outline" size={32} color={colors.amber} />
+              <Ionicons name="time-outline" size={32} color={colors.danger} />
               <Text style={styles.pendingTitle}>Verification pending</Text>
               <Text style={styles.pendingSub}>
                 Stripe is reviewing your details. This usually completes within a few minutes. You can go online once verification is confirmed.
@@ -155,7 +155,7 @@ export default function VerificationScreen() {
         {state.phase === 'action_needed' && (
           <>
             <View style={styles.warningCard}>
-              <Ionicons name="alert-circle-outline" size={32} color={colors.amber} />
+              <Ionicons name="alert-circle-outline" size={32} color={colors.danger} />
               <Text style={styles.warningTitle}>Action needed</Text>
               <Text style={styles.warningBody}>
                 Stripe has flagged a verification requirement for your account. Open Stripe to review and complete the required steps.
@@ -330,12 +330,12 @@ const styles = StyleSheet.create({
   },
 
   pendingCard: {
-    backgroundColor: 'rgba(255,203,71,0.06)',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 22,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.35)',
+    borderColor: colors.red,
     alignItems: 'center',
     gap: 12,
     marginBottom: 22,
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   pendingTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 18,
-    color: colors.amber,
+    color: colors.danger,
     letterSpacing: 0.2,
     textAlign: 'center',
   },
@@ -377,12 +377,12 @@ const styles = StyleSheet.create({
   },
 
   warningCard: {
-    backgroundColor: 'rgba(255,203,71,0.07)',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 22,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.35)',
+    borderColor: colors.red,
     alignItems: 'center',
     gap: 10,
     marginBottom: 24,
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   warningTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: colors.amber,
+    color: colors.danger,
     letterSpacing: 0.2,
     textAlign: 'center',
   },

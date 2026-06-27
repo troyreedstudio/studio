@@ -210,7 +210,7 @@ export default function EarningsScreen() {
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={[styles.statValue, { color: colors.amber }]}>
+                  <Text style={styles.statValue}>
                     {data?.avgRating != null ? data.avgRating.toFixed(1) : '--'}
                   </Text>
                   <Text style={styles.statLabel}>RATING</Text>
@@ -644,9 +644,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,203,71,0.10)',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.35)',
+    borderColor: colors.red,
   },
   statusBadgePaid: {
     backgroundColor: 'rgba(22,163,74,0.10)',
@@ -656,13 +656,13 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: colors.amber,
+    backgroundColor: colors.danger,
   },
   statusDotPaid: { backgroundColor: colors.verified },
   statusText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.amber,
+    color: colors.danger,
     letterSpacing: 1.4,
   },
   statusTextPaid: { color: colors.verified },

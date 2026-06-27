@@ -302,7 +302,7 @@ export default function ScoutDashboard() {
 
                 {taken && (
                   <View style={styles.takenNote}>
-                    <Ionicons name="alert-circle" size={13} color={colors.amber} />
+                    <Ionicons name="alert-circle" size={13} color={colors.danger} />
                     <Text style={styles.takenNoteText}>
                       Another Scout grabbed that one. Showing the latest open checks.
                     </Text>
@@ -333,7 +333,7 @@ export default function ScoutDashboard() {
             <View style={styles.emptyCard}>
               <View style={styles.emptyIconWrap}>
                 {locationDenied ? (
-                  <Ionicons name="location-outline" size={22} color={colors.amber} />
+                  <Ionicons name="location-outline" size={22} color={colors.danger} />
                 ) : (
                   <Ionicons name="radio-outline" size={22} color={colors.verified} />
                 )}
@@ -666,12 +666,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255,203,71,0.08)',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 11,
     paddingVertical: 9,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.3)',
+    borderColor: colors.red,
     marginBottom: 12,
   },
   takenNoteText: {

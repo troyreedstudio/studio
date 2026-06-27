@@ -107,7 +107,7 @@ export function CameraViewfinder({
           <View style={camStyles.topBar}>
             <View style={camStyles.statusPills}>
               <View style={camStyles.statusPill}>
-                <Ionicons name="location" size={10} color="#00FF7F" />
+                <Ionicons name="location" size={10} color="#16A34A" />
                 <Text style={camStyles.statusPillText}>GPS</Text>
               </View>
               <View style={camStyles.statusPill}>
@@ -206,9 +206,9 @@ const camStyles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(0,255,127,0.18)',
+    backgroundColor: 'rgba(22,163,74,0.18)',
     borderWidth: 1.5,
-    borderColor: 'rgba(0,255,127,0.6)',
+    borderColor: 'rgba(22,163,74,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -217,7 +217,7 @@ const camStyles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#00FF7F',
+    backgroundColor: '#16A34A',
     alignItems: 'center',
     justifyContent: 'center',
   },

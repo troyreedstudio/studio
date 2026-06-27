@@ -371,14 +371,14 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 999,
-    backgroundColor: colors.amber,
+    backgroundColor: 'rgba(176,21,27,0.10)',
     borderWidth: 1,
-    borderColor: '#C99A1F',
+    borderColor: colors.danger,
   },
   lastTakeBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.black,
+    color: colors.danger,
     letterSpacing: 1.4,
   },
   decisionTitle: {

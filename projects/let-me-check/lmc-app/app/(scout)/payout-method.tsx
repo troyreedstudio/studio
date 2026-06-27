@@ -208,7 +208,7 @@ export default function PayoutMethodScreen() {
         {state.phase === 'action_needed' && (
           <>
             <View style={styles.warningCard}>
-              <Ionicons name="warning-outline" size={24} color={colors.amber} />
+              <Ionicons name="warning-outline" size={24} color={colors.danger} />
               <Text style={styles.warningTitle}>Action needed</Text>
               <Text style={styles.warningBody}>
                 Stripe needs additional information to enable your payouts. Open your Stripe dashboard to complete the required steps.
@@ -442,12 +442,12 @@ const styles = StyleSheet.create({
   },
 
   warningCard: {
-    backgroundColor: 'rgba(255,203,71,0.07)',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 22,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.35)',
+    borderColor: colors.red,
     alignItems: 'center',
     gap: 10,
     marginBottom: 24,
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
   warningTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: colors.amber,
+    color: colors.danger,
     letterSpacing: 0.2,
     textAlign: 'center',
   },
