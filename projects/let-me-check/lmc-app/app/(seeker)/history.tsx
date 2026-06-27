@@ -79,8 +79,8 @@ export default function HistoryScreen() {
 
         <View style={styles.statsRow}>
           <LinearGradient
-            colors={['rgba(218,37,29,0.18)', 'rgba(218,37,29,0.05)', 'rgba(255,255,255,0)']}
-            locations={[0, 0.45, 1]}
+            colors={['#FF5247', '#DA251D', '#9E0E07']}
+            locations={[0, 0.5, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -185,15 +185,15 @@ const styles = StyleSheet.create({
   backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 14 },
   title: { fontFamily: 'Inter_700Bold', fontSize: 30, color: colors.textPrimary, letterSpacing: 0.4 },
   statsRow: {
-    flexDirection: 'row', backgroundColor: colors.white, borderRadius: 16, overflow: 'hidden',
-    marginHorizontal: 20, marginVertical: 16, padding: 18, borderWidth: 1, borderColor: colors.border,
+    flexDirection: 'row', backgroundColor: colors.red, borderRadius: 16, overflow: 'hidden',
+    marginHorizontal: 20, marginVertical: 16, padding: 18, borderWidth: 1, borderColor: colors.red,
     alignItems: 'center', shadowColor: colors.black, shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12, shadowRadius: 18, elevation: 5,
   },
   statCard: { flex: 1, alignItems: 'center' },
-  statValue: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 24, color: colors.textPrimary, letterSpacing: 0.3, marginBottom: 4 },
-  statLabel: { fontFamily: 'Inter_700Bold', fontSize: 9, color: colors.textTertiary, letterSpacing: 1.5, textTransform: 'uppercase' },
-  statDivider: { width: 1, height: 36, backgroundColor: colors.border },
+  statValue: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 24, color: colors.white, letterSpacing: 0.3, marginBottom: 4 },
+  statLabel: { fontFamily: 'Inter_700Bold', fontSize: 9, color: 'rgba(255,255,255,0.7)', letterSpacing: 1.5, textTransform: 'uppercase' },
+  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
   sectionLabel: {
     fontFamily: 'Inter_700Bold', fontSize: 11, color: colors.textTertiary, letterSpacing: 3,
     paddingHorizontal: 20, marginBottom: 12, textTransform: 'uppercase',

@@ -123,11 +123,11 @@ export default function EarningsScreen() {
             </View>
           ) : (
             <>
-              {/* Big total card — hero with brand sheen */}
+              {/* Big total card — full red gradient hero, matches dashboard earnings card */}
               <View style={styles.totalCard}>
                 <LinearGradient
-                  colors={['rgba(218,37,29,0.18)', 'rgba(218,37,29,0.05)', 'rgba(255,255,255,0)']}
-                  locations={[0, 0.45, 1]}
+                  colors={['#FF5247', '#DA251D', '#9E0E07']}
+                  locations={[0, 0.5, 1]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFill}
@@ -142,7 +142,7 @@ export default function EarningsScreen() {
                     </Text>
                   </View>
                   <View style={styles.upBadge}>
-                    <Ionicons name="trending-up" size={10} color={colors.verified} />
+                    <Ionicons name="trending-up" size={10} color={colors.white} />
                     <Text style={styles.upText}>LIVE</Text>
                   </View>
                 </View>
@@ -420,13 +420,13 @@ const styles = StyleSheet.create({
   },
 
   totalCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.red,
     borderRadius: 18,
     overflow: 'hidden',
     marginHorizontal: 22,
     padding: 22,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.red,
     marginBottom: 22,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 6 },
@@ -437,14 +437,14 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 2.5,
     marginBottom: 10,
   },
   totalValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 42,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 0.5,
     marginBottom: 14,
   },
@@ -457,22 +457,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(22,163,74,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: 999,
     paddingHorizontal: 11,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(22,163,74,0.3)',
+    borderColor: 'rgba(255,255,255,0.22)',
   },
   totalChipDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: colors.verified,
+    backgroundColor: colors.white,
   },
   totalChipText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.verified,
+    color: colors.white,
     fontSize: 10.5,
     letterSpacing: 0.4,
   },
@@ -480,16 +480,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(22,163,74,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(22,163,74,0.25)',
+    borderColor: 'rgba(255,255,255,0.22)',
     borderRadius: 999,
     paddingHorizontal: 9,
     paddingVertical: 4,
   },
   upText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.verified,
+    color: colors.white,
     fontSize: 10,
     letterSpacing: 0.4,
   },

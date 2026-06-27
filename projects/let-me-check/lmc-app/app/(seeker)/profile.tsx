@@ -162,11 +162,11 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Stats Row — hero card with brand sheen */}
+        {/* Stats Row — full red gradient hero, matches dashboard earnings card */}
         <View style={styles.statsRow}>
           <LinearGradient
-            colors={['rgba(218,37,29,0.18)', 'rgba(218,37,29,0.05)', 'rgba(255,255,255,0)']}
-            locations={[0, 0.45, 1]}
+            colors={['#FF5247', '#DA251D', '#9E0E07']}
+            locations={[0, 0.5, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
+    backgroundColor: colors.red,
     borderRadius: 16,
     overflow: 'hidden',
     marginHorizontal: 22,
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     padding: 18,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.red,
     alignItems: 'center',
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 6 },
@@ -350,17 +350,17 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 0.3,
     marginBottom: 5,
   },
   statLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 1.4,
   },
-  statDivider: { width: 1, height: 36, backgroundColor: colors.border },
+  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
