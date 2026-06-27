@@ -177,7 +177,7 @@ export default function PermissionsScreen() {
                 </View>
 
                 <View style={styles.deniedNote}>
-                  <Ionicons name="alert-circle-outline" size={12} color={colors.amber} />
+                  <Ionicons name="alert-circle-outline" size={12} color={colors.danger} />
                   <Text style={styles.deniedText}>{p.ifDenied}</Text>
                 </View>
 
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    backgroundColor: 'rgba(255,203,71,0.08)',
+    backgroundColor: 'rgba(176,21,27,0.07)',
     borderRadius: 8,
     marginTop: 4,
     marginBottom: 12,

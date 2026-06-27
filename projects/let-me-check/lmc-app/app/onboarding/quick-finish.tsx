@@ -298,7 +298,7 @@ export default function QuickFinishScreen() {
                 maxLength={12}
               />
               {referralCode.length > 0 && (
-                <Ionicons name="gift-outline" size={16} color={colors.amber} style={styles.inputCheck} />
+                <Ionicons name="gift-outline" size={16} color={colors.red} style={styles.inputCheck} />
               )}
             </View>
             <Text style={styles.fieldHint}>

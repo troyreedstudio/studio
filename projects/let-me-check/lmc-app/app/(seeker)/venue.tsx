@@ -259,14 +259,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   liveBlip: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.verified },
-  liveBlipSoon: { backgroundColor: colors.amber },
+  liveBlipSoon: { backgroundColor: colors.red },
   liveText: {
     fontSize: 13,
     color: colors.verified,
     fontWeight: '700',
     letterSpacing: 1.5,
   },
-  liveTextSoon: { color: colors.amber },
+  liveTextSoon: { color: colors.red },
   infoRow: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -310,11 +310,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   tierCardPriorityActive: {
-    borderColor: colors.amber,
-    backgroundColor: '#FFFDF0',
+    borderColor: colors.red,
+    backgroundColor: 'rgba(218,37,29,0.04)',
   },
   priorityBadge: {
-    backgroundColor: colors.amber,
+    backgroundColor: 'rgba(218,37,29,0.12)',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   priorityBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.black,
+    color: colors.red,
     letterSpacing: 1,
   },
   tierLabel: {
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  selectedBadgeAmber: { backgroundColor: colors.amber },
+  selectedBadgeAmber: { backgroundColor: colors.red },
   selectedBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 12,

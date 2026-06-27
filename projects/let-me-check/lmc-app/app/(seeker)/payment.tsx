@@ -380,14 +380,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  tierBadgePriority: { backgroundColor: 'rgba(255,203,71,0.18)' },
+  tierBadgePriority: { backgroundColor: 'rgba(218,37,29,0.12)' },
   tierBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
     color: colors.textPrimary,
     letterSpacing: 1.5,
   },
-  tierBadgeTextPriority: { color: colors.amber },
+  tierBadgeTextPriority: { color: colors.red },
   shareCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',

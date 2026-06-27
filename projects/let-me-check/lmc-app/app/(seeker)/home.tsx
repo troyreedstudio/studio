@@ -1311,11 +1311,11 @@ const reqStyles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   tierCardPriorityActive: {
-    borderColor: colors.amber,
-    backgroundColor: '#FFFDF0',
+    borderColor: colors.red,
+    backgroundColor: 'rgba(218,37,29,0.04)',
   },
   priorityBadge: {
-    backgroundColor: colors.amber,
+    backgroundColor: 'rgba(218,37,29,0.12)',
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -1325,7 +1325,7 @@ const reqStyles = StyleSheet.create({
   priorityBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 8,
-    color: colors.black,
+    color: colors.red,
     letterSpacing: 1,
   },
   tierLabel: {
@@ -1356,7 +1356,7 @@ const reqStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  selectedBadgeAmber: { backgroundColor: colors.amber },
+  selectedBadgeAmber: { backgroundColor: colors.red },
   selectedBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
@@ -2395,7 +2395,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   scoutDotOff: {
-    backgroundColor: colors.amber,
+    backgroundColor: colors.textTertiary,
   },
   locScouts: {
     fontFamily: 'Inter_500Medium',

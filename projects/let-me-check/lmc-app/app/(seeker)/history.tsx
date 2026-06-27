@@ -197,8 +197,8 @@ const styles = StyleSheet.create({
   watchHint: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: colors.red, letterSpacing: 0.3 },
   checkRight: { alignItems: 'flex-end', gap: 6 },
   tierPill: { backgroundColor: colors.surface, borderRadius: 100, paddingHorizontal: 9, paddingVertical: 3 },
-  tierPillPriority: { backgroundColor: 'rgba(255,203,71,0.12)' },
+  tierPillPriority: { backgroundColor: 'rgba(218,37,29,0.12)' },
   tierPillText: { fontFamily: 'Inter_700Bold', fontSize: 9, color: colors.textTertiary, letterSpacing: 1.5 },
-  tierPillTextPriority: { color: colors.amber },
+  tierPillTextPriority: { color: colors.red },
   checkPrice: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 16, color: colors.textPrimary, letterSpacing: 0.3 },
 });

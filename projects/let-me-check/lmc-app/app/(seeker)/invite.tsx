@@ -90,7 +90,7 @@ export default function InviteScreen() {
         {/* Reward card — copy describes the mechanic; amounts come from referral_config */}
         <View style={styles.rewardCard}>
           <View style={styles.rewardIconWrap}>
-            <Ionicons name="gift-outline" size={30} color="#FFCB47" />
+            <Ionicons name="gift-outline" size={30} color={colors.red} />
           </View>
           <Text style={styles.rewardTitle}>Give credits, get credits</Text>
           <Text style={styles.rewardSub}>
@@ -184,12 +184,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   rewardCard: {
-    backgroundColor: 'rgba(255,203,71,0.06)',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     marginHorizontal: 20,
     padding: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.35)',
+    borderWidth: 1.5,
+    borderColor: colors.red,
     marginBottom: 24,
     alignItems: 'center',
   },
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(255,203,71,0.12)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
