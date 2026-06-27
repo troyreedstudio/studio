@@ -101,7 +101,7 @@ export default function BootSplash() {
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }).start(() => {
-        router.replace('/how-it-works');
+        router.replace('/design-index'); // TEMP design-review — revert to '/how-it-works'
       });
     }, 3800);
 
@@ -129,7 +129,7 @@ export default function BootSplash() {
                 adjustsFontSizeToFit
                 minimumFontScale={0.4}
               >
-                LMC
+                LET ME CHECK
               </Text>
             </View>
           }
@@ -163,7 +163,6 @@ export default function BootSplash() {
             </Animated.View>
           </View>
         </MaskedView>
-        <Text style={styles.wordmark}>LET ME CHECK</Text>
       </Animated.View>
 
       <Animated.View
