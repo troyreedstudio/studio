@@ -130,6 +130,7 @@ export default function ScoutApprovedScreen() {
 
             {/* SCOUT CARD */}
             <View style={styles.scoutCard}>
+              <CtaGlow radius={16} />
               <View style={styles.scoutCardTop}>
                 <Text style={styles.scoutCardBrand}>LMC SCOUT</Text>
                 <View style={styles.verifiedPill}>
@@ -340,6 +341,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 18,
     marginBottom: 20,
+    overflow: 'hidden', // clip the CtaGlow gradient to the rounded corners
   },
   scoutCardTop: {
     flexDirection: 'row',
