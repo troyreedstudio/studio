@@ -15,6 +15,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { startConnectOnboarding, getConnectStatus } from '../lib/payments';
 import type { PayoutSpeed } from '../lib/payments';
 import { colors } from '../lib/theme';
+import { CtaGlow } from '../components/CtaGlow';
 
 const WHAT_STRIPE_NEEDS = [
   {
@@ -159,10 +160,11 @@ export default function ScoutPayoutScreen() {
               <Text style={styles.earnLabel}>No-fault pay</Text>
               <Text style={styles.earnWhy}>Could not film for a valid reason, GPS verified</Text>
             </View>
-            <View style={styles.earnCell}>
-              <Text style={[styles.earnAmount, { color: colors.amber }]}>$80–$200</Text>
-              <Text style={styles.earnLabel}>Typical week</Text>
-              <Text style={styles.earnWhy}>Active hours in a live market</Text>
+            <View style={[styles.earnCell, styles.earnCellHero]}>
+              <CtaGlow radius={10} />
+              <Text style={[styles.earnAmount, styles.earnTextHero]}>$80–$200</Text>
+              <Text style={[styles.earnLabel, styles.earnTextHero]}>Typical week</Text>
+              <Text style={[styles.earnWhy, styles.earnWhyHero]}>Active hours in a live market</Text>
             </View>
           </View>
 
@@ -459,6 +461,14 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     lineHeight: 15,
   },
+  // "Typical week" hero cell — red gradient (CtaGlow) with white text
+  earnCellHero: {
+    backgroundColor: colors.red,
+    borderColor: colors.red,
+    overflow: 'hidden',
+  },
+  earnTextHero: { color: colors.white },
+  earnWhyHero: { color: 'rgba(255,255,255,0.8)' },
 
   contractCard: {
     backgroundColor: colors.surface,
