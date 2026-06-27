@@ -218,7 +218,7 @@ export default function ScoutPayoutScreen() {
           {WHAT_STRIPE_NEEDS.map((item, i) => (
             <View key={i} style={styles.row}>
               <View style={styles.rowIcon}>
-                <Ionicons name={item.icon} size={18} color={colors.textPrimary} />
+                <Ionicons name={item.icon} size={18} color={colors.red} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowTitle}>{item.title}</Text>
@@ -407,9 +407,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(218,37,29,0.08)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(218,37,29,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
