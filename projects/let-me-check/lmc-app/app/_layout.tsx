@@ -127,7 +127,7 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: '#FFFFFF' },
           }}
         />
-        <DesignNavOverlay />
+        {__DEV__ && <DesignNavOverlay />}
       </SessionProvider>
     </StripeProvider>
   );
