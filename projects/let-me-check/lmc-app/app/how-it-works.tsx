@@ -204,10 +204,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   brandTag: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 26,
+    fontFamily: 'Orbitron_700Bold',
+    fontSize: 18,
     letterSpacing: 1.5,
-    lineHeight: 32,
+    lineHeight: 26,
     textAlign: 'center',
     textTransform: 'uppercase',
     marginBottom: 18,
