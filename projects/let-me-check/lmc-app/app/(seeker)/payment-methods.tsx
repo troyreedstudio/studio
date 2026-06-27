@@ -6,6 +6,7 @@
 
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { usePaymentMethod } from '../state/payment-method';
 import { colors } from '../lib/theme';
 
@@ -30,7 +31,7 @@ export default function PaymentMethodsScreen() {
           <View style={styles.cardRow}>
             <View style={styles.cardLeft}>
               <View style={styles.cardIcon}>
-                <Text style={styles.cardEmoji}>💳</Text>
+                <Ionicons name="card-outline" size={20} color={colors.red} />
               </View>
               <View style={styles.cardInfo}>
                 <Text style={styles.cardName}>{card.brand} ····  {card.last4}</Text>
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  cardEmoji: { fontSize: 20 },
+  cardEmoji: { /* replaced by Ionicons card-outline */ },
   cardInfo: { flex: 1 },
   cardName: {
     fontFamily: 'Inter_700Bold',

@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, ActivityIndicator, Keyboard, Modal, FlatList, Alert, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -596,7 +597,7 @@ function SearchOverlay({
             {locating ? (
               <ActivityIndicator size="small" color={colors.onRed} />
             ) : (
-              <Text style={overlayStyles.checkHerePin}>📍</Text>
+              <Ionicons name="location-outline" size={18} color={colors.onRed} />
             )}
           </View>
           <View style={overlayStyles.checkHereTextWrap}>
@@ -626,8 +627,8 @@ function SearchOverlay({
           activeOpacity={0.75}
           onPress={() => handleSelect(s)}
         >
-          <View style={overlayStyles.resultIconWrap}>
-            <Text style={overlayStyles.resultPin}>📍</Text>
+          <View style={[overlayStyles.resultIconWrap, overlayStyles.resultIconWrapRed]}>
+            <Ionicons name="location-outline" size={16} color={colors.red} />
           </View>
           <View style={overlayStyles.resultTextWrap}>
             <Text style={overlayStyles.resultName} numberOfLines={1}>{s.primaryText}</Text>
@@ -670,8 +671,8 @@ function SearchOverlay({
             }
           }}
         >
-          <View style={overlayStyles.resultIconWrap}>
-            <Text style={overlayStyles.resultPin}>🕐</Text>
+          <View style={[overlayStyles.resultIconWrap, overlayStyles.resultIconWrapRed]}>
+            <Ionicons name="time-outline" size={16} color={colors.red} />
           </View>
           <View style={overlayStyles.resultTextWrap}>
             <Text style={overlayStyles.resultName}>{r.name}</Text>
@@ -689,8 +690,8 @@ function SearchOverlay({
           activeOpacity={0.75}
           onPress={() => handleSelectSaved(p)}
         >
-          <View style={overlayStyles.resultIconWrap}>
-            <Text style={overlayStyles.resultPin}>🔖</Text>
+          <View style={[overlayStyles.resultIconWrap, overlayStyles.resultIconWrapRed]}>
+            <Ionicons name="bookmark-outline" size={16} color={colors.red} />
           </View>
           <View style={overlayStyles.resultTextWrap}>
             <Text style={overlayStyles.resultName}>{p.name}</Text>
@@ -730,8 +731,8 @@ function SearchOverlay({
             activeOpacity={0.75}
             onPress={handleUnavailableFallback}
           >
-            <View style={overlayStyles.resultIconWrap}>
-              <Text style={overlayStyles.resultPin}>🔍</Text>
+            <View style={[overlayStyles.resultIconWrap, overlayStyles.resultIconWrapRed]}>
+              <Ionicons name="search" size={16} color={colors.red} />
             </View>
             <View style={overlayStyles.resultTextWrap}>
               <Text style={overlayStyles.resultName}>{item.query}</Text>
@@ -764,7 +765,7 @@ function SearchOverlay({
               <Text style={overlayStyles.cancelText}>Cancel</Text>
             </TouchableOpacity>
             <View style={overlayStyles.inputWrap}>
-              <Text style={overlayStyles.inputIcon}>🔍</Text>
+              <Ionicons name="search" size={15} color={colors.textTertiary} />
               <TextInput
                 ref={inputRef}
                 style={overlayStyles.input}
@@ -795,9 +796,11 @@ function SearchOverlay({
                   style={[overlayStyles.micBtn, listening && overlayStyles.micBtnActive]}
                 >
                   <Animated.View style={listening ? { opacity: micPulse.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) } : undefined}>
-                    <Text style={[overlayStyles.micIcon, listening && overlayStyles.micIconActive]}>
-                      {listening ? '⏹' : '🎤'}
-                    </Text>
+                    <Ionicons
+                      name={listening ? 'stop' : 'mic-outline'}
+                      size={15}
+                      color={listening ? colors.red : colors.red}
+                    />
                   </Animated.View>
                 </TouchableOpacity>
               )}
@@ -887,7 +890,7 @@ const overlayStyles = StyleSheet.create({
     borderColor: colors.border,
     gap: 10,
   },
-  inputIcon: { fontSize: 15 },
+  inputIcon: { /* replaced by Ionicons search */ },
   input: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
@@ -913,12 +916,8 @@ const overlayStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.red,
   },
-  micIcon: {
-    fontSize: 15,
-  },
-  micIconActive: {
-    fontSize: 14,
-  },
+  micIcon: { /* replaced by Ionicons mic-outline/stop */ },
+  micIconActive: { /* replaced by Ionicons */ },
   // Listening banner — shown below search bar while STT is active
   listeningBanner: {
     flexDirection: 'row',
@@ -1006,7 +1005,11 @@ const overlayStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  resultPin: { fontSize: 16 },
+  resultIconWrapRed: {
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderColor: 'rgba(218,37,29,0.15)',
+  },
+  resultPin: { /* replaced by Ionicons */ },
   resultTextWrap: { flex: 1 },
   resultName: {
     fontFamily: 'Inter_700Bold',
@@ -1093,7 +1096,7 @@ const overlayStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkHerePin: { fontSize: 18 },
+  checkHerePin: { /* replaced by Ionicons location-outline */ },
   checkHereTextWrap: { flex: 1 },
   checkHereName: {
     fontFamily: 'Inter_700Bold',
@@ -1223,7 +1226,7 @@ function RequestSheet({ pinName, market, isPartner, onCancel, onRequest }: Reque
             {interior && <Text style={reqStyles.interiorCheckGlyph}>✓</Text>}
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={reqStyles.interiorEyebrow}>✦ PARTNER VENUE</Text>
+            <Text style={reqStyles.interiorEyebrow}>PARTNER VENUE</Text>
             <View style={reqStyles.interiorTitleRow}>
               <Text style={reqStyles.interiorTitle}>Include interior</Text>
               <Text style={reqStyles.interiorBadge}>+$5</Text>
@@ -1829,7 +1832,7 @@ export default function HomeScreen() {
             }}
             activeOpacity={0.85}
           >
-            <Text style={styles.locPin}>📍</Text>
+            <Ionicons name="location-outline" size={13} color={colors.red} />
             <Text style={styles.locCity}>{displayCity}</Text>
             <View style={[styles.scoutDot, outOfCoverage && styles.scoutDotOff]} />
             <Text style={[styles.locScouts, outOfCoverage && styles.locScoutsOff]}>{displayStatusText}</Text>
@@ -1848,7 +1851,7 @@ export default function HomeScreen() {
         {/* Honest out-of-coverage banner — never pretend we serve a city we don't */}
         {outOfCoverage && (
           <View style={styles.waitlistBanner}>
-            <Text style={styles.waitlistPin}>📍</Text>
+            <Ionicons name="location-outline" size={13} color={colors.red} />
             <Text style={styles.waitlistText}>
               We&apos;re not live in {userCityLabel} yet.
             </Text>
@@ -1895,7 +1898,7 @@ export default function HomeScreen() {
               activeOpacity={0.85}
               onPress={() => setSearchOpen(true)}
             >
-              <Text style={styles.searchIcon}>🔍</Text>
+              <Ionicons name="search" size={16} color={colors.textTertiary} />
               <Text style={styles.searchPlaceholder}>Any place. Any address.</Text>
             </TouchableOpacity>
 
@@ -1938,7 +1941,7 @@ export default function HomeScreen() {
                         });
                       }}
                     >
-                      <Text style={styles.savedChipGlyph}>♥</Text>
+                      <Ionicons name="heart" size={11} color={colors.red} />
                       <Text style={styles.savedChipText} numberOfLines={1}>
                         {p.name}
                       </Text>
@@ -1965,7 +1968,7 @@ export default function HomeScreen() {
                     }
                   >
                     <View style={styles.recentIconWrap}>
-                      <Text style={styles.recentIcon}>🕐</Text>
+                      <Ionicons name="time-outline" size={13} color={colors.red} />
                     </View>
                     <View style={styles.recentText}>
                       <Text style={styles.recentName}>{r.name}</Text>
@@ -2382,7 +2385,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
-  locPin: { fontSize: 13 },
+  locPin: { /* replaced by Ionicons location-outline */ },
   locCity: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
@@ -2425,7 +2428,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
-  waitlistPin: { fontSize: 13 },
+  waitlistPin: { /* replaced by Ionicons location-outline */ },
   waitlistText: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
@@ -2547,7 +2550,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  searchIcon: { fontSize: 16 },
+  searchIcon: { /* replaced by Ionicons search */ },
   searchPlaceholder: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
@@ -2586,11 +2589,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(218,37,29,0.22)',
     maxWidth: '48%',
   },
-  savedChipGlyph: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 11,
-    color: colors.red,
-  },
+  savedChipGlyph: { /* replaced by Ionicons heart */ },
   savedChipText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 12,
@@ -2622,7 +2621,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  recentIcon: { fontSize: 13 },
+  recentIcon: { /* replaced by Ionicons time-outline */ },
   recentText: { flex: 1 },
   recentNameRow: {
     flexDirection: 'row',

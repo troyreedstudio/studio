@@ -11,6 +11,7 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import { getMarketById, DEFAULT_MARKET_ID, nearestLiveMarket } from '../data/markets';
@@ -247,7 +248,7 @@ export default function SearchScreen() {
 
       {/* Search Input */}
       <View style={styles.searchInputWrap}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Ionicons name="search" size={16} color={colors.textTertiary} />
         <TextInput
           style={styles.searchInput}
           placeholder={PLACEHOLDER_HINTS[hintIdx]}
@@ -272,7 +273,7 @@ export default function SearchScreen() {
             onPress={() => setVoiceListening(true)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text style={styles.micIcon}>🎤</Text>
+            <Ionicons name="mic-outline" size={18} color={colors.red} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -288,7 +289,7 @@ export default function SearchScreen() {
           }
         }}
       >
-        <Text style={styles.locIcon}>📍</Text>
+        <Ionicons name="location-outline" size={18} color={colors.onRed} />
         <View style={styles.locTextWrap}>
           <Text style={styles.locTitle}>Use my current location</Text>
           <Text style={styles.locSub}>
@@ -320,8 +321,8 @@ export default function SearchScreen() {
                     onPress={() => handleSelectRecent(r)}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.resultIconWrap}>
-                      <Text style={styles.resultPin}>🕐</Text>
+                    <View style={[styles.resultIconWrap, styles.resultIconWrapRed]}>
+                      <Ionicons name="time-outline" size={16} color={colors.red} />
                     </View>
                     <View style={styles.resultTextWrap}>
                       <Text style={styles.resultName}>{r.name}</Text>
@@ -345,8 +346,8 @@ export default function SearchScreen() {
                   onPress={() => handleSelectSaved(p)}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.resultIconWrap}>
-                    <Text style={styles.resultPin}>🔖</Text>
+                  <View style={[styles.resultIconWrap, styles.resultIconWrapRed]}>
+                    <Ionicons name="bookmark-outline" size={16} color={colors.red} />
                   </View>
                   <View style={styles.resultTextWrap}>
                     <Text style={styles.resultName}>{p.name}</Text>
@@ -378,8 +379,8 @@ export default function SearchScreen() {
               onPress={() => handleSelectRecent({ name: query.trim(), city: 'Typed location' })}
               activeOpacity={0.7}
             >
-              <View style={styles.resultIconWrap}>
-                <Text style={styles.resultPin}>🔍</Text>
+              <View style={[styles.resultIconWrap, styles.resultIconWrapRed]}>
+                <Ionicons name="search" size={16} color={colors.red} />
               </View>
               <View style={styles.resultTextWrap}>
                 <Text style={styles.resultName}>{query.trim()}</Text>
@@ -407,8 +408,8 @@ export default function SearchScreen() {
                 onPress={() => handleSelectSuggestion(s)}
                 activeOpacity={0.7}
               >
-                <View style={styles.resultIconWrap}>
-                  <Text style={styles.resultPin}>📍</Text>
+                <View style={[styles.resultIconWrap, styles.resultIconWrapRed]}>
+                  <Ionicons name="location-outline" size={16} color={colors.red} />
                 </View>
                 <View style={styles.resultTextWrap}>
                   <Text style={styles.resultName}>{s.primaryText}</Text>
@@ -431,7 +432,7 @@ export default function SearchScreen() {
       >
         <View style={styles.voiceOverlay}>
           <View style={styles.voiceCard}>
-            <Text style={styles.voiceMic}>🎤</Text>
+            <Ionicons name="mic-outline" size={44} color={colors.red} style={{ marginBottom: 14 }} />
             <Text style={styles.voiceListeningText}>Listening{voiceDots}</Text>
             <Text style={styles.voiceHint}>Speak the place you want to check</Text>
             <View style={styles.voicePulseRow}>
@@ -491,7 +492,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 12,
   },
-  searchIcon: { fontSize: 16 },
+  searchIcon: { /* replaced by Ionicons search */ },
   searchInput: {
     flex: 1,
     fontFamily: 'Inter_400Regular',
@@ -502,9 +503,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
   },
-  micIcon: {
-    fontSize: 18,
-  },
+  micIcon: { /* replaced by Ionicons mic-outline */ },
   voiceOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.55)',
@@ -526,10 +525,7 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
-  voiceMic: {
-    fontSize: 44,
-    marginBottom: 14,
-  },
+  voiceMic: { /* replaced by Ionicons mic-outline */ },
   voiceListeningText: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
@@ -583,7 +579,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 14,
   },
-  locIcon: { fontSize: 18 },
+  locIcon: { /* replaced by Ionicons location-outline */ },
   locTextWrap: { flex: 1 },
   locTitle: {
     fontFamily: 'Inter_600SemiBold',
@@ -634,7 +630,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  resultPin: { fontSize: 16 },
+  resultIconWrapRed: {
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderColor: 'rgba(218,37,29,0.15)',
+  },
+  resultPin: { /* replaced by Ionicons */ },
   resultTextWrap: { flex: 1 },
   resultName: {
     fontFamily: 'Inter_700Bold',

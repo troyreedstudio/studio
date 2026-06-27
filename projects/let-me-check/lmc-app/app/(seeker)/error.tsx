@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +8,8 @@ import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 type ErrorType = 'no-scouts' | 'payment-declined' | 'connection' | 'missed-window';
 
 const ERRORS: Record<ErrorType, {
-  emoji: string;
+  iconName: React.ComponentProps<typeof Ionicons>['name'];
+  iconColor: string;
   title: string;
   message: string;
   primaryLabel: string;
@@ -15,7 +17,8 @@ const ERRORS: Record<ErrorType, {
   secondaryLabel: string;
 }> = {
   'no-scouts': {
-    emoji: '🔍',
+    iconName: 'search',
+    iconColor: '#DA251D', // colors.red — no import cycle
     title: 'No Scouts Available',
     message: "We couldn't find a Scout near this location right now. You haven't been charged. Try again in a few minutes or pick a different place.",
     primaryLabel: 'TRY AGAIN',
@@ -23,7 +26,8 @@ const ERRORS: Record<ErrorType, {
     secondaryLabel: 'Back to Home',
   },
   'payment-declined': {
-    emoji: '💳',
+    iconName: 'card-outline',
+    iconColor: '#DA251D',
     title: 'Payment Declined',
     message: 'Your card was declined. No charge was made. Try again and use a different card or payment method.',
     primaryLabel: 'TRY AGAIN',
@@ -31,7 +35,8 @@ const ERRORS: Record<ErrorType, {
     secondaryLabel: 'Back to Home',
   },
   'connection': {
-    emoji: '📡',
+    iconName: 'cloud-offline-outline',
+    iconColor: '#B0151B', // colors.danger
     title: 'Connection Lost',
     message: "Looks like you're offline. Check your connection and try again.",
     primaryLabel: 'RETRY',
@@ -39,7 +44,8 @@ const ERRORS: Record<ErrorType, {
     secondaryLabel: 'Back to Home',
   },
   'missed-window': {
-    emoji: '⏱️',
+    iconName: 'time-outline',
+    iconColor: '#DA251D',
     title: 'Scout Missed the Window',
     message: 'Your Scout did not deliver in time. You have been refunded automatically and the Scout has been warned. Sorry about that.',
     primaryLabel: 'REQUEST AGAIN',
@@ -67,7 +73,7 @@ export default function ErrorScreen() {
       <View style={styles.inner}>
         {/* Icon */}
         <View style={styles.iconCircle}>
-          <Text style={styles.emoji}>{err.emoji}</Text>
+          <Ionicons name={err.iconName} size={44} color={err.iconColor} />
         </View>
 
         <Text style={styles.title}>{err.title}</Text>
@@ -127,7 +133,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 26,
   },
-  emoji: { fontSize: 44 },
+  emoji: { /* replaced by Ionicons */ },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 26,

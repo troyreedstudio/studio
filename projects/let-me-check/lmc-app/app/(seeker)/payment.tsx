@@ -237,7 +237,7 @@ export default function PaymentScreen() {
       {/* Delivery Time */}
       <View style={styles.deliveryCard}>
         <View style={styles.deliveryIcon}>
-          <Text style={styles.deliveryEmoji}>⚡</Text>
+          <Ionicons name="flash" size={18} color={colors.red} />
         </View>
         <View>
           <Text style={styles.deliveryTitle}>Estimated Delivery</Text>
@@ -258,12 +258,16 @@ export default function PaymentScreen() {
       >
         {payment.card ? (
           <>
-            <Text style={styles.paymentMethodLabel}>
-              {payment.card.brand === 'ApplePay' ? ' ' : '💳  '}
-              {payment.card.brand === 'ApplePay'
-                ? 'Apple Pay'
-                : `${payment.card.brand} •••• ${payment.card.last4}`}
-            </Text>
+            <View style={styles.paymentMethodLabelRow}>
+              {payment.card.brand !== 'ApplePay' && (
+                <Ionicons name="card-outline" size={16} color={colors.red} style={{ marginRight: 8 }} />
+              )}
+              <Text style={styles.paymentMethodLabel}>
+                {payment.card.brand === 'ApplePay'
+                  ? 'Apple Pay'
+                  : `${payment.card.brand} •••• ${payment.card.last4}`}
+              </Text>
+            </View>
             <Text style={styles.changeText}>Change</Text>
           </>
         ) : (
@@ -517,7 +521,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  deliveryEmoji: { fontSize: 18 },
+  deliveryEmoji: { /* replaced by Ionicons flash */ },
   deliveryTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
@@ -555,6 +559,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 24,
+  },
+  paymentMethodLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   paymentMethodLabel: {
     fontFamily: 'Inter_500Medium',

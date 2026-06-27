@@ -175,7 +175,7 @@ export default function DeliveryScreen() {
 
   const scoutName = scoutProfile?.display_name ?? 'Your Scout';
   const scoutInitial = (scoutProfile?.display_name?.trim()?.[0] ?? 'S').toUpperCase();
-  const ratingPart = scoutProfile?.avg_rating != null ? `⭐ ${scoutProfile.avg_rating}` : null;
+  const ratingPart = scoutProfile?.avg_rating != null ? `★ ${scoutProfile.avg_rating}` : null;
   const clipsPart = scoutProfile?.clip_count != null ? `${scoutProfile.clip_count} videos` : null;
   const scoutMeta = [ratingPart, clipsPart].filter(Boolean).join(' · ');
 
@@ -233,11 +233,22 @@ export default function DeliveryScreen() {
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity key={star} onPress={() => handleRate(star)} disabled={submitting} activeOpacity={0.7}>
-              <Text style={[styles.star, star <= rating && styles.starActive]}>★</Text>
+              <Ionicons
+                name="star"
+                size={36}
+                color={star <= rating ? colors.amber : colors.border}
+              />
             </TouchableOpacity>
           ))}
         </View>
-        {rating > 0 && <Text style={styles.ratingFeedback}>{rating >= 4 ? 'Awesome! Thanks for rating 🙌' : 'Thanks for the feedback'}</Text>}
+        {rating > 0 && (
+          <View style={styles.ratingFeedbackRow}>
+            {rating >= 4 && (
+              <Ionicons name="checkmark-circle" size={16} color={colors.verified} style={{ marginRight: 4 }} />
+            )}
+            <Text style={styles.ratingFeedback}>{rating >= 4 ? 'Awesome! Thanks for rating' : 'Thanks for the feedback'}</Text>
+          </View>
+        )}
 
         <View style={styles.scoutCard}>
           <View style={styles.scoutAvatar}><Text style={styles.scoutAvatarText}>{scoutInitial}</Text></View>
@@ -299,9 +310,10 @@ const styles = StyleSheet.create({
   liveTime: { fontFamily: 'Inter_600SemiBold', color: colors.textSecondary, fontSize: 10.5, letterSpacing: 0.4 },
   sectionLabel: { fontFamily: 'Inter_700Bold', fontSize: 11, color: colors.textTertiary, letterSpacing: 3, marginBottom: 12, marginTop: 6, textTransform: 'uppercase' },
   starsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  star: { fontSize: 36, color: colors.border },
-  starActive: { color: colors.amber },
-  ratingFeedback: { fontFamily: 'Inter_400Regular', color: colors.textSecondary, fontSize: 12.5, marginBottom: 22, letterSpacing: 0.3 },
+  star: { /* replaced by Ionicons star */ },
+  starActive: { /* replaced by Ionicons star amber */ },
+  ratingFeedbackRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 22 },
+  ratingFeedback: { fontFamily: 'Inter_400Regular', color: colors.textSecondary, fontSize: 12.5, letterSpacing: 0.3 },
   scoutCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 26, marginTop: 8 },
   scoutAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.border, borderWidth: 1, borderColor: colors.borderStrong, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   scoutAvatarText: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 16, letterSpacing: 0.3 },

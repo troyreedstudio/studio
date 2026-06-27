@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { getProfile } from '../lib/api';
 import { colors } from '../lib/theme';
@@ -82,7 +83,7 @@ export default function PreferredCitiesScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.cityLeft}>
-                <Text style={styles.cityPin}>📍</Text>
+                <Ionicons name="location-outline" size={16} color={colors.red} />
                 <View style={styles.cityInfo}>
                   <Text style={styles.cityName}>{c.name}</Text>
                   <Text style={styles.cityRegion}>{c.region}</Text>
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(218,37,29,0.03)',
   },
   cityLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
-  cityPin: { fontSize: 16 },
+  cityPin: { /* replaced by Ionicons location-outline */ },
   cityInfo: { flex: 1 },
   cityName: {
     fontFamily: 'Inter_700Bold',

@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Scro
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { isPartnerVenue, getMarketById, DEFAULT_MARKET_ID } from '../data/markets';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
@@ -84,10 +85,12 @@ export default function VenueScreen() {
         {/* Info Row */}
         <View style={styles.infoRow}>
           <View style={styles.infoChip}>
-            <Text style={styles.infoChipText}>🕐 Scouts Nearby</Text>
+            <Ionicons name="time-outline" size={13} color={colors.red} />
+            <Text style={styles.infoChipText}>Scouts Nearby</Text>
           </View>
           <View style={styles.infoChip}>
-            <Text style={styles.infoChipText}>⚡ Fast Delivery</Text>
+            <Ionicons name="flash" size={13} color={colors.red} />
+            <Text style={styles.infoChipText}>Fast Delivery</Text>
           </View>
         </View>
 
@@ -140,7 +143,7 @@ export default function VenueScreen() {
               {interior && <Text style={styles.interiorCheckGlyph}>✓</Text>}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.interiorEyebrow}>✦ PARTNER VENUE</Text>
+              <Text style={styles.interiorEyebrow}>PARTNER VENUE</Text>
               <View style={styles.interiorTitleRow}>
                 <Text style={styles.interiorTitle}>Include interior</Text>
                 <Text style={styles.interiorBadge}>+$5</Text>
@@ -274,6 +277,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   infoChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: colors.surface,
     borderRadius: 20,
     paddingHorizontal: 12,
