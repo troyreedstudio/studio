@@ -27,6 +27,7 @@ import { collectFraudSignals, FraudSignals } from '../lib/fraud-signals';
 import { CameraViewfinder } from './_filming-viewfinder';
 import { styles } from './_filming-styles';
 import { colors } from '../lib/theme';
+import { CtaGlow } from '../components/CtaGlow';
 
 const TROUBLE_REASONS = [
   'Line is gone / venue empty',
@@ -415,6 +416,7 @@ export default function FilmingScreen() {
 
           {/* Delivery countdown */}
           <View style={styles.countdownCard}>
+            <CtaGlow radius={16} />
             <Text style={styles.countdownLabel}>DELIVERY DEADLINE</Text>
             <Text style={styles.countdown}>{timeLeft}</Text>
             <Text style={styles.countdownSub}>
@@ -616,7 +618,7 @@ export default function FilmingScreen() {
               activeOpacity={0.85}
               onPress={() => setTroubleOpen(true)}
             >
-              <Ionicons name="warning" size={16} color="#FFCB47" />
+              <Ionicons name="warning" size={16} color={colors.red} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.troubleTitle}>TROUBLE HERE - REPORT VENUE</Text>
                 <Text style={styles.troubleSub}>

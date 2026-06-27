@@ -71,14 +71,14 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: colors.amber,
+    backgroundColor: colors.red,
     borderWidth: 1,
-    borderColor: '#C99A1F',
+    borderColor: colors.red,
   },
   priorityPillText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.black,
+    color: colors.onRed,
     letterSpacing: 1.4,
   },
 
@@ -115,8 +115,8 @@ export const styles = StyleSheet.create({
     marginBottom: 18,
   },
   troubleClosed: {
-    backgroundColor: 'rgba(255,203,71,0.06)',
-    borderColor: 'rgba(255,203,71,0.35)',
+    backgroundColor: colors.surface,
+    borderColor: colors.red,
   },
   troubleReported: {
     backgroundColor: 'rgba(22,163,74,0.06)',
@@ -127,8 +127,8 @@ export const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'stretch',
     gap: 0,
-    backgroundColor: 'rgba(255,203,71,0.04)',
-    borderColor: 'rgba(255,203,71,0.35)',
+    backgroundColor: colors.surface,
+    borderColor: colors.red,
     paddingTop: 12,
     paddingBottom: 4,
   },
@@ -141,7 +141,7 @@ export const styles = StyleSheet.create({
   troubleHeaderLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: colors.amber,
+    color: colors.red,
     letterSpacing: 1.4,
   },
   troubleTitle: {
@@ -177,12 +177,13 @@ export const styles = StyleSheet.create({
   // Countdown card — light surface with red accent on sub-label
   countdownCard: {
     width: '100%',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.red,
+    overflow: 'hidden', // clip the CtaGlow gradient to the rounded corners
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.red,
     marginBottom: 22,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
@@ -193,21 +194,21 @@ export const styles = StyleSheet.create({
   countdownLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 2.5,
     marginBottom: 8,
   },
   countdown: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 48,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 3,
     marginBottom: 4,
   },
   countdownSub: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 11,
-    color: colors.amber,
+    color: 'rgba(255,255,255,0.85)',
     letterSpacing: 1.2,
   },
 
