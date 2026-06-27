@@ -221,7 +221,7 @@ export default function ProfileScreen() {
         >
           <View style={styles.referralLeft}>
             <View style={styles.referralIconWrap}>
-              <Ionicons name="gift-outline" size={20} color="#FFCB47" />
+              <Ionicons name="gift-outline" size={20} color={colors.red} />
             </View>
             <View>
               <Text style={styles.referralTitle}>Invite friends</Text>
@@ -411,12 +411,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,203,71,0.06)',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 22,
     padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,203,71,0.35)',
+    borderWidth: 1.5,
+    borderColor: colors.red, // light box outlined in red (was yellow)
     marginBottom: 18,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,203,71,0.12)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
