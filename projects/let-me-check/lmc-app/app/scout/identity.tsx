@@ -104,7 +104,7 @@ export default function ScoutIdentityScreen() {
                 style={[styles.listRow, i < WHY_ITEMS.length - 1 && styles.listRowDivider]}
               >
                 <View style={styles.iconWrap}>
-                  <Ionicons name={item.icon} size={20} color={colors.verified} />
+                  <Ionicons name={item.icon} size={20} color={colors.red} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.listTitle}>{item.title}</Text>
@@ -248,7 +248,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(22,163,74,0.08)',
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(218,37,29,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,

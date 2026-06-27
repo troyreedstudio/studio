@@ -74,7 +74,7 @@ export default function TaxDocumentsScreen() {
               style={[styles.row, i > 0 && styles.rowBorder]}
             >
               <View style={styles.rowIcon}>
-                <Ionicons name={item.icon} size={18} color={colors.textSecondary} />
+                <Ionicons name={item.icon} size={18} color={colors.red} />
               </View>
               <View style={styles.rowBody}>
                 <Text style={styles.rowTitle}>{item.title}</Text>
@@ -193,7 +193,9 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(218,37,29,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,

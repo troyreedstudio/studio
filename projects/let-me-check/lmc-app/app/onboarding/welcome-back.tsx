@@ -38,7 +38,7 @@ export default function WelcomeBackScreen() {
           >
             <View style={styles.cardTop}>
               <View style={styles.cardIconWrap}>
-                <Ionicons name="eye-outline" size={26} color={colors.textPrimary} />
+                <Ionicons name="eye-outline" size={26} color={colors.red} />
               </View>
               <View style={[styles.tagPill, styles.tagPillSeeker]}>
                 <Ionicons name="eye" size={11} color={colors.red} />
@@ -137,7 +137,9 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(218,37,29,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },

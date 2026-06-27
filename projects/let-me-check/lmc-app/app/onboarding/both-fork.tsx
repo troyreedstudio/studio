@@ -80,7 +80,7 @@ export default function BothForkScreen() {
           >
             <View style={styles.cardTopRow}>
               <View style={[styles.cardIconWrap, styles.cardIconWrapDark]}>
-                <Ionicons name="eye-outline" size={26} color={colors.textPrimary} />
+                <Ionicons name="eye-outline" size={26} color={colors.red} />
               </View>
               <View style={[styles.tagPill, styles.tagPillSeeker]}>
                 <Ionicons name="eye" size={11} color={colors.onRed} />
@@ -179,7 +179,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardIconWrapDark: {
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(218,37,29,0.15)',
   },
   cardHeadline: {
     fontFamily: 'Inter_700Bold',
