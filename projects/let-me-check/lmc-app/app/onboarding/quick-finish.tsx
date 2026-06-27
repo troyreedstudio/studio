@@ -17,7 +17,6 @@ import { supabase } from '../lib/supabase';
 import { setIntendedRoleFlags, updateProfile } from '../lib/api';
 import { applyReferralCode } from '../lib/referrals';
 import { colors } from '../lib/theme';
-import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type AuthSource = 'apple' | 'google' | 'phone';
 
@@ -321,12 +320,11 @@ export default function QuickFinishScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.primaryBtn, ctaGlowShadow, (!ready || submitting) && styles.primaryBtnDisabled]}
+            style={[styles.primaryBtn, (!ready || submitting) && styles.primaryBtnDisabled]}
             disabled={!ready || submitting}
             onPress={handleFinish}
             activeOpacity={0.85}
           >
-            {(ready && !submitting) && <CtaGlow radius={14} />}
             <Text style={[styles.primaryBtnText, (!ready || submitting) && styles.primaryBtnTextDisabled]}>
               {submitting ? 'CREATING ACCOUNT...' : 'FINISH SIGN-UP'}
             </Text>
@@ -575,23 +573,26 @@ const styles = StyleSheet.create({
   },
 
   primaryBtn: {
-    backgroundColor: colors.red,
+    backgroundColor: colors.buttonGrey,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
   },
   primaryBtnDisabled: {
-    backgroundColor: colors.border,
+    backgroundColor: '#F1F2F4',
+    borderColor: colors.border,
   },
   primaryBtnText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.onRed,
+    color: colors.buttonGreyText,
     fontSize: 13,
     letterSpacing: 2.5,
   },
   primaryBtnTextDisabled: {
-    color: colors.textTertiary,
+    color: colors.buttonGreyText,
     letterSpacing: 2,
   },
 
