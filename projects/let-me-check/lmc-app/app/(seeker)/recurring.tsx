@@ -133,10 +133,10 @@ const styles = StyleSheet.create({
     width: 50,
   },
   title: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 15,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 17,
     color: colors.textPrimary,
-    letterSpacing: 0.3,
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontFamily: 'Inter_300Light',

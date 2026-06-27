@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
   backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 16 },
-  title: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 26, color: colors.textPrimary, letterSpacing: 0.3, marginBottom: 5 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: colors.textPrimary, letterSpacing: -0.4, marginBottom: 5 },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.textSecondary, letterSpacing: 0.3 },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',

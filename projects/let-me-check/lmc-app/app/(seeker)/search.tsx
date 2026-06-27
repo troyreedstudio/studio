@@ -474,10 +474,10 @@ const styles = StyleSheet.create({
     color: colors.red,
   },
   headerTitle: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 17,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 19,
     color: colors.textPrimary,
-    letterSpacing: 0.4,
+    letterSpacing: -0.4,
   },
   searchInputWrap: {
     flexDirection: 'row',

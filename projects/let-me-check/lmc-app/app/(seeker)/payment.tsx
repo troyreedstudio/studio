@@ -315,10 +315,10 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   title: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 22,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 24,
     color: colors.textPrimary,
-    letterSpacing: 0.2,
+    letterSpacing: -0.4,
     marginBottom: 6,
   },
   subtitle: {

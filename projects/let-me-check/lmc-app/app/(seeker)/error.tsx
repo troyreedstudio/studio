@@ -135,11 +135,11 @@ const styles = StyleSheet.create({
   },
   emoji: { /* replaced by Ionicons */ },
   title: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 24,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 26,
     color: colors.textPrimary,
     textAlign: 'center',
-    letterSpacing: 0.3,
+    letterSpacing: -0.4,
     marginBottom: 14,
   },
   message: {

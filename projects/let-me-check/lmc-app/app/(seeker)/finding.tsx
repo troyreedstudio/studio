@@ -285,10 +285,10 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 19,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 21,
     color: colors.textPrimary,
-    letterSpacing: 0.2,
+    letterSpacing: -0.4,
     textAlign: 'center',
     marginBottom: 10,
     paddingHorizontal: 10,

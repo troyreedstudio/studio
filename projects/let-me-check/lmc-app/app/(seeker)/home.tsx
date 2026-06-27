@@ -2523,10 +2523,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sheetTitle: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 20,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 22,
     color: colors.textPrimary,
-    letterSpacing: 0.2,
+    letterSpacing: -0.4,
     marginBottom: 4,
   },
   sheetHint: {

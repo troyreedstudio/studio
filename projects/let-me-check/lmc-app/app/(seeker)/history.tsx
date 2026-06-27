@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 14 },
-  title: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 28, color: colors.textPrimary, letterSpacing: 0.3 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 30, color: colors.textPrimary, letterSpacing: -0.4 },
   statsRow: {
     flexDirection: 'row', backgroundColor: colors.red, borderRadius: 16, overflow: 'hidden',
     marginHorizontal: 20, marginVertical: 16, padding: 18, borderWidth: 1, borderColor: colors.red,
