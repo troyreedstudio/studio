@@ -5,7 +5,7 @@ export default function ScoutLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#000000' },
+        contentStyle: { backgroundColor: '#FFFFFF' },
       }}
     />
   );

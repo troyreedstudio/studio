@@ -33,7 +33,11 @@ import { Sora_400Regular, Sora_500Medium, Sora_600SemiBold, Sora_700Bold, Sora_8
 import { DMSans_400Regular, DMSans_500Medium, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
 import { SairaCondensed_500Medium, SairaCondensed_700Bold, SairaCondensed_900Black } from '@expo-google-fonts/saira-condensed';
 import { HankenGrotesk_400Regular, HankenGrotesk_500Medium, HankenGrotesk_700Bold, HankenGrotesk_800ExtraBold } from '@expo-google-fonts/hanken-grotesk';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, LogBox } from 'react-native';
+
+// TEMP design-review: silence the on-screen warning banner so it stops covering
+// bottom-anchored buttons. Remove with the rest of the review scaffolding.
+LogBox.ignoreAllLogs();
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -105,7 +109,7 @@ export default function RootLayout() {
   });
 
   if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: '#000000' }} />;
+    return <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />;
   }
 
   return (
@@ -115,12 +119,12 @@ export default function RootLayout() {
       urlScheme="lmc"
     >
       <SessionProvider>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <BootGate />
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: '#000000' },
+            contentStyle: { backgroundColor: '#FFFFFF' },
           }}
         />
         <DesignNavOverlay />

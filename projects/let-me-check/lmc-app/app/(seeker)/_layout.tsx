@@ -5,7 +5,7 @@ export default function SeekerLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#000000' },
+        contentStyle: { backgroundColor: '#FFFFFF' },
       }}
     />
   );
