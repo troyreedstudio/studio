@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Linking, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
 
 const FAQS = [
@@ -14,12 +15,12 @@ const FAQS = [
 ];
 
 const CONTACT_OPTIONS = [
-  { icon: '✉️', label: 'Email Support', value: 'help@letmecheck.com', href: 'mailto:help@letmecheck.com' },
-  { icon: '💬', label: 'Live Chat', value: 'Mon-Fri, 9am-6pm EST', href: 'mailto:help@letmecheck.com' },
+  { icon: 'mail-outline', label: 'Email Support', value: 'help@letmecheck.com', href: 'mailto:help@letmecheck.com' },
+  { icon: 'chatbubble-ellipses-outline', label: 'Live Chat', value: 'Mon-Fri, 9am-6pm EST', href: 'mailto:help@letmecheck.com' },
   // PLACEHOLDER: swap for the hosted URL before submission (D-05)
-  { icon: '📜', label: 'Terms of Service', value: 'lmc.app/terms', href: 'https://lmc.app/terms' },
+  { icon: 'document-text-outline', label: 'Terms of Service', value: 'lmc.app/terms', href: 'https://lmc.app/terms' },
   // PLACEHOLDER: swap for the hosted URL before submission (D-05)
-  { icon: '🔒', label: 'Privacy Policy', value: 'lmc.app/privacy', href: 'https://lmc.app/privacy' },
+  { icon: 'lock-closed-outline', label: 'Privacy Policy', value: 'lmc.app/privacy', href: 'https://lmc.app/privacy' },
 ];
 
 export default function HelpScreen() {
@@ -58,7 +59,7 @@ export default function HelpScreen() {
               activeOpacity={0.7}
               onPress={() => { if (c.href) void Linking.openURL(c.href); }}
             >
-              <Text style={styles.contactIcon}>{c.icon}</Text>
+              <Ionicons name={c.icon as keyof typeof Ionicons.glyphMap} size={20} color={colors.red} style={styles.contactIcon} />
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>{c.label}</Text>
                 <Text style={styles.contactValue}>{c.value}</Text>
