@@ -74,34 +74,8 @@ export default function HistoryScreen() {
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.backText}>‹ Back</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>My Activity</Text>
+          <Text style={styles.title}>Past Checks</Text>
         </View>
-
-        <View style={styles.statsRow}>
-          <LinearGradient
-            colors={['#FF5247', '#DA251D', '#9E0E07']}
-            locations={[0, 0.5, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{rows.length}</Text>
-            <Text style={styles.statLabel}>Total Checks</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>${totalSpent.toFixed(0)}</Text>
-            <Text style={styles.statLabel}>Total Spent</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{avgRating ? `${avgRating.toFixed(1)}★` : '—'}</Text>
-            <Text style={styles.statLabel}>Avg Rating</Text>
-          </View>
-        </View>
-
-        <Text style={styles.sectionLabel}>RECENT CHECKS</Text>
 
         {checks === null ? (
           <View style={styles.stateWrap}>
