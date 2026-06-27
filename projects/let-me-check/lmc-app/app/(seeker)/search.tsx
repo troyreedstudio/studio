@@ -527,10 +527,10 @@ const styles = StyleSheet.create({
   },
   voiceMic: { /* replaced by Ionicons mic-outline */ },
   voiceListeningText: {
-    fontFamily: 'JetBrainsMono_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 22,
     color: colors.textPrimary,
-    letterSpacing: 1,
+    letterSpacing: -0.4,
     marginBottom: 8,
   },
   voiceHint: {
@@ -665,9 +665,10 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   feedbackTitle: {
-    fontFamily: 'JetBrainsMono_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 15,
     color: colors.textPrimary,
+    letterSpacing: -0.2,
     marginBottom: 6,
   },
   feedbackSub: {
@@ -687,10 +688,10 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   emptySavedTitle: {
-    fontFamily: 'JetBrainsMono_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 16,
     color: colors.textPrimary,
-    letterSpacing: 0.3,
+    letterSpacing: -0.2,
     marginBottom: 4,
   },
   emptySavedSub: {
