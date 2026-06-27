@@ -422,10 +422,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 25,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 27,
     color: colors.textPrimary,
-    letterSpacing: 0.2,
+    letterSpacing: -0.4,
     textAlign: 'center',
     marginBottom: 8,
   },
