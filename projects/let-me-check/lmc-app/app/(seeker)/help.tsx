@@ -1,5 +1,6 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Linking, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
+import { colors } from '../lib/theme';
 
 const FAQS = [
   { q: 'What is Let Me Check?', a: 'Order a real 15-second video of any place from a real person nearby. Delivered in 7-10 minutes. From $15.' },
@@ -26,6 +27,7 @@ export default function HelpScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -100,51 +102,51 @@ export default function HelpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: '#ffffff', fontSize: 15, marginBottom: 16 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: '#ffffff', letterSpacing: 0.4, marginBottom: 5 },
-  subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: '#888', letterSpacing: 0.3 },
+  backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 16 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: colors.textPrimary, letterSpacing: 0.4, marginBottom: 5 },
+  subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.textSecondary, letterSpacing: 0.3 },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textTertiary,
     letterSpacing: 3,
     paddingHorizontal: 20,
     marginBottom: 12,
     textTransform: 'uppercase',
   },
   faqList: {
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     overflow: 'hidden',
   },
   faqRow: { padding: 16 },
-  faqRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
+  faqRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
   faqQ: {
     fontFamily: 'Inter_700Bold',
     fontSize: 16,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 6,
   },
   faqA: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
-    color: '#888',
+    color: colors.textSecondary,
     lineHeight: 18,
     letterSpacing: 0.2,
   },
   contactList: {
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     marginBottom: 22,
     overflow: 'hidden',
   },
@@ -155,41 +157,41 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
   },
-  contactRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
+  contactRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
   contactIcon: { fontSize: 18 },
   contactInfo: { flex: 1 },
   contactLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
-    color: '#ffffff',
+    color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   contactValue: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: '#888',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   contactArrow: {
     fontSize: 20,
-    color: '#00FF7F',
+    color: colors.red,
   },
   disclaimer: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: '#444',
+    color: colors.textTertiary,
     paddingHorizontal: 32,
     lineHeight: 16,
     letterSpacing: 0.5,
     textAlign: 'center',
   },
   devList: {
-    backgroundColor: '#0d0d0d',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: colors.border,
     borderStyle: 'dashed',
     marginBottom: 22,
     overflow: 'hidden',
@@ -201,15 +203,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 13,
   },
-  devRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' },
+  devRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
   devLabel: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: '#888',
+    color: colors.textSecondary,
     letterSpacing: 0.3,
   },
   devArrow: {
     fontSize: 18,
-    color: '#00FF7F',
+    color: colors.red,
   },
 });
