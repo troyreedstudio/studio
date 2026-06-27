@@ -18,6 +18,7 @@ import { getProfile } from '../lib/api';
 import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
 import { supabase } from '../lib/supabase';
 import { colors } from '../lib/theme';
+import { CtaGlow } from '../components/CtaGlow';
 
 /**
  * Derive a stable, human-readable Scout ID from the user's Supabase auth UUID.
@@ -229,9 +230,10 @@ export default function ScoutProfileScreen() {
 
         {/* Stats Row -- real data, real zeros on a fresh account */}
         <View style={styles.statsRow}>
+          <CtaGlow radius={16} />
           <View style={styles.statItem}>
             {statsLoading ? (
-              <ActivityIndicator color={colors.red} size="small" />
+              <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Text style={styles.statValue}>${totalEarned}</Text>
             )}
@@ -240,7 +242,7 @@ export default function ScoutProfileScreen() {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             {statsLoading ? (
-              <ActivityIndicator color={colors.red} size="small" />
+              <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Text style={styles.statValue}>{totalChecks}</Text>
             )}
@@ -249,7 +251,7 @@ export default function ScoutProfileScreen() {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             {statsLoading ? (
-              <ActivityIndicator color={colors.red} size="small" />
+              <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Text style={styles.statValue}>{rating}</Text>
             )}
@@ -363,30 +365,31 @@ const styles = StyleSheet.create({
 
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.red,
+    overflow: 'hidden',
     borderRadius: 16,
     marginHorizontal: 22,
     marginBottom: 24,
     padding: 18,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.red,
     alignItems: 'center',
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 22,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 0.3,
     marginBottom: 5,
   },
   statLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 1.4,
   },
-  statDivider: { width: 1, height: 36, backgroundColor: colors.border },
+  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
 
   sectionLabel: {
     fontFamily: 'Inter_700Bold',

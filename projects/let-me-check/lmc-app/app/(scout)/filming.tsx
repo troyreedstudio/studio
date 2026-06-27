@@ -370,7 +370,7 @@ export default function FilmingScreen() {
             </View>
             {isPriority && (
               <View style={styles.priorityPill}>
-                <Ionicons name="flash" size={9} color="#1a1a1a" />
+                <Ionicons name="flash" size={9} color={colors.onRed} />
                 <Text style={styles.priorityPillText}>PRIORITY</Text>
               </View>
             )}
