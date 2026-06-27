@@ -321,12 +321,12 @@ const styles = StyleSheet.create({
   dotDone: { backgroundColor: 'rgba(218,37,29,0.4)' },
 
   title: {
-    fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 24,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 26,
     color: colors.textPrimary,
     paddingHorizontal: 22,
     marginBottom: 6,
-    letterSpacing: 0.2,
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontFamily: 'Inter_300Light',
