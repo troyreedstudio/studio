@@ -187,10 +187,10 @@ export default function ScoutDashboard() {
 
           {/* Earnings Card */}
           <View style={styles.earningsCard}>
-            {/* Subtle brand sheen: a faint red glow in the corner of the white card */}
+            {/* Full transitional red gradient hero */}
             <LinearGradient
-              colors={['rgba(218,37,29,0.18)', 'rgba(218,37,29,0.05)', 'rgba(255,255,255,0)']}
-              locations={[0, 0.45, 1]}
+              colors={['#FF5247', '#DA251D', '#9E0E07']}
+              locations={[0, 0.5, 1]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -446,13 +446,13 @@ const styles = StyleSheet.create({
   },
 
   earningsCard: {
-    backgroundColor: colors.white, // elevated white card — floats off the canvas
+    backgroundColor: colors.red, // red gradient hero (CtaGlow-style) — white text on top
     borderRadius: 18,
-    overflow: 'hidden', // clip the gradient sheen to the rounded corners
+    overflow: 'hidden', // clip the gradient to the rounded corners
     marginHorizontal: 22,
     padding: 22,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.red,
     marginBottom: 14,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 6 },
@@ -463,14 +463,14 @@ const styles = StyleSheet.create({
   earningsLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.textSecondary, // grey label on the light card
+    color: 'rgba(255,255,255,0.7)', // muted white label on the red card
     letterSpacing: 2.5,
     marginBottom: 10,
   },
   earningsValue: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 42,
-    color: colors.textPrimary, // black $ amount — the focal point
+    color: colors.white, // white $ amount — the focal point
     letterSpacing: 0.5,
     marginBottom: 14,
   },
@@ -483,28 +483,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(22,163,74,0.08)', // green tint reads on the light card
+    backgroundColor: 'rgba(255,255,255,0.12)', // translucent white pill on the red card
     borderRadius: 999,
     paddingHorizontal: 11,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(22,163,74,0.3)',
+    borderColor: 'rgba(255,255,255,0.22)',
   },
   earningsDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: colors.verified,
+    backgroundColor: colors.white,
   },
   earningsChipText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.verified,
+    color: colors.white,
     fontSize: 10.5,
     letterSpacing: 0.6,
   },
   viewAllText: {
     fontFamily: 'Inter_700Bold',
-    color: colors.red,
+    color: colors.white,
     fontSize: 10.5,
     letterSpacing: 2,
   },
