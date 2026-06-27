@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { getProfile, updateProfile } from '../lib/api';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 export default function PersonalInfoScreen() {
   const router = useRouter();
@@ -192,11 +193,13 @@ export default function PersonalInfoScreen() {
                 style={[
                   styles.saveBtn,
                   (!isDirty || saving) && styles.saveBtnDisabled,
+                  isDirty && !saving && ctaGlowShadow,
                 ]}
                 onPress={() => void handleSave()}
                 disabled={!isDirty || saving}
                 activeOpacity={0.85}
               >
+                {isDirty && !saving && <CtaGlow radius={14} />}
                 {saving ? (
                   <ActivityIndicator color={colors.onRed} size="small" />
                 ) : (

@@ -16,6 +16,7 @@ import { useScoutEarnings } from '../state/scout-earnings';
 import { getCheck } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 // Stage reflects the REAL server-owned state of the clip after upload.
 //
@@ -119,10 +120,11 @@ export default function SubmittedScreen() {
                 </Text>
               </View>
               <TouchableOpacity
-                style={styles.primaryBtn}
+                style={[styles.primaryBtn, ctaGlowShadow]}
                 onPress={() => router.replace('/(scout)/dashboard')}
                 activeOpacity={0.85}
               >
+                <CtaGlow radius={14} />
                 <Text style={styles.primaryBtnText}>Back to dashboard</Text>
               </TouchableOpacity>
             </Animated.View>
@@ -301,10 +303,11 @@ export default function SubmittedScreen() {
         {/* CTAs */}
         <View style={styles.ctaWrap}>
           <TouchableOpacity
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, ctaGlowShadow]}
             onPress={() => router.replace('/(scout)/dashboard')}
             activeOpacity={0.85}
           >
+            <CtaGlow radius={14} />
             <Ionicons name="radio" size={14} color={colors.onRed} />
             <Text style={styles.primaryBtnText}>BACK TO DASHBOARD</Text>
           </TouchableOpacity>

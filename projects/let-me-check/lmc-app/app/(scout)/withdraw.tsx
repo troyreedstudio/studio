@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { requestPayout } from '../lib/payments';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 export default function WithdrawScreen() {
   const router = useRouter();
@@ -157,11 +158,13 @@ export default function WithdrawScreen() {
           style={[
             styles.withdrawBtn,
             (!validAmount || processing) && styles.withdrawBtnDisabled,
+            validAmount && !processing && ctaGlowShadow,
           ]}
           disabled={!validAmount || processing}
           onPress={handleWithdraw}
           activeOpacity={0.85}
         >
+          {validAmount && !processing && <CtaGlow radius={14} />}
           <Text style={styles.withdrawBtnText}>
             {processing
               ? 'PROCESSING...'

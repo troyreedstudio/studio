@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useScoutEarnings } from '../state/scout-earnings';
 import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 const MAX_BAR_HEIGHT = 110;
 
@@ -303,7 +304,7 @@ export default function EarningsScreen() {
                   </View>
                 </View>
                 <TouchableOpacity
-                  style={[styles.withdrawBtn, available <= 0 && styles.withdrawBtnDisabled]}
+                  style={[styles.withdrawBtn, available <= 0 && styles.withdrawBtnDisabled, available > 0 && ctaGlowShadow]}
                   activeOpacity={0.85}
                   disabled={available <= 0}
                   onPress={() => {
@@ -320,6 +321,7 @@ export default function EarningsScreen() {
                     });
                   }}
                 >
+                  {available > 0 && <CtaGlow radius={12} />}
                   <Text style={styles.withdrawBtnText}>WITHDRAW TO BANK</Text>
                 </TouchableOpacity>
                 <Text style={styles.withdrawFoot}>

@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { getConnectStatus, startConnectOnboarding } from '../lib/payments';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type VerifyState =
   | { phase: 'loading' }
@@ -163,11 +164,12 @@ export default function VerificationScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.primaryBtn, opening && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, opening && styles.primaryBtnDisabled, !opening && ctaGlowShadow]}
               onPress={handleReVerify}
               disabled={opening}
               activeOpacity={0.85}
             >
+              {!opening && <CtaGlow radius={14} />}
               <Ionicons
                 name="open-outline"
                 size={16}

@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { getConnectStatus, startConnectOnboarding } from '../lib/payments';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type ConnectState =
   | { phase: 'loading' }
@@ -136,11 +137,12 @@ export default function PayoutMethodScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.primaryBtn, opening && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, opening && styles.primaryBtnDisabled, !opening && ctaGlowShadow]}
               onPress={handleOpenStripe}
               disabled={opening}
               activeOpacity={0.85}
             >
+              {!opening && <CtaGlow radius={14} />}
               <Ionicons name="open-outline" size={16} color={opening ? colors.textTertiary : colors.onRed} />
               <Text style={[styles.primaryBtnText, opening && styles.primaryBtnTextDim]}>
                 {opening ? 'OPENING STRIPE...' : 'SET UP PAYOUTS'}
@@ -216,11 +218,12 @@ export default function PayoutMethodScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.primaryBtn, opening && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, opening && styles.primaryBtnDisabled, !opening && ctaGlowShadow]}
               onPress={handleOpenStripe}
               disabled={opening}
               activeOpacity={0.85}
             >
+              {!opening && <CtaGlow radius={14} />}
               <Ionicons name="open-outline" size={16} color={opening ? colors.textTertiary : colors.onRed} />
               <Text style={[styles.primaryBtnText, opening && styles.primaryBtnTextDim]}>
                 {opening ? 'OPENING STRIPE...' : 'COMPLETE IN STRIPE'}

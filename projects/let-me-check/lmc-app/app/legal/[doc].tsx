@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { recordDocConsent } from '../lib/consent';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 type DocKey = 'terms' | 'privacy' | 'aup' | 'code';
 
@@ -239,11 +240,12 @@ export default function LegalDocScreen() {
           ))}
 
           <TouchableOpacity
-            style={[styles.acceptBtn, accepted && styles.acceptBtnDone]}
+            style={[styles.acceptBtn, accepted && styles.acceptBtnDone, !accepted && ctaGlowShadow]}
             onPress={handleAccept}
             disabled={accepted}
             activeOpacity={0.85}
           >
+            {!accepted && <CtaGlow radius={14} />}
             <Text style={[styles.acceptBtnText, accepted && styles.acceptBtnTextDone]}>
               {accepted ? '✓ ACCEPTED' : 'I ACCEPT'}
             </Text>

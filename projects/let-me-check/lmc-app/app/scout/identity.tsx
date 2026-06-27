@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
+import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
 // Identity verification for Scouts is handled by Stripe Identity during the
 // Stripe Connect Express onboarding (the payout step). Stripe collects the
@@ -140,10 +141,11 @@ export default function ScoutIdentityScreen() {
 
           {/* CTA — proceed to payout setup where Stripe KYC actually happens */}
           <TouchableOpacity
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, ctaGlowShadow]}
             onPress={() => router.push('/scout/payout')}
             activeOpacity={0.85}
           >
+            <CtaGlow radius={14} />
             <View style={styles.primaryBtnInner}>
               <Ionicons name="arrow-forward" size={16} color={colors.onRed} />
               <Text style={styles.primaryBtnText}>CONTINUE TO PAYOUT SETUP</Text>
