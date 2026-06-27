@@ -332,8 +332,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   userName: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 24,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 22,
     color: colors.textPrimary,
     letterSpacing: 0.3,
     marginBottom: 5,

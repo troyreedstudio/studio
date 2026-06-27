@@ -107,8 +107,8 @@ const styles = StyleSheet.create({
   },
   scroll: { paddingHorizontal: 26, paddingBottom: 48 },
   title: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 28,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 25,
     color: colors.textPrimary,
     letterSpacing: 0.2,
     marginBottom: 10,

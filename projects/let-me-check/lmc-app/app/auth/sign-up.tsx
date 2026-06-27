@@ -526,8 +526,8 @@ const styles = StyleSheet.create({
   stepContent: { flex: 1 },
 
   title: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 24,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 22,
     color: colors.textPrimary,
     letterSpacing: 0,
     lineHeight: 32,

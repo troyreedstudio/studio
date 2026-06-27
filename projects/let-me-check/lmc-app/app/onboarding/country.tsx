@@ -276,8 +276,8 @@ const styles = StyleSheet.create({
   dot: { width: 20, height: 3, borderRadius: 2, backgroundColor: colors.border },
   dotDone: { backgroundColor: 'rgba(218,37,29,0.4)' },
   title: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 26,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 24,
     color: colors.textPrimary,
     paddingHorizontal: 22,
     marginBottom: 6,

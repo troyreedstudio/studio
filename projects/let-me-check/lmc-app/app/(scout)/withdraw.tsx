@@ -198,10 +198,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontFamily: 'BodoniModa_700Bold',
-    fontSize: 28,
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 25,
     color: colors.textPrimary,
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
     marginBottom: 5,
   },
   subtitle: {
