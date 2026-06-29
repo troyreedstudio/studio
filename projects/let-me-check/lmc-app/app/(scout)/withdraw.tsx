@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { requestPayout } from '../lib/payments';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
+import { BackButton } from '../components/BackButton';
 
 export default function WithdrawScreen() {
   const router = useRouter();
@@ -91,9 +92,7 @@ export default function WithdrawScreen() {
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(scout)/earnings" />
           <Text style={styles.title}>Withdraw</Text>
           <Text style={styles.subtitle}>Cash out your earnings to your bank</Text>
         </View>
@@ -191,12 +190,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 15,
-    marginBottom: 16,
-  },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 27,

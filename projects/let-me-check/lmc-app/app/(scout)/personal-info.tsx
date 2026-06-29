@@ -19,6 +19,7 @@ import { supabase } from '../lib/supabase';
 import { getProfile, updateProfile } from '../lib/api';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
+import { BackButton } from '../components/BackButton';
 
 export default function PersonalInfoScreen() {
   const router = useRouter();
@@ -107,12 +108,7 @@ export default function PersonalInfoScreen() {
         >
           {/* Top bar */}
           <View style={styles.topBar}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            >
-              <Text style={styles.backText}>‹ Back</Text>
-            </TouchableOpacity>
+            <BackButton fallback="/(scout)/profile" />
           </View>
 
           {/* Header */}
@@ -226,12 +222,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 8,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
   },
 
   header: {

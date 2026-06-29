@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { recordDocConsent } from '../lib/consent';
 import { colors } from '../lib/theme';
+import { BackButton } from '../components/BackButton';
 
 // Source of truth: docs/SCOUT-CONDUCT.md + docs/FILMING-POLICY.md.
 // Binding legal text lives in the full Scout Agreement (/legal/code) — these
@@ -93,9 +94,11 @@ export default function ScoutRulesScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => (page === 0 ? (router.canGoBack() ? router.back() : router.push('/scout/become')) : goTo(page - 1))}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            hitSlop={{ top: 14, bottom: 14, left: 14, right: 18 }}
+            style={styles.backBtn}
+            activeOpacity={0.7}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Ionicons name="chevron-back" size={26} color={colors.red} />
           </TouchableOpacity>
 
           <View style={styles.progressRow}>
@@ -272,13 +275,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
-    width: 80,
-  },
+  backBtn: { alignSelf: 'flex-start', marginLeft: -4 },
   progressRow: { flexDirection: 'row', gap: 6 },
   dot: { width: 20, height: 3, borderRadius: 2, backgroundColor: colors.border },
   dotDone: { backgroundColor: 'rgba(218,37,29,0.35)' },

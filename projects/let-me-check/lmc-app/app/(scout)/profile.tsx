@@ -20,6 +20,7 @@ import { supabase } from '../lib/supabase';
 import { colors } from '../lib/theme';
 import { CtaGlow } from '../components/CtaGlow';
 import { BottomNav } from '../components/BottomNav';
+import { BackButton } from '../components/BackButton';
 
 /**
  * Derive a stable, human-readable Scout ID from the user's Supabase auth UUID.
@@ -178,14 +179,7 @@ export default function ScoutProfileScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() =>
-              router.canGoBack() ? router.back() : router.push('/(scout)/dashboard')
-            }
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(scout)/dashboard" />
         </View>
 
         {/* Avatar */}
@@ -311,13 +305,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 22, paddingTop: 12 },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
   avatarSection: { alignItems: 'center', paddingVertical: 24 },
   avatarCircle: {
     width: 88,

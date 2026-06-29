@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useScoutEarnings } from '../state/scout-earnings';
+import { BackButton } from '../components/BackButton';
 import { getCheck } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
 import { colors } from '../lib/theme';
@@ -138,14 +139,7 @@ export default function SubmittedScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
-        <TouchableOpacity
-          style={styles.backFab}
-          onPress={() => router.replace('/(scout)/dashboard')}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
+        <BackButton fallback="/(scout)/dashboard" style={styles.backFab} />
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
@@ -393,10 +387,6 @@ const styles = StyleSheet.create({
     top: 6,
     left: 10,
     zIndex: 5,
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   scroll: { paddingBottom: 24 },
   body: { paddingHorizontal: 22, paddingTop: 24 },

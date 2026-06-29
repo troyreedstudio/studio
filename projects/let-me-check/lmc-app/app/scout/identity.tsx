@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
+import { BackButton } from '../components/BackButton';
 
 // Identity verification for Scouts is handled by Stripe Identity during the
 // Stripe Connect Express onboarding (the payout step). Stripe collects the
@@ -67,12 +68,7 @@ export default function ScoutIdentityScreen() {
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => (router.canGoBack() ? router.back() : router.push('/scout/become'))}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/scout/become" />
           <View style={styles.progressRow}>
             {[1, 2, 3].map((n) => (
               <View
@@ -172,12 +168,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 12,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
   dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },

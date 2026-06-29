@@ -18,6 +18,7 @@ import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 import { BottomNav } from '../components/BottomNav';
+import { BackButton } from '../components/BackButton';
 
 const MAX_BAR_HEIGHT = 110;
 
@@ -86,12 +87,7 @@ export default function EarningsScreen() {
         >
           {/* Top bar */}
           <View style={styles.topBar}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            >
-              <Text style={styles.backText}>‹ Back</Text>
-            </TouchableOpacity>
+            <BackButton fallback="/(scout)/dashboard" />
           </View>
 
           {/* Header */}
@@ -353,12 +349,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 8,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
   },
   header: {
     paddingHorizontal: 22,
