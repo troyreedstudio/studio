@@ -299,15 +299,15 @@ const styles = StyleSheet.create({
   },
   methodSpacer: { width: 22 },
 
-  // Google — platform-mandated white button
+  // Google — secondary grey button (matches sign-up; Apple=black primary, Google=grey)
   methodBtnGoogle: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: colors.white,
+    backgroundColor: colors.buttonGrey,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#D1D5DB',
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 18,
