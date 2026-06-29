@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, StyleSheet, type ViewStyle } from 'react-native';
+import { TouchableOpacity, StyleSheet, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { colors } from '../lib/theme';
@@ -14,11 +14,9 @@ import { colors } from '../lib/theme';
  */
 export function BackButton({
   fallback,
-  label = 'Back',
   style,
 }: {
   fallback?: string;
-  label?: string;
   style?: ViewStyle;
 }) {
   const router = useRouter();
@@ -29,23 +27,16 @@ export function BackButton({
   return (
     <TouchableOpacity
       onPress={onPress}
-      hitSlop={{ top: 12, bottom: 12, left: 12, right: 16 }}
-      style={[styles.row, style]}
+      hitSlop={{ top: 14, bottom: 14, left: 14, right: 18 }}
+      style={[styles.btn, style]}
       activeOpacity={0.7}
     >
-      <Ionicons name="chevron-back" size={22} color={colors.red} />
-      <Text style={styles.label}>{label}</Text>
+      <Ionicons name="chevron-back" size={26} color={colors.red} />
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' },
-  label: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 15,
-    letterSpacing: 0.2,
-    marginLeft: -2,
-  },
+  // arrow-only: a clean red chevron, no "Back" label (modern, compact, consistent)
+  btn: { alignSelf: 'flex-start', marginLeft: -4 },
 });
