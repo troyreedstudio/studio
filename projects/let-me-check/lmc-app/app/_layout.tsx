@@ -156,7 +156,9 @@ function BootGate() {
     // (Face ID succeeds but nothing happens). BootGate still routes on a cold
     // relaunch (splash/index group), which is the case it's for.
     const inEntryFlow = group === 'onboarding' || group === 'auth';
-    if (!inHub && !inEntryFlow) {
+    // TEMP: don't bounce the design-review Index/jumps back to the hub.
+    const inDesignReview = group === 'design-index';
+    if (!inHub && !inEntryFlow && !inDesignReview) {
       router.replace(hubRouteForRole(profile?.current_role) as never);
     }
   }, [loading, session, profile, segments, router]);
