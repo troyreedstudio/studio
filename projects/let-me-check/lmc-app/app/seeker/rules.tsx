@@ -86,9 +86,11 @@ export default function SeekerRulesScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => (page === 0 ? router.back() : goTo(page - 1))}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            hitSlop={{ top: 14, bottom: 14, left: 14, right: 18 }}
+            activeOpacity={0.7}
+            style={{ alignSelf: 'flex-start', marginLeft: -4 }}
           >
-            <Text style={styles.backText}>‹ Back</Text>
+            <Ionicons name="chevron-back" size={26} color={colors.red} />
           </TouchableOpacity>
 
           <View style={styles.progressRow}>
@@ -244,13 +246,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 12,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
-    width: 80,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
   dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },

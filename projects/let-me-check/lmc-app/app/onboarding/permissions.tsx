@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { requestUserLocation, detectCityByIP, getUserCity } from '../state/location';
 import { colors } from '../lib/theme';
+import { BackButton } from '../components/BackButton';
 
 type PermKey = 'location' | 'notif';
 type PermState = 'pending' | 'granted' | 'skipped';
@@ -128,12 +129,7 @@ export default function PermissionsScreen() {
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.canGoBack() ? router.back() : router.replace('/onboarding/role')}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/onboarding/role" />
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
               <View key={i} style={[styles.dot, styles.dotDone]} />
@@ -272,12 +268,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 16,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
   dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },

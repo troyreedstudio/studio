@@ -24,6 +24,7 @@ import { getIntendedRole } from '../state/intended-role';
 import { setManualLocation } from '../state/location';
 import { colors } from '../lib/theme';
 import { CtaGlow } from '../components/CtaGlow';
+import { BackButton } from '../components/BackButton';
 
 type Status = MarketStatus;
 type City = Market & { scouts: number; status: MarketStatus };
@@ -115,12 +116,7 @@ export default function CityPickerScreen() {
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.canGoBack() ? router.back() : router.replace('/onboarding/country')}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/onboarding/country" />
           <View style={styles.progressRow}>
             {[0, 1, 2, 3, 4].map((_, i) => (
               <View key={i} style={[styles.dot, styles.dotDone]} />
@@ -309,12 +305,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 16,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
   dot: { width: 24, height: 3, borderRadius: 2, backgroundColor: colors.border },

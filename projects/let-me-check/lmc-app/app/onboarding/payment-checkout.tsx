@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
+import { BackButton } from '../components/BackButton';
 
 export default function PaymentCheckoutScreen() {
   const router = useRouter();
@@ -20,9 +21,7 @@ export default function PaymentCheckoutScreen() {
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(seeker)/home')} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(seeker)/home" />
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll}>
@@ -98,12 +97,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 32,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
   },
   scroll: { paddingHorizontal: 26, paddingBottom: 48 },
   title: {

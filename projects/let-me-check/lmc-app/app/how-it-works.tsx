@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { colors } from './lib/theme';
+import { BackButton } from './components/BackButton';
 
 const CHROME_STOPS: [string, string, ...string[]] = [
   '#a8a8a8', '#ffffff', '#ffffff', '#f2f2f2', '#8c8c8c', '#363636', '#161616',
@@ -68,14 +69,7 @@ export default function HowItWorksScreen() {
 
       {/* Back to splash */}
       <SafeAreaView style={styles.backHeader} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={24} color={INK} />
-        </TouchableOpacity>
+        <BackButton fallback="/" style={styles.backBtn} />
       </SafeAreaView>
 
       {/* Combined trailer (placeholder clip) fills this frame */}

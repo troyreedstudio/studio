@@ -135,8 +135,8 @@ export default function SignUpScreen() {
 
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={goBack} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <Text style={styles.backText}>Back</Text>
+          <TouchableOpacity onPress={goBack} hitSlop={{ top: 14, bottom: 14, left: 14, right: 18 }} activeOpacity={0.7} style={{ alignSelf: 'flex-start', marginLeft: -4 }}>
+            <Ionicons name="chevron-back" size={26} color={colors.red} />
           </TouchableOpacity>
           <View style={styles.progressRow}>
             {STEPS.map((s) => {
@@ -483,12 +483,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 8,
     paddingBottom: 18,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
   },
   progressRow: { flexDirection: 'row', gap: 6 },
   progressDot: {
