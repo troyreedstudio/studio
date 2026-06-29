@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
+import { BottomNav } from '../components/BottomNav';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
@@ -1682,8 +1683,8 @@ export default function HomeScreen() {
         scaleBarEnabled={false}
         logoEnabled
         attributionEnabled
-        attributionPosition={{ bottom: 8, left: 8 }}
-        logoPosition={{ bottom: 8, left: 8 }}
+        attributionPosition={{ bottom: 92, left: 8 }}
+        logoPosition={{ bottom: 92, left: 8 }}
         onPress={handleMapPress}
         onCameraChanged={handleCameraChanged}
       >
@@ -1999,6 +2000,11 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </>
         )}
+      </View>
+
+      {/* Persistent tab bar — pinned at bottom over the map */}
+      <View style={styles.navWrap} pointerEvents="box-none">
+        <BottomNav variant="seeker" active="home" floating />
       </View>
     </View>
   );
@@ -2327,6 +2333,7 @@ const scoutInviteStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
+  navWrap: { position: 'absolute', bottom: 0, left: 0, right: 0 },
 
   topGradient: {
     position: 'absolute',
@@ -2488,14 +2495,14 @@ const styles = StyleSheet.create({
   // Bottom sheet — white card
   sheet: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 84,
     left: 0,
     right: 0,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 30,
+    paddingBottom: 18,
     borderTopWidth: 1,
     borderLeftWidth: 1,
     borderRightWidth: 1,
