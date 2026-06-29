@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useStripe } from '@stripe/stripe-react-native';
 import { addRecurring } from '../state/recurring';
+import { BackButton } from '../components/BackButton';
 import { usePaymentMethod } from '../state/payment-method';
 import { createPaymentHold, recordHold } from '../lib/payments';
 import { createCheck } from '../lib/checks';
@@ -143,9 +144,7 @@ export default function PaymentScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backText}>‹ Back</Text>
-        </TouchableOpacity>
+        <BackButton fallback="/(seeker)/home" />
         <Text style={styles.title}>CONFIRM YOUR CHECK</Text>
         <Text style={styles.subtitle}>Review before you pay</Text>
       </View>
