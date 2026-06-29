@@ -31,11 +31,14 @@ export function BottomNav({
   variant,
   active,
   floating = false,
+  onActivePress,
 }: {
   variant: 'seeker' | 'scout';
   active: TabKey;
   /** floating=true adds a translucent shadow so it reads over a map. */
   floating?: boolean;
+  /** Called when the ALREADY-active tab is tapped (e.g. tap Home on Home to reset it). */
+  onActivePress?: () => void;
 }) {
   const router = useRouter();
   const tabs = variant === 'seeker' ? SEEKER_TABS : SCOUT_TABS;
@@ -51,6 +54,7 @@ export function BottomNav({
             activeOpacity={0.7}
             onPress={() => {
               if (!isActive) router.replace(t.route as never);
+              else onActivePress?.();
             }}
           >
             <Ionicons name={t.icon} size={23} color={tint} />

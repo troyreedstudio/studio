@@ -2004,7 +2004,24 @@ export default function HomeScreen() {
 
       {/* Persistent tab bar — pinned at bottom over the map */}
       <View style={styles.navWrap} pointerEvents="box-none">
-        <BottomNav variant="seeker" active="home" floating />
+        <BottomNav
+          variant="seeker"
+          active="home"
+          floating
+          onActivePress={() => {
+            // Tap Home while already home → reset to a clean map: clear pin, close
+            // search, and recenter on the user (visible response, like "scroll to top").
+            setDroppedPin(null);
+            setSearchOpen(false);
+            const coords = getUserCoords() ?? market.center;
+            cameraRef.current?.setCamera({
+              centerCoordinate: coords as [number, number],
+              zoomLevel: 14.5,
+              pitch: 50,
+              animationDuration: 700,
+            });
+          }}
+        />
       </View>
     </View>
   );
