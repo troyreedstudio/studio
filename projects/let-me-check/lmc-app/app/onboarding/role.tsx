@@ -51,7 +51,7 @@ export default function RoleScreen() {
           {/* BOTH — the recommended hero */}
           <View style={styles.heroWrap}>
             <View style={styles.recommendedPill}>
-              <Ionicons name="star" size={9} color={colors.white} />
+              <Ionicons name="star" size={9} color={colors.buttonGreyText} />
               <Text style={styles.recommendedPillText}>RECOMMENDED</Text>
             </View>
             <TouchableOpacity
@@ -209,14 +209,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: colors.black,
+    backgroundColor: colors.buttonGrey,
     borderWidth: 1,
-    borderColor: colors.black,
+    borderColor: colors.buttonGrey,
   },
   recommendedPillText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.white,
+    color: colors.buttonGreyText,
     letterSpacing: 1.6,
   },
   heroCard: {
