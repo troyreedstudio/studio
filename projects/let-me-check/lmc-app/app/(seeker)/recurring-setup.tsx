@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { BackButton } from '../components/BackButton';
 import { addRecurring, type RecurringFreq } from '../state/recurring';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
@@ -60,12 +61,7 @@ export default function RecurringSetupScreen() {
       <SafeAreaView style={styles.safe}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(seeker)/recurring" />
           <Text style={styles.title}>Schedule a Check</Text>
           <View style={{ width: 50 }} />
         </View>
@@ -168,13 +164,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-  },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
-    width: 50,
   },
   title: {
     fontFamily: 'Inter_700Bold',

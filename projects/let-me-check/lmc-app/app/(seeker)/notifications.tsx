@@ -1,9 +1,9 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Switch, StatusBar } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Switch, StatusBar } from 'react-native';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { getProfile } from '../lib/api';
 import { colors } from '../lib/theme';
+import { BackButton } from '../components/BackButton';
 
 const SETTINGS = [
   { id: 'delivered', label: 'Check Delivered', sub: 'When your video is ready to watch', defaultValue: true },
@@ -21,7 +21,6 @@ const DEFAULT_VALUES = SETTINGS.reduce<Record<string, boolean>>(
 );
 
 export default function NotificationsScreen() {
-  const router = useRouter();
   const [values, setValues] = useState<Record<string, boolean>>(DEFAULT_VALUES);
   // Gate rendering of toggles until saved data has resolved so the UI never
   // shows default values that then snap to the persisted state.
@@ -66,9 +65,7 @@ export default function NotificationsScreen() {
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(seeker)/home" />
           <Text style={styles.title}>Notifications</Text>
           <Text style={styles.subtitle}>Choose what you want to hear from us</Text>
         </View>
@@ -106,7 +103,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 16 },
   title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: colors.textPrimary, letterSpacing: -0.4, marginBottom: 5 },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.textSecondary, letterSpacing: 0.3 },
   sectionLabel: {

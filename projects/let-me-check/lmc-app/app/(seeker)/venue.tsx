@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { isPartnerVenue, getMarketById, DEFAULT_MARKET_ID } from '../data/markets';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
+import { BackButton } from '../components/BackButton';
 
 export default function VenueScreen() {
   const router = useRouter();
@@ -41,15 +42,7 @@ export default function VenueScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => {
-              if (router.canGoBack()) router.back();
-              else router.replace('/(seeker)/home');
-            }}
-          >
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(seeker)/home" />
           <Text style={styles.venueName}>{name}</Text>
           <View style={styles.venueCityRow}>
             <Text style={styles.venueCity}>{city}</Text>
@@ -190,8 +183,6 @@ export default function VenueScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  backBtn: { marginBottom: 12 },
-  backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15 },
   venueName: {
     fontSize: 28,
     fontWeight: '800',

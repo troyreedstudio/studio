@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Linking, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { BackButton } from '../components/BackButton';
 import { colors } from '../lib/theme';
 
 const FAQS = [
@@ -31,9 +32,7 @@ export default function HelpScreen() {
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(seeker)/home" />
           <Text style={styles.title}>Help & Support</Text>
           <Text style={styles.subtitle}>How can we help you today?</Text>
         </View>
@@ -106,7 +105,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 16 },
   title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: colors.textPrimary, letterSpacing: -0.4, marginBottom: 5 },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.textSecondary, letterSpacing: 0.3 },
   sectionLabel: {

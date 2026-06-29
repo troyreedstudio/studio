@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { BackButton } from '../components/BackButton';
 import { switchRole, signOut } from '../lib/auth';
 import { deleteMyAccount } from '../lib/account';
 import { getProfile } from '../lib/api';
@@ -141,12 +142,7 @@ export default function ProfileScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => (router.canGoBack() ? router.back() : router.push('/(seeker)/home'))}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(seeker)/home" />
         </View>
 
         {/* Avatar */}
@@ -277,13 +273,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 22, paddingTop: 12 },
-  backText: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.red,
-    fontSize: 14,
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
   avatarSection: { alignItems: 'center', paddingVertical: 24 },
   avatarCircle: {
     width: 88,

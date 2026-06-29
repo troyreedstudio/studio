@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '../components/BackButton';
 import { useState, useEffect, useCallback } from 'react';
 import { listMyChecks, listMyRatings, type CheckRow } from '../lib/checks';
 import { colors } from '../lib/theme';
@@ -73,9 +74,7 @@ export default function HistoryScreen() {
         <StatusBar barStyle="dark-content" />
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(seeker)/home" />
           <Text style={styles.title}>Past Checks</Text>
         </View>
 
@@ -161,7 +160,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 14 },
   title: { fontFamily: 'Inter_700Bold', fontSize: 30, color: colors.textPrimary, letterSpacing: -0.4 },
   statsRow: {
     flexDirection: 'row', backgroundColor: colors.red, borderRadius: 16, overflow: 'hidden',

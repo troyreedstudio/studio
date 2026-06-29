@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { BackButton } from '../components/BackButton';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
@@ -62,14 +63,7 @@ export default function ErrorScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <TouchableOpacity
-        style={styles.backFab}
-        onPress={() => router.replace('/(seeker)/home')}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
-      </TouchableOpacity>
+      <BackButton fallback="/(seeker)/home" style={styles.backFab} />
       <View style={styles.inner}>
         {/* Icon */}
         <View style={styles.iconCircle}>

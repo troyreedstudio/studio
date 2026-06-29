@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, StatusBar } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { BackButton } from '../components/BackButton';
 import { supabase } from '../lib/supabase';
 import { getProfile } from '../lib/api';
 import { colors } from '../lib/theme';
@@ -18,7 +18,6 @@ const CITIES = [
 ];
 
 export default function PreferredCitiesScreen() {
-  const router = useRouter();
   // Start empty — real selection loads from the profile on mount.
   const [selected, setSelected] = useState<Set<string>>(new Set<string>());
   // Gate rendering of city rows until saved data has resolved so the UI never
@@ -65,9 +64,7 @@ export default function PreferredCitiesScreen() {
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>‹ Back</Text>
-          </TouchableOpacity>
+          <BackButton fallback="/(seeker)/home" />
           <Text style={styles.title}>Preferred Cities</Text>
           <Text style={styles.subtitle}>Get trending updates from cities you follow</Text>
         </View>
@@ -110,7 +107,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 22 },
-  backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 16 },
   title: { fontFamily: 'Inter_700Bold', fontSize: 28, color: colors.textPrimary, letterSpacing: -0.4, marginBottom: 5 },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.textSecondary, letterSpacing: 0.3 },
   sectionLabel: {
