@@ -127,7 +127,10 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: '#FFFFFF' },
           }}
         />
-        {__DEV__ && <DesignNavOverlay />}
+        {/* TEMP: visible in this build so Troy can jump to post-match pages (filming,
+            delivery, completion) for design review on a Release build. Re-gate to
+            `{__DEV__ && ...}` (or remove) before any public/launch build. */}
+        <DesignNavOverlay />
       </SessionProvider>
     </StripeProvider>
   );
