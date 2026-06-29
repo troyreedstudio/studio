@@ -89,6 +89,7 @@ export default function SignInScreen() {
                   >
                     <Text style={styles.methodIconApple}></Text>
                     <Text style={styles.methodLabelApple}>Continue with Apple</Text>
+                    <View style={styles.methodSpacer} />
                   </TouchableOpacity>
 
                   {/* Google — platform-mandated white button with brand colors */}
@@ -100,6 +101,7 @@ export default function SignInScreen() {
                   >
                     <Text style={styles.methodIconG}>G</Text>
                     <Text style={styles.methodLabelGoogle}>Continue with Google</Text>
+                    <View style={styles.methodSpacer} />
                   </TouchableOpacity>
 
                   {PHONE_AUTH_ENABLED ? (
@@ -110,6 +112,7 @@ export default function SignInScreen() {
                     >
                       <Ionicons name="call-outline" size={18} color={colors.textPrimary} style={styles.methodIconIon} />
                       <Text style={styles.methodLabel}>Continue with Phone</Text>
+                      <View style={styles.methodSpacer} />
                     </TouchableOpacity>
                   ) : (
                     <View style={[styles.methodBtn, styles.methodBtnDisabled]}>
@@ -117,6 +120,7 @@ export default function SignInScreen() {
                       <Text style={[styles.methodLabel, styles.methodLabelDisabled]}>
                         Phone — coming soon
                       </Text>
+                      <View style={styles.methodSpacer} />
                     </View>
                   )}
                 </View>
@@ -288,11 +292,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   methodLabelApple: {
+    flex: 1,
+    textAlign: 'center',
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
     color: '#ffffff',
     letterSpacing: 0.3,
   },
+  methodSpacer: { width: 22 },
 
   // Google — platform-mandated white button
   methodBtnGoogle: {
@@ -315,6 +322,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   methodLabelGoogle: {
+    flex: 1,
+    textAlign: 'center',
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
     color: colors.textPrimary,
@@ -346,6 +355,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   methodLabel: {
+    flex: 1,
+    textAlign: 'center',
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
     color: colors.textPrimary,
