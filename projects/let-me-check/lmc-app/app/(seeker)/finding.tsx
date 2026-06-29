@@ -249,6 +249,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     paddingTop: 8,
+    paddingHorizontal: 20,
   },
   cancelText: {
     fontFamily: 'Inter_500Medium',
