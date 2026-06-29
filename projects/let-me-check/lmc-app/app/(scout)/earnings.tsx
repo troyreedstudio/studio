@@ -17,6 +17,7 @@ import { useScoutEarnings } from '../state/scout-earnings';
 import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
+import { BottomNav } from '../components/BottomNav';
 
 const MAX_BAR_HEIGHT = 110;
 
@@ -333,6 +334,8 @@ export default function EarningsScreen() {
 
           <View style={{ height: 40 }} />
         </ScrollView>
+
+        <BottomNav variant="scout" active="earnings" />
       </SafeAreaView>
     </View>
   );

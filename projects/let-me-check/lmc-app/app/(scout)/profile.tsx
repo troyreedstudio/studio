@@ -19,6 +19,7 @@ import { getScoutEarnings, type ScoutEarnings } from '../lib/payments';
 import { supabase } from '../lib/supabase';
 import { colors } from '../lib/theme';
 import { CtaGlow } from '../components/CtaGlow';
+import { BottomNav } from '../components/BottomNav';
 
 /**
  * Derive a stable, human-readable Scout ID from the user's Supabase auth UUID.
@@ -171,9 +172,10 @@ export default function ScoutProfileScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+    <View style={styles.outerContainer}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -297,13 +299,16 @@ export default function ScoutProfileScreen() {
         </TouchableOpacity>
 
         <View style={{ height: 32 }} />
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+      <BottomNav variant="scout" active="profile" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  outerContainer: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1 },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 22, paddingTop: 12 },
   backText: {

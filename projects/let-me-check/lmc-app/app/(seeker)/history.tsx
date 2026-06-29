@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
 import { listMyChecks, listMyRatings, type CheckRow } from '../lib/checks';
 import { colors } from '../lib/theme';
+import { BottomNav } from '../components/BottomNav';
 
 // Seeker-paid total per tier (the pricing model). Used for the price label +
 // "Total Spent". Currency-aware display is a later refinement; symbol from row.
@@ -67,9 +68,10 @@ export default function HistoryScreen() {
     : 0;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+    <View style={styles.outerContainer}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.backText}>‹ Back</Text>
@@ -147,13 +149,16 @@ export default function HistoryScreen() {
         )}
 
         <View style={{ height: 24 }} />
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+      <BottomNav variant="seeker" active="activity" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  outerContainer: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1 },
   scroll: { paddingBottom: 32 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backText: { fontFamily: 'Inter_500Medium', color: colors.red, fontSize: 15, marginBottom: 14 },

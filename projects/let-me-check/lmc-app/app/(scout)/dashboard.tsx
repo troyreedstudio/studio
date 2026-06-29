@@ -18,6 +18,7 @@ import { acceptCheck, type CheckRow } from '../lib/checks';
 import { upsertScoutLocation, setScoutOffline } from '../lib/scout-location';
 import { listOpenChecksForScout } from '../lib/dispatch';
 import { colors } from '../lib/theme';
+import { BottomNav } from '../components/BottomNav';
 
 // Display-only payout label derived from the check tier. NO money is written
 // here — earnings are credited in Phase 4. Real pricing: standard $8, priority $12.
@@ -360,37 +361,7 @@ export default function ScoutDashboard() {
           )}
         </ScrollView>
 
-        {/* Bottom Nav */}
-        <View style={styles.navBar}>
-          <TouchableOpacity style={styles.navItem} activeOpacity={0.7}>
-            <Ionicons name="radio" size={20} color={colors.red} />
-            <Text style={[styles.navLabel, styles.navLabelActive]}>Dashboard</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.navItem}
-            activeOpacity={0.7}
-            onPress={() => router.push('/(scout)/earnings')}
-          >
-            <Ionicons name="stats-chart-outline" size={20} color={colors.textTertiary} />
-            <Text style={styles.navLabel}>Earnings</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.navItem}
-            activeOpacity={0.7}
-            onPress={() => router.replace('/(seeker)/home')}
-          >
-            <Ionicons name="eye-outline" size={20} color={colors.textTertiary} />
-            <Text style={styles.navLabel}>Seeker Mode</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.navItem}
-            activeOpacity={0.7}
-            onPress={() => router.push('/(scout)/profile')}
-          >
-            <Ionicons name="person-outline" size={20} color={colors.textTertiary} />
-            <Text style={styles.navLabel}>Profile</Text>
-          </TouchableOpacity>
-        </View>
+        <BottomNav variant="scout" active="dashboard" />
       </SafeAreaView>
     </View>
   );
@@ -399,7 +370,7 @@ export default function ScoutDashboard() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
-  scroll: { paddingBottom: 110 },
+  scroll: { paddingBottom: 24 },
 
   header: {
     flexDirection: 'row',
@@ -750,24 +721,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
 
-  navBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    backgroundColor: colors.bg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingBottom: 24,
-    paddingTop: 12,
-  },
-  navItem: { flex: 1, alignItems: 'center', gap: 4 },
-  navLabel: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 10,
-    color: colors.textTertiary,
-    letterSpacing: 0.5,
-  },
-  navLabelActive: { color: colors.red },
 });
