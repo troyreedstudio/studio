@@ -292,8 +292,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   methodLabelApple: {
-    flex: 1,
-    textAlign: 'center',
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
     color: '#ffffff',
@@ -322,8 +320,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   methodLabelGoogle: {
-    flex: 1,
-    textAlign: 'center',
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
     color: colors.textPrimary,
@@ -355,8 +351,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   methodLabel: {
-    flex: 1,
-    textAlign: 'center',
     fontFamily: 'Inter_600SemiBold',
     fontSize: 14,
     color: colors.textPrimary,
