@@ -17,6 +17,7 @@ import { useScoutEarnings } from '../state/scout-earnings';
 import { acceptCheck, type CheckRow } from '../lib/checks';
 import { upsertScoutLocation, setScoutOffline } from '../lib/scout-location';
 import { listOpenChecksForScout } from '../lib/dispatch';
+import { switchRole } from '../lib/auth';
 import { colors } from '../lib/theme';
 import { BottomNav } from '../components/BottomNav';
 
@@ -177,6 +178,17 @@ export default function ScoutDashboard() {
                 {online ? 'You\'re online, ready to earn' : 'You\'re offline'}
               </Text>
             </View>
+            <TouchableOpacity
+              style={styles.seekerSwitch}
+              onPress={() => {
+                void switchRole('seeker').catch(() => {});
+                router.replace('/(seeker)/home');
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="swap-horizontal" size={14} color={colors.red} />
+              <Text style={styles.seekerSwitchText}>SEEKER</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.profilePill}
               onPress={() => router.push('/(scout)/profile')}
@@ -398,6 +410,24 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 8,
     letterSpacing: 0.2,
+  },
+  seekerSwitch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    height: 42, // match the profile pill so they top-align cleanly in the header
+    borderRadius: 21,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginRight: 10,
+  },
+  seekerSwitchText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: colors.red,
+    letterSpacing: 1,
   },
   profilePill: {
     width: 42,
