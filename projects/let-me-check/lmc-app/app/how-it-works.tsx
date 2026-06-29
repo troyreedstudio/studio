@@ -46,7 +46,10 @@ export default function HowItWorksScreen() {
     p.muted = true;
   });
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  // Start true: the clip muted-autoplays, so assume playing — this avoids the
+  // play button flashing on screen during the splash → video-page transition.
+  // The playingChange listener below corrects it to false only on a real pause.
+  const [isPlaying, setIsPlaying] = useState(true);
 
   // Play once the clip reports ready (play() in the setup runs too early to stick).
   useEffect(() => {
