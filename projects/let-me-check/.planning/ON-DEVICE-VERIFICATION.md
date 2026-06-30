@@ -33,7 +33,7 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 ## C. Scout flow  (Phases 4/5/7/8)
 | Check | Status | Notes |
 |---|---|---|
-| Become a Scout → Verify ID & payouts (Stripe Connect) | ⚠️ | resume-from-profile design is CORRECT; but Stripe onboarding never completed (no scout_stripe_accounts row) |
+| Become a Scout → Verify ID & payouts (Stripe Connect) | ✅ | COMPLETED end-to-end on-device (acct_1To3Bk…, charges+payouts enabled, identity verified) after enabling Connect + the https-return fix. Button → "Manage in Stripe" |
 | Dashboard online/offline + incoming requests | ✅ | today (real dispatch) |
 | Accept job (atomic) | ✅ | today |
 | Filming — record 15s | ✅ | today |
@@ -46,7 +46,7 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 ### Findings (to fix)
 1. **❌ Go-online gate not enforced (Phase 4 / 04-04).** A Scout with NO `scout_stripe_accounts` row (payouts not enabled) was able to go online, accept, film, and deliver jobs — so they could work jobs they can't be paid for. Gate should block online/accept until `payouts_enabled`. Verify the stripe-connect-status go-online gate is actually wired client + server.
 2. ✅ Button IS wired — "Set up bank account" calls `stripe-connect-onboard` (good).
-3. **❌→🔧 `stripe-connect-onboard` HTTP 500 — CONFIRMED cause.** Deployed error-surfacing patch; exact Stripe error: *"You can only create new accounts if you've signed up for Connect (dashboard.stripe.com/connect)."* **Fix = Troy signs up for Connect in the Stripe TEST dashboard** (one-time, never done = never tested). Not a code bug.
+3. **✅ FIXED — `stripe-connect-onboard` HTTP 500.** Two root causes, both resolved: (a) Connect not signed up → Troy enabled it in the "Let me check" sandbox; (b) `account_links` rejected `lmc://` return URLs → added public `stripe-return` https function that deep-links back. Onboarding now completes end-to-end. Also added error-surfacing try/catch to the function.
    - **Code issue (likely next failure):** `accountLinks.create` uses `return_url`/`refresh_url` = `lmc://scout/payout?...` (custom scheme). Stripe typically **rejects non-https** account-link URLs — once Connect is enabled, this may need an https universal-link/redirect that bounces to `lmc://`.
    - **Code hygiene:** the function has **no try/catch** around the Stripe calls → returns a bare 500 with no message. Add error handling to surface the real Stripe error.
 
