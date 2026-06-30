@@ -15,13 +15,14 @@ const FAQS = [
   { q: 'Can I become a Scout?', a: 'Yes — switch modes anytime from your Profile. You\'ll need to pass a quick verification flow and link a payout account.' },
 ];
 
-const CONTACT_OPTIONS = [
+const CONTACT_OPTIONS: {
+  icon: string; label: string; value: string; href?: string; route?: string;
+}[] = [
   { icon: 'mail-outline', label: 'Email Support', value: 'help@letmecheck.com', href: 'mailto:help@letmecheck.com' },
   { icon: 'chatbubble-ellipses-outline', label: 'Live Chat', value: 'Mon-Fri, 9am-6pm EST', href: 'mailto:help@letmecheck.com' },
-  // PLACEHOLDER: swap for the hosted URL before submission (D-05)
-  { icon: 'document-text-outline', label: 'Terms of Service', value: 'lmc.app/terms', href: 'https://lmc.app/terms' },
-  // PLACEHOLDER: swap for the hosted URL before submission (D-05)
-  { icon: 'lock-closed-outline', label: 'Privacy Policy', value: 'lmc.app/privacy', href: 'https://lmc.app/privacy' },
+  // In-app legal screens (legal/[doc].tsx) — not the placeholder external URLs.
+  { icon: 'document-text-outline', label: 'Terms of Service', value: 'Read in the app', route: '/legal/terms' },
+  { icon: 'lock-closed-outline', label: 'Privacy Policy', value: 'Read in the app', route: '/legal/privacy' },
 ];
 
 export default function HelpScreen() {
@@ -56,7 +57,7 @@ export default function HelpScreen() {
               key={c.label}
               style={[styles.contactRow, i < CONTACT_OPTIONS.length - 1 && styles.contactRowBorder]}
               activeOpacity={0.7}
-              onPress={() => { if (c.href) void Linking.openURL(c.href); }}
+              onPress={() => { if (c.route) router.push(c.route as never); else if (c.href) void Linking.openURL(c.href); }}
             >
               <Ionicons name={c.icon as keyof typeof Ionicons.glyphMap} size={20} color={colors.red} style={styles.contactIcon} />
               <View style={styles.contactInfo}>
