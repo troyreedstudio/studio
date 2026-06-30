@@ -37,11 +37,12 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 | Dashboard online/offline + incoming requests | ✅ | today (real dispatch) |
 | Accept job (atomic) | ✅ | today |
 | Filming — record 15s | ✅ | today |
+| Trouble-Here report (refund) | ✅ | backend FIXED (was 500 "catch is not a function" — bad `.catch` on rpc); now reports + refunds Seeker. UI busy-state polish queued for rebuild |
 | **Submit → upload to Mux** | ❌ | **0% then fails — BROKEN** |
 | **On-device face blur** | ❌ | **OOM crash on submit — temp-disabled** |
 | Submitted / completion screen | 🔒 | blocked by upload |
 | Earnings tab | ✅ | real data (3 delivered, 5★, 100%); $0 to withdraw is correct (no payout account) |
-| Payout / Identity sections (resume setup) | ✅ | correctly show "set up bank" / "action needed" as the finish-later path |
+| Payout / Identity sections (resume setup) | ✅ | resume path works; post-setup shows active + "Manage in Stripe" reconnects to Stripe ✅ |
 
 ### Findings (to fix)
 1. **❌ Go-online gate not enforced (Phase 4 / 04-04).** A Scout with NO `scout_stripe_accounts` row (payouts not enabled) was able to go online, accept, film, and deliver jobs — so they could work jobs they can't be paid for. Gate should block online/accept until `payouts_enabled`. Verify the stripe-connect-status go-online gate is actually wired client + server.
@@ -50,11 +51,17 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
    - **Code issue (likely next failure):** `accountLinks.create` uses `return_url`/`refresh_url` = `lmc://scout/payout?...` (custom scheme). Stripe typically **rejects non-https** account-link URLs — once Connect is enabled, this may need an https universal-link/redirect that bounces to `lmc://`.
    - **Code hygiene:** the function has **no try/catch** around the Stripe calls → returns a bare 500 with no message. Add error handling to surface the real Stripe error.
 
-## D. PRIORITY FIX — Video pipeline  ← I own this, off Troy's plate
-The one never-verified-on-device path. Fix + test end-to-end:
-1. **Upload to Mux fails (0% → back to submit).** Diagnose (likely the New-Arch `uploadAsync` / Mux URL / network). Confirm via `idevicesyslog` on submit.
-2. **Blur OOM crash.** Re-engineer `modules/lmc-blur` to process frame-by-frame in `autoreleasepool` at a capped resolution; re-enable `BLUR_POST_RECORD_ENABLED`. (legal/required — see [[project_lmc_blur_memory_crash]])
-3. **Run the full loop on-device:** record → blur → upload → Seeker's screen flips to delivered → plays the Mux clip.
+## D. Video pipeline  ← was the broken path; now largely cracked
+1. **✅ Upload — FIXED.** The "0% fail" was NOT a code bug: the Mux **free plan caps at 10 assets** and it was full. Surfaced via the new error path; cleared 8 old test assets. Upload now works end-to-end (check `4b4f866b` reached `delivered`, clip `ready` + `playable`). **Before launch: upgrade Mux off the free plan.**
+2. **🔧 Blur OOM — FIX BUILT, pending morning on-device re-verify.** `LmcVideoExport.swift`: per-frame `autoreleasepool` + `CIContext cacheIntermediates:false`; capture→720p; `BLUR_POST_RECORD_ENABLED` re-enabled. See [[project_lmc_blur_memory_crash]]. If it still memory-kills → AVAssetReader/Writer streaming rewrite.
+3. **⏳ Full loop with blur ON** — record → blur → upload → deliver — to run in the morning.
+
+## MORNING TEST PLAN (first thing)
+1. **Blur** (the overnight fix): film + submit a clip → must NOT crash → secures → uploads. Confirm with `idevicecrashreport`/`idevicesyslog` (no new ReportMemoryException). Check the delivered clip's faces are blurred.
+2. **Seeker receiving flow** (set up, not yet run): Seeker requests a check → waiting/countdown screen → Guy delivers it on the backend → screen should flip live to Delivery → watch + rate → lands in History. (No manual "accept" step by design — confirm that's the intended UX.)
+3. **Help links** (fixed, needs this build): Seeker → Help → Terms/Privacy now open the in-app legal screens.
+4. **Design fixes** (this build): History red-circle badge, recurring icon circle, Scout name = Inter, Trouble-Here per-row spinner.
+5. **Still ⏳:** voice search, notifications, and the go-online gate finding (#1 — Scout could go online with no payout account).
 
 ## E. Payments (Stripe TEST)  (Phase 4) — ⏳ re-verify on-device
 Card hold at request · capture-on-delivery + Scout transfer · refunds / Trouble-Here.
