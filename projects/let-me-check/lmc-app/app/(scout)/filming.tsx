@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   Camera,
   useCameraDevice,
+  useCameraFormat,
   useCameraPermission,
 } from 'react-native-vision-camera';
 import * as Location from 'expo-location';
@@ -83,6 +84,13 @@ export default function FilmingScreen() {
   // can be absent on a simulator - the screen degrades gracefully.
   const camera = useRef<Camera>(null);
   const device = useCameraDevice('back');
+  // Cap recording to 1080p. The device default (4K on modern iPhones) makes the
+  // post-record face-blur re-encode 4K frames through Core Image, which spikes
+  // memory past iOS's limit and gets the app killed (Jetsam/OOM) on submit. 1080p
+  // is plenty for a 15s verification clip + face detection + signage reading.
+  const format = useCameraFormat(device, [
+    { videoResolution: { width: 1920, height: 1080 } },
+  ]);
   const { hasPermission, requestPermission } = useCameraPermission();
   useEffect(() => {
     if (!hasPermission) requestPermission().catch(() => {});
@@ -692,6 +700,7 @@ export default function FilmingScreen() {
         venue={String(venue)}
         cameraRef={camera}
         device={device}
+        format={format}
         hasPermission={hasPermission}
         onCameraInitialized={handleCameraInitialized}
       />

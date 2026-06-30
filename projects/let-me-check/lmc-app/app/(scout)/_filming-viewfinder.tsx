@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Camera, type CameraDevice } from 'react-native-vision-camera';
+import { Camera, type CameraDevice, type CameraFormat } from 'react-native-vision-camera';
 
 export function CameraViewfinder({
   visible,
@@ -26,6 +26,7 @@ export function CameraViewfinder({
   venue,
   cameraRef,
   device,
+  format,
   hasPermission,
   onCameraInitialized,
 }: {
@@ -36,6 +37,7 @@ export function CameraViewfinder({
   venue: string;
   cameraRef: React.RefObject<Camera | null>;
   device: CameraDevice | undefined;
+  format?: CameraFormat;
   hasPermission: boolean;
   onCameraInitialized?: () => void;
 }) {
@@ -72,6 +74,7 @@ export function CameraViewfinder({
             ref={cameraRef}
             style={StyleSheet.absoluteFill}
             device={device!}
+            format={format}
             isActive={visible}
             video={true}
             audio={false}
