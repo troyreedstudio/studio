@@ -131,10 +131,12 @@ export async function handleConnectOnboard(
   const link = await stripe.accountLinks.create({
     account: stripeAccountId,
     type: "account_onboarding",
-    // Deep-link scheme (app.config.js urlScheme='lmc') so the hosted Stripe flow
-    // returns the Scout directly back into the app (lmc-app/app/scout/payout.tsx).
-    refresh_url: "lmc://scout/payout?refresh=1",
-    return_url: "lmc://scout/payout?onboarded=1",
+    // Stripe rejects custom app schemes (lmc://) here ("not a valid URL") — these
+    // MUST be https. Point at the public `stripe-return` function, which is a valid
+    // https URL Stripe accepts and which bounces the Scout back into the app via the
+    // lmc:// deep link (lmc-app/app/scout/payout.tsx).
+    refresh_url: "https://cawqasszfbzvbtunamda.supabase.co/functions/v1/stripe-return?status=refresh",
+    return_url: "https://cawqasszfbzvbtunamda.supabase.co/functions/v1/stripe-return?status=onboarded",
   });
 
   // Audit log — T-04-21 repudiation mitigation (SCOUT-02).
@@ -170,6 +172,18 @@ if (import.meta.main) {
     }
 
     const stripe = await getStripeClient();
-    return handleConnectOnboard({ scoutId, payoutSpeed }, { stripe, svc: serviceClient() });
+    try {
+      return await handleConnectOnboard({ scoutId, payoutSpeed }, { stripe, svc: serviceClient() });
+    } catch (e) {
+      // Surface the real Stripe/runtime error instead of a bare 500 (diagnostics +
+      // the client can show a useful message). The most common cause here is
+      // Stripe Connect not being enabled/configured on the platform account.
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[stripe-connect-onboard] failed:", msg);
+      return new Response(JSON.stringify({ error: msg }), {
+        status: 500,
+        headers: { "content-type": "application/json" },
+      });
+    }
   });
 }

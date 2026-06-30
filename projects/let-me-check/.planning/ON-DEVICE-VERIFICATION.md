@@ -23,23 +23,32 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 | Check | Status | Notes |
 |---|---|---|
 | Home map / "Where do you need eyes?" | ✅ | today |
-| Search — place + voice | ⏳ | |
-| Request a check → payment (Stripe hold) | ⏳ | roadmap: 04-06 smoke-tested |
+| Search — place (Soho House NYC) | ✅ | today on-device |
+| Request a check → payment (Stripe hold) | ✅ | today: saved card picked up, hold placed, moved to Finding |
 | Finding a Scout (dispatch) | ✅ | correctly times out → "no scouts" |
+| Search — voice | ⏳ | not yet exercised |
 | Waiting / delivery countdown | ⏳ | |
 | Delivery — watch clip + rate | 🔒 | needs a delivered clip (blocked by D) |
 
 ## C. Scout flow  (Phases 4/5/7/8)
 | Check | Status | Notes |
 |---|---|---|
-| Become a Scout → Verify ID & payouts (Stripe Connect) | ⏳ | merged to one screen today |
+| Become a Scout → Verify ID & payouts (Stripe Connect) | ⚠️ | resume-from-profile design is CORRECT; but Stripe onboarding never completed (no scout_stripe_accounts row) |
 | Dashboard online/offline + incoming requests | ✅ | today (real dispatch) |
 | Accept job (atomic) | ✅ | today |
 | Filming — record 15s | ✅ | today |
 | **Submit → upload to Mux** | ❌ | **0% then fails — BROKEN** |
 | **On-device face blur** | ❌ | **OOM crash on submit — temp-disabled** |
 | Submitted / completion screen | 🔒 | blocked by upload |
-| Earnings / withdraw (Stripe) | ⏳ | |
+| Earnings tab | ✅ | real data (3 delivered, 5★, 100%); $0 to withdraw is correct (no payout account) |
+| Payout / Identity sections (resume setup) | ✅ | correctly show "set up bank" / "action needed" as the finish-later path |
+
+### Findings (to fix)
+1. **❌ Go-online gate not enforced (Phase 4 / 04-04).** A Scout with NO `scout_stripe_accounts` row (payouts not enabled) was able to go online, accept, film, and deliver jobs — so they could work jobs they can't be paid for. Gate should block online/accept until `payouts_enabled`. Verify the stripe-connect-status go-online gate is actually wired client + server.
+2. ✅ Button IS wired — "Set up bank account" calls `stripe-connect-onboard` (good).
+3. **❌→🔧 `stripe-connect-onboard` HTTP 500 — CONFIRMED cause.** Deployed error-surfacing patch; exact Stripe error: *"You can only create new accounts if you've signed up for Connect (dashboard.stripe.com/connect)."* **Fix = Troy signs up for Connect in the Stripe TEST dashboard** (one-time, never done = never tested). Not a code bug.
+   - **Code issue (likely next failure):** `accountLinks.create` uses `return_url`/`refresh_url` = `lmc://scout/payout?...` (custom scheme). Stripe typically **rejects non-https** account-link URLs — once Connect is enabled, this may need an https universal-link/redirect that bounces to `lmc://`.
+   - **Code hygiene:** the function has **no try/catch** around the Stripe calls → returns a bare 500 with no message. Add error handling to surface the real Stripe error.
 
 ## D. PRIORITY FIX — Video pipeline  ← I own this, off Troy's plate
 The one never-verified-on-device path. Fix + test end-to-end:
