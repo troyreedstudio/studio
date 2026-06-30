@@ -151,11 +151,22 @@ function BootGate() {
 
     const group = segments[0]; // e.g. '(seeker)', '(scout)', 'auth', 'onboarding'
     const inHub = group === '(seeker)' || group === '(scout)';
-    // Let the AUTH + ONBOARDING flows own their own routing — otherwise BootGate
-    // races the sign-up screen's post-sign-in navigation and both get dropped
-    // (Face ID succeeds but nothing happens). BootGate still routes on a cold
-    // relaunch (splash/index group), which is the case it's for.
-    const inEntryFlow = group === 'onboarding' || group === 'auth';
+    // Let the whole post-signup ONBOARDING flow own its own routing — otherwise
+    // BootGate bounces it to the hub and the user skips setup ("signed in but no
+    // onboarding screens"). The flow spans several route groups:
+    //   auth        — sign-up / sign-in
+    //   onboarding  — Almost done, country/city/permissions, both-fork ("which side first?")
+    //   seeker      — Service Standards (app/seeker/rules) — NOTE: NOT the '(seeker)' hub
+    //   scout       — Scout activation (become → identity → payout → approved) — NOT '(scout)' hub
+    //   legal       — terms/privacy/AUP opened mid-onboarding
+    // BootGate still routes a cold-launched signed-in user from the splash/marketing
+    // screens to their hub (that's the case it's for).
+    const inEntryFlow =
+      group === 'onboarding' ||
+      group === 'auth' ||
+      group === 'seeker' ||
+      group === 'scout' ||
+      group === 'legal';
     // TEMP: don't bounce the design-review Index/jumps back to the hub.
     const inDesignReview = group === 'design-index';
     if (!inHub && !inEntryFlow && !inDesignReview) {
