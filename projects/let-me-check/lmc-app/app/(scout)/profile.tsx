@@ -324,10 +324,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   userName: {
-    fontFamily: 'JetBrainsMono_700Bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 22,
     color: colors.textPrimary,
-    letterSpacing: 0.3,
+    letterSpacing: -0.4,
     marginBottom: 5,
   },
   memberSince: {
