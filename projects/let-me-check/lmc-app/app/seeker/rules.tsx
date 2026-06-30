@@ -113,7 +113,7 @@ export default function SeekerRulesScreen() {
           style={styles.pager}
         >
           {/* CARD 1 — What you'll get */}
-          <Card width={width} title="What you'll get">
+          <Card width={width} title="What you'll get as a Seeker">
             <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator={false}>
               {WILL_GET.map((r, i) => (
                 <DetailRow key={i} icon={r.icon} title={r.title} why={r.why} />
@@ -122,8 +122,8 @@ export default function SeekerRulesScreen() {
             <NextButton onPress={() => goTo(1)} />
           </Card>
 
-          {/* CARD 2 — What we'll never film */}
-          <Card width={width} title="What we'll never film">
+          {/* CARD 2 — What you'll never film as a Scout */}
+          <Card width={width} title="What you'll never film as a Scout">
             <ScrollView style={styles.cardScroll} contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator={false}>
               {WONT_FILM.map((r, i) => (
                 <DetailRow key={i} icon={r.icon} title={r.title} why={r.why} />
