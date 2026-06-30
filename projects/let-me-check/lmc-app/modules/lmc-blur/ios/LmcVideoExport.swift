@@ -40,10 +40,14 @@ struct LmcVideoExport {
   // Reused Metal-backed CIContext (Plan 03 blur uses the same instance).
   // Falls back to a default CIContext if no Metal device is available (simulator edge).
   static let ciContext: CIContext = {
+    // cacheIntermediates:false stops Core Image from accumulating intermediate
+    // textures across frames — a key source of the memory spike that jetsammed the
+    // app on submit (ReportMemoryException). Memory stays flat across the clip.
+    let opts: [CIContextOption: Any] = [.cacheIntermediates: false]
     if let device = MTLCreateSystemDefaultDevice() {
-      return CIContext(mtlDevice: device)
+      return CIContext(mtlDevice: device, options: opts)
     }
-    return CIContext()
+    return CIContext(options: opts)
   }()
 
   /// Re-encode the input clip to a NEW temp file, video track only, blurring the
@@ -77,12 +81,18 @@ struct LmcVideoExport {
     let composition = AVMutableVideoComposition(
       asset: asset,
       applyingCIFiltersWithHandler: { request in
-        let source = request.sourceImage
-        let rects = lookup.faceRects(at: request.compositionTime)
-        let output = rects.isEmpty
-          ? source
-          : blur.composite(source: source, normalizedFaceRects: rects)
-        request.finish(with: output, context: ciContext)
+        // autoreleasepool releases each frame's CIImage + intermediate buffers
+        // immediately instead of letting them pile up until the export finishes —
+        // the fix for the iOS per-app memory-limit kill on submit (Jetsam /
+        // ReportMemoryException). Memory now stays bounded per frame.
+        autoreleasepool {
+          let source = request.sourceImage
+          let rects = lookup.faceRects(at: request.compositionTime)
+          let output = rects.isEmpty
+            ? source
+            : blur.composite(source: source, normalizedFaceRects: rects)
+          request.finish(with: output, context: ciContext)
+        }
       }
     )
 

@@ -53,9 +53,11 @@ export const BLUR_POST_RECORD_MODE: PostRecordBlurMode = 'gaussian';
  * the path can be flipped off instantly if a device issue surfaces, without a
  * code change to the upload orchestration.
  */
-// TEMP (2026-06-30): flipped OFF for this design-review session only. The blur
-// re-encode exceeds iOS's per-app memory limit and crashes the app on submit
-// (confirmed via ReportMemoryException). MUST be turned back ON after the native
-// blur memory rework (process frame-by-frame, capped resolution). Legal/required
-// feature — do NOT ship with this false.
-export const BLUR_POST_RECORD_ENABLED = false;
+// Re-enabled (2026-07-01) after the native blur memory rework: per-frame
+// autoreleasepool + cacheIntermediates:false in LmcVideoExport.swift + a 720p
+// capture cap. Together these keep the blur re-encode's memory bounded so it no
+// longer trips iOS's per-app memory limit (the earlier Jetsam/ReportMemoryException
+// crash on submit). Legal/required feature. PENDING on-device re-verification
+// (film + submit) — if it still memory-kills, the next step is the AVAssetReader/
+// Writer streaming rewrite (see modules/lmc-blur notes).
+export const BLUR_POST_RECORD_ENABLED = true;

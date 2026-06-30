@@ -84,12 +84,14 @@ export default function FilmingScreen() {
   // can be absent on a simulator - the screen degrades gracefully.
   const camera = useRef<Camera>(null);
   const device = useCameraDevice('back');
-  // Cap recording to 1080p. The device default (4K on modern iPhones) makes the
-  // post-record face-blur re-encode 4K frames through Core Image, which spikes
-  // memory past iOS's limit and gets the app killed (Jetsam/OOM) on submit. 1080p
-  // is plenty for a 15s verification clip + face detection + signage reading.
+  // Cap recording to 720p. The device default (4K) made the post-record face-blur
+  // re-encode huge frames through Core Image and the app got memory-killed on submit
+  // (Jetsam/ReportMemoryException). Paired with the per-frame autoreleasepool +
+  // cacheIntermediates:false in LmcVideoExport, 720p keeps blur memory well under the
+  // limit. 720p is plenty for a 15s verification clip + face/signage. (Can bump back
+  // to 1080p once on-device memory headroom is confirmed comfortable.)
   const format = useCameraFormat(device, [
-    { videoResolution: { width: 1920, height: 1080 } },
+    { videoResolution: { width: 1280, height: 720 } },
   ]);
   const { hasPermission, requestPermission } = useCameraPermission();
   useEffect(() => {
