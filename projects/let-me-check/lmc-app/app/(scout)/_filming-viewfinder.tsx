@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Camera, type CameraDevice, type CameraFormat } from 'react-native-vision-camera';
+import { Camera, type CameraDevice, type CameraDeviceFormat } from 'react-native-vision-camera';
 
 export function CameraViewfinder({
   visible,
@@ -37,7 +37,7 @@ export function CameraViewfinder({
   venue: string;
   cameraRef: React.RefObject<Camera | null>;
   device: CameraDevice | undefined;
-  format?: CameraFormat;
+  format?: CameraDeviceFormat;
   hasPermission: boolean;
   onCameraInitialized?: () => void;
 }) {
