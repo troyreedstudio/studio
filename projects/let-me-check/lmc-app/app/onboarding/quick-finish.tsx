@@ -77,8 +77,24 @@ export default function QuickFinishScreen() {
   const nameAutoFilled = isAutoFill && autoFilledName;
   const emailAutoFilled = isAutoFill && autoFilledEmail;
 
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const ready = first.length >= 1 && last.length >= 1 && emailOk && consented;
+  // Trim before validating — Apple/Google can hand back values with stray
+  // whitespace, which silently failed the strict email pattern and left the
+  // Finish button dead with no explanation.
+  const ft = first.trim();
+  const lt = last.trim();
+  const et = email.trim();
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(et);
+  const ready = ft.length >= 1 && lt.length >= 1 && emailOk && consented;
+  // Tell the user WHY the button is disabled (a silent dead button reads as broken).
+  const missingReason = ready
+    ? ''
+    : !ft.length
+    ? 'Enter your first name'
+    : !lt.length
+    ? 'Enter your last name'
+    : !emailOk
+    ? 'Enter a valid email address'
+    : 'Tick "I am 18 or older" to continue';
 
   const handleFinish = async () => {
     if (submitting) return;
@@ -162,7 +178,7 @@ export default function QuickFinishScreen() {
                   style={[styles.input, nameAutoFilled && styles.inputAutoFilled]}
                   value={first}
                   onChangeText={setFirst}
-                  placeholder="Troy"
+                  placeholder="First name"
                   placeholderTextColor={colors.textTertiary}
                   autoCapitalize="words"
                   autoCorrect={false}
@@ -179,7 +195,7 @@ export default function QuickFinishScreen() {
                   style={[styles.input, nameAutoFilled && styles.inputAutoFilled]}
                   value={last}
                   onChangeText={setLast}
-                  placeholder="Reed"
+                  placeholder="Last name"
                   placeholderTextColor={colors.textTertiary}
                   autoCapitalize="words"
                   autoCorrect={false}
@@ -314,6 +330,10 @@ export default function QuickFinishScreen() {
               </Text>
             </View>
           </View>
+
+          {!ready && !!missingReason && (
+            <Text style={styles.missingHint}>{missingReason}</Text>
+          )}
 
           <TouchableOpacity
             style={[styles.primaryBtn, (!ready || submitting) && styles.primaryBtnDisabled]}
@@ -586,6 +606,14 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
 
+  missingHint: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12.5,
+    color: colors.red,
+    textAlign: 'center',
+    marginBottom: 10,
+    letterSpacing: 0.2,
+  },
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
