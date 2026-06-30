@@ -96,10 +96,14 @@ export async function handleTroubleReport(
   //    transition_check(no_scout) from a terminal state will raise, so the
   //    function returns a server error on a true duplicate. The event_log check
   //    is an additional guard surfaced via the check_event_exists RPC if available.
+  // svc.rpc(...) is thenable but has NO .catch() — it resolves to {data, error}
+  // and never rejects. The old `.catch(...)` threw "catch is not a function" and
+  // 500'd the whole request. Await directly: if the guard RPC errors or is absent,
+  // `data` is null and we fall through to the transition (the real idempotency layer).
   const { data: nofaultExists } = await svc.rpc("check_event_exists", {
     p_event_type: "payment.scout_nofault_paid",
     p_subject_id: checkId,
-  }).catch(() => ({ data: null }));
+  });
 
   if (nofaultExists === true) {
     return Response.json({ status: "reported" });

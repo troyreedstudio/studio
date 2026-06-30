@@ -153,6 +153,9 @@ export default function FilmingScreen() {
   const [troubleOpen, setTroubleOpen] = useState(false);
   const [troubleReason, setTroubleReason] = useState<string | null>(null);
   const [troubleBusy, setTroubleBusy] = useState(false);
+  // Which specific reason is being submitted — so ONLY that row shows the spinner,
+  // instead of every row blanking to "Reporting…" at once.
+  const [submittingReason, setSubmittingReason] = useState<string | null>(null);
   const [takesCount, setTakesCount] = useState(0);
   const MAX_TAKES = 3;
   // Real upload orchestration (extracted to lib/clips). Drives the progress UI
@@ -648,11 +651,15 @@ export default function FilmingScreen() {
               {TROUBLE_REASONS.map((r) => (
                 <TouchableOpacity
                   key={r}
-                  style={[styles.troubleReasonRow, troubleBusy && { opacity: 0.4 }]}
+                  style={[
+                    styles.troubleReasonRow,
+                    troubleBusy && submittingReason !== r && { opacity: 0.4 },
+                  ]}
                   activeOpacity={0.7}
                   disabled={troubleBusy}
                   onPress={async () => {
                     if (!checkId || troubleBusy) return;
+                    setSubmittingReason(r);
                     setTroubleBusy(true);
                     try {
                       await reportTrouble(String(checkId), r);
@@ -661,19 +668,24 @@ export default function FilmingScreen() {
                       // route the Scout back to their dashboard.
                       setTroubleReason(r);
                       setTroubleOpen(false);
-                      setTimeout(() => router.replace('/(scout)/dashboard'), 2000);
+                      setTimeout(() => router.replace('/(scout)/dashboard'), 2800);
                     } catch (err) {
                       const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
                       Alert.alert('Could not report trouble', msg);
                     } finally {
                       setTroubleBusy(false);
+                      setSubmittingReason(null);
                     }
                   }}
                 >
                   <Text style={styles.troubleReasonText}>
-                    {troubleBusy ? 'Reporting...' : r}
+                    {submittingReason === r ? 'Reporting…' : r}
                   </Text>
-                  <Ionicons name="chevron-forward" size={14} color={colors.textTertiary} />
+                  {submittingReason === r ? (
+                    <ActivityIndicator size="small" color={colors.red} />
+                  ) : (
+                    <Ionicons name="chevron-forward" size={14} color={colors.textTertiary} />
+                  )}
                 </TouchableOpacity>
               ))}
             </View>
