@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -43,9 +44,19 @@ export default function SignInScreen() {
     setError(null);
     setBusy(true);
     try {
-      await fn();
+      await Promise.race([
+        fn(),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Sign-in timed out — the provider never responded. Tap to try again.')),
+            40000,
+          ),
+        ),
+      ]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sign in failed. Please try again.');
+      const msg = e instanceof Error ? e.message : 'Sign in failed. Please try again.';
+      setError(msg);
+      Alert.alert('Sign-in problem', msg);
     } finally {
       setBusy(false);
     }

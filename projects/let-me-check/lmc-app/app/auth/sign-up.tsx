@@ -10,6 +10,7 @@ import {
   Animated,
   StatusBar,
   Modal,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -92,10 +93,23 @@ export default function SignUpScreen() {
     setError(null);
     setSubmitting(true);
     try {
-      await fn();
+      // Timeout guard: a native sign-in that never returns must not lock the
+      // buttons forever (submitting stuck true). Surface it instead.
+      await Promise.race([
+        fn(),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Sign-in timed out — the provider never responded. Tap to try again.')),
+            40000,
+          ),
+        ),
+      ]);
       next();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sign up failed. Please try again.');
+      const msg = e instanceof Error ? e.message : 'Sign up failed. Please try again.';
+      setError(msg);
+      // Make failures impossible to miss while we debug auth on-device.
+      Alert.alert('Sign-in problem', msg);
     } finally {
       setSubmitting(false);
     }
