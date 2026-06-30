@@ -170,6 +170,15 @@ export default function FilmingScreen() {
     clipUpload.status === 'uploading' ||
     clipUpload.status === 'processing';
   const uploadPct = Math.round(clipUpload.progress * 100);
+
+  // Surface a failed upload to the Scout instead of silently dropping back to the
+  // submit button — shows the real error (e.g. the Mux/server reason) so failures
+  // are diagnosable on-device, not invisible.
+  useEffect(() => {
+    if (clipUpload.status === 'error' && clipUpload.error) {
+      Alert.alert('Upload problem', clipUpload.error);
+    }
+  }, [clipUpload.status, clipUpload.error]);
   const haloPulse = useRef(new Animated.Value(1)).current;
 
   // Breathing halo on the idle record button - subtle futuristic pulse

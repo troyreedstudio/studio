@@ -146,9 +146,20 @@ if (import.meta.main) Deno.serve(async (req: Request) => {
   } catch (_e) {
     return new Response("bad body", { status: 400 });
   }
-  const mux = await getMuxClient();
-  return handleUploadUrl(
-    { checkId, callerId, filmed_lat, filmed_lng, filmed_accuracy_m, fraud_signals },
-    { mux, svc: serviceClient() },
-  );
+  try {
+    const mux = await getMuxClient();
+    return await handleUploadUrl(
+      { checkId, callerId, filmed_lat, filmed_lng, filmed_accuracy_m, fraud_signals },
+      { mux, svc: serviceClient() },
+    );
+  } catch (e) {
+    // Surface the real Mux/runtime error instead of a bare 500 — the client puts
+    // this in the upload error state so the Scout sees why the upload failed.
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[mux-upload-url] failed:", msg);
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }
 });
