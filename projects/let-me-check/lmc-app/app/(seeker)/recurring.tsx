@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   cardIconWrap: {
     width: 38,
     height: 38,
-    borderRadius: 10,
+    borderRadius: 19,
     backgroundColor: 'rgba(218,37,29,0.08)',
     borderWidth: 1,
     borderColor: 'rgba(218,37,29,0.18)',

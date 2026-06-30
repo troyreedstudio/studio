@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { listMyChecks, listMyRatings, type CheckRow } from '../lib/checks';
 import { colors } from '../lib/theme';
 import { BottomNav } from '../components/BottomNav';
+import { CtaGlow } from '../components/CtaGlow';
 
 // Seeker-paid total per tier (the pricing model). Used for the price label +
 // "Total Spent". Currency-aware display is a later refinement; symbol from row.
@@ -116,6 +117,7 @@ export default function HistoryScreen() {
               >
                 <View style={styles.checkLeft}>
                   <View style={styles.venueAvatar}>
+                    <CtaGlow radius={22} />
                     <Text style={styles.venueAvatarText}>{label[0]?.toUpperCase() ?? '?'}</Text>
                   </View>
                   <View style={styles.checkInfo}>
@@ -187,10 +189,10 @@ const styles = StyleSheet.create({
   },
   checkLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   venueAvatar: {
-    width: 44, height: 44, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1,
-    borderColor: colors.border, justifyContent: 'center', alignItems: 'center', marginRight: 12,
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.red, overflow: 'hidden',
+    justifyContent: 'center', alignItems: 'center', marginRight: 12,
   },
-  venueAvatarText: { fontFamily: 'JetBrainsMono_700Bold', fontSize: 22, color: colors.textTertiary, letterSpacing: 0.3 },
+  venueAvatarText: { fontFamily: 'Inter_700Bold', fontSize: 20, color: colors.white, letterSpacing: 0 },
   checkInfo: { flex: 1 },
   checkVenue: { fontFamily: 'Inter_700Bold', fontSize: 17, color: colors.textPrimary, letterSpacing: 0.3, marginBottom: 3 },
   checkCity: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.textSecondary, letterSpacing: 0.3, marginBottom: 5 },
