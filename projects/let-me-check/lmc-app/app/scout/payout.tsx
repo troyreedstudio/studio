@@ -133,9 +133,9 @@ export default function ScoutPayoutScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Start earning</Text>
+          <Text style={styles.title}>Verify ID & set up payouts</Text>
           <Text style={styles.subtitle}>
-            Here&apos;s what you&apos;ll make. Set up your payouts below, secured by Stripe.
+            Here&apos;s what you&apos;ll make. To get paid, Stripe verifies your ID (photo ID + selfie) and connects your bank in one secure step, about 2 minutes. We never see your ID.
           </Text>
 
           {/* WHAT YOU EARN — lead with the upside */}

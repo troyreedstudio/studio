@@ -15,8 +15,7 @@ import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 import { BackButton } from '../components/BackButton';
 
 const STEPS = [
-  { icon: 'card-outline', title: 'Verify your identity', time: '2 min', why: 'Photo of your gov ID + selfie. Handled by Stripe Identity.', route: '/scout/identity' as const },
-  { icon: 'cash-outline', title: 'Start earning', time: '5 min', why: 'Add your bank and earnings land straight in your account. Secured by Stripe Connect.', route: '/scout/payout' as const },
+  { icon: 'card-outline', title: 'Verify ID & set up payouts', time: '5 min', why: 'Stripe verifies your gov ID + selfie and connects your bank in one secure step. We never see your ID.', route: '/scout/payout' as const },
   { icon: 'document-text-outline', title: 'The Scout Code', time: '2 min', why: 'What every Scout agrees to. Independent contractor terms.', route: '/scout/rules' as const },
   { icon: 'checkmark-circle-outline', title: 'Get approved', time: 'Instant', why: 'Most Scouts approved in under 10 min total.', route: '/scout/approved' as const },
 ];
@@ -68,7 +67,7 @@ export default function BecomeScoutScreen() {
 
           <TouchableOpacity
             style={[styles.primaryBtn, ctaGlowShadow]}
-            onPress={() => router.push('/scout/identity')}
+            onPress={() => router.push('/scout/payout')}
             activeOpacity={0.85}
           >
             <CtaGlow radius={14} />

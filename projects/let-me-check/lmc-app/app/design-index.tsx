@@ -128,10 +128,6 @@ const SECTIONS: Section[] = [
         path: '/scout/become',
       },
       {
-        label: 'Identity Verification',
-        path: '/scout/identity',
-      },
-      {
         label: 'Payout Setup',
         path: '/scout/payout',
       },
