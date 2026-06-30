@@ -400,8 +400,8 @@ export default function FilmingScreen() {
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 10,
-                backgroundColor: outOfRange ? 'rgba(176,21,27,0.06)' : 'rgba(22,163,74,0.08)',
-                borderColor: outOfRange ? colors.danger : colors.verified,
+                backgroundColor: outOfRange ? 'rgba(176,21,27,0.06)' : colors.surface,
+                borderColor: outOfRange ? colors.danger : colors.border,
                 borderWidth: 1,
                 borderRadius: 14,
                 paddingVertical: 14,
@@ -555,7 +555,7 @@ export default function FilmingScreen() {
                   activeOpacity={0.9}
                   onPress={handleSubmit}
                 >
-                  <Ionicons name="arrow-up" size={14} color="#000" />
+                  <Ionicons name="arrow-up" size={14} color={colors.onRed} />
                   <Text style={styles.submitBtnText}>SUBMIT VIDEO</Text>
                 </TouchableOpacity>
               </View>

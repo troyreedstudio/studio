@@ -53,4 +53,9 @@ export const BLUR_POST_RECORD_MODE: PostRecordBlurMode = 'gaussian';
  * the path can be flipped off instantly if a device issue surfaces, without a
  * code change to the upload orchestration.
  */
-export const BLUR_POST_RECORD_ENABLED = true;
+// TEMP (2026-06-30): flipped OFF for this design-review session only. The blur
+// re-encode exceeds iOS's per-app memory limit and crashes the app on submit
+// (confirmed via ReportMemoryException). MUST be turned back ON after the native
+// blur memory rework (process frame-by-frame, capped resolution). Legal/required
+// feature — do NOT ship with this false.
+export const BLUR_POST_RECORD_ENABLED = false;
