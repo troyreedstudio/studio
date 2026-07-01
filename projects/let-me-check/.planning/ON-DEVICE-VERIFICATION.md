@@ -69,7 +69,7 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 - **✅ Card hold at request** — verified (real `authorized` PI on the test card).
 - **✅ Capture-on-delivery + Scout transfer — VERIFIED (hold → captured → `scout_paid: true`).**
   - 🐛 **FIXED (critical):** `stripe-capture` loaded the check with `.eq('check_id', …)` but the checks PK is `id` → `scout_id` was always null → **every Scout transfer deferred forever (Scouts never paid).** Changed to `.eq('id', …)`, deployed; re-tested → transfer completes. Would have shipped broken.
-- **✅ Refunds / Trouble-Here** — Trouble-Here refund verified earlier; cancel-refund path seen.
+- **✅ Refunds — fully verified.** Scout Trouble-Here refund ✅; Seeker "problem with my video" refund ✅ (reported too-blurry → instant refund; payment `refunded`, Scout kept pay per D-08). 🐛 `stripe-refund` had the SAME `.eq('check_id')`-on-checks bug → refunds always 404'd; fixed to `.eq('id')`, deployed, verified. Swept all fns — no others.
 - (Test artifact: check `9d49fd44` is captured-but-not-transferred from the pre-fix run — harmless test data.)
 
 ## F. Notifications (Phase 10) — ⏳
