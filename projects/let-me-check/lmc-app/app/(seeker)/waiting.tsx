@@ -7,6 +7,7 @@ import { getCheck, cancelCheck, type CheckRow } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
 import { getUserCoords } from '../state/location';
 import { colors } from '../lib/theme';
+import { CtaGlow } from '../components/CtaGlow';
 
 function PulsingMarker({ coordinate }: { coordinate: [number, number] }) {
   const pulse = useRef(new Animated.Value(0)).current;
@@ -273,6 +274,7 @@ export default function WaitingScreen() {
 
       {/* Bottom sheet — countdown is the hero moment */}
       <View style={styles.sheet}>
+        <CtaGlow radius={28} />
         <View style={styles.sheetHandle} />
 
         {/* Brand mark — full wordmark, not the LMC shorthand */}
@@ -284,7 +286,7 @@ export default function WaitingScreen() {
         </Text>
         {/* Real countdown to the delivery deadline (the hero moment). */}
         {mmss ? (
-          <Text style={styles.statusHero}>{mmss}</Text>
+          <Text style={styles.statusClock}>{mmss}</Text>
         ) : (
           <Text style={styles.statusHero}>
             {isFilming ? 'Recording your video…' : 'Getting into position…'}
@@ -370,9 +372,9 @@ export default function WaitingScreen() {
 
 function Step({ label, state }: { label: string; state: 'done' | 'active' | 'pending' }) {
   const dotColor =
-    state === 'done' ? colors.verified : state === 'active' ? colors.red : colors.border;
+    state === 'pending' ? 'rgba(255,255,255,0.35)' : colors.white;
   const labelColor =
-    state === 'pending' ? colors.textTertiary : colors.textPrimary;
+    state === 'pending' ? 'rgba(255,255,255,0.55)' : colors.white;
   return (
     <View style={stepStyles.col}>
       <View style={[stepStyles.dot, { backgroundColor: dotColor }]}>
@@ -385,7 +387,7 @@ function Step({ label, state }: { label: string; state: 'done' | 'active' | 'pen
 
 function StepLine({ state }: { state: 'done' | 'active' | 'pending' }) {
   const color =
-    state === 'done' ? colors.verified : state === 'active' ? colors.red : colors.border;
+    state === 'pending' ? 'rgba(255,255,255,0.35)' : colors.white;
   return <View style={[stepStyles.line, { backgroundColor: color }]} />;
 }
 
@@ -530,7 +532,7 @@ const stepStyles = StyleSheet.create({
   check: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.onRed,
+    color: colors.red,
   },
   label: {
     fontFamily: 'JetBrainsMono_500Medium',
@@ -628,6 +630,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: colors.bg,
+    overflow: 'hidden',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 24,
@@ -646,7 +649,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(255,255,255,0.5)',
     alignSelf: 'center',
     marginBottom: 10,
   },
@@ -655,7 +658,7 @@ const styles = StyleSheet.create({
   brandMonogram: {
     fontFamily: 'Orbitron_700Bold',
     fontSize: 18,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 2,
     textAlign: 'center',
     marginBottom: 8,
@@ -665,19 +668,29 @@ const styles = StyleSheet.create({
   etaLabel: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 10,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.85)',
     letterSpacing: 2.8,
     textAlign: 'center',
     marginBottom: 4,
   },
   statusHero: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 24,
-    color: colors.textPrimary,
+    fontSize: 22,
+    color: colors.white,
     letterSpacing: 0.3,
     textAlign: 'center',
     lineHeight: 30,
     marginTop: 2,
+  },
+  statusClock: {
+    fontFamily: 'JetBrainsMono_700Bold',
+    fontSize: 62,
+    color: colors.white,
+    letterSpacing: -1.5,
+    textAlign: 'center',
+    lineHeight: 66,
+    marginTop: 4,
+    marginBottom: 2,
   },
   metaRow: {
     flexDirection: 'row',
@@ -692,19 +705,19 @@ const styles = StyleSheet.create({
   metaPrimary: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 0.3,
   },
   metaStatus: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.78)',
     letterSpacing: 0.3,
   },
   metaDot: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.5)',
     lineHeight: 14,
   },
 
@@ -721,7 +734,7 @@ const styles = StyleSheet.create({
 
   // Tier badges
   tierBadgePriority: {
-    backgroundColor: 'rgba(218,37,29,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 100,
     paddingHorizontal: 16,
     paddingVertical: 9,
@@ -733,19 +746,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
   },
   tierBadgeStandard: {
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.16)',
     borderRadius: 100,
     paddingHorizontal: 16,
     paddingVertical: 9,
     alignSelf: 'center',
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.35)',
   },
   tierBadgeText: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 11,
-    color: colors.black,
+    color: colors.white,
     letterSpacing: 2,
   },
 
@@ -756,7 +769,7 @@ const styles = StyleSheet.create({
   cancelLinkText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.85)',
     letterSpacing: 0.5,
   },
 });
