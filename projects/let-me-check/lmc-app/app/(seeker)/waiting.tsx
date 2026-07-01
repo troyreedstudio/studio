@@ -655,10 +655,10 @@ const styles = StyleSheet.create({
   // Venue title — the check being done: top of the sheet + most prominent
   venueTitle: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 26,
+    fontSize: 22,
     color: colors.white,
     letterSpacing: -0.4,
-    lineHeight: 31,
+    lineHeight: 27,
     textAlign: 'center',
     marginBottom: 8,
     paddingHorizontal: 6,
