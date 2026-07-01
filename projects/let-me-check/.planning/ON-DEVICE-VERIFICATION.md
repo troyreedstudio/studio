@@ -65,8 +65,12 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 6. **✅ Voice search improved** — forced Apple server recognition (`requiresOnDeviceRecognition:false`) since on-device was mis-hearing place names; pending Troy's re-test.
 7. **Still ⏳:** notifications, money capture-on-delivery + Scout payout, refund/dispute, go-online gate **FIX** (#1 — Scout could go online with no payout account), + smaller screens (membership / profile edits / referrals).
 
-## E. Payments (Stripe TEST)  (Phase 4) — ⏳ re-verify on-device
-Card hold at request · capture-on-delivery + Scout transfer · refunds / Trouble-Here.
+## E. Payments (Stripe TEST)  (Phase 4)
+- **✅ Card hold at request** — verified (real `authorized` PI on the test card).
+- **✅ Capture-on-delivery + Scout transfer — VERIFIED (hold → captured → `scout_paid: true`).**
+  - 🐛 **FIXED (critical):** `stripe-capture` loaded the check with `.eq('check_id', …)` but the checks PK is `id` → `scout_id` was always null → **every Scout transfer deferred forever (Scouts never paid).** Changed to `.eq('id', …)`, deployed; re-tested → transfer completes. Would have shipped broken.
+- **✅ Refunds / Trouble-Here** — Trouble-Here refund verified earlier; cancel-refund path seen.
+- (Test artifact: check `9d49fd44` is captured-but-not-transferred from the pre-fix run — harmless test data.)
 
 ## F. Notifications (Phase 10) — ⏳
 Scout push on nearby job · Seeker push on delivery.
