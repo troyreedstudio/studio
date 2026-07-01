@@ -59,17 +59,17 @@ export function evaluateRefund(input: {
     throw new Error(`invalid refund reason: ${reasonCode}`);
   }
 
-  // Special case: 'never_delivered' on a genuinely undelivered check.
-  // The clip never arrived, so we auto-approve regardless of prior refund count.
+  // Auto-approve ONLY a genuinely undelivered clip — the Seeker got nothing, so
+  // there's no judgment call and no abuse surface. This stays instant.
   if (reasonCode === "never_delivered" && !delivered) {
     return { decision: "auto_approved" };
   }
 
-  // Standard rule: first refund in the 30-day window -> auto_approved.
-  // Repeat refunders (abuse guard) -> manual_review; a human decides before money moves.
-  if (priorRefundsIn30d === 0) {
-    return { decision: "auto_approved" };
-  }
-
+  // EVERY other reason is a subjective QUALITY dispute ("too blurry", "wrong place",
+  // etc.) — route to manual review so a human approves before any money moves. This
+  // is the deliberate anti-abuse / revenue-leakage default (the Uber model): the
+  // client shows "our team will review this and get back to you" — no instant
+  // self-serve refund. (priorRefundsIn30d is retained in the signature/immutable log
+  // but no longer auto-approves anything.)
   return { decision: "manual_review" };
 }
