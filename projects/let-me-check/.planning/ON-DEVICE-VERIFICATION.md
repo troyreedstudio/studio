@@ -27,8 +27,8 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 | Request a check → payment (Stripe hold) | ✅ | today: saved card picked up, hold placed, moved to Finding |
 | Finding a Scout (dispatch) | ✅ | correctly times out → "no scouts" |
 | Search — voice | ⏳ | not yet exercised |
-| Waiting / delivery countdown | ⏳ | |
-| Delivery — watch clip + rate | 🔒 | needs a delivered clip (blocked by D) |
+| Waiting / delivery countdown | ✅ | VERIFIED + redesigned (red hero sheet, venue title, mono clock) |
+| Delivery — watch clip + rate | ✅ | watched the delivered blurred clip; rating available |
 
 ## C. Scout flow  (Phases 4/5/7/8)
 | Check | Status | Notes |
@@ -38,9 +38,9 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 | Accept job (atomic) | ✅ | today |
 | Filming — record 15s | ✅ | today |
 | Trouble-Here report (refund) | ✅ | backend FIXED (was 500 "catch is not a function" — bad `.catch` on rpc); now reports + refunds Seeker. UI busy-state polish queued for rebuild |
-| **Submit → upload to Mux** | ❌ | **0% then fails — BROKEN** |
-| **On-device face blur** | ❌ | **OOM crash on submit — temp-disabled** |
-| Submitted / completion screen | 🔒 | blocked by upload |
+| Submit → upload to Mux | ✅ | FIXED (was the Mux free-plan 10-asset cap, not code) — uploads end-to-end |
+| On-device face blur | ✅ | FIXED + verified (autoreleasepool + cache-off + 720p); 0 memory kills; faces visibly blurred |
+| Submitted / completion screen | ✅ | reached "sent to Seeker" |
 | Earnings tab | ✅ | real data (3 delivered, 5★, 100%); $0 to withdraw is correct (no payout account) |
 | Payout / Identity sections (resume setup) | ✅ | resume path works; post-setup shows active + "Manage in Stripe" reconnects to Stripe ✅ |
 
@@ -58,7 +58,7 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 
 ## MORNING TEST PLAN (first thing)
 1. **Blur** (the overnight fix): film + submit a clip → must NOT crash → secures → uploads. Confirm with `idevicecrashreport`/`idevicesyslog` (no new ReportMemoryException). Check the delivered clip's faces are blurred.
-2. **Seeker receiving flow** (set up, not yet run): Seeker requests a check → waiting/countdown screen → Guy delivers it on the backend → screen should flip live to Delivery → watch + rate → lands in History. (No manual "accept" step by design — confirm that's the intended UX.)
+2. **✅ Seeker receiving flow — VERIFIED end-to-end.** request → finding → (Scout accepted) → waiting screen → delivered → screen **flipped live** to Delivery → watched the **blurred** clip → correct. Full seeker loop works. (No manual "accept" step by design — confirmed OK.) Waiting-screen DESIGN reworked (red-gradient hero sheet + big 62px mono clock + white text) — rebuilding for Troy's review.
 3. **Help links** (fixed, needs this build): Seeker → Help → Terms/Privacy now open the in-app legal screens.
 4. **Design fixes** (this build): History red-circle badge, recurring icon circle, Scout name = Inter, Trouble-Here per-row spinner.
 5. **Still ⏳:** voice search, notifications, and the go-online gate finding (#1 — Scout could go online with no payout account).
