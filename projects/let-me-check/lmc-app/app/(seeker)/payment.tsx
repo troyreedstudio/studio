@@ -72,7 +72,8 @@ export default function PaymentScreen() {
         paymentIntentClientSecret: hold.clientSecret,
         customerId: hold.customerId,
         customerEphemeralKeySecret: hold.ephemeralKey,
-        applePay: { merchantCountryCode: 'US' },
+        // Apple Pay deferred post-v1 (needs an Apple merchant ID + capability that
+        // was blocking the iOS build). Card entry + Google Pay cover launch.
         googlePay: { merchantCountryCode: 'US', testEnv: __DEV__ },
         allowsDelayedPaymentMethods: false,
       });

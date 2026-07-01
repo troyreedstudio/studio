@@ -104,7 +104,9 @@ module.exports = {
       // Durable Podfile `use_modular_headers!` so prebuild can't wipe the Google
       // Sign-In modular-headers fix (AppCheckCore/GoogleUtilities/RecaptchaInterop).
       './plugins/withModularHeaders',
-      ['@stripe/stripe-react-native', { merchantIdentifier: 'merchant.com.blackmalibuinc.letmecheck', enableGooglePay: true }],
+      // Apple Pay (merchantIdentifier) deferred post-v1 — its merchant ID/capability
+      // blocked the iOS provisioning profile. Card + Google Pay cover launch.
+      ['@stripe/stripe-react-native', { enableGooglePay: true }],
     ],
     // New Architecture is explicitly ON (ios.newArchEnabled:true above).
     // stripe-react-native 0.67.0 fully supports New Architecture.
