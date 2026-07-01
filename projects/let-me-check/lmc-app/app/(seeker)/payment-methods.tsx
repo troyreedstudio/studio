@@ -32,16 +32,9 @@ export default function PaymentMethodsScreen() {
               </View>
               <View style={styles.cardInfo}>
                 <Text style={styles.cardName}>{card.brand} ····  {card.last4}</Text>
-                <Text style={styles.cardExpiry}>Saved for future checks</Text>
+                <Text style={styles.cardExpiry}>To use a different card, choose or add one at checkout</Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={styles.removeBtn}
-              onPress={() => clear()}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.removeBtnText}>REMOVE</Text>
-            </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.emptyCard}>

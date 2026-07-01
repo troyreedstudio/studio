@@ -106,14 +106,6 @@ export default function InviteScreen() {
           ) : (
             <Text style={styles.codeText}>{code || 'Generating...'}</Text>
           )}
-          <TouchableOpacity
-            style={[styles.copyBtn, (loading || !code) && styles.copyBtnDisabled]}
-            activeOpacity={0.7}
-            onPress={handleCopy}
-            disabled={loading || !code}
-          >
-            <Text style={styles.copyBtnText}>{copied ? 'COPIED' : 'COPY'}</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Stats */}
@@ -243,21 +235,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     fontSize: 15,
     color: colors.textTertiary,
-  },
-  copyBtn: {
-    backgroundColor: colors.red,
-    borderRadius: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  copyBtnDisabled: {
-    backgroundColor: colors.surface,
-  },
-  copyBtnText: {
-    fontFamily: 'Inter_700Bold',
-    color: colors.onRed,
-    fontSize: 11,
-    letterSpacing: 1.5,
   },
   statsRow: {
     flexDirection: 'row',
