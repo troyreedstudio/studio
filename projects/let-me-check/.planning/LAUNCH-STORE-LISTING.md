@@ -57,3 +57,10 @@ Universal positioning (NOT nightlife-only). Taglines: "Know Before You Go." / "R
 - **Support email** (help@letmecheck.com?)
 - Confirm **age rating** answers (does it show user-generated video? yes → likely 17+ or a content note)
 - **Privacy**: the in-app policy is wired; the store also needs a hosted privacy URL + the data-collection declarations (I'll fill the declaration; you host the policy page)
+
+---
+## BUILD STATUS — resume point (2026-07-01, ~14:45)
+- ✅ Android production build FINISHED (`.aab`) — build `c95c2929`. Play submission NOT done (needs Play Console app + service-account key, or manual .aab upload).
+- 🍎 iOS build #1 (`34e97ec8`) ERRORED early (~3 min). Re-fired as `f71278c4` (auto-submit to TestFlight scheduled). Android succeeded from same project → code is fine; likely transient.
+- ⏳ On return: check TestFlight for iOS (v1.0.0). Fill App Store Connect export-compliance + test notes. If iOS errored again, pull logs at expo.dev/accounts/troyreed26/projects/lmc-app/builds and diagnose. Then set up Play submission.
+- EAS: `owner troyreed26`, ascAppId 6764298662, all 6 env vars registered in EAS production, eas.json `_env_setup` key removed (it broke the CLI).
