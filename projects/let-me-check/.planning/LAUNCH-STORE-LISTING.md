@@ -1,4 +1,6 @@
-# App Store + Google Play listing — DRAFT for Troy's approval
+# App Store + Google Play listing — ✅ APPROVED (2026-07-01)
+
+Troy approved the name, subtitle, description, and category. Screenshots + support/privacy URLs still to gather.
 
 Universal positioning (NOT nightlife-only). Taglines: "Know Before You Go." / "Real Eyes. Right Now. Anywhere."
 
