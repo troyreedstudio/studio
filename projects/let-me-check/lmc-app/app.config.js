@@ -14,6 +14,12 @@ module.exports = {
     },
     ios: {
       supportsTablet: false,
+      // Auto-answer App Store "export compliance": the app uses only standard
+      // HTTPS/TLS (exempt encryption), so no manual "Missing Compliance" step
+      // blocks TestFlight/submission. Set false = exempt.
+      config: {
+        usesNonExemptEncryption: false,
+      },
       bundleIdentifier: 'Com.BlackMalibuinc.letmecheck',
       // Explicitly declare New Architecture ON so expo prebuild writes
       // "newArchEnabled":"true" into ios/Podfile.properties.json, which makes
