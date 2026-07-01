@@ -277,10 +277,10 @@ export default function WaitingScreen() {
         <CtaGlow radius={28} />
         <View style={styles.sheetHandle} />
 
-        {/* Brand mark — full wordmark, not the LMC shorthand */}
-        <Text style={styles.brandMonogram}>Let Me Check</Text>
+        {/* Venue name — the check being done, the hero/anchor of this screen */}
+        <Text style={styles.venueTitle} numberOfLines={2}>{venue}</Text>
 
-        {/* Live status hero */}
+        {/* Live status, directly under the venue */}
         <Text style={styles.etaLabel}>
           {isFilming ? 'YOUR SCOUT IS FILMING' : 'YOUR SCOUT IS ON SITE'}
         </Text>
@@ -297,13 +297,6 @@ export default function WaitingScreen() {
             {isFilming ? 'Recording your video' : 'estimated time to delivery'}
           </Text>
         ) : null}
-
-        {/* Venue + city */}
-        <View style={styles.metaRow}>
-          <Text style={styles.metaPrimary}>{venue}</Text>
-          <Text style={styles.metaDot}>·</Text>
-          <Text style={styles.metaPrimary}>{city}</Text>
-        </View>
 
         {/* Progress steps — driven by the real status */}
         <View style={styles.stepsRow}>
@@ -657,6 +650,18 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textAlign: 'center',
     marginBottom: 8,
+  },
+
+  // Venue title — the check being done: top of the sheet + most prominent
+  venueTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 26,
+    color: colors.white,
+    letterSpacing: -0.4,
+    lineHeight: 31,
+    textAlign: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 6,
   },
 
   // Status hero
