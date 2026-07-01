@@ -109,6 +109,9 @@ module.exports = {
       // Apple Pay (merchantIdentifier) deferred post-v1 — its merchant ID/capability
       // blocked the iOS provisioning profile. Card + Google Pay cover launch.
       ['@stripe/stripe-react-native', { enableGooglePay: true }],
+      // Strip the aps-environment (Push) entitlement — Push is deferred post-v1.
+      // MUST be last so it runs after whatever in the dep graph injects it.
+      './plugins/withoutApsEnvironment',
     ],
     // New Architecture is explicitly ON (ios.newArchEnabled:true above).
     // stripe-react-native 0.67.0 fully supports New Architecture.
