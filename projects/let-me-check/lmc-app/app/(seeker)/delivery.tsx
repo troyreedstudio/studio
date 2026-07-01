@@ -12,6 +12,7 @@ import { getCheck, getCheckClip, rateCheck, type CheckRow, type ClipRow } from '
 import { getPlaybackToken } from '../lib/clips';
 import { requestRefund, type RefundReason } from '../lib/payments';
 import { supabase } from '../lib/supabase';
+import { useSavedPlaces } from '../state/saved';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
@@ -110,6 +111,7 @@ function ReportSheet({ checkId, onClose }: { checkId: string; onClose: () => voi
 export default function DeliveryScreen() {
   const router = useRouter();
   const { checkId, venue = 'Komodo', city = 'Miami' } = useLocalSearchParams<{ checkId: string; venue: string; city: string }>();
+  const { toggle, isSaved } = useSavedPlaces();
   const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [check, setCheck] = useState<CheckRow | null>(null);
@@ -172,6 +174,23 @@ export default function DeliveryScreen() {
   };
   const locationLabel = check?.location_label || `${venue}, ${city}`;
   const filmedLine = formatFilmedAgo(clip?.filmed_at ?? null);
+
+  // Save-this-place: derive a stable place from the check's requested coords.
+  // Only enabled when both coords are finite (guards against null-island saves).
+  const savedLat = check?.requested_lat;
+  const savedLng = check?.requested_lng;
+  const hasCoord = typeof savedLat === 'number' && typeof savedLng === 'number' && Number.isFinite(savedLat) && Number.isFinite(savedLng);
+  const placeKey = hasCoord ? `place-${savedLat.toFixed(5)}_${savedLng.toFixed(5)}` : null;
+  const placeSaved = placeKey ? isSaved(placeKey) : false;
+  const handleSavePlace = () => {
+    if (!hasCoord || !placeKey) return;
+    toggle({
+      id: placeKey,
+      name: locationLabel,
+      coord: [savedLng, savedLat],
+      marketId: check?.market_id ?? '',
+    });
+  };
 
   const scoutName = scoutProfile?.display_name ?? 'Your Scout';
   const scoutInitial = (scoutProfile?.display_name?.trim()?.[0] ?? 'S').toUpperCase();
@@ -250,6 +269,19 @@ export default function DeliveryScreen() {
           </View>
         )}
 
+        {hasCoord && (
+          <TouchableOpacity style={styles.savePlaceBtn} onPress={handleSavePlace} activeOpacity={0.75}>
+            <Ionicons
+              name={placeSaved ? 'bookmark' : 'bookmark-outline'}
+              size={18}
+              color={placeSaved ? colors.red : colors.textSecondary}
+            />
+            <Text style={[styles.savePlaceText, placeSaved && styles.savePlaceTextActive]}>
+              {placeSaved ? 'Saved' : 'Save this place'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <View style={styles.scoutCard}>
           <View style={styles.scoutAvatar}><Text style={styles.scoutAvatarText}>{scoutInitial}</Text></View>
           <View style={styles.scoutInfo}>
@@ -314,6 +346,10 @@ const styles = StyleSheet.create({
   starActive: { /* replaced by Ionicons star amber */ },
   ratingFeedbackRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 22 },
   ratingFeedback: { fontFamily: 'Inter_400Regular', color: colors.textSecondary, fontSize: 12.5, letterSpacing: 0.3 },
+  // Save this place: subtle bordered chip, red accent when active
+  savePlaceBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 7, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 100, borderWidth: 1, borderColor: colors.border, marginTop: 14, marginBottom: 4 },
+  savePlaceText: { fontFamily: 'Inter_600SemiBold', color: colors.textSecondary, fontSize: 12.5, letterSpacing: 0.3 },
+  savePlaceTextActive: { color: colors.red },
   scoutCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 26, marginTop: 8 },
   scoutAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.border, borderWidth: 1, borderColor: colors.borderStrong, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   scoutAvatarText: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 16, letterSpacing: 0.3 },

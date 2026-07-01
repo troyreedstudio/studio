@@ -1,9 +1,11 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { BackButton } from '../components/BackButton';
 import { useState, useEffect, useCallback } from 'react';
 import { listMyChecks, listMyRatings, type CheckRow } from '../lib/checks';
+import { useSavedPlaces } from '../state/saved';
 import { colors } from '../lib/theme';
 import { BottomNav } from '../components/BottomNav';
 import { CtaGlow } from '../components/CtaGlow';
@@ -43,6 +45,7 @@ function statusLabel(status: string | null): string {
 
 export default function HistoryScreen() {
   const router = useRouter();
+  const { toggle, isSaved } = useSavedPlaces();
   const [checks, setChecks] = useState<CheckRow[] | null>(null);
   const [ratingsMap, setRatingsMap] = useState<Map<string, number>>(new Map());
   const [error, setError] = useState(false);
@@ -101,6 +104,21 @@ export default function HistoryScreen() {
             const rating = ratingsMap.get(check.id) ?? 0;
             const price = TIER_PRICE[check.tier] ?? 0;
             const label = check.location_label || 'Check';
+            // Save-this-place: only when the row has finite requested coords.
+            const rLat = check.requested_lat;
+            const rLng = check.requested_lng;
+            const hasCoord = typeof rLat === 'number' && typeof rLng === 'number' && Number.isFinite(rLat) && Number.isFinite(rLng);
+            const placeKey = hasCoord ? `place-${rLat.toFixed(5)}_${rLng.toFixed(5)}` : null;
+            const placeSaved = placeKey ? isSaved(placeKey) : false;
+            const onToggleSave = () => {
+              if (!hasCoord || !placeKey) return;
+              toggle({
+                id: placeKey,
+                name: label,
+                coord: [rLng, rLat],
+                marketId: check.market_id ?? '',
+              });
+            };
             return (
               <TouchableOpacity
                 key={check.id}
@@ -137,10 +155,26 @@ export default function HistoryScreen() {
                   </View>
                 </View>
                 <View style={styles.checkRight}>
-                  <View style={[styles.tierPill, check.tier === 'priority' && styles.tierPillPriority]}>
-                    <Text style={[styles.tierPillText, check.tier === 'priority' && styles.tierPillTextPriority]}>
-                      {check.tier.toUpperCase()}
-                    </Text>
+                  <View style={styles.checkRightTop}>
+                    {hasCoord && (
+                      <TouchableOpacity
+                        onPress={onToggleSave}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        activeOpacity={0.7}
+                        style={styles.bookmarkBtn}
+                      >
+                        <Ionicons
+                          name={placeSaved ? 'bookmark' : 'bookmark-outline'}
+                          size={17}
+                          color={placeSaved ? colors.red : colors.textTertiary}
+                        />
+                      </TouchableOpacity>
+                    )}
+                    <View style={[styles.tierPill, check.tier === 'priority' && styles.tierPillPriority]}>
+                      <Text style={[styles.tierPillText, check.tier === 'priority' && styles.tierPillTextPriority]}>
+                        {check.tier.toUpperCase()}
+                      </Text>
+                    </View>
                   </View>
                   <Text style={styles.checkPrice}>${price.toFixed(2)}</Text>
                 </View>
@@ -201,6 +235,8 @@ const styles = StyleSheet.create({
   starActive: { color: colors.amber },
   watchHint: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: colors.red, letterSpacing: 0.3 },
   checkRight: { alignItems: 'flex-end', gap: 6 },
+  checkRightTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bookmarkBtn: { padding: 2 },
   tierPill: { backgroundColor: colors.surface, borderRadius: 100, paddingHorizontal: 9, paddingVertical: 3 },
   tierPillPriority: { backgroundColor: 'rgba(218,37,29,0.12)' },
   tierPillText: { fontFamily: 'Inter_700Bold', fontSize: 9, color: colors.textTertiary, letterSpacing: 1.5 },
