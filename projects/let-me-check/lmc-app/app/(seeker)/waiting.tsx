@@ -298,23 +298,18 @@ export default function WaitingScreen() {
           </Text>
         ) : null}
 
-        {/* Venue + Scout meta */}
+        {/* Venue + city */}
         <View style={styles.metaRow}>
           <Text style={styles.metaPrimary}>{venue}</Text>
           <Text style={styles.metaDot}>·</Text>
           <Text style={styles.metaPrimary}>{city}</Text>
-          <Text style={styles.metaDot}>·</Text>
-          <Text style={styles.metaStatus}>{isFilming ? 'filming' : 'Scout on-site'}</Text>
         </View>
 
         {/* Progress steps — driven by the real status */}
         <View style={styles.stepsRow}>
           <Step label="Paid" state="done" />
-          <StepLine state="done" />
           <Step label="Assigned" state="done" />
-          <StepLine state={isFilming ? 'done' : 'active'} />
           <Step label="Recording" state={isFilming ? 'active' : 'pending'} />
-          <StepLine state="pending" />
           <Step label="Delivered" state="pending" />
         </View>
 
