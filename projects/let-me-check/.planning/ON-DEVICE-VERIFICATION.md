@@ -61,7 +61,9 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 2. **✅ Seeker receiving flow — VERIFIED end-to-end.** request → finding → (Scout accepted) → waiting screen → delivered → screen **flipped live** to Delivery → watched the **blurred** clip → correct. Full seeker loop works. (No manual "accept" step by design — confirmed OK.) Waiting-screen DESIGN reworked (red-gradient hero sheet + big 62px mono clock + white text) — rebuilding for Troy's review.
 3. **Help links** (fixed, needs this build): Seeker → Help → Terms/Privacy now open the in-app legal screens.
 4. **Design fixes** (this build): History red-circle badge, recurring icon circle, Scout name = Inter, Trouble-Here per-row spinner.
-5. **Still ⏳:** voice search, notifications, and the go-online gate finding (#1 — Scout could go online with no payout account).
+5. **✅ Saved places — built + verified.** The save trigger was missing entirely; wired "Save this place" on Delivery + a per-row bookmark in History (save-after-a-check UX, Troy's call). Verified: save → shows in Saved Places → selectable on home search.
+6. **✅ Voice search improved** — forced Apple server recognition (`requiresOnDeviceRecognition:false`) since on-device was mis-hearing place names; pending Troy's re-test.
+7. **Still ⏳:** notifications, money capture-on-delivery + Scout payout, refund/dispute, go-online gate **FIX** (#1 — Scout could go online with no payout account), + smaller screens (membership / profile edits / referrals).
 
 ## E. Payments (Stripe TEST)  (Phase 4) — ⏳ re-verify on-device
 Card hold at request · capture-on-delivery + Scout transfer · refunds / Trouble-Here.
