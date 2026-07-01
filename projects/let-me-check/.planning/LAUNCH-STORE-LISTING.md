@@ -59,8 +59,10 @@ Universal positioning (NOT nightlife-only). Taglines: "Know Before You Go." / "R
 - **Privacy**: the in-app policy is wired; the store also needs a hosted privacy URL + the data-collection declarations (I'll fill the declaration; you host the policy page)
 
 ---
-## BUILD STATUS — resume point (2026-07-01, ~14:45)
+## BUILD STATUS — resume point (2026-07-01, evening)
 - ✅ Android production build FINISHED (`.aab`) — build `c95c2929`. Play submission NOT done (needs Play Console app + service-account key, or manual .aab upload).
-- 🍎 iOS build #1 (`34e97ec8`) ERRORED early (~3 min). Re-fired as `f71278c4` (auto-submit to TestFlight scheduled). Android succeeded from same project → code is fine; likely transient.
-- ⏳ On return: check TestFlight for iOS (v1.0.0). Fill App Store Connect export-compliance + test notes. If iOS errored again, pull logs at expo.dev/accounts/troyreed26/projects/lmc-app/builds and diagnose. Then set up Play submission.
-- EAS: `owner troyreed26`, ascAppId 6764298662, all 6 env vars registered in EAS production, eas.json `_env_setup` key removed (it broke the CLI).
+- 🍎 iOS builds #1/#2/#3 (`34e97ec8`, `f71278c4`, `72aa2089`) all ERRORED — root cause: `XCODE_BUILD_ERROR`, the auto-generated provisioning profile (June 13) predated the Apple Pay + Push + Sign-in-with-Apple capabilities, so signing failed.
+- 🔧 FIX applied: (a) deferred Apple Pay post-v1 — removed `merchantIdentifier` from the Stripe plugin (app.config.js), the payment sheet (payment.tsx), and StripeProvider (_layout.tsx); card + Google Pay remain. (b) Regenerated the iOS provisioning profile by running the build with `EXPO_ASC_API_KEY_PATH`/`EXPO_ASC_KEY_ID`/`EXPO_ASC_ISSUER_ID` **plus `EXPO_APPLE_TEAM_ID=YNCLWQN2B8`** — the Team ID was the missing piece that let EAS authenticate + regenerate the profile (new profile `M4B2Y3MR29`) non-interactively.
+- 🍎 iOS build `da7afc22` re-fired with the fresh profile — expected to build + sign + auto-submit to TestFlight.
+- ⏳ Next: confirm `da7afc22` finishes green → TestFlight. Fill App Store Connect export-compliance + test notes. Then set up Play submission. Add Apple Pay back post-launch (create merchant ID in Apple portal).
+- EAS: `owner troyreed26`, ascAppId 6764298662, appleTeamId YNCLWQN2B8 (Pink pineapple App LLC), all 6 env vars registered in EAS production.
