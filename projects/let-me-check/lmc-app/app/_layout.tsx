@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { SessionProvider, useSession, hubRouteForRole } from './lib/session';
 import { MAPBOX_TOKEN, STRIPE_PUBLISHABLE_KEY } from './lib/config';
 import { StripeProvider } from '@stripe/stripe-react-native';
+import { View } from 'react-native';
 
 // Token comes from the always-bundled config module (Release builds do NOT inline
 // .env, and ExponentConstants is unreliable on device-release — see config.ts).
@@ -33,12 +34,6 @@ import { Sora_400Regular, Sora_500Medium, Sora_600SemiBold, Sora_700Bold, Sora_8
 import { DMSans_400Regular, DMSans_500Medium, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
 import { SairaCondensed_500Medium, SairaCondensed_700Bold, SairaCondensed_900Black } from '@expo-google-fonts/saira-condensed';
 import { HankenGrotesk_400Regular, HankenGrotesk_500Medium, HankenGrotesk_700Bold, HankenGrotesk_800ExtraBold } from '@expo-google-fonts/hanken-grotesk';
-import { View, Text, TouchableOpacity, LogBox } from 'react-native';
-
-// TEMP design-review: silence the on-screen warning banner so it stops covering
-// bottom-anchored buttons. Remove with the rest of the review scaffolding.
-LogBox.ignoreAllLogs();
-
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     PlayfairDisplay_400Regular,
@@ -127,10 +122,6 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: '#FFFFFF' },
           }}
         />
-        {/* TEMP: visible in this build so Troy can jump to post-match pages (filming,
-            delivery, completion) for design review on a Release build. Re-gate to
-            `{__DEV__ && ...}` (or remove) before any public/launch build. */}
-        <DesignNavOverlay />
       </SessionProvider>
     </StripeProvider>
   );
@@ -167,9 +158,7 @@ function BootGate() {
       group === 'seeker' ||
       group === 'scout' ||
       group === 'legal';
-    // TEMP: don't bounce the design-review Index/jumps back to the hub.
-    const inDesignReview = group === 'design-index';
-    if (!inHub && !inEntryFlow && !inDesignReview) {
+    if (!inHub && !inEntryFlow) {
       router.replace(hubRouteForRole(profile?.current_role) as never);
     }
   }, [loading, session, profile, segments, router]);
@@ -177,32 +166,3 @@ function BootGate() {
   return null;
 }
 
-// TEMP: design-review only — a floating "Index" button on every screen so Troy can
-// always return to /design-index while walking the design. Remove with design-index
-// before launch. Hidden on the index screen itself.
-function DesignNavOverlay() {
-  const router = useRouter();
-  const segments = useSegments();
-  if (segments[0] === 'design-index') return null;
-  return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 12, bottom: 34, zIndex: 9999 }}>
-      <TouchableOpacity
-        onPress={() => router.replace('/design-index')}
-        activeOpacity={0.85}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 6,
-          backgroundColor: 'rgba(10,10,10,0.82)',
-          paddingHorizontal: 14,
-          paddingVertical: 9,
-          borderRadius: 999,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.25)',
-        }}
-      >
-        <Text style={{ color: '#fff', fontSize: 13, fontFamily: 'Inter_700Bold' }}>☰ Index</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
