@@ -57,8 +57,16 @@ export async function registerPushToken(): Promise<string | null> {
 
   // EAS_PROJECT_ID is bundled in config.ts — always present in Release builds.
   // (Constants.expoConfig.extra is null in Release; never use that path here.)
-  const token = (await Notifications.getExpoPushTokenAsync({ projectId: EAS_PROJECT_ID })).data;
-  return token; // 'ExponentPushToken[xxxxxx]'
+  // NOTE: the APNs entitlement (aps-environment) is deferred post-v1 (see app.config.js),
+  // so getExpoPushTokenAsync will throw on-device until the push key is set up. Guard it
+  // and return null so callers stay fire-and-forget. Restore is a no-op once the plugin
+  // is re-added — this try/catch is harmless with the entitlement present.
+  try {
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId: EAS_PROJECT_ID })).data;
+    return token; // 'ExponentPushToken[xxxxxx]'
+  } catch {
+    return null; // push not available yet (entitlement deferred)
+  }
 }
 
 // ── Token persistence ─────────────────────────────────────────────────────────

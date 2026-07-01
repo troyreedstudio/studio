@@ -83,11 +83,13 @@ module.exports = {
         },
       ],
       'expo-apple-authentication',
-      // expo-notifications plugin — adds the APNs entitlement to the iOS binary
-      // (without this, push permission is granted but APNs rejects delivery).
-      // SDK 54 deprecates the old top-level `notification` config key in favour of this plugin.
-      // enableBackgroundRemoteNotifications defaults to false (correct for LMC — standard push only).
-      ['expo-notifications', {}],
+      // expo-notifications DEFERRED post-v1: the APNs entitlement (aps-environment)
+      // needs an APNs push key that EAS only provisions in an interactive terminal,
+      // which blocked the headless production build. Core dispatch/delivery runs on
+      // Supabase realtime (works app-open), so background push is a fast-follow.
+      // To restore: un-comment the line below, run `eas credentials -p ios` once
+      // interactively to create the push key, then rebuild.
+      // ['expo-notifications', {}],
       // Voice search — iOS Speech framework + microphone.
       // Permissions are declared in ios.infoPlist above (NSSpeechRecognitionUsageDescription
       // + NSMicrophoneUsageDescription). The plugin wires the native Speech framework
