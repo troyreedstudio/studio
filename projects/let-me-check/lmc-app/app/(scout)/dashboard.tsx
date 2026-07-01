@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
   Switch,
+  Alert,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -18,6 +19,7 @@ import { acceptCheck, type CheckRow } from '../lib/checks';
 import { upsertScoutLocation, setScoutOffline } from '../lib/scout-location';
 import { listOpenChecksForScout } from '../lib/dispatch';
 import { switchRole } from '../lib/auth';
+import { getConnectStatus } from '../lib/payments';
 import { colors } from '../lib/theme';
 import { BottomNav } from '../components/BottomNav';
 
@@ -30,7 +32,7 @@ const payoutForTier = (tier: string | null | undefined) =>
 export default function ScoutDashboard() {
   const router = useRouter();
   const earnings = useScoutEarnings();
-  const [online, setOnline] = useState(true);
+  const [online, setOnline] = useState(false);
   const [openChecks, setOpenChecks] = useState<CheckRow[]>([]);
   const [taken, setTaken] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
@@ -41,6 +43,30 @@ export default function ScoutDashboard() {
   // Holds the expo-location subscription so we can .remove() it on going offline
   // or screen unmount (T-05-25: foreground-only, stops cleanly when not online).
   const locationSub = useRef<Location.LocationSubscription | null>(null);
+
+  // Go-online gate (Phase 4 / 04-04): a Scout can only go online + accept jobs once
+  // Stripe payouts are set up — otherwise they'd work jobs they can't be paid for.
+  // Verified fresh at toggle time; blocked with a prompt to finish payout setup.
+  const handleToggleOnline = useCallback(async (next: boolean) => {
+    if (!next) { setOnline(false); return; }
+    try {
+      const status = await getConnectStatus();
+      if (status.eligible) {
+        setOnline(true);
+      } else {
+        Alert.alert(
+          'Set up payouts first',
+          'Finish your payout setup so you can get paid, then you can go online and accept jobs.',
+          [
+            { text: 'Not now', style: 'cancel' },
+            { text: 'Set up payouts', onPress: () => router.push('/scout/payout' as never) },
+          ],
+        );
+      }
+    } catch {
+      Alert.alert('Could not verify payouts', 'Please check your connection and try again.');
+    }
+  }, [router]);
 
   // The first open check is what the Scout sees in the incoming-request card.
   const request = openChecks[0] ?? null;
@@ -250,7 +276,7 @@ export default function ScoutDashboard() {
             </View>
             <Switch
               value={online}
-              onValueChange={setOnline}
+              onValueChange={handleToggleOnline}
               trackColor={{ false: colors.border, true: 'rgba(22,163,74,0.35)' }}
               thumbColor={online ? colors.verified : colors.textTertiary}
               ios_backgroundColor={colors.surface}
