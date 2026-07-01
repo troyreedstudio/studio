@@ -50,7 +50,6 @@ const SCOUT_ITEMS: { icon: IconName; label: string; route: string }[] = [
   { icon: 'shield-checkmark-outline', label: 'Identity & verification', route: '/(scout)/verification' },
   { icon: 'document-text-outline', label: 'Tax documents (1099)', route: '/(scout)/tax-documents' },
   { icon: 'reader-outline', label: 'The Scout Code', route: '/(scout)/scout-code' },
-  { icon: 'gift-outline', label: 'Invite friends', route: '/(seeker)/invite' },
 ];
 
 const ACCOUNT_ITEMS: { icon: IconName; label: string; route: string }[] = [
@@ -199,12 +198,9 @@ export default function ScoutProfileScreen() {
           </View>
         </View>
 
-        {/* Scout ID card -- tappable, routes to invite screen */}
-        <TouchableOpacity
-          style={styles.scoutIdCard}
-          onPress={() => router.push('/(seeker)/invite' as never)}
-          activeOpacity={0.75}
-        >
+        {/* Scout ID card -- display-only verification badge. "Invite friends" lives
+            in the menu below, so this no longer doubles as an invite link. */}
+        <View style={styles.scoutIdCard}>
           <View style={styles.scoutIdLeft}>
             <View style={styles.scoutIdIconWrap}>
               <Ionicons name="finger-print-outline" size={18} color={colors.red} />
@@ -218,11 +214,7 @@ export default function ScoutProfileScreen() {
               )}
             </View>
           </View>
-          <View style={styles.scoutIdRight}>
-            <Text style={styles.inviteHint}>Invite friends</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
-          </View>
-        </TouchableOpacity>
+        </View>
 
         {/* Stats Row -- real data, real zeros on a fresh account */}
         <View style={styles.statsRow}>
@@ -254,6 +246,26 @@ export default function ScoutProfileScreen() {
             <Text style={styles.statLabel}>RATING</Text>
           </View>
         </View>
+
+        {/* Referral banner — routes to the shared invite screen (matches Seeker) */}
+        <TouchableOpacity
+          style={styles.referralBanner}
+          onPress={() => router.push('/(seeker)/invite' as never)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.referralLeft}>
+            <View style={styles.referralIconWrap}>
+              <Ionicons name="gift-outline" size={20} color={colors.red} />
+            </View>
+            <View>
+              <Text style={styles.referralTitle}>Invite friends</Text>
+              <Text style={styles.referralSub}>Give credits, get credits</Text>
+            </View>
+          </View>
+          <View style={styles.referralBtn}>
+            <Text style={styles.referralBtnText}>INVITE</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* Scout section */}
         <Text style={styles.sectionLabel}>SCOUT</Text>
@@ -466,6 +478,57 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textTertiary,
     letterSpacing: 0.3,
+  },
+  referralBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    marginHorizontal: 22,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: colors.red, // light box outlined in red (was yellow)
+    marginBottom: 18,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  referralLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  referralIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(218,37,29,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  referralTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 16,
+    color: colors.textPrimary,
+    letterSpacing: 0.2,
+    marginBottom: 2,
+  },
+  referralSub: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 11.5,
+    color: colors.textSecondary,
+    letterSpacing: 0.2,
+  },
+  referralBtn: {
+    backgroundColor: colors.red,
+    borderRadius: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  referralBtnText: {
+    fontFamily: 'Inter_700Bold',
+    color: colors.onRed,
+    fontSize: 11,
+    letterSpacing: 1.4,
   },
   switchModeBtn: {
     flexDirection: 'row',
