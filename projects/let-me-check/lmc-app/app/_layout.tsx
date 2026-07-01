@@ -110,7 +110,6 @@ export default function RootLayout() {
   return (
     <StripeProvider
       publishableKey={STRIPE_PUBLISHABLE_KEY}
-      merchantIdentifier="merchant.com.blackmalibuinc.letmecheck"
       urlScheme="lmc"
     >
       <SessionProvider>
