@@ -69,10 +69,13 @@ export async function handleRefund(
   }
 
   // 3. Load check row (ownership + status).
+  // The checks table's PK is `id` (only payments has `check_id`). The old
+  // `.select("check_id…").eq("check_id", …)` always failed → "check not found" →
+  // Seeker refunds never worked. Fixed to `id`.
   const { data: check } = await svc
     .from("checks")
-    .select("check_id, seeker_id, status")
-    .eq("check_id", checkId)
+    .select("seeker_id, status")
+    .eq("id", checkId)
     .maybeSingle();
 
   if (!check) {
