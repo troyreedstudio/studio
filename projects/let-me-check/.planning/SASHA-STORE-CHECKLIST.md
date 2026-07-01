@@ -30,3 +30,10 @@ Apple credentials, Expo login, all backend keys (Supabase/Mapbox/Google), Mux pa
 
 ## If the iOS build shows "errored" in Expo
 Tell Guy — he'll pull the logs and re-fire it. (Android already built fine, so the code is good.)
+
+## Google Play Developer account — the EIN/company thing (has a lead time!)
+- Google Sign-IN inside the app = DONE (no EIN needed).
+- To PUBLISH Android as **Black Malibu Inc**, Google Play needs **business verification = a D-U-N-S number** (free, tied to the company).
+- **Shortcut:** Apple required the same D-U-N-S. If the **Apple Developer account is under Black Malibu Inc**, you ALREADY have a D-U-N-S → reuse it for Google Play, no wait.
+- If not / unsure → request a free D-U-N-S at dnb.com now (can take 1–2 weeks). This is the only thing with a real lead time — worth starting before the Android launch.
+- Also (launch, not now): publish the Google OAuth **consent screen** to "In production" (needs the privacy-policy URL) so non-test users can sign in with Google at scale.
