@@ -53,8 +53,8 @@ The functional audit Troy asked for — **executed on the real phone** (UDID `00
 
 ## D. Video pipeline  ← was the broken path; now largely cracked
 1. **✅ Upload — FIXED.** The "0% fail" was NOT a code bug: the Mux **free plan caps at 10 assets** and it was full. Surfaced via the new error path; cleared 8 old test assets. Upload now works end-to-end (check `4b4f866b` reached `delivered`, clip `ready` + `playable`). **Before launch: upgrade Mux off the free plan.**
-2. **🔧 Blur OOM — FIX BUILT, pending morning on-device re-verify.** `LmcVideoExport.swift`: per-frame `autoreleasepool` + `CIContext cacheIntermediates:false`; capture→720p; `BLUR_POST_RECORD_ENABLED` re-enabled. See [[project_lmc_blur_memory_crash]]. If it still memory-kills → AVAssetReader/Writer streaming rewrite.
-3. **⏳ Full loop with blur ON** — record → blur → upload → deliver — to run in the morning.
+2. **✅ Blur OOM — FIXED + VERIFIED on-device (2026-07-01).** `LmcVideoExport.swift`: per-frame `autoreleasepool` + `CIContext cacheIntermediates:false`; capture→720p; `BLUR_POST_RECORD_ENABLED` re-enabled. Filmed + submitted with blur ON: securing → uploading 0-100 → "sent to Seeker", **0 memory kills** (confirmed via `idevicecrashreport`: 0 new JetsamEvents; log: 0 real ReportMemoryException). Check delivered, clip ready+playable.
+3. **✅ Full loop with blur ON** — record → blur → upload → deliver — works end-to-end. (Still to eyeball: faces actually visibly blurred in a clip with a face in frame.)
 
 ## MORNING TEST PLAN (first thing)
 1. **Blur** (the overnight fix): film + submit a clip → must NOT crash → secures → uploads. Confirm with `idevicecrashreport`/`idevicesyslog` (no new ReportMemoryException). Check the delivered clip's faces are blurred.
