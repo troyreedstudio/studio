@@ -23,6 +23,7 @@ import { useSavedPlaces } from '../state/saved';
 import { getUserCoords, getUserCity, useUserLocation, requestUserLocation } from '../state/location';
 import { useRecents, addRecent, relativeTime } from '../state/recents';
 import { getProfile } from '../lib/api';
+import { switchRole } from '../lib/auth';
 import { searchPlaces, getPlaceCoords, placeToAppCoord, type PlaceSuggestion } from '../lib/places';
 import { colors } from '../lib/theme';
 
@@ -1846,6 +1847,15 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={styles.scoutSwitch}
+            onPress={() => { void switchRole('scout').catch(() => {}); router.replace('/(scout)/dashboard'); }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="swap-horizontal" size={14} color={colors.red} />
+            <Text style={styles.scoutSwitchText}>SCOUT</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.profileBtn}
             onPress={() => router.push('/(seeker)/profile')}
             activeOpacity={0.85}
@@ -2491,6 +2501,24 @@ const styles = StyleSheet.create({
     fontFamily: 'Orbitron_700Bold',
     fontSize: 14,
     color: colors.onRed,
+    letterSpacing: 1,
+  },
+  scoutSwitch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginRight: 10,
+  },
+  scoutSwitchText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    color: colors.red,
     letterSpacing: 1,
   },
   profileBtn: {
