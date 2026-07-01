@@ -18,6 +18,7 @@ import { setIntendedRoleFlags } from '../lib/api';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 import { BackButton } from '../components/BackButton';
+import SuccessTick from '../components/SuccessTick';
 
 /**
  * Derive a stable, human-readable Scout ID from the user's Supabase auth UUID.
@@ -108,10 +109,8 @@ export default function ScoutApprovedScreen() {
             {/* HERO */}
             <View style={styles.hero}>
               <View style={styles.checkWrap}>
-                <Animated.View
-                  style={[styles.checkCircle, { transform: [{ scale: breath }] }]}
-                >
-                  <Text style={styles.checkGlyph}>✓</Text>
+                <Animated.View style={{ transform: [{ scale: breath }] }}>
+                  <SuccessTick />
                 </Animated.View>
               </View>
 
@@ -278,27 +277,6 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   checkWrap: { width: 120, height: 120, marginBottom: 18, alignItems: 'center', justifyContent: 'center' },
-  ring: {
-    position: 'absolute',
-    width: 108,
-    height: 108,
-    borderRadius: 54,
-    backgroundColor: colors.verified,
-  },
-  checkCircle: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: colors.verified,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkGlyph: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 48,
-    color: colors.white,
-    marginTop: 2,
-  },
   title: {
     fontFamily: 'Inter_700Bold',
     fontSize: 27,

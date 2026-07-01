@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { useSavedPlaces } from '../state/saved';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
+import SuccessTick from '../components/SuccessTick';
 
 const REFUND_REASONS: { code: RefundReason; label: string }[] = [
   { code: 'blurry', label: 'Too blurry to use' },
@@ -216,7 +217,7 @@ export default function DeliveryScreen() {
       </TouchableOpacity>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.successHeader}>
-          <View style={styles.checkCircle}><Text style={styles.checkMark}>✓</Text></View>
+          <View style={styles.heroTick}><SuccessTick /></View>
           <Text style={styles.readyTitle}>YOUR CHECK IS READY</Text>
           <Text style={styles.venueName}>{locationLabel}</Text>
         </View>
@@ -320,8 +321,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 32 },
   successHeader: { alignItems: 'center', marginBottom: 28 },
   // Check circle: verified green — semantic "success / delivered" state
-  checkCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(22,163,74,0.12)', borderWidth: 2, borderColor: colors.verified, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  checkMark: { fontFamily: 'Inter_700Bold', fontSize: 36, color: colors.verified },
+  heroTick: { marginBottom: 16 },
   readyTitle: { fontFamily: 'Inter_700Bold', fontSize: 26, color: colors.textPrimary, letterSpacing: -0.4, marginBottom: 8 },
   venueName: { fontFamily: 'Inter_700Bold', fontSize: 18, color: colors.textSecondary, letterSpacing: 0.4 },
   // Video box: stays dark — video content looks best on a dark surface

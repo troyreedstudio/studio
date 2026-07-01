@@ -16,6 +16,7 @@ import { requestPayout } from '../lib/payments';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 import { BackButton } from '../components/BackButton';
+import SuccessTick from '../components/SuccessTick';
 
 export default function WithdrawScreen() {
   const router = useRouter();
@@ -69,8 +70,8 @@ export default function WithdrawScreen() {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
         <View style={styles.successWrap}>
-          <View style={styles.successCircle}>
-            <Text style={styles.successCheck}>✓</Text>
+          <View style={styles.successTick}>
+            <SuccessTick />
           </View>
           <Text style={styles.successTitle}>Withdrawal Sent</Text>
           <Text style={styles.successAmount}>${paidAmount.toFixed(2)}</Text>
@@ -374,21 +375,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 32,
   },
-  successCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: 'rgba(22,163,74,0.10)',
-    borderWidth: 2,
-    borderColor: colors.verified,
-    justifyContent: 'center',
-    alignItems: 'center',
+  successTick: {
     marginBottom: 22,
-  },
-  successCheck: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 40,
-    color: colors.verified,
   },
   successTitle: {
     fontFamily: 'BodoniModa_700Bold',

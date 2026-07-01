@@ -18,6 +18,7 @@ import { getCheck } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
+import SuccessTick from '../components/SuccessTick';
 
 // Stage reflects the REAL server-owned state of the clip after upload.
 //
@@ -146,10 +147,8 @@ export default function SubmittedScreen() {
         >
           <Animated.View style={[styles.body, { opacity: fade }]}>
             {/* Hero */}
-            <View style={styles.heroCheckRing}>
-              <View style={styles.heroCheckInner}>
-                <Ionicons name="checkmark" size={28} color={colors.white} />
-              </View>
+            <View style={styles.heroTick}>
+              <SuccessTick />
             </View>
 
             <Text style={styles.title}>Video sent</Text>
@@ -391,6 +390,10 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 24 },
   body: { paddingHorizontal: 22, paddingTop: 24 },
 
+  heroTick: {
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
   heroCheckRing: {
     alignSelf: 'center',
     width: 64,
