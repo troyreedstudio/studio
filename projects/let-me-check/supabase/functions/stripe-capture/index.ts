@@ -61,10 +61,13 @@ export async function handleCapture(
   }
 
   // 3. Load the check row to get scout_id, seeker_id, and tier.
+  // NOTE: the checks table's PK is `id` (only the payments table has `check_id`).
+  // Filtering by `check_id` here returned nothing → scout_id was always null →
+  // the Scout transfer ALWAYS deferred (Scouts never got paid). Fixed to `id`.
   const { data: check } = await svc
     .from("checks")
     .select("scout_id, tier, currency, seeker_id")
-    .eq("check_id", checkId)
+    .eq("id", checkId)
     .maybeSingle();
 
   const scoutId = check?.scout_id ?? null;
