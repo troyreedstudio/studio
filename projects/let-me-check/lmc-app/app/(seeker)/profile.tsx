@@ -15,6 +15,8 @@ import { BottomNav } from '../components/BottomNav';
 type IconName = keyof typeof Ionicons.glyphMap;
 
 const SETTINGS: { icon: IconName; label: string; route: string }[] = [
+  { icon: 'person-outline', label: 'Personal Info', route: '/(seeker)/personal-info' },
+  { icon: 'card-outline', label: 'Payment Methods', route: '/(seeker)/payment-methods' },
   { icon: 'receipt-outline', label: 'Past Checks', route: '/(seeker)/history' },
   { icon: 'heart-outline', label: 'Saved Places', route: '/(seeker)/saved' },
   { icon: 'repeat-outline', label: 'Recurring Checks', route: '/(seeker)/recurring' },

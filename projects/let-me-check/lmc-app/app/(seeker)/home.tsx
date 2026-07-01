@@ -409,7 +409,7 @@ function SearchOverlay({
       lang: 'en-US',
       interimResults: true,    // partial results stream into query while speaking
       maxAlternatives: 1,
-      continuous: true,        // keep listening patiently — no early 2-3s cutoff
+      continuous: false,       // auto-stop when the user stops talking — no manual tap
       // Force Apple's SERVER recognition instead of the on-device engine — markedly
       // more accurate for place/proper nouns like "Soho House" (on-device was
       // mis-hearing them and taking many tries).
