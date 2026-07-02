@@ -1,21 +1,15 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, Modal, TextInput, ActivityIndicator, Dimensions, Animated, Easing, StatusBar } from 'react-native';
-
-// Hero video height — the clip is portrait, so let it dominate the screen
-// (Netflix-style) instead of a small thumbnail. Caps so a sliver of the details
-// below peeks to invite scroll.
-const HERO_VIDEO_H = Math.round(Dimensions.get('window').height * 0.62);
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, TextInput, ActivityIndicator, Animated, Easing, Share, StatusBar } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useRef } from 'react';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getCheck, getCheckClip, rateCheck, type CheckRow, type ClipRow } from '../lib/checks';
 import { getPlaybackToken } from '../lib/clips';
 import { requestRefund, type RefundReason } from '../lib/payments';
 import { supabase } from '../lib/supabase';
 import { useSavedPlaces } from '../state/saved';
 import { colors } from '../lib/theme';
-import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
-import SuccessTick from '../components/SuccessTick';
 
 const REFUND_REASONS: { code: RefundReason; label: string }[] = [
   { code: 'blurry', label: 'Too blurry to use' },
@@ -119,20 +113,16 @@ export default function DeliveryScreen() {
   const [clip, setClip] = useState<ClipRow | null>(null);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [scoutProfile, setScoutProfile] = useState<{ display_name: string | null; avg_rating: number | null; clip_count: number | null } | null>(null);
-  // Branded poster shown over the player until the Seeker taps play — avoids the
-  // raw green/blank video surface expo-video shows before the first frame.
-  const [showPoster, setShowPoster] = useState(true);
-  const posterPulse = useRef(new Animated.Value(1)).current;
+
+  // Reveal fade — the video + chrome fade in on arrival (the "reveal" moment).
+  const reveal = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!checkId) return;
-    getCheck(checkId)
-      .then((c) => { setCheck(c); })
-      .catch(() => {});
-    getCheckClip(checkId)
-      .then((cl) => { setClip(cl); })
-      .catch(() => {});
+    getCheck(checkId).then(setCheck).catch(() => {});
+    getCheckClip(checkId).then(setClip).catch(() => {});
   }, [checkId]);
 
   useEffect(() => {
@@ -155,29 +145,25 @@ export default function DeliveryScreen() {
     return () => { cancelled = true; };
   }, [checkId, clip?.mux_playback_id]);
 
-  const player = useVideoPlayer(videoSrc, (p) => { p.loop = false; });
+  // Autoplay + loop — the video reveals and plays on arrival (no tap-to-play).
+  const player = useVideoPlayer(videoSrc, (p) => { p.loop = true; p.muted = false; p.play(); });
 
-  // Gentle pulse on the poster play button.
+  // Fade the whole screen in once the source resolves — the cinematic reveal.
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(posterPulse, { toValue: 1.12, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(posterPulse, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [posterPulse]);
+    if (!videoSrc) return;
+    Animated.timing(reveal, { toValue: 1, duration: 550, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [videoSrc, reveal]);
 
-  const handlePlayPoster = () => {
-    try { player.play(); } catch { /* player may not be ready; the tap still reveals controls */ }
-    setShowPoster(false);
+  const togglePlay = () => {
+    try {
+      if (paused) player.play(); else player.pause();
+    } catch { /* player may not be ready */ }
+    setPaused((v) => !v);
   };
+
   const locationLabel = check?.location_label || `${venue}, ${city}`;
   const filmedLine = formatFilmedAgo(clip?.filmed_at ?? null);
 
-  // Save-this-place: derive a stable place from the check's requested coords.
-  // Only enabled when both coords are finite (guards against null-island saves).
   const savedLat = check?.requested_lat;
   const savedLng = check?.requested_lng;
   const hasCoord = typeof savedLat === 'number' && typeof savedLng === 'number' && Number.isFinite(savedLat) && Number.isFinite(savedLng);
@@ -185,12 +171,13 @@ export default function DeliveryScreen() {
   const placeSaved = placeKey ? isSaved(placeKey) : false;
   const handleSavePlace = () => {
     if (!hasCoord || !placeKey) return;
-    toggle({
-      id: placeKey,
-      name: locationLabel,
-      coord: [savedLng, savedLat],
-      marketId: check?.market_id ?? '',
-    });
+    toggle({ id: placeKey, name: locationLabel, coord: [savedLng, savedLat], marketId: check?.market_id ?? '' });
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({ message: `I just checked out ${locationLabel} live on Let Me Check 👀 Real eyes, right now, anywhere.` });
+    } catch { /* user dismissed the share sheet */ }
   };
 
   const scoutName = scoutProfile?.display_name ?? 'Your Scout';
@@ -210,159 +197,154 @@ export default function DeliveryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <TouchableOpacity style={styles.backFab} onPress={() => router.replace('/(seeker)/home')} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} activeOpacity={0.7}>
-        <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
-      </TouchableOpacity>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.successHeader}>
-          <View style={styles.heroTick}><SuccessTick /></View>
-          <Text style={styles.readyTitle}>YOUR CHECK IS READY</Text>
-          <Text style={styles.venueName}>{locationLabel}</Text>
-        </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
 
-        <View style={[styles.videoBox, { height: HERO_VIDEO_H }]}>
-          {videoSrc ? (
-            <VideoView player={player} style={StyleSheet.absoluteFillObject} contentFit="cover" allowsFullscreen nativeControls />
-          ) : (
-            <View style={styles.processingWrap}>
-              <Ionicons name="hourglass-outline" size={28} color="rgba(255,255,255,0.6)" />
-              <Text style={styles.processingText}>Processing your video…</Text>
+      {/* Full-bleed video — fills the whole screen. Tap toggles play/pause. */}
+      {videoSrc ? (
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: reveal }]}>
+          <TouchableOpacity activeOpacity={1} style={StyleSheet.absoluteFill} onPress={togglePlay}>
+            <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />
+          </TouchableOpacity>
+          {paused && (
+            <View style={styles.pauseOverlay} pointerEvents="none">
+              <View style={styles.pausePill}><Ionicons name="play" size={30} color="#fff" style={{ marginLeft: 3 }} /></View>
             </View>
           )}
-          <View style={styles.videoBadge}><Text style={styles.videoBadgeText}>HD · 15s</Text></View>
-          {/* Branded poster over the player until tap — hides the raw green surface. */}
-          {videoSrc && showPoster && (
-            <TouchableOpacity style={styles.poster} activeOpacity={0.92} onPress={handlePlayPoster}>
-              <Text style={styles.posterBrand}>LET ME CHECK</Text>
-              <Animated.View style={[styles.posterPlay, { transform: [{ scale: posterPulse }] }]}>
-                <Ionicons name="play" size={34} color="#000" style={{ marginLeft: 4 }} />
-              </Animated.View>
-              <Text style={styles.posterHint}>Tap to play your check</Text>
-            </TouchableOpacity>
-          )}
+        </Animated.View>
+      ) : (
+        <View style={styles.processingWrap}>
+          <ActivityIndicator color="#fff" />
+          <Text style={styles.processingText}>Preparing your video…</Text>
         </View>
-        {/* Filmed-ago moved BELOW the player so it never covers the footage. */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10, marginBottom: 8 }}>
-          <View style={styles.liveBlip} />
-          <Text style={styles.liveTime}>{filmedLine}</Text>
-        </View>
+      )}
 
-        <Text style={styles.sectionLabel}>RATE YOUR CHECK</Text>
+      {/* Top scrim + floating header */}
+      <LinearGradient colors={['rgba(0,0,0,0.7)', 'transparent']} style={styles.topScrim} pointerEvents="none" />
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backFab} onPress={() => router.replace('/(seeker)/home')} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} activeOpacity={0.7}>
+          <Ionicons name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <View style={styles.topTitleWrap}>
+          <Text style={styles.readyEyebrow}>YOUR CHECK IS READY</Text>
+          <Text style={styles.topVenue} numberOfLines={1}>{locationLabel}</Text>
+        </View>
+        <View style={{ width: 40 }} />
+      </View>
+      {/* Trust line floats on the video (GPS verified · faces blurred · filmed-ago) */}
+      <View style={styles.trustFloat} pointerEvents="none">
+        {clip?.gps_verified === true && (
+          <View style={styles.verifiedChip}>
+            <Ionicons name="shield-checkmark" size={11} color={colors.verified} />
+            <Text style={styles.verifiedChipText}>GPS VERIFIED · FACES BLURRED</Text>
+          </View>
+        )}
+        <View style={styles.filmedRow}>
+          <View style={styles.liveBlip} />
+          <Text style={styles.filmedText}>{filmedLine}</Text>
+        </View>
+      </View>
+
+      {/* Bottom scrim + control sheet floating over the video */}
+      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.92)']} style={styles.bottomScrim} pointerEvents="none" />
+      <View style={styles.bottomSheet}>
+        {/* Rate */}
+        <Text style={styles.rateLabel}>RATE YOUR CHECK</Text>
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity key={star} onPress={() => handleRate(star)} disabled={submitting} activeOpacity={0.7}>
-              <Ionicons
-                name="star"
-                size={36}
-                color={star <= rating ? colors.amber : colors.border}
-              />
+              <Ionicons name="star" size={34} color={star <= rating ? colors.amber : 'rgba(255,255,255,0.28)'} />
             </TouchableOpacity>
           ))}
         </View>
-        {rating > 0 && (
-          <View style={styles.ratingFeedbackRow}>
-            {rating >= 4 && (
-              <Ionicons name="checkmark-circle" size={16} color={colors.verified} style={{ marginRight: 4 }} />
-            )}
-            <Text style={styles.ratingFeedback}>{rating >= 4 ? 'Awesome! Thanks for rating' : 'Thanks for the feedback'}</Text>
-          </View>
-        )}
 
-        {hasCoord && (
-          <TouchableOpacity style={styles.savePlaceBtn} onPress={handleSavePlace} activeOpacity={0.75}>
-            <Ionicons
-              name={placeSaved ? 'bookmark' : 'bookmark-outline'}
-              size={18}
-              color={placeSaved ? colors.red : colors.textSecondary}
-            />
-            <Text style={[styles.savePlaceText, placeSaved && styles.savePlaceTextActive]}>
-              {placeSaved ? 'Saved' : 'Save this place'}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.scoutCard}>
+        {/* Scout row */}
+        <View style={styles.scoutRow}>
           <View style={styles.scoutAvatar}><Text style={styles.scoutAvatarText}>{scoutInitial}</Text></View>
           <View style={styles.scoutInfo}>
-            <Text style={styles.scoutName}>{scoutName}</Text>
-            {scoutMeta ? <Text style={styles.scoutRating}>{scoutMeta}</Text> : null}
+            <Text style={styles.scoutName} numberOfLines={1}>{scoutName}</Text>
+            {scoutMeta ? <Text style={styles.scoutMeta} numberOfLines={1}>{scoutMeta}</Text> : null}
           </View>
-          {clip?.gps_verified === true && (
-            <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Verified</Text></View>
-          )}
         </View>
 
-        <TouchableOpacity style={[styles.primaryBtn, ctaGlowShadow]} onPress={() => router.replace('/(seeker)/home')} activeOpacity={0.85}>
-          <CtaGlow radius={14} />
-          <Text style={styles.primaryBtnText}>DONE · BACK TO HOME</Text>
-        </TouchableOpacity>
+        {/* Actions: Save · Share · Done */}
+        <View style={styles.actionsRow}>
+          {hasCoord && (
+            <TouchableOpacity style={styles.actionBtn} onPress={handleSavePlace} activeOpacity={0.75}>
+              <Ionicons name={placeSaved ? 'bookmark' : 'bookmark-outline'} size={20} color={placeSaved ? colors.red : '#fff'} />
+              <Text style={styles.actionLabel}>{placeSaved ? 'Saved' : 'Save'}</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.actionBtn} onPress={handleShare} activeOpacity={0.75}>
+            <Ionicons name="share-outline" size={20} color="#fff" />
+            <Text style={styles.actionLabel}>Share</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/(seeker)/home')} activeOpacity={0.85}>
+            <Text style={styles.doneBtnText}>DONE</Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.reportLink} onPress={() => setReportOpen(true)} activeOpacity={0.7}>
           <Text style={styles.reportLinkText}>Something wrong with this check?</Text>
         </TouchableOpacity>
-        <View style={{ height: 32 }} />
-      </ScrollView>
+      </View>
 
       <Modal visible={reportOpen} transparent animationType="fade" onRequestClose={() => setReportOpen(false)}>
         <View style={styles.modalOverlay}>
           {checkId ? <ReportSheet checkId={checkId} onClose={() => setReportOpen(false)} /> : null}
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  backFab: { position: 'absolute', top: 6, left: 6, zIndex: 5, width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  scroll: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 32 },
-  successHeader: { alignItems: 'center', marginBottom: 28 },
-  // Check circle: verified green — semantic "success / delivered" state
-  heroTick: { marginBottom: 16 },
-  readyTitle: { fontFamily: 'Inter_700Bold', fontSize: 26, color: colors.textPrimary, letterSpacing: -0.4, marginBottom: 8 },
-  venueName: { fontFamily: 'Inter_700Bold', fontSize: 18, color: colors.textSecondary, letterSpacing: 0.4 },
-  // Video box: stays dark — video content looks best on a dark surface
-  videoBox: { height: 220, backgroundColor: '#0d0d0d', borderRadius: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#1e1e1e', marginBottom: 18, position: 'relative', overflow: 'hidden' },
-  processingWrap: { alignItems: 'center', justifyContent: 'center', gap: 10 },
-  processingText: { fontFamily: 'Inter_500Medium', fontSize: 12.5, color: 'rgba(255,255,255,0.6)', letterSpacing: 0.3 },
-  videoBadge: { position: 'absolute', top: 12, right: 12, backgroundColor: '#000000aa', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
-  // Poster: stays dark (sits over the video surface before play)
-  poster: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', gap: 22 },
-  posterBrand: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 22, letterSpacing: 3, textTransform: 'uppercase' },
-  // Poster play button: colors.red — primary action on the branded poster
-  posterPlay: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.red, justifyContent: 'center', alignItems: 'center', shadowColor: colors.red, shadowOpacity: 0.45, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } },
-  posterHint: { fontFamily: 'Inter_500Medium', color: 'rgba(255,255,255,0.6)', fontSize: 12.5, letterSpacing: 0.4 },
-  videoBadgeText: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 9, letterSpacing: 1.5 },
-  liveTimestamp: { position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 5 },
-  // Filmed-ago blip: colors.verified — "recently delivered" is a success state
+  container: { flex: 1, backgroundColor: '#000' },
+
+  processingWrap: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  processingText: { fontFamily: 'Inter_500Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.3 },
+
+  pauseOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
+  pausePill: { width: 74, height: 74, borderRadius: 37, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' },
+
+  // Top chrome
+  topScrim: { position: 'absolute', top: 0, left: 0, right: 0, height: 170 },
+  topBar: { position: 'absolute', top: 54, left: 16, right: 16, flexDirection: 'row', alignItems: 'center' },
+  backFab: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'center', alignItems: 'center' },
+  topTitleWrap: { flex: 1, alignItems: 'center' },
+  readyEyebrow: { fontFamily: 'Inter_700Bold', fontSize: 9.5, color: 'rgba(255,255,255,0.75)', letterSpacing: 2.4, marginBottom: 3 },
+  topVenue: { fontFamily: 'Inter_700Bold', fontSize: 17, color: '#fff', letterSpacing: 0.2, maxWidth: 240 },
+
+  trustFloat: { position: 'absolute', top: 108, left: 0, right: 0, alignItems: 'center', gap: 8 },
+  verifiedChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 100, paddingHorizontal: 11, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)' },
+  verifiedChipText: { fontFamily: 'Inter_700Bold', fontSize: 9, color: 'rgba(255,255,255,0.9)', letterSpacing: 1.2 },
+  filmedRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.verified },
-  liveTime: { fontFamily: 'Inter_600SemiBold', color: colors.textSecondary, fontSize: 10.5, letterSpacing: 0.4 },
-  sectionLabel: { fontFamily: 'Inter_700Bold', fontSize: 11, color: colors.textTertiary, letterSpacing: 3, marginBottom: 12, marginTop: 6, textTransform: 'uppercase' },
-  starsRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  star: { /* replaced by Ionicons star */ },
-  starActive: { /* replaced by Ionicons star amber */ },
-  ratingFeedbackRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 22 },
-  ratingFeedback: { fontFamily: 'Inter_400Regular', color: colors.textSecondary, fontSize: 12.5, letterSpacing: 0.3 },
-  // Save this place: subtle bordered chip, red accent when active
-  savePlaceBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 7, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 100, borderWidth: 1, borderColor: colors.border, marginTop: 14, marginBottom: 4 },
-  savePlaceText: { fontFamily: 'Inter_600SemiBold', color: colors.textSecondary, fontSize: 12.5, letterSpacing: 0.3 },
-  savePlaceTextActive: { color: colors.red },
-  scoutCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 26, marginTop: 8 },
-  scoutAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.border, borderWidth: 1, borderColor: colors.borderStrong, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  scoutAvatarText: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 16, letterSpacing: 0.3 },
+  filmedText: { fontFamily: 'Inter_600SemiBold', fontSize: 10.5, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.4 },
+
+  // Bottom chrome
+  bottomScrim: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 340 },
+  bottomSheet: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 24, paddingBottom: 40, paddingTop: 8 },
+  rateLabel: { fontFamily: 'Inter_700Bold', fontSize: 10.5, color: 'rgba(255,255,255,0.6)', letterSpacing: 3, marginBottom: 12, textAlign: 'center' },
+  starsRow: { flexDirection: 'row', gap: 12, marginBottom: 22, alignSelf: 'center' },
+
+  scoutRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
+  scoutAvatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.14)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  scoutAvatarText: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 16 },
   scoutInfo: { flex: 1 },
-  scoutName: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 17, letterSpacing: 0.3, marginBottom: 3 },
-  scoutRating: { fontFamily: 'Inter_400Regular', color: colors.textSecondary, fontSize: 11.5, letterSpacing: 0.3 },
-  // Verified badge: colors.verified — semantic GPS-verified checkmark
-  verifiedBadge: { backgroundColor: 'rgba(22,163,74,0.08)', borderRadius: 100, paddingHorizontal: 9, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(22,163,74,0.35)' },
-  verifiedText: { fontFamily: 'Inter_700Bold', color: colors.verified, fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase' },
-  primaryBtn: { backgroundColor: colors.red, borderRadius: 14, paddingVertical: 18, alignItems: 'center', marginBottom: 10 },
-  primaryBtnText: { fontFamily: 'Inter_700Bold', color: colors.onRed, fontSize: 13, letterSpacing: 2.5 },
-  reportLink: { alignItems: 'center', paddingVertical: 14 },
-  reportLinkText: { fontFamily: 'Inter_400Regular', color: colors.textTertiary, fontSize: 12, textDecorationLine: 'underline' },
+  scoutName: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 16, letterSpacing: 0.2, marginBottom: 2 },
+  scoutMeta: { fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.65)', fontSize: 11.5, letterSpacing: 0.3 },
+
+  actionsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  actionBtn: { alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' },
+  actionLabel: { fontFamily: 'Inter_600SemiBold', color: '#fff', fontSize: 11, letterSpacing: 0.3 },
+  doneBtn: { flex: 1, backgroundColor: colors.red, borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
+  doneBtnText: { fontFamily: 'Inter_700Bold', color: colors.onRed, fontSize: 13, letterSpacing: 2.5 },
+
+  reportLink: { alignItems: 'center', paddingVertical: 12 },
+  reportLinkText: { fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 12, textDecorationLine: 'underline' },
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.72)', justifyContent: 'flex-end' },
 });
 

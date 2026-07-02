@@ -46,7 +46,10 @@ export async function signInWithApple(): Promise<void> {
     token: cred.identityToken,
   });
   if (error) throw error;
-  await logEvent('auth.signed_in', { method: 'apple' });
+  // Analytics is fire-and-forget: a slow or failing log_event must NEVER block or
+  // throw into the sign-in flow. Awaiting it here stranded users on the sign-up
+  // screen after a SUCCESSFUL sign-in (session created, navigation never fired).
+  void logEvent('auth.signed_in', { method: 'apple' }).catch(() => {});
   // Fire-and-forget: push token registration must NEVER block sign-in.
   registerPushToken()
     .then((token) => { if (token) void upsertPushToken(token, Platform.OS); })
@@ -101,7 +104,9 @@ export async function signInWithGoogle(): Promise<void> {
     // "Skip nonce checks" enabled for Google in the dashboard.
   });
   if (error) throw error;
-  await logEvent('auth.signed_in', { method: 'google' });
+  // Analytics is fire-and-forget: a slow or failing log_event must NEVER block or
+  // throw into the sign-in flow (see signInWithApple note).
+  void logEvent('auth.signed_in', { method: 'google' }).catch(() => {});
   // Fire-and-forget: push token registration must NEVER block sign-in.
   registerPushToken()
     .then((token) => { if (token) void upsertPushToken(token, Platform.OS); })
@@ -139,7 +144,7 @@ export async function verifyPhoneOtp(phone: string, code: string): Promise<void>
   assertPhoneEnabled();
   const { error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
   if (error) throw error;
-  await logEvent('auth.signed_in', { method: 'phone' });
+  void logEvent('auth.signed_in', { method: 'phone' }).catch(() => {});
 }
 
 // ── Sign out (AUTH-04) ────────────────────────────────────────────────────────
