@@ -44,10 +44,15 @@ module.exports = {
           'Let Me Check uses the microphone for voice search.',
         NSSpeechRecognitionUsageDescription:
           'Let Me Check uses speech recognition so you can search for a place by voice.',
-        // NSPhotoLibraryUsageDescription intentionally absent: the app uses no
-        // photo-library API (no MediaLibrary, CameraRoll, saveToPhotos, or
-        // ImagePicker anywhere in the codebase). Declaring it unused would
-        // trigger an Apple review query (5.1.1 minimum permissions).
+        // A bundled SDK references the Photo Library API, so Apple's processing
+        // REQUIRES these purpose strings even though the app opens no picker
+        // itself (ITMS-90683 rejected build 17 without them). Extra Info.plist
+        // purpose strings never trip App Review — only missing ones do, and the
+        // app never prompts for photo access at runtime, so 5.1.1 is not at risk.
+        NSPhotoLibraryUsageDescription:
+          'Let Me Check may access your photo library to attach or save verification videos and images.',
+        NSPhotoLibraryAddUsageDescription:
+          'Let Me Check may save verification videos and images to your photo library.',
         ITSAppUsesNonExemptEncryption: false,
       },
     },
