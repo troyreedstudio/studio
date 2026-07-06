@@ -40,7 +40,7 @@ export default function SignInScreen() {
     else setStep('phone');
   };
 
-  const runAuth = async (fn: () => Promise<void>) => {
+  const runAuth = async (fn: () => Promise<void>, next?: () => void) => {
     setError(null);
     setBusy(true);
     try {
@@ -53,6 +53,11 @@ export default function SignInScreen() {
           ),
         ),
       ]);
+      // On success, carry the returning user forward. The sign-in screen lives in
+      // the 'auth' group, which BootGate deliberately never redirects from — so
+      // without an explicit next() the user was STRANDED here after a SUCCESSFUL
+      // sign-in. welcome-back was built for exactly this but was never wired up.
+      next?.();
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Sign in failed. Please try again.';
       setError(msg);
@@ -96,7 +101,7 @@ export default function SignInScreen() {
                   {/* Apple — platform-mandated black button */}
                   <TouchableOpacity
                     style={styles.methodBtnApple}
-                    onPress={() => runAuth(signInWithApple)}
+                    onPress={() => runAuth(signInWithApple, () => router.replace('/onboarding/welcome-back'))}
                     disabled={busy}
                     activeOpacity={0.85}
                   >
@@ -108,7 +113,7 @@ export default function SignInScreen() {
                   {/* Google — platform-mandated white button with brand colors */}
                   <TouchableOpacity
                     style={styles.methodBtnGoogle}
-                    onPress={() => runAuth(signInWithGoogle)}
+                    onPress={() => runAuth(signInWithGoogle, () => router.replace('/onboarding/welcome-back'))}
                     disabled={busy}
                     activeOpacity={0.85}
                   >
@@ -223,7 +228,7 @@ export default function SignInScreen() {
                   style={[styles.primaryBtn, ctaGlowShadow, (otp.length < 6 || busy) && styles.primaryBtnDisabled]}
                   disabled={otp.length < 6 || busy}
                   onPress={() =>
-                    runAuth(() => verifyPhoneOtp('+1' + phone.replace(/\D/g, ''), otp))
+                    runAuth(() => verifyPhoneOtp('+1' + phone.replace(/\D/g, ''), otp), () => router.replace('/onboarding/welcome-back'))
                   }
                   activeOpacity={0.85}
                 >
