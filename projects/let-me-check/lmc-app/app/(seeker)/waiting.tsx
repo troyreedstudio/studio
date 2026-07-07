@@ -99,6 +99,7 @@ export default function WaitingScreen() {
 
   const [check, setCheck] = useState<CheckRow | null>(null);
   const cameraRef = useRef<Mapbox.Camera>(null);
+  const flownIn = useRef(false);
 
   // Live status off the real row (DISP-04). Initial getCheck() then subscribe;
   // onError re-fetches to reconcile a transition missed while disconnected.
@@ -194,13 +195,33 @@ export default function WaitingScreen() {
       ? [(venueCoord[0] + userCoord[0]) / 2, (venueCoord[1] + userCoord[1]) / 2]
       : venueCoord ?? userCoord ?? null;
 
+  // Cinematic globe → venue dive (Snap Map style): the map opens on the globe,
+  // then sweeps down and lands on the check location. Runs once, when we first
+  // have a coordinate to fly to.
+  useEffect(() => {
+    if (!cameraCenter || flownIn.current) return;
+    flownIn.current = true;
+    const t = setTimeout(() => {
+      cameraRef.current?.setCamera({
+        centerCoordinate: cameraCenter,
+        zoomLevel: 14,
+        pitch: 45,
+        animationDuration: 3800,
+        animationMode: 'flyTo',
+      });
+    }, 450);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cameraCenter ? cameraCenter[0] : null, cameraCenter ? cameraCenter[1] : null]);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
       {/* Edge-to-edge Mapbox light canvas */}
       <Mapbox.MapView
         style={StyleSheet.absoluteFillObject}
-        styleURL="mapbox://styles/mapbox/light-v11"
+        styleURL="mapbox://styles/mapbox/dark-v11"
+        projection="globe"
         compassEnabled={false}
         scaleBarEnabled={false}
         logoEnabled
@@ -213,8 +234,8 @@ export default function WaitingScreen() {
             ref={cameraRef}
             defaultSettings={{
               centerCoordinate: cameraCenter,
-              zoomLevel: 14,
-              pitch: 45,
+              zoomLevel: 2.4,
+              pitch: 0,
             }}
           />
         )}
@@ -231,7 +252,7 @@ export default function WaitingScreen() {
 
       {/* Top gradient for floating bar */}
       <LinearGradient
-        colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,0)']}
+        colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0)']}
         style={styles.topGradient}
         pointerEvents="none"
       />

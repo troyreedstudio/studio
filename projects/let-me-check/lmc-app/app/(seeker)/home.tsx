@@ -1543,7 +1543,8 @@ export default function HomeScreen() {
           centerCoordinate: coord,
           zoomLevel: 17,
           pitch: 55,
-          animationDuration: 1200,
+          animationDuration: 2200,
+          animationMode: 'flyTo',
         });
       }
     }
@@ -1580,7 +1581,9 @@ export default function HomeScreen() {
     cameraRef.current?.setCamera({
       centerCoordinate: coords,
       zoomLevel: 14.5,
-      animationDuration: 900,
+      pitch: 45,
+      animationDuration: 3600,
+      animationMode: 'flyTo',
     });
   }, [params.pinLat, params.marketId]);
 
@@ -1603,7 +1606,8 @@ export default function HomeScreen() {
       centerCoordinate: [lon, lat],
       zoomLevel: 17,
       pitch: 55,
-      animationDuration: 1200,
+      animationDuration: 2200,
+      animationMode: 'flyTo',
     });
   }, []);
 
@@ -1681,10 +1685,11 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      {/* Edge-to-edge map — the canvas (Mapbox light, Uber/Apple quality) */}
+      {/* Edge-to-edge map — dark globe canvas (Snap Map style: red overlays glow) */}
       <Mapbox.MapView
         style={StyleSheet.absoluteFillObject}
-        styleURL="mapbox://styles/mapbox/light-v11"
+        styleURL="mapbox://styles/mapbox/dark-v11"
+        projection="globe"
         compassEnabled={false}
         scaleBarEnabled={false}
         logoEnabled
@@ -1705,8 +1710,10 @@ export default function HomeScreen() {
                 : usingRealLocation && userCoords
                 ? userCoords
                 : market.center,
-            zoomLevel: params.pinLat ? 16.5 : MIAMI_ZOOM,
-            pitch: 50,
+            // Cold-load opens on the globe (the teaser); a selected pin skips
+            // straight to the place. The fly-in effects below dive from here.
+            zoomLevel: params.pinLat ? 16.5 : 2.4,
+            pitch: params.pinLat ? 50 : 0,
           }}
         />
 
@@ -1811,9 +1818,9 @@ export default function HomeScreen() {
         )}
       </Mapbox.MapView>
 
-      {/* Top gradient overlay — subtle fade for light map readability */}
+      {/* Top gradient overlay — dark fade so the white pills pop on the dark globe */}
       <LinearGradient
-        colors={['rgba(255,255,255,0.72)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0)']}
+        colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.12)', 'rgba(0,0,0,0)']}
         locations={[0, 0.45, 1]}
         style={styles.topGradient}
         pointerEvents="none"
