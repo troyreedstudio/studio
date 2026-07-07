@@ -163,6 +163,13 @@ export default function DeliveryScreen() {
 
   const locationLabel = check?.location_label || `${venue}, ${city}`;
   const filmedLine = formatFilmedAgo(clip?.filmed_at ?? null);
+  // Freshness decays: a snapshot older than ~12 min may no longer reflect the
+  // place, so the trust badge shifts green→amber and adds an honest "may have
+  // changed" nudge (pairs with the real-time expectation set at order time).
+  const filmedMins = clip?.filmed_at
+    ? Math.max(0, Math.round((Date.now() - new Date(clip.filmed_at).getTime()) / 60000))
+    : null;
+  const stale = filmedMins != null && filmedMins >= 12;
 
   const savedLat = check?.requested_lat;
   const savedLng = check?.requested_lng;
@@ -240,16 +247,21 @@ export default function DeliveryScreen() {
           </View>
         )}
         <View style={styles.filmedRow}>
-          <View style={styles.liveBlip} />
-          <Text style={styles.filmedText}>{filmedLine}</Text>
+          <View style={[styles.liveBlip, stale && styles.liveBlipStale]} />
+          <Text style={[styles.filmedText, stale && styles.filmedTextStale]}>
+            {stale ? `${filmedLine} · conditions may have changed` : filmedLine}
+          </Text>
         </View>
       </View>
 
       {/* Bottom scrim + control sheet floating over the video */}
       <LinearGradient colors={['transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.92)']} style={styles.bottomScrim} pointerEvents="none" />
       <View style={styles.bottomSheet}>
-        {/* Rate */}
-        <Text style={styles.rateLabel}>RATE YOUR CHECK</Text>
+        {/* Rate — framed around the Scout's VIDEO (clear? on location? well filmed?),
+            NOT the venue's later conditions, so a place changing by the time the
+            Seeker arrives can't unfairly tank the Scout or justify a refund. */}
+        <Text style={styles.rateLabel}>RATE YOUR SCOUT</Text>
+        <Text style={styles.rateSub}>How was the video? Clear, on location, well filmed?</Text>
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity key={star} onPress={() => handleRate(star)} disabled={submitting} activeOpacity={0.7}>
@@ -321,12 +333,15 @@ const styles = StyleSheet.create({
   verifiedChipText: { fontFamily: 'Inter_700Bold', fontSize: 9, color: 'rgba(255,255,255,0.9)', letterSpacing: 1.2 },
   filmedRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.verified },
+  liveBlipStale: { backgroundColor: colors.amber },
   filmedText: { fontFamily: 'Inter_600SemiBold', fontSize: 10.5, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.4 },
+  filmedTextStale: { color: colors.amber },
 
   // Bottom chrome
   bottomScrim: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 340 },
   bottomSheet: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 24, paddingBottom: 40, paddingTop: 8 },
-  rateLabel: { fontFamily: 'Inter_700Bold', fontSize: 10.5, color: 'rgba(255,255,255,0.6)', letterSpacing: 3, marginBottom: 12, textAlign: 'center' },
+  rateLabel: { fontFamily: 'Inter_700Bold', fontSize: 10.5, color: 'rgba(255,255,255,0.6)', letterSpacing: 3, marginBottom: 6, textAlign: 'center' },
+  rateSub: { fontFamily: 'Inter_400Regular', fontSize: 11.5, color: 'rgba(255,255,255,0.5)', letterSpacing: 0.2, textAlign: 'center', marginBottom: 16 },
   starsRow: { flexDirection: 'row', gap: 12, marginBottom: 22, alignSelf: 'center' },
 
   scoutRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },

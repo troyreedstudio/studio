@@ -249,6 +249,15 @@ export default function PaymentScreen() {
         </View>
       </View>
 
+      {/* Real-time expectation — frames the check as a live snapshot before paying,
+          so a place changing by the time they arrive never reads as inaccuracy. */}
+      <View style={styles.realtimeNote}>
+        <Ionicons name="pulse" size={15} color={colors.red} style={{ marginTop: 1 }} />
+        <Text style={styles.realtimeText}>
+          Your check is a <Text style={styles.realtimeBold}>live snapshot of this moment</Text>. Popular places can change fast, so it shows what your Scout sees now, not a guarantee of later.
+        </Text>
+      </View>
+
       {/* Payment Method — tapping opens Stripe PaymentSheet directly */}
       <TouchableOpacity
         style={styles.paymentMethod}
@@ -510,6 +519,30 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
+  },
+  realtimeNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 9,
+    backgroundColor: 'rgba(218,37,29,0.04)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(218,37,29,0.14)',
+    paddingHorizontal: 13,
+    paddingVertical: 12,
+    marginBottom: 12,
+  },
+  realtimeText: {
+    flex: 1,
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: colors.textSecondary,
+    lineHeight: 17,
+    letterSpacing: 0.1,
+  },
+  realtimeBold: {
+    fontFamily: 'Inter_700Bold',
+    color: colors.textPrimary,
   },
   deliveryIcon: {
     width: 40,
