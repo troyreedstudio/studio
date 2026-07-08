@@ -268,6 +268,29 @@ function makeRing(
   return pts;
 }
 
+// Scatter warm "streetlight / car light" points around a spot — the city-lights
+// look at street level, shown when a location is dived into.
+function streetLights([lon, lat]: [number, number]) {
+  const N = 8;
+  const spread = 0.016;
+  const features: { type: 'Feature'; geometry: { type: 'Point'; coordinates: number[] }; properties: Record<string, never> }[] = [];
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const jx = (((i * 7 + j * 3) % 5) - 2) * 0.0009;
+      const jy = (((i * 3 + j * 5) % 5) - 2) * 0.0009;
+      features.push({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [lon - spread / 2 + (i / (N - 1)) * spread + jx, lat - spread / 2 + (j / (N - 1)) * spread + jy],
+        },
+        properties: {},
+      });
+    }
+  }
+  return { type: 'FeatureCollection' as const, features };
+}
+
 function UserPin({ coordinate }: { coordinate: [number, number] }) {
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -1955,6 +1978,21 @@ export default function HomeScreen() {
         <Mapbox.SymbolLayer id="road-label" existing style={{ textColor: '#ffffff', textHaloColor: 'rgba(0,0,0,0.85)', textHaloWidth: 1.5 }} />
         <Mapbox.SymbolLayer id="poi-label" existing style={{ textColor: 'rgba(255,255,255,0.72)', textHaloColor: 'rgba(0,0,0,0.6)', textHaloWidth: 1 }} />
 
+        {/* 3D buildings — only render once zoomed into a location (dive-in), so the
+            spot has real depth like the waiting screen. Hidden on the globe teaser. */}
+        <Mapbox.FillExtrusionLayer
+          id="buildings-3d"
+          sourceID="composite"
+          sourceLayerID="building"
+          minZoomLevel={14}
+          style={{
+            fillExtrusionColor: '#2b2f3d',
+            fillExtrusionHeight: ['get', 'height'],
+            fillExtrusionBase: ['get', 'min_height'],
+            fillExtrusionOpacity: 0.85,
+          }}
+        />
+
         {/* User location pin — real GPS, not the demo market centre */}
         {zoomedIn && usingRealLocation && userCoords && <UserPin coordinate={userCoords} />}
         {demo && (
@@ -2005,6 +2043,14 @@ export default function HomeScreen() {
               <PulsingScout key={`live-${i}`} coordinate={coord} />
             ))}
           </>
+        )}
+
+        {/* Warm street/car lights scattered around the dived-in location */}
+        {droppedPin && (
+          <Mapbox.ShapeSource id="street-lights-src" shape={streetLights(droppedPin)}>
+            <Mapbox.CircleLayer id="street-lights-glow" style={{ circleColor: 'rgb(255,206,120)', circleRadius: 9, circleOpacity: 0.35, circleBlur: 1 }} />
+            <Mapbox.CircleLayer id="street-lights-core" style={{ circleColor: 'rgb(255,234,180)', circleRadius: 2.6, circleOpacity: 0.95, circleBlur: 0.4 }} />
+          </Mapbox.ShapeSource>
         )}
 
         {/* Illuminated hotspot — a warm glow radiating from the checked spot so the
