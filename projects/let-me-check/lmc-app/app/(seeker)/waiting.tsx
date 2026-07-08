@@ -240,6 +240,17 @@ export default function WaitingScreen() {
           />
         )}
 
+        {/* Space atmosphere — the glowing halo around the globe (the Snap Map look) */}
+        <Mapbox.Atmosphere
+          style={{
+            color: 'rgb(90, 150, 255)',
+            highColor: 'rgb(120, 180, 255)',
+            horizonBlend: 0.035,
+            spaceColor: 'rgb(6, 8, 22)',
+            starIntensity: 0.6,
+          }}
+        />
+
         {/* User location — real GPS */}
         {userCoord && <UserPin coordinate={userCoord} />}
 

@@ -8,6 +8,7 @@ import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import Mapbox from '@rnmapbox/maps';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 import { BottomNav } from '../components/BottomNav';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -48,6 +49,98 @@ const PLACEHOLDER_HINTS = [
 // Mapbox uses [longitude, latitude] order
 const MIAMI_CENTER: [number, number] = [-80.1918, 25.7617];
 const MIAMI_ZOOM = 14.5;
+
+// Decorative "activity" hotspots for the globe-teaser heatmap — a lit-up globe
+// like the Snap Map reference (no real check-volume data yet; roughly world metros).
+const GLOBE_HOTSPOTS: [number, number, number][] = [
+  // LMC launch markets — the hottest (red) spots
+  [-80.19, 25.76, 1.35], [-74.0, 40.71, 1.35],
+  // US metros where LMC grows next
+  [-118.24, 34.05, 1.0], [-87.63, 41.88, 0.9], [-122.42, 37.77, 0.9], [-95.37, 29.76, 0.8],
+  [-84.39, 33.75, 0.85], [-96.8, 32.78, 0.75], [-75.16, 39.95, 0.75], [-77.04, 38.9, 0.75],
+  [-115.14, 36.17, 0.78], [-112.07, 33.45, 0.65], [-90.07, 29.95, 0.65], [-71.06, 42.36, 0.72],
+  [-104.99, 39.74, 0.6], [-97.74, 30.27, 0.65], [-81.38, 28.54, 0.72],
+  // Global majors — real cities that keep the globe alive
+  [-0.12, 51.5, 0.95], [2.35, 48.85, 0.85], [-99.13, 19.43, 0.7], [-46.63, -23.55, 0.7],
+  [55.27, 25.2, 0.9], [77.2, 28.6, 0.8], [139.69, 35.68, 0.9], [121.47, 31.23, 0.8],
+  [-58.38, -34.6, 0.6], [28.98, 41.0, 0.65], [151.2, -33.87, 0.6], [103.8, 1.35, 0.7],
+];
+const HOTSPOTS_GEOJSON = {
+  type: 'FeatureCollection' as const,
+  features: GLOBE_HOTSPOTS.map(([lon, lat, intensity]) => ({
+    type: 'Feature' as const,
+    geometry: { type: 'Point' as const, coordinates: [lon, lat] },
+    properties: { intensity },
+  })),
+};
+
+// Soft city lights across the globe — the "small lights within the globe" detail
+// (Apple-map night-lights feel). Denser than the heatmap so the DARK regions
+// (South America, Africa, Asia) get the road/city-light glow, not just the US.
+const CITY_LIGHTS: [number, number][] = [
+  // North America
+  [-74, 40.7], [-118.2, 34], [-87.6, 41.9], [-80.2, 25.8], [-122.4, 37.8], [-95.4, 29.8], [-84.4, 33.7], [-96.8, 32.8], [-75.2, 40], [-77, 38.9], [-79.4, 43.7], [-73.6, 45.5], [-123.1, 49.3], [-99.1, 19.4], [-103.3, 20.7], [-100.3, 25.7], [-90.5, 14.6],
+  // South America (Troy's focus — Venezuela, Colombia, Ecuador, Peru, Chile)
+  [-74, 4.7], [-66.9, 10.5], [-77, -12], [-78.5, -0.2], [-70.6, -33.4], [-75.5, 6.2], [-76.5, 3.4], [-79.9, -2.2], [-56.2, -34.9], [-58.4, -34.6], [-47.9, -15.8], [-46.6, -23.5], [-43.2, -22.9], [-68.1, -16.5], [-51.2, -30], [-63.2, -17.8], [-57.6, -25.3], [-71.5, -16.4],
+  // Europe
+  [-0.12, 51.5], [2.35, 48.85], [-3.7, 40.4], [12.5, 41.9], [13.4, 52.5], [4.9, 52.4], [2.17, 41.4], [-9.1, 38.7], [23.7, 37.98], [16.4, 48.2], [21, 52.2], [30.5, 50.45], [37.6, 55.75], [28.98, 41], [24.9, 60.2], [18.06, 59.3], [12.57, 55.68],
+  // Africa
+  [3.4, 6.5], [31.2, 30], [28, -26.2], [36.8, -1.3], [-7.6, 33.6], [-0.2, 5.6], [38.7, 9], [32.6, 0.3], [15.3, -4.3], [18.4, -33.9],
+  // Middle East / Asia
+  [55.3, 25.2], [46.7, 24.7], [51.4, 35.7], [44.4, 33.3], [34.8, 32.1], [77.2, 28.6], [72.9, 19], [77.6, 12.97], [67, 24.9], [90.4, 23.8], [100.5, 13.75], [106.8, -6.2], [121, 14.6], [103.8, 1.35], [101.7, 3.15], [106.7, 10.8], [114.1, 22.3], [121.5, 31.2], [116.4, 39.9], [126.98, 37.57], [139.7, 35.7], [135.5, 34.7], [121.5, 25],
+  // Oceania
+  [151.2, -33.9], [144.96, -37.8], [174.76, -36.85],
+];
+const CITY_LIGHTS_GEOJSON = {
+  type: 'FeatureCollection' as const,
+  features: CITY_LIGHTS.map(([lon, lat]) => ({
+    type: 'Feature' as const,
+    geometry: { type: 'Point' as const, coordinates: [lon, lat] },
+    properties: {},
+  })),
+};
+
+// Decorative bright stars scattered in the black space around the globe — the
+// Mapbox atmosphere stars are maxed at intensity 1, so these add the extra pop.
+const STARS: { x: string; y: string; s: number; o: number }[] = [
+  { x: '6%', y: '4%', s: 2.2, o: 0.95 }, { x: '18%', y: '9%', s: 1.4, o: 0.7 },
+  { x: '30%', y: '3%', s: 1.7, o: 0.85 }, { x: '44%', y: '6%', s: 1.2, o: 0.6 },
+  { x: '58%', y: '4%', s: 2.2, o: 0.95 }, { x: '72%', y: '8%', s: 1.5, o: 0.75 },
+  { x: '86%', y: '5%', s: 2, o: 0.9 }, { x: '94%', y: '11%', s: 1.4, o: 0.7 },
+  { x: '4%', y: '17%', s: 1.7, o: 0.85 }, { x: '11%', y: '25%', s: 2.4, o: 0.95 },
+  { x: '92%', y: '18%', s: 2.2, o: 0.95 }, { x: '88%', y: '28%', s: 1.4, o: 0.7 },
+  { x: '3%', y: '31%', s: 1.6, o: 0.8 }, { x: '96%', y: '35%', s: 1.8, o: 0.85 },
+  { x: '9%', y: '39%', s: 1.4, o: 0.65 }, { x: '90%', y: '44%', s: 1.6, o: 0.75 },
+  { x: '50%', y: '2%', s: 1.5, o: 0.75 }, { x: '38%', y: '10%', s: 1.2, o: 0.55 },
+  { x: '66%', y: '11%', s: 1.4, o: 0.65 }, { x: '80%', y: '15%', s: 1.7, o: 0.85 },
+  { x: '24%', y: '14%', s: 1.3, o: 0.6 }, { x: '6%', y: '47%', s: 1.7, o: 0.8 },
+  { x: '95%', y: '50%', s: 1.4, o: 0.65 }, { x: '15%', y: '6%', s: 1.2, o: 0.55 },
+];
+function StarField() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {STARS.map((st, i) => (
+        <View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: st.x as unknown as number,
+            top: st.y as unknown as number,
+            width: st.s,
+            height: st.s,
+            borderRadius: st.s / 2,
+            backgroundColor: '#fff',
+            opacity: st.o,
+            shadowColor: '#fff',
+            shadowOpacity: 0.9,
+            shadowRadius: 2.5,
+            shadowOffset: { width: 0, height: 0 },
+          }}
+        />
+      ))}
+    </View>
+  );
+}
 
 // Per-market demo supply. Miami + New York are the two "rich" demo cities — each
 // gets scattered Scouts, live (pulsing) Scouts, vision cones, and venue pins.
@@ -1192,6 +1285,12 @@ function RequestSheet({ pinName, market, isPartner, onCancel, onRequest }: Reque
           onPress={() => setSelectedTier('standard')}
           activeOpacity={0.8}
         >
+          <LinearGradient
+            colors={['#A2A6B1', '#70737D', '#44464E']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+          />
           <Text style={reqStyles.tierLabel}>Standard</Text>
           <Text style={reqStyles.tierPrice}>$15</Text>
           <Text style={reqStyles.tierTime}>~10 min</Text>
@@ -1208,6 +1307,12 @@ function RequestSheet({ pinName, market, isPartner, onCancel, onRequest }: Reque
           onPress={() => setSelectedTier('priority')}
           activeOpacity={0.8}
         >
+          <LinearGradient
+            colors={['#A2A6B1', '#70737D', '#44464E']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+          />
           <View style={reqStyles.priorityBadge}>
             <Text style={reqStyles.priorityBadgeText}>PRIORITY</Text>
           </View>
@@ -1222,34 +1327,43 @@ function RequestSheet({ pinName, market, isPartner, onCancel, onRequest }: Reque
         </TouchableOpacity>
       </View>
 
-      {/* Partner interior add-on (only for known partner venues) */}
-      {isPartner && (
-        <TouchableOpacity
-          style={[reqStyles.interiorCard, interior && reqStyles.interiorCardActive]}
-          activeOpacity={0.85}
-          onPress={() => setInterior(!interior)}
-        >
-          <View style={[reqStyles.interiorCheck, interior && reqStyles.interiorCheckActive]}>
-            {interior && <Text style={reqStyles.interiorCheckGlyph}>✓</Text>}
+      {/* Interior add-on — always shown so the sheet is identical on every spot. */}
+      <TouchableOpacity
+        style={[reqStyles.interiorCard, interior && reqStyles.interiorCardActive]}
+        activeOpacity={0.85}
+        onPress={() => setInterior(!interior)}
+      >
+        <LinearGradient
+          colors={['#A2A6B1', '#70737D', '#44464E']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
+        />
+        <View style={[reqStyles.interiorCheck, interior && reqStyles.interiorCheckActive]}>
+          {interior && <Text style={reqStyles.interiorCheckGlyph}>✓</Text>}
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={reqStyles.interiorEyebrow}>PARTNER VENUE</Text>
+          <View style={reqStyles.interiorTitleRow}>
+            <Text style={reqStyles.interiorTitle}>Include interior</Text>
+            <Text style={reqStyles.interiorBadge}>+$5</Text>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={reqStyles.interiorEyebrow}>PARTNER VENUE</Text>
-            <View style={reqStyles.interiorTitleRow}>
-              <Text style={reqStyles.interiorTitle}>Include interior</Text>
-              <Text style={reqStyles.interiorBadge}>+$5</Text>
-            </View>
-            <Text style={reqStyles.interiorSub}>30-sec video inside the venue</Text>
-          </View>
-        </TouchableOpacity>
-      )}
+          <Text style={reqStyles.interiorSub}>30-sec video inside the venue</Text>
+        </View>
+      </TouchableOpacity>
 
       {/* Request check CTA */}
       <TouchableOpacity
-        style={[reqStyles.ctaBtn, ctaGlowShadow]}
+        style={reqStyles.ctaBtn}
         onPress={handleRequest}
         activeOpacity={0.85}
       >
-        <CtaGlow radius={14} />
+        <LinearGradient
+          colors={['#FFFFFF', '#F1F1F4', '#DEDEE3']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+        />
         <Text style={reqStyles.ctaBtnText}>{`REQUEST CHECK · ${priceStr}`}</Text>
       </TouchableOpacity>
     </View>
@@ -1264,30 +1378,30 @@ const reqStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: 14,
+    marginBottom: 10,
     gap: 12,
   },
   headerLeft: { flex: 1 },
   placeName: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 18,
-    color: colors.textPrimary,
+    fontSize: 17,
+    color: colors.white,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   placeCity: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.6)',
     letterSpacing: 0.3,
   },
   cancelBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.16)',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
@@ -1295,39 +1409,46 @@ const reqStyles = StyleSheet.create({
   cancelGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.7)',
   },
   sectionLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.55)',
     letterSpacing: 2,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   tierRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   tierCard: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: '#44464E',
     borderRadius: 14,
-    padding: 14,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    minHeight: 110,
+    padding: 11,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+    minHeight: 84,
+    // Keep the gradient corners clean, but don't clip the lift shadow.
+    // Soft lift so the cards read as raised glass, not flat dark patches.
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 6,
   },
   tierCardActive: {
-    borderColor: colors.textPrimary,
-    backgroundColor: colors.bg,
+    borderColor: colors.white,
+    borderWidth: 1.5,
   },
   tierCardPriorityActive: {
     borderColor: colors.red,
-    backgroundColor: 'rgba(218,37,29,0.04)',
+    borderWidth: 1.5,
   },
   priorityBadge: {
-    backgroundColor: 'rgba(218,37,29,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -1337,25 +1458,25 @@ const reqStyles = StyleSheet.create({
   priorityBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 8,
-    color: colors.red,
+    color: colors.white,
     letterSpacing: 1,
   },
   tierLabel: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: colors.textPrimary,
+    color: colors.white,
     marginBottom: 4,
   },
   tierPrice: {
     fontFamily: 'JetBrainsMono_700Bold',
-    fontSize: 22,
-    color: colors.textPrimary,
+    fontSize: 20,
+    color: colors.white,
     marginBottom: 2,
   },
   tierTime: {
     fontFamily: 'Inter_500Medium',
     fontSize: 12,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.6)',
   },
   selectedBadge: {
     position: 'absolute',
@@ -1364,7 +1485,7 @@ const reqStyles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: colors.textPrimary,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1378,24 +1499,33 @@ const reqStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: '#44464E',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.22)',
     borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 11,
-    marginBottom: 14,
+    paddingVertical: 8,
+    marginBottom: 10,
+    // Same lift as the tier cards so all three cards share one material.
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 6,
   },
   interiorCardActive: {
-    borderColor: colors.red,
-    backgroundColor: 'rgba(218,37,29,0.04)',
+    borderColor: colors.white,
+    borderWidth: 1.5,
+  },
+  interiorCardMuted: {
+    opacity: 0.55,
   },
   interiorCheck: {
     width: 20,
     height: 20,
     borderRadius: 5,
     borderWidth: 1.5,
-    borderColor: colors.borderStrong,
+    borderColor: 'rgba(255,255,255,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
@@ -1410,7 +1540,7 @@ const reqStyles = StyleSheet.create({
   interiorEyebrow: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.red,
+    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 2,
     marginBottom: 3,
   },
@@ -1423,28 +1553,34 @@ const reqStyles = StyleSheet.create({
   interiorTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: colors.textPrimary,
+    color: colors.white,
   },
   interiorBadge: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 12,
-    color: colors.red,
+    color: colors.white,
   },
   interiorSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.6)',
   },
   ctaBtn: {
-    backgroundColor: colors.red,
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 6,
   },
   ctaBtnText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 14,
-    color: colors.onRed,
+    color: '#141414',
     letterSpacing: 1.5,
   },
 });
@@ -1518,14 +1654,17 @@ export default function HomeScreen() {
   // ── Search overlay state ──────────────────────────────────────────────────
   const [searchOpen, setSearchOpen] = useState(false);
 
-  // When marketId changes → fly camera to that market's center
+  // When marketId changes → re-orient the globe teaser to that market (stay on
+  // the full globe at the same centered position; never dive into a city here).
   useEffect(() => {
     if (!params.pinLat && !params.pinLon) {
       cameraRef.current?.setCamera({
         centerCoordinate: market.center,
-        zoomLevel: 13.5,
-        pitch: 50,
+        zoomLevel: 1.0,
+        pitch: 0,
+        padding: { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
         animationDuration: 1200,
+        animationMode: 'flyTo',
       });
     }
   }, [marketId]);
@@ -1578,14 +1717,19 @@ export default function HomeScreen() {
     const coords = getUserCoords();
     if (!coords) return;
     setCurrentCenter(coords);
+    // Home rests on the full globe (the teaser), but rotate it so the user's
+    // own region faces front — they open the map already looking at their part
+    // of the world, so a local search barely moves and only far places spin.
+    // We stay zoomed out (still the round globe), just re-orient the ball.
     cameraRef.current?.setCamera({
       centerCoordinate: coords,
-      zoomLevel: 14.5,
-      pitch: 45,
-      animationDuration: 3600,
+      zoomLevel: 1.0,
+      pitch: 0,
+      padding: { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
+      animationDuration: 1200,
       animationMode: 'flyTo',
     });
-  }, [params.pinLat, params.marketId]);
+  }, [params.pinLat, params.marketId, userCoords]);
 
   // If no coords are resolved yet when home mounts, request location now so
   // the pill shows the user's real city instead of "Set your location".
@@ -1597,24 +1741,41 @@ export default function HomeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Callback from SearchOverlay: close overlay, drop pin, fly camera, show YES card
+  // Callback from SearchOverlay: close overlay, drop pin, then run a cinematic
+  // two-step camera move — the globe SPINS to bring the location to centre
+  // (staying zoomed out), then DIVES down into the exact spot (Snap Map style).
   const handleOverlaySelect = useCallback((appCoord: [number, number], name: string) => {
     const [lon, lat] = appCoord;
     setDroppedPin([lon, lat]);
     setPinName(name);
+    // Step 1 — spin the globe so the target rotates to the middle.
     cameraRef.current?.setCamera({
       centerCoordinate: [lon, lat],
-      zoomLevel: 17,
-      pitch: 55,
-      animationDuration: 2200,
+      zoomLevel: 2.6,
+      pitch: 0,
+      animationDuration: 1600,
       animationMode: 'flyTo',
     });
+    // Step 2 — dive down into the location once the spin lands.
+    setTimeout(() => {
+      cameraRef.current?.setCamera({
+        centerCoordinate: [lon, lat],
+        zoomLevel: 17,
+        pitch: 55,
+        animationDuration: 2200,
+        animationMode: 'flyTo',
+      });
+    }, 1550);
   }, []);
 
   // Is the user outside every live market? Drives the honest "not live yet" banner.
   // userCoords + coverage are computed at the top of the component (before marketId
   // derivation) — no re-declaration here.
   const usingRealLocation = !params.marketId && !params.pinLat && !!userCoords;
+  // Teaser globe = zoomed all the way out (no dropped pin). Demo market pins
+  // (venue labels, scout dots, YOU/LIVE) only make sense once you've zoomed
+  // into a spot, so hide them while resting on the full globe.
+  const zoomedIn = !!params.pinLat;
   const outOfCoverage = usingRealLocation && !!coverage && !coverage.inMarket;
   const inLiveMarket = usingRealLocation && !!coverage && coverage.inMarket;
   const userCityLabel = getUserCity() || 'your area';
@@ -1710,15 +1871,92 @@ export default function HomeScreen() {
                 : usingRealLocation && userCoords
                 ? userCoords
                 : market.center,
-            // Cold-load opens on the globe (the teaser); a selected pin skips
-            // straight to the place. The fly-in effects below dive from here.
-            zoomLevel: params.pinLat ? 16.5 : 2.4,
+            // Cold-load rests on the FULL globe (the teaser — a small round ball
+            // in space); a selected pin skips straight to the place. The user
+            // dives into their area by searching or tapping.
+            zoomLevel: params.pinLat ? 16.5 : 1.0,
             pitch: params.pinLat ? 50 : 0,
+            // Center the globe in the clear band between the top pills and the sheet.
+            padding: params.pinLat
+              ? undefined
+              : { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
           }}
         />
 
+        {/* Space atmosphere — the glowing halo around the globe (the Snap Map look) */}
+        <Mapbox.Atmosphere
+          style={{
+            color: 'rgb(58, 118, 235)',
+            highColor: 'rgb(200, 224, 255)',
+            horizonBlend: 0.032,
+            spaceColor: 'rgb(0, 0, 0)',
+            starIntensity: 1.0,
+          }}
+        />
+
+        {/* Illuminated activity hotspots — the glowing globe surface (Snap Map look):
+            blue → cyan → neon green → yellow → red, like the reference. */}
+        <Mapbox.ShapeSource id="globe-hotspots" shape={HOTSPOTS_GEOJSON}>
+          <Mapbox.HeatmapLayer
+            id="globe-hotspots-heat"
+            style={{
+              heatmapWeight: ['interpolate', ['linear'], ['get', 'intensity'], 0, 0.45, 1, 1.2],
+              heatmapIntensity: 2.2,
+              heatmapRadius: 44,
+              heatmapOpacity: 0.9,
+              heatmapColor: [
+                'interpolate', ['linear'], ['heatmap-density'],
+                0, 'rgba(0,0,0,0)',
+                0.08, 'rgba(30,90,255,0.5)',
+                0.28, 'rgba(0,210,255,0.72)',
+                0.48, 'rgba(50,255,120,0.86)',
+                0.68, 'rgba(255,225,0,0.95)',
+                1, 'rgba(255,45,30,1)',
+              ],
+            }}
+          />
+        </Mapbox.ShapeSource>
+
+        {/* Soft warm city lights across the globe (the "small lights" / road-light
+            detail) — glows in the dark regions the heatmap doesn't cover. */}
+        <Mapbox.ShapeSource id="city-lights-src" shape={CITY_LIGHTS_GEOJSON}>
+          {/* Soft outer halo — the warm glow bleeding off each cluster. */}
+          <Mapbox.CircleLayer
+            id="city-lights-glow"
+            style={{
+              circleColor: 'rgb(255, 214, 130)',
+              circleRadius: ['interpolate', ['linear'], ['zoom'], 1, 5, 4, 12],
+              circleOpacity: 0.28,
+              circleBlur: 1,
+            }}
+          />
+          {/* Bright warm core — the actual "city light" point. */}
+          <Mapbox.CircleLayer
+            id="city-lights-core"
+            style={{
+              circleColor: 'rgb(255, 236, 179)',
+              circleRadius: ['interpolate', ['linear'], ['zoom'], 1, 1.7, 4, 3],
+              circleOpacity: 0.95,
+              circleBlur: 0.4,
+            }}
+          />
+        </Mapbox.ShapeSource>
+
+        {/* Brighten the stock place labels to white (like the Snap Map reference)
+            so cities/countries read crisply instead of dim gray. */}
+        <Mapbox.SymbolLayer id="continent-label" existing style={{ textColor: 'rgba(255,255,255,0.82)', textHaloColor: 'rgba(0,0,0,0.5)', textHaloWidth: 1 }} />
+        <Mapbox.SymbolLayer id="country-label" existing style={{ textColor: '#ffffff', textHaloColor: 'rgba(0,0,0,0.5)', textHaloWidth: 1 }} />
+        <Mapbox.SymbolLayer id="state-label" existing style={{ textColor: 'rgba(255,255,255,0.88)', textHaloColor: 'rgba(0,0,0,0.5)', textHaloWidth: 1 }} />
+        <Mapbox.SymbolLayer id="settlement-major-label" existing style={{ textColor: '#ffffff', textHaloColor: 'rgba(0,0,0,0.55)', textHaloWidth: 1.1 }} />
+        <Mapbox.SymbolLayer id="settlement-minor-label" existing style={{ textColor: 'rgba(255,255,255,0.86)', textHaloColor: 'rgba(0,0,0,0.55)', textHaloWidth: 1 }} />
+        <Mapbox.SymbolLayer id="settlement-subdivision-label" existing style={{ textColor: 'rgba(255,255,255,0.8)' }} />
+        {/* Street-name labels — brighten to white so the zoomed-in location view
+            is legible (SE 12th St, etc.) instead of the dim dark default. */}
+        <Mapbox.SymbolLayer id="road-label" existing style={{ textColor: 'rgba(255,255,255,0.9)', textHaloColor: 'rgba(0,0,0,0.7)', textHaloWidth: 1.2 }} />
+        <Mapbox.SymbolLayer id="poi-label" existing style={{ textColor: 'rgba(255,255,255,0.72)', textHaloColor: 'rgba(0,0,0,0.6)', textHaloWidth: 1 }} />
+
         {/* User location pin — real GPS, not the demo market centre */}
-        {usingRealLocation && userCoords && <UserPin coordinate={userCoords} />}
+        {zoomedIn && usingRealLocation && userCoords && <UserPin coordinate={userCoords} />}
         {demo && (
           <>
             {demo.venues.map((v) => (
@@ -1769,6 +2007,44 @@ export default function HomeScreen() {
           </>
         )}
 
+        {/* Illuminated hotspot — a warm glow radiating from the checked spot so the
+            dark map lights up around the location (same glow language as the globe). */}
+        {droppedPin && (
+          <Mapbox.ShapeSource
+            id="pin-glow-src"
+            shape={{
+              type: 'FeatureCollection' as const,
+              features: [
+                {
+                  type: 'Feature' as const,
+                  geometry: { type: 'Point' as const, coordinates: droppedPin },
+                  properties: { mag: 1 },
+                },
+              ],
+            }}
+          >
+            <Mapbox.HeatmapLayer
+              id="pin-glow"
+              style={{
+                heatmapWeight: 1,
+                heatmapIntensity: 1,
+                heatmapRadius: 100,
+                heatmapOpacity: 0.85,
+                heatmapColor: [
+                  'interpolate',
+                  ['linear'],
+                  ['heatmap-density'],
+                  0, 'rgba(0,0,0,0)',
+                  0.15, 'rgba(255,201,120,0.22)',
+                  0.45, 'rgba(255,220,150,0.42)',
+                  0.75, 'rgba(255,236,185,0.62)',
+                  1, 'rgba(255,248,225,0.82)',
+                ],
+              }}
+            />
+          </Mapbox.ShapeSource>
+        )}
+
         {/* Geofence ring around dropped pin — 50m radius */}
         {droppedPin && (
           <Mapbox.ShapeSource
@@ -1789,14 +2065,14 @@ export default function HomeScreen() {
           >
             <Mapbox.FillLayer
               id="geofence-fill"
-              style={{ fillColor: colors.red, fillOpacity: 0.10 }}
+              style={{ fillColor: '#3BA9FF', fillOpacity: 0.12 }}
             />
             <Mapbox.LineLayer
               id="geofence-line"
               style={{
-                lineColor: colors.red,
+                lineColor: '#3BA9FF',
                 lineWidth: 1.5,
-                lineOpacity: 0.6,
+                lineOpacity: 0.8,
               }}
             />
           </Mapbox.ShapeSource>
@@ -1817,6 +2093,9 @@ export default function HomeScreen() {
           </Mapbox.MarkerView>
         )}
       </Mapbox.MapView>
+
+      {/* Bright decorative stars in the black space around the globe */}
+      <StarField />
 
       {/* Top gradient overlay — dark fade so the white pills pop on the dark globe */}
       <LinearGradient
@@ -1846,6 +2125,7 @@ export default function HomeScreen() {
             }}
             activeOpacity={0.85}
           >
+            <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />
             <Ionicons name="location-outline" size={13} color={colors.red} />
             <Text style={styles.locCity}>{displayCity}</Text>
             <View style={[styles.scoutDot, outOfCoverage && styles.scoutDotOff]} />
@@ -1858,7 +2138,8 @@ export default function HomeScreen() {
             onPress={() => { void switchRole('scout').catch(() => {}); router.replace('/(scout)/dashboard'); }}
             activeOpacity={0.8}
           >
-            <Ionicons name="swap-horizontal" size={14} color={colors.red} />
+            <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />
+            <Ionicons name="swap-horizontal" size={14} color={colors.white} />
             <Text style={styles.scoutSwitchText}>SCOUT</Text>
           </TouchableOpacity>
 
@@ -1867,6 +2148,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/(seeker)/profile')}
             activeOpacity={0.85}
           >
+            <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />
             <Text style={styles.profileInitials}>{profileInitials}</Text>
           </TouchableOpacity>
         </View>
@@ -1874,6 +2156,7 @@ export default function HomeScreen() {
         {/* Honest out-of-coverage banner — never pretend we serve a city we don't */}
         {outOfCoverage && (
           <View style={styles.waitlistBanner}>
+            <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />
             <Ionicons name="location-outline" size={13} color={colors.red} />
             <Text style={styles.waitlistText}>
               We&apos;re not live in {userCityLabel} yet.
@@ -1889,8 +2172,9 @@ export default function HomeScreen() {
         )}
       </SafeAreaView>
 
-      {/* Bottom sheet — white card over light map */}
+      {/* Bottom sheet — frosted glass floating over the globe */}
       <View style={styles.sheet}>
+        <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <View style={styles.sheetHandle} />
 
         {droppedPin ? (
@@ -1902,6 +2186,16 @@ export default function HomeScreen() {
             onCancel={() => {
               setDroppedPin(null);
               setPinName(null);
+              // Fly back out to the round globe (the teaser rests fully zoomed out).
+              const c = getUserCoords() ?? market.center;
+              cameraRef.current?.setCamera({
+                centerCoordinate: c as [number, number],
+                zoomLevel: 1.0,
+                pitch: 0,
+                padding: { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
+                animationMode: 'flyTo',
+                animationDuration: 2200,
+              });
             }}
             onRequest={({ venue, city, tier, price, time, interior }) => {
               router.push({
@@ -2031,16 +2325,19 @@ export default function HomeScreen() {
           active="home"
           floating
           onActivePress={() => {
-            // Tap Home while already home → reset to a clean map: clear pin, close
-            // search, and recenter on the user (visible response, like "scroll to top").
+            // Tap Home while already home → reset to the globe teaser: clear pin,
+            // close search, and fly all the way back out to the round globe.
             setDroppedPin(null);
+            setPinName(null);
             setSearchOpen(false);
             const coords = getUserCoords() ?? market.center;
             cameraRef.current?.setCamera({
               centerCoordinate: coords as [number, number],
-              zoomLevel: 14.5,
-              pitch: 50,
-              animationDuration: 700,
+              zoomLevel: 1.0,
+              pitch: 0,
+              padding: { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
+              animationMode: 'flyTo',
+              animationDuration: 1800,
             });
           }}
         />
@@ -2242,16 +2539,14 @@ const venueStyles = StyleSheet.create({
   label: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255,255,255,0.94)',
-    borderWidth: 1,
-    borderColor: 'rgba(218,37,29,0.35)',
+    borderRadius: 6,
+    backgroundColor: 'rgba(6,7,10,0.66)',
     marginBottom: 2,
   },
   labelText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.red,
+    color: colors.white,
     letterSpacing: 1.2,
   },
   stem: {
@@ -2302,10 +2597,8 @@ const pulseStyles = StyleSheet.create({
     gap: 3,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 5,
+    backgroundColor: 'rgba(6,7,10,0.66)',
   },
   recDot: {
     width: 4.5,
@@ -2316,7 +2609,7 @@ const pulseStyles = StyleSheet.create({
   recText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 1,
   },
 });
@@ -2326,9 +2619,11 @@ const scoutInviteStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surface,
+    // Light inset — matches the search input; the sheet behind is already frosted,
+    // so a second dark blur here would double-darken and break consistency.
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.16)',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 14,
@@ -2340,7 +2635,7 @@ const scoutInviteStyles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(218,37,29,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2353,20 +2648,20 @@ const scoutInviteStyles = StyleSheet.create({
   label: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.red,
+    color: colors.white,
     letterSpacing: 2,
     marginBottom: 2,
   },
   title: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    color: colors.textPrimary,
+    color: 'rgba(255,255,255,0.92)',
     letterSpacing: 0.2,
   },
   arrow: {
     fontFamily: 'Inter_400Regular',
     fontSize: 22,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.6)',
   },
 });
 
@@ -2418,16 +2713,17 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.96)',
+    backgroundColor: 'rgba(16,17,24,0.42)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.14)',
     borderRadius: 22,
     paddingHorizontal: 14,
     paddingVertical: 11,
     gap: 8,
     justifyContent: 'center',
+    overflow: 'hidden',
     shadowColor: colors.black,
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
@@ -2435,7 +2731,7 @@ const styles = StyleSheet.create({
   locCity: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 0.3,
   },
   scoutDot: {
@@ -2466,11 +2762,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.96)',
-    borderWidth: 1.5,
-    borderColor: colors.red, // outlined in red (was amber)
+    backgroundColor: 'rgba(16,17,24,0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    overflow: 'hidden',
     shadowColor: colors.black,
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.25,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
@@ -2479,7 +2776,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 12.5,
-    color: colors.textPrimary,
+    color: 'rgba(255,255,255,0.9)',
     letterSpacing: 0.2,
   },
   waitlistBtn: {
@@ -2497,7 +2794,7 @@ const styles = StyleSheet.create({
   locChevron: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.6)',
     marginLeft: 2,
   },
   cityIconWrap: {
@@ -2517,35 +2814,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 42,
     borderRadius: 21,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(16,17,24,0.42)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.14)',
     marginRight: 10,
+    overflow: 'hidden',
   },
   scoutSwitchText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-    color: colors.red,
+    color: colors.white,
     letterSpacing: 1,
   },
   profileBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.96)',
+    backgroundColor: 'rgba(16,17,24,0.42)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.14)',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
     shadowColor: colors.black,
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
   profileInitials: {
     fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 0.5,
   },
 
@@ -2563,40 +2862,40 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg,
+    borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(48,78,152,0.5)',
     overflow: 'hidden',
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.25,
     shadowRadius: 24,
   },
   sheetHandle: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(255,255,255,0.35)',
     alignSelf: 'center',
     marginBottom: 12,
   },
   sheetEyebrow: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.5)',
     letterSpacing: 5,
     marginBottom: 10,
   },
   sheetTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 22,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: -0.4,
     marginBottom: 4,
   },
   sheetHint: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.68)',
     letterSpacing: 0.2,
     marginBottom: 14,
   },
@@ -2605,21 +2904,21 @@ const styles = StyleSheet.create({
   searchTapTarget: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 13,
     gap: 12,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.16)',
   },
   searchIcon: { /* replaced by Ionicons search */ },
   searchPlaceholder: {
     flex: 1,
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.6)',
     letterSpacing: 0.2,
   },
   // Saved
@@ -2657,7 +2956,7 @@ const styles = StyleSheet.create({
   savedChipText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 12,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 0.2,
   },
 
@@ -2665,7 +2964,7 @@ const styles = StyleSheet.create({
   recentLabel: {
     fontFamily: 'Inter_700Bold',
     fontSize: 10,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.55)',
     letterSpacing: 2,
     marginBottom: 8,
   },
@@ -2679,9 +2978,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2697,7 +2996,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontFamily: 'Inter_600SemiBold',
     fontSize: 15,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 0.2,
   },
   partnerChip: {
@@ -2725,12 +3024,12 @@ const styles = StyleSheet.create({
   recentSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.6)',
     letterSpacing: 0.2,
   },
   recentArrow: {
     fontSize: 20,
-    color: colors.textTertiary,
+    color: 'rgba(255,255,255,0.6)',
     fontFamily: 'Inter_500Medium',
   },
 });

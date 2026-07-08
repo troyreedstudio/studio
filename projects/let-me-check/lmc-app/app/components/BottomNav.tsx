@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { colors } from '../lib/theme';
 
@@ -44,9 +45,20 @@ export function BottomNav({
   const tabs = variant === 'seeker' ? SEEKER_TABS : SCOUT_TABS;
   return (
     <View style={[styles.bar, floating && styles.barFloating]}>
+      {/* Over the map, the bar is a frosted dark-glass panel (matches the search
+          sheet + Scout card) so the hero page reads futuristic. */}
+      {floating && <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />}
       {tabs.map((t) => {
         const isActive = t.key === active;
-        const tint = isActive ? colors.red : colors.textTertiary;
+        // On the frosted floating bar the active tab is white (no red accent);
+        // on the light docked bars it stays red.
+        const tint = isActive
+          ? floating
+            ? colors.white
+            : colors.red
+          : floating
+            ? 'rgba(255,255,255,0.62)'
+            : colors.textTertiary;
         return (
           <TouchableOpacity
             key={t.key}
@@ -77,10 +89,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   barFloating: {
+    backgroundColor: 'rgba(16,17,24,0.42)',
+    borderTopColor: 'rgba(255,255,255,0.14)',
+    overflow: 'hidden',
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
     elevation: 8,
   },
   tab: { flex: 1, alignItems: 'center', gap: 3 },

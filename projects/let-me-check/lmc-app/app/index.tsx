@@ -101,7 +101,7 @@ export default function BootSplash() {
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }).start(() => {
-        router.replace('/how-it-works'); // real boot. (design review: tap the dev-only ☰ Index button to jump to /design-index)
+        router.replace('/how-it-works');
       });
     }, 3800);
 
