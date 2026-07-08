@@ -7,7 +7,43 @@ import { getCheck, cancelCheck, type CheckRow } from '../lib/checks';
 import { subscribeToCheck } from '../lib/realtime';
 import { getUserCoords } from '../state/location';
 import { colors } from '../lib/theme';
-import { CtaGlow } from '../components/CtaGlow';
+import { BlurView } from 'expo-blur';
+
+// Small circle (polygon ring) around a point, in metres — for the live-zone ring.
+function makeRing([lon, lat]: [number, number], meters: number, points = 64): number[][] {
+  const coords: number[][] = [];
+  const earth = 6378137;
+  const dLat = (meters / earth) * (180 / Math.PI);
+  const dLon = dLat / Math.cos((lat * Math.PI) / 180);
+  for (let i = 0; i <= points; i++) {
+    const a = (i / points) * 2 * Math.PI;
+    coords.push([lon + dLon * Math.cos(a), lat + dLat * Math.sin(a)]);
+  }
+  return coords;
+}
+
+// Scatter warm "streetlight / car light" points across the area around the
+// venue — the same city-lights language as the globe, at street level.
+function streetLights([lon, lat]: [number, number]) {
+  const N = 8;
+  const spread = 0.016;
+  const features: { type: 'Feature'; geometry: { type: 'Point'; coordinates: number[] }; properties: Record<string, never> }[] = [];
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const jx = (((i * 7 + j * 3) % 5) - 2) * 0.0009;
+      const jy = (((i * 3 + j * 5) % 5) - 2) * 0.0009;
+      features.push({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [lon - spread / 2 + (i / (N - 1)) * spread + jx, lat - spread / 2 + (j / (N - 1)) * spread + jy],
+        },
+        properties: {},
+      });
+    }
+  }
+  return { type: 'FeatureCollection' as const, features };
+}
 
 function PulsingMarker({ coordinate }: { coordinate: [number, number] }) {
   const pulse = useRef(new Animated.Value(0)).current;
@@ -15,14 +51,14 @@ function PulsingMarker({ coordinate }: { coordinate: [number, number] }) {
     Animated.loop(
       Animated.timing(pulse, {
         toValue: 1,
-        duration: 1800,
+        duration: 2200,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       })
     ).start();
   }, [pulse]);
 
-  const ringScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.6, 3.0] });
+  const ringScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.6, 3.4] });
   const ringOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] });
 
   return (
@@ -74,14 +110,13 @@ function UserPin({ coordinate }: { coordinate: [number, number] }) {
 
 function VenuePin({ coordinate, label }: { coordinate: [number, number]; label: string }) {
   return (
-    <Mapbox.MarkerView id="venue-pin" coordinate={coordinate} allowOverlap anchor={{ x: 0.5, y: 0.5 }}>
+    <Mapbox.MarkerView id="venue-pin" coordinate={coordinate} allowOverlap anchor={{ x: 0.5, y: 1 }}>
       <View style={venuePinStyles.wrap}>
-        <View style={venuePinStyles.core} />
-        <View style={venuePinStyles.badge}>
-          <Text style={venuePinStyles.text} numberOfLines={1}>
-            {label}
-          </Text>
+        <View style={venuePinStyles.label}>
+          <Text style={venuePinStyles.labelText} numberOfLines={1}>{label}</Text>
         </View>
+        <View style={venuePinStyles.stem} />
+        <View style={venuePinStyles.dot} />
       </View>
     </Mapbox.MarkerView>
   );
@@ -89,12 +124,14 @@ function VenuePin({ coordinate, label }: { coordinate: [number, number]; label: 
 
 export default function WaitingScreen() {
   const router = useRouter();
-  const { checkId, venue = 'Komodo', city = 'Miami', tier = 'standard' } = useLocalSearchParams<{
+  const { checkId, venue = 'Komodo', city = 'Miami', tier = 'standard', lat, lon } = useLocalSearchParams<{
     checkId: string;
     venue: string;
     city: string;
     tier: string;
     time: string;
+    lat: string;
+    lon: string;
   }>();
 
   const [check, setCheck] = useState<CheckRow | null>(null);
@@ -163,8 +200,12 @@ export default function WaitingScreen() {
 
   // Real venue coords from the check row. Only available once the check loads.
   // Mapbox uses [longitude, latitude].
-  const venueLng = check?.requested_lng ?? null;
-  const venueLat = check?.requested_lat ?? null;
+  // Prefer the real check row; fall back to coords passed through navigation
+  // (so the map lands on the venue even before/without the backend row).
+  const paramLng = lon != null && lon !== '' ? parseFloat(lon) : NaN;
+  const paramLat = lat != null && lat !== '' ? parseFloat(lat) : NaN;
+  const venueLng = check?.requested_lng ?? (Number.isNaN(paramLng) ? null : paramLng);
+  const venueLat = check?.requested_lat ?? (Number.isNaN(paramLat) ? null : paramLat);
   const venueCoord: [number, number] | null =
     venueLng !== null && venueLat !== null ? [venueLng, venueLat] : null;
 
@@ -188,12 +229,10 @@ export default function WaitingScreen() {
     return () => clearInterval(interval);
   }, [venueCoord ? venueCoord[0] : null, venueCoord ? venueCoord[1] : null]);
 
-  // Camera: center between venue and user when we have both; fall back to venue
-  // alone, or user alone. Never hardcoded to a city.
-  const cameraCenter: [number, number] | null =
-    venueCoord && userCoord
-      ? [(venueCoord[0] + userCoord[0]) / 2, (venueCoord[1] + userCoord[1]) / 2]
-      : venueCoord ?? userCoord ?? null;
+  // Camera: focus on the VENUE (where the Scout is filming) — that's the live
+  // action. The Seeker may be anywhere; centering on a far-away midpoint would
+  // zoom the map out to nothing. Fall back to the user only if we have no venue.
+  const cameraCenter: [number, number] | null = venueCoord ?? userCoord ?? null;
 
   // Cinematic globe → venue dive (Snap Map style): the map opens on the globe,
   // then sweeps down and lands on the check location. Runs once, when we first
@@ -204,8 +243,8 @@ export default function WaitingScreen() {
     const t = setTimeout(() => {
       cameraRef.current?.setCamera({
         centerCoordinate: cameraCenter,
-        zoomLevel: 14,
-        pitch: 45,
+        zoomLevel: 15.5,
+        pitch: 50,
         animationDuration: 3800,
         animationMode: 'flyTo',
       });
@@ -240,16 +279,100 @@ export default function WaitingScreen() {
           />
         )}
 
-        {/* Space atmosphere — the glowing halo around the globe (the Snap Map look) */}
+        {/* Space atmosphere — matches the Home globe exactly */}
         <Mapbox.Atmosphere
           style={{
-            color: 'rgb(90, 150, 255)',
-            highColor: 'rgb(120, 180, 255)',
-            horizonBlend: 0.035,
-            spaceColor: 'rgb(6, 8, 22)',
-            starIntensity: 0.6,
+            color: 'rgb(58, 118, 235)',
+            highColor: 'rgb(200, 224, 255)',
+            horizonBlend: 0.032,
+            spaceColor: 'rgb(0, 0, 0)',
+            starIntensity: 1.0,
           }}
         />
+
+        {/* White place labels — matches Home so the map reads crisply */}
+        <Mapbox.SymbolLayer id="continent-label" existing style={{ textColor: 'rgba(255,255,255,0.82)', textHaloColor: 'rgba(0,0,0,0.5)', textHaloWidth: 1 }} />
+        <Mapbox.SymbolLayer id="country-label" existing style={{ textColor: '#ffffff', textHaloColor: 'rgba(0,0,0,0.5)', textHaloWidth: 1 }} />
+        <Mapbox.SymbolLayer id="state-label" existing style={{ textColor: 'rgba(255,255,255,0.88)', textHaloColor: 'rgba(0,0,0,0.5)', textHaloWidth: 1 }} />
+        <Mapbox.SymbolLayer id="settlement-major-label" existing style={{ textColor: '#ffffff', textHaloColor: 'rgba(0,0,0,0.55)', textHaloWidth: 1.1 }} />
+        <Mapbox.SymbolLayer id="settlement-minor-label" existing style={{ textColor: 'rgba(255,255,255,0.86)', textHaloColor: 'rgba(0,0,0,0.55)', textHaloWidth: 1 }} />
+        <Mapbox.SymbolLayer id="settlement-subdivision-label" existing style={{ textColor: 'rgba(255,255,255,0.8)' }} />
+        <Mapbox.SymbolLayer id="road-label" existing style={{ textColor: '#ffffff', textHaloColor: 'rgba(0,0,0,0.85)', textHaloWidth: 1.5 }} />
+        <Mapbox.SymbolLayer id="poi-label" existing style={{ textColor: 'rgba(255,255,255,0.72)', textHaloColor: 'rgba(0,0,0,0.6)', textHaloWidth: 1 }} />
+
+        {/* 3D buildings — the tilted, zoomed-in venue view gets real depth */}
+        <Mapbox.FillExtrusionLayer
+          id="buildings-3d"
+          sourceID="composite"
+          sourceLayerID="building"
+          minZoomLevel={14}
+          style={{
+            fillExtrusionColor: '#2b2f3d',
+            fillExtrusionHeight: ['get', 'height'],
+            fillExtrusionBase: ['get', 'min_height'],
+            fillExtrusionOpacity: 0.85,
+          }}
+        />
+
+        {/* Subtle warm street lighting — the roads glow softly, like a night
+            aerial view where the streets and highways are lit up. */}
+        <Mapbox.LineLayer id="road-motorway-trunk" existing style={{ lineColor: 'rgba(255,206,130,0.85)', lineBlur: 1.4, lineWidth: 2 }} />
+        <Mapbox.LineLayer id="road-primary" existing style={{ lineColor: 'rgba(255,212,150,0.7)', lineBlur: 1.2 }} />
+        <Mapbox.LineLayer id="road-secondary-tertiary" existing style={{ lineColor: 'rgba(250,218,165,0.55)', lineBlur: 1 }} />
+        <Mapbox.LineLayer id="road-street" existing style={{ lineColor: 'rgba(240,222,180,0.38)', lineBlur: 0.8 }} />
+
+        {/* Warm street/car lights scattered across the area — the city-lights look */}
+        {venueCoord && (
+          <Mapbox.ShapeSource id="street-lights-src" shape={streetLights(venueCoord)}>
+            <Mapbox.CircleLayer id="street-lights-glow" style={{ circleColor: 'rgb(255,206,120)', circleRadius: 9, circleOpacity: 0.35, circleBlur: 1 }} />
+            <Mapbox.CircleLayer id="street-lights-core" style={{ circleColor: 'rgb(255,234,180)', circleRadius: 2.6, circleOpacity: 0.95, circleBlur: 0.4 }} />
+          </Mapbox.ShapeSource>
+        )}
+
+        {/* Illuminated hotspot + blue live-zone ring around the venue (matches Home) */}
+        {venueCoord && (
+          <>
+            <Mapbox.ShapeSource
+              id="w-pin-glow-src"
+              shape={{
+                type: 'FeatureCollection' as const,
+                features: [
+                  { type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: venueCoord }, properties: { mag: 1 } },
+                ],
+              }}
+            >
+              <Mapbox.HeatmapLayer
+                id="w-pin-glow"
+                style={{
+                  heatmapWeight: 1,
+                  heatmapIntensity: 1,
+                  heatmapRadius: 100,
+                  heatmapOpacity: 0.85,
+                  heatmapColor: [
+                    'interpolate', ['linear'], ['heatmap-density'],
+                    0, 'rgba(0,0,0,0)',
+                    0.15, 'rgba(255,201,120,0.22)',
+                    0.45, 'rgba(255,220,150,0.42)',
+                    0.75, 'rgba(255,236,185,0.62)',
+                    1, 'rgba(255,248,225,0.82)',
+                  ],
+                }}
+              />
+            </Mapbox.ShapeSource>
+            <Mapbox.ShapeSource
+              id="w-geofence-src"
+              shape={{
+                type: 'FeatureCollection' as const,
+                features: [
+                  { type: 'Feature' as const, geometry: { type: 'Polygon' as const, coordinates: [makeRing(venueCoord, 50, 64)] }, properties: {} },
+                ],
+              }}
+            >
+              <Mapbox.FillLayer id="w-geofence-fill" style={{ fillColor: '#3BA9FF', fillOpacity: 0.12 }} />
+              <Mapbox.LineLayer id="w-geofence-line" style={{ lineColor: '#3BA9FF', lineWidth: 1.5, lineOpacity: 0.8 }} />
+            </Mapbox.ShapeSource>
+          </>
+        )}
 
         {/* User location — real GPS */}
         {userCoord && <UserPin coordinate={userCoord} />}
@@ -275,10 +398,12 @@ export default function WaitingScreen() {
           onPress={() => router.replace('/(seeker)/home')}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
+          <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />
           <Text style={styles.iconChevron}>‹</Text>
         </TouchableOpacity>
 
         <View style={styles.statusPill}>
+          <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />
           <View style={styles.pillDot} />
           <Text style={styles.pillLabel}>SCOUT ON SITE</Text>
         </View>
@@ -306,7 +431,7 @@ export default function WaitingScreen() {
 
       {/* Bottom sheet — countdown is the hero moment */}
       <View style={styles.sheet}>
-        <CtaGlow radius={28} />
+        <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <View style={styles.sheetHandle} />
 
         {/* Venue name — the check being done, the hero/anchor of this screen */}
@@ -455,87 +580,79 @@ const userStyles = StyleSheet.create({
 });
 
 const pulseStyles = StyleSheet.create({
-  wrap: { width: 60, height: 60, justifyContent: 'center', alignItems: 'center' },
+  wrap: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   ring: {
     position: 'absolute',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: colors.red,
   },
   core: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: colors.red,
-    shadowColor: colors.red,
-    shadowOpacity: 0.7,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
   },
   recBadge: {
     position: 'absolute',
-    top: -10,
-    left: 28,
+    top: 24,
+    left: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    backgroundColor: 'rgba(6,7,10,0.66)',
   },
   recDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
+    width: 4.5,
+    height: 4.5,
+    borderRadius: 2.25,
     backgroundColor: colors.danger,
   },
   recText: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 11,
-    color: colors.textPrimary,
-    letterSpacing: 1.2,
+    fontSize: 10,
+    color: colors.white,
+    letterSpacing: 1,
   },
 });
 
 const venuePinStyles = StyleSheet.create({
   wrap: {
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
     alignItems: 'center',
   },
-  core: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.red,
-    shadowColor: colors.red,
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
+  label: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: 'rgba(6,7,10,0.66)',
+    marginBottom: 2,
   },
-  badge: {
-    position: 'absolute',
-    top: -6,
-    left: 28,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 5,
-    backgroundColor: colors.red,
-    shadowColor: colors.red,
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  text: {
+  labelText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 9,
-    color: colors.onRed,
-    letterSpacing: 1,
+    color: colors.white,
+    letterSpacing: 1.2,
+  },
+  stem: {
+    width: 1.5,
+    height: 6,
+    backgroundColor: colors.red,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.red,
+    borderWidth: 1.5,
+    borderColor: colors.white,
+    shadowColor: colors.red,
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
   },
 });
 
@@ -580,20 +697,21 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.94)',
+    backgroundColor: 'rgba(16,17,24,0.42)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.14)',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
     shadowColor: colors.black,
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
   iconChevron: {
     fontFamily: 'Inter_500Medium',
     fontSize: 24,
-    color: colors.textPrimary,
+    color: colors.white,
     marginTop: -2,
     marginLeft: -2,
   },
@@ -601,14 +719,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.96)',
+    backgroundColor: 'rgba(16,17,24,0.42)',
     borderRadius: 22,
     paddingHorizontal: 14,
     paddingVertical: 11,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.14)',
+    overflow: 'hidden',
     shadowColor: colors.black,
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
@@ -616,7 +735,7 @@ const styles = StyleSheet.create({
   pillLabel: {
     fontFamily: 'JetBrainsMono_700Bold',
     fontSize: 11,
-    color: colors.textPrimary,
+    color: colors.white,
     letterSpacing: 2,
   },
 
@@ -627,20 +746,20 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: colors.bg,
+    backgroundColor: 'rgba(16,17,24,0.5)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.14)',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.black,
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
   recenterGlyph: {
     fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    color: colors.textPrimary,
+    color: colors.white,
   },
 
   // Bottom sheet
@@ -649,7 +768,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.bg,
+    backgroundColor: 'rgba(48,78,152,0.5)',
     overflow: 'hidden',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
@@ -657,12 +776,10 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 22,
     borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: colors.border,
+    borderTopColor: 'rgba(255,255,255,0.2)',
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.25,
     shadowRadius: 24,
   },
   sheetHandle: {

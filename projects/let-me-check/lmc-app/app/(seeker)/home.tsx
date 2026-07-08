@@ -1952,7 +1952,7 @@ export default function HomeScreen() {
         <Mapbox.SymbolLayer id="settlement-subdivision-label" existing style={{ textColor: 'rgba(255,255,255,0.8)' }} />
         {/* Street-name labels — brighten to white so the zoomed-in location view
             is legible (SE 12th St, etc.) instead of the dim dark default. */}
-        <Mapbox.SymbolLayer id="road-label" existing style={{ textColor: 'rgba(255,255,255,0.9)', textHaloColor: 'rgba(0,0,0,0.7)', textHaloWidth: 1.2 }} />
+        <Mapbox.SymbolLayer id="road-label" existing style={{ textColor: '#ffffff', textHaloColor: 'rgba(0,0,0,0.85)', textHaloWidth: 1.5 }} />
         <Mapbox.SymbolLayer id="poi-label" existing style={{ textColor: 'rgba(255,255,255,0.72)', textHaloColor: 'rgba(0,0,0,0.6)', textHaloWidth: 1 }} />
 
         {/* User location pin — real GPS, not the demo market centre */}
@@ -2860,9 +2860,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 12,
     borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderTopColor: 'rgba(255,255,255,0.2)',
     backgroundColor: 'rgba(48,78,152,0.5)',
     overflow: 'hidden',
     shadowColor: colors.black,
