@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, ActivityIndicator, Keyboard, Modal, FlatList, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Animated, Easing, TextInput, ActivityIndicator, Keyboard, Modal, FlatList, Alert, Platform, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   ExpoSpeechRecognitionModule,
@@ -1665,6 +1665,21 @@ export default function HomeScreen() {
   const demo = DEMO_BY_MARKET[market.id] ?? null;
   const conesShape = conesToGeoJSON(demo?.scouts ?? []);
   const cameraRef = useRef<Mapbox.Camera>(null);
+
+  // Responsive globe: size + position are derived from the live screen height so
+  // the teaser globe is centered between the top pills and the sheet on ANY
+  // iPhone — a big Pro Max, a mid iPhone 13, or a small SE — instead of being
+  // hand-tuned to one screen. Calibrated so a ~932pt screen keeps the full,
+  // label-rich globe, and shorter phones shrink it a touch so it never overpowers.
+  const { height: winH } = useWindowDimensions();
+  const globeZoom = Math.min(0.95, Math.max(0.68, (winH - 540) / 410));
+  const globePad = {
+    paddingTop: Math.round(winH * 0.135),
+    paddingBottom: Math.round(winH * 0.30),
+    paddingLeft: 0,
+    paddingRight: 0,
+  };
+
   const [scoutShape, setScoutShape] = useState(() => scoutsToGeoJSON(demo?.scouts ?? []));
   const [liveCoords, setLiveCoords] = useState<[number, number][]>(demo?.liveScouts ?? []);
   const [currentCenter, setCurrentCenter] = useState<[number, number]>(MIAMI_CENTER);
@@ -1683,9 +1698,9 @@ export default function HomeScreen() {
     if (!params.pinLat && !params.pinLon) {
       cameraRef.current?.setCamera({
         centerCoordinate: market.center,
-        zoomLevel: 1.0,
+        zoomLevel: globeZoom,
         pitch: 0,
-        padding: { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
+        padding: globePad,
         animationDuration: 1200,
         animationMode: 'flyTo',
       });
@@ -1746,9 +1761,9 @@ export default function HomeScreen() {
     // We stay zoomed out (still the round globe), just re-orient the ball.
     cameraRef.current?.setCamera({
       centerCoordinate: coords,
-      zoomLevel: 1.0,
+      zoomLevel: globeZoom,
       pitch: 0,
-      padding: { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
+      padding: globePad,
       animationDuration: 1200,
       animationMode: 'flyTo',
     });
@@ -1897,12 +1912,12 @@ export default function HomeScreen() {
             // Cold-load rests on the FULL globe (the teaser — a small round ball
             // in space); a selected pin skips straight to the place. The user
             // dives into their area by searching or tapping.
-            zoomLevel: params.pinLat ? 16.5 : 1.0,
+            zoomLevel: params.pinLat ? 16.5 : globeZoom,
             pitch: params.pinLat ? 50 : 0,
             // Center the globe in the clear band between the top pills and the sheet.
             padding: params.pinLat
               ? undefined
-              : { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
+              : globePad,
           }}
         />
 
@@ -2236,9 +2251,9 @@ export default function HomeScreen() {
               const c = getUserCoords() ?? market.center;
               cameraRef.current?.setCamera({
                 centerCoordinate: c as [number, number],
-                zoomLevel: 1.0,
+                zoomLevel: globeZoom,
                 pitch: 0,
-                padding: { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
+                padding: globePad,
                 animationMode: 'flyTo',
                 animationDuration: 2200,
               });
@@ -2379,9 +2394,9 @@ export default function HomeScreen() {
             const coords = getUserCoords() ?? market.center;
             cameraRef.current?.setCamera({
               centerCoordinate: coords as [number, number],
-              zoomLevel: 1.0,
+              zoomLevel: globeZoom,
               pitch: 0,
-              padding: { paddingTop: 92, paddingBottom: 285, paddingLeft: 0, paddingRight: 0 },
+              padding: globePad,
               animationMode: 'flyTo',
               animationDuration: 1800,
             });
