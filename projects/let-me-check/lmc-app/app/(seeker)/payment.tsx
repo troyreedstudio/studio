@@ -33,12 +33,16 @@ export default function PaymentScreen() {
     tier = 'standard',
     price = '$15',
     time = '10 min',
+    lat,
+    lon,
   } = useLocalSearchParams<{
     venue: string;
     city: string;
     tier: string;
     price: string;
     time: string;
+    lat: string;
+    lon: string;
   }>();
 
   const isPriority = tier === 'priority';
@@ -103,10 +107,16 @@ export default function PaymentScreen() {
       // Step 4: Hold succeeded — now create the check (D-01 order enforced).
       // Pass the hold's PaymentIntent id so the check is LINKED to the hold —
       // capture-on-delivery needs it (without this the hold is orphaned).
+      const parsedLat = lat != null && lat !== '' ? parseFloat(lat) : undefined;
+      const parsedLon = lon != null && lon !== '' ? parseFloat(lon) : undefined;
       const checkId = await createCheck({
         tier: tier === 'priority' ? 'priority' : 'standard',
         locationLabel: String(venue),
         paymentIntentId: hold.paymentIntentId,
+        // Real coords of the chosen spot so dispatch can find nearby Scouts and
+        // the finding/waiting map lands on the right place.
+        ...(parsedLat !== undefined && !Number.isNaN(parsedLat) ? { lat: parsedLat } : {}),
+        ...(parsedLon !== undefined && !Number.isNaN(parsedLon) ? { lng: parsedLon } : {}),
       });
 
       // Step 5: Write the payments row that links this check to its Stripe hold.
@@ -130,6 +140,8 @@ export default function PaymentScreen() {
           city: String(city),
           tier: String(tier),
           time: String(time),
+          ...(lat ? { lat: String(lat) } : {}),
+          ...(lon ? { lon: String(lon) } : {}),
         },
       });
     } catch (e) {

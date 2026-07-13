@@ -2261,7 +2261,12 @@ export default function HomeScreen() {
             onRequest={({ venue, city, tier, price, time, interior }) => {
               router.push({
                 pathname: '/(seeker)/payment',
-                params: { venue, city, tier, price, time, interior },
+                params: {
+                  venue, city, tier, price, time, interior,
+                  // Carry the chosen spot's coords so the check is created WITH a
+                  // location (dispatch + the finding/waiting map need this).
+                  ...(droppedPin ? { lat: String(droppedPin[1]), lon: String(droppedPin[0]) } : {}),
+                },
               });
             }}
           />
