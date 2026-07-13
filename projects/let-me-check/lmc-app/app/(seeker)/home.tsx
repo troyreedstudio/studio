@@ -1673,13 +1673,14 @@ export default function HomeScreen() {
   // and never covered by the panel.
   const { height: winH } = useWindowDimensions();
   const [sheetH, setSheetH] = useState(0);
-  const topInset = Math.round(winH * 0.15); // status bar + top pills + banner room
-  // +36 clears the globe's OUTER GLOW (the atmosphere halo extends past the sphere),
+  const topInset = Math.round(winH * 0.12); // status bar + top pills + banner room
+  // +44 clears the globe's OUTER GLOW (the atmosphere halo extends past the sphere),
   // not just the sphere edge — otherwise the glow bleeds onto the sheet.
-  const bottomInset = sheetH > 0 ? sheetH + 36 : Math.round(winH * 0.36);
-  const band = Math.max(200, winH - topInset - bottomInset);
-  // Divisor > band keeps the sphere comfortably inside the band so the glow has room.
-  const globeZoom = Math.min(0.92, Math.max(0.58, band / 520));
+  const bottomInset = sheetH > 0 ? sheetH + 44 : Math.round(winH * 0.38);
+  const band = Math.max(180, winH - topInset - bottomInset);
+  // Divisor > band keeps the sphere comfortably inside the band so the glow has
+  // room; the low min lets it shrink enough when the sheet is tall (many recents).
+  const globeZoom = Math.min(0.92, Math.max(0.5, band / 540));
   const globePad = {
     paddingTop: topInset,
     paddingBottom: bottomInset,
@@ -1727,6 +1728,7 @@ export default function HomeScreen() {
           centerCoordinate: coord,
           zoomLevel: 17,
           pitch: 55,
+          padding: globePad,
           animationDuration: 2200,
           animationMode: 'flyTo',
         });
@@ -1779,6 +1781,19 @@ export default function HomeScreen() {
   // Re-center the globe whenever the sheet's measured height or the screen size
   // changes, so it always sits centered in the clear band above the sheet.
   useEffect(() => {
+    // A dropped pin (tier sheet) has priority: re-center the zoomed-in venue in
+    // the band ABOVE its box once the box measures, so the pin isn't hidden.
+    if (droppedPin) {
+      cameraRef.current?.setCamera({
+        centerCoordinate: droppedPin,
+        zoomLevel: 17,
+        pitch: 55,
+        padding: globePad,
+        animationDuration: 400,
+        animationMode: 'flyTo',
+      });
+      return;
+    }
     if (params.pinLat || params.marketId) return;
     const c = getUserCoords() ?? market.center;
     cameraRef.current?.setCamera({
@@ -1823,6 +1838,7 @@ export default function HomeScreen() {
         centerCoordinate: [lon, lat],
         zoomLevel: 17,
         pitch: 55,
+        padding: globePad,
         animationDuration: 2200,
         animationMode: 'flyTo',
       });
@@ -2349,6 +2365,7 @@ export default function HomeScreen() {
                           centerCoordinate: p.coord,
                           zoomLevel: 17,
                           pitch: 55,
+                          padding: globePad,
                           animationDuration: 1200,
                         });
                       }}
@@ -2363,11 +2380,12 @@ export default function HomeScreen() {
               </>
             )}
 
-            {/* Recent — the user's last 2 confirmed checks, newest first */}
+            {/* Recent — the user's most recent check (kept to one row so the
+                panel stays compact and the globe keeps its clear band above it). */}
             {recents.length > 0 && (
               <>
                 <Text style={styles.recentLabel}>RECENT</Text>
-                {recents.slice(0, 2).map((r) => (
+                {recents.slice(0, 1).map((r) => (
                   <TouchableOpacity
                     key={r.name}
                     style={styles.recentRow}
