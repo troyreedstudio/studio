@@ -1673,10 +1673,13 @@ export default function HomeScreen() {
   // and never covered by the panel.
   const { height: winH } = useWindowDimensions();
   const [sheetH, setSheetH] = useState(0);
-  const topInset = Math.round(winH * 0.13); // status bar + top pills + banner room
-  const bottomInset = sheetH > 0 ? sheetH + 12 : Math.round(winH * 0.34);
+  const topInset = Math.round(winH * 0.15); // status bar + top pills + banner room
+  // +36 clears the globe's OUTER GLOW (the atmosphere halo extends past the sphere),
+  // not just the sphere edge — otherwise the glow bleeds onto the sheet.
+  const bottomInset = sheetH > 0 ? sheetH + 36 : Math.round(winH * 0.36);
   const band = Math.max(200, winH - topInset - bottomInset);
-  const globeZoom = Math.min(0.95, Math.max(0.6, band / 470));
+  // Divisor > band keeps the sphere comfortably inside the band so the glow has room.
+  const globeZoom = Math.min(0.92, Math.max(0.58, band / 520));
   const globePad = {
     paddingTop: topInset,
     paddingBottom: bottomInset,
