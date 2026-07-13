@@ -1666,16 +1666,20 @@ export default function HomeScreen() {
   const conesShape = conesToGeoJSON(demo?.scouts ?? []);
   const cameraRef = useRef<Mapbox.Camera>(null);
 
-  // Responsive globe: size + position are derived from the live screen height so
-  // the teaser globe is centered between the top pills and the sheet on ANY
-  // iPhone — a big Pro Max, a mid iPhone 13, or a small SE — instead of being
-  // hand-tuned to one screen. Calibrated so a ~932pt screen keeps the full,
-  // label-rich globe, and shorter phones shrink it a touch so it never overpowers.
+  // Responsive globe: it sits centered in the clear band ABOVE the bottom sheet.
+  // We MEASURE the sheet's real height (it grows with recent/saved rows) and the
+  // top chrome, then size + center the globe in whatever space is left — so on
+  // ANY iPhone, with ANY amount of content in the sheet, the globe is centered
+  // and never covered by the panel.
   const { height: winH } = useWindowDimensions();
-  const globeZoom = Math.min(0.95, Math.max(0.68, (winH - 540) / 410));
+  const [sheetH, setSheetH] = useState(0);
+  const topInset = Math.round(winH * 0.13); // status bar + top pills + banner room
+  const bottomInset = sheetH > 0 ? sheetH + 12 : Math.round(winH * 0.34);
+  const band = Math.max(200, winH - topInset - bottomInset);
+  const globeZoom = Math.min(0.95, Math.max(0.6, band / 470));
   const globePad = {
-    paddingTop: Math.round(winH * 0.135),
-    paddingBottom: Math.round(winH * 0.30),
+    paddingTop: topInset,
+    paddingBottom: bottomInset,
     paddingLeft: 0,
     paddingRight: 0,
   };
@@ -1768,6 +1772,22 @@ export default function HomeScreen() {
       animationMode: 'flyTo',
     });
   }, [params.pinLat, params.marketId, userCoords]);
+
+  // Re-center the globe whenever the sheet's measured height or the screen size
+  // changes, so it always sits centered in the clear band above the sheet.
+  useEffect(() => {
+    if (params.pinLat || params.marketId) return;
+    const c = getUserCoords() ?? market.center;
+    cameraRef.current?.setCamera({
+      centerCoordinate: c as [number, number],
+      zoomLevel: globeZoom,
+      pitch: 0,
+      padding: globePad,
+      animationDuration: 500,
+      animationMode: 'flyTo',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sheetH, winH]);
 
   // If no coords are resolved yet when home mounts, request location now so
   // the pill shows the user's real city instead of "Set your location".
@@ -2234,7 +2254,13 @@ export default function HomeScreen() {
       </SafeAreaView>
 
       {/* Bottom sheet — frosted glass floating over the globe */}
-      <View style={styles.sheet}>
+      <View
+        style={styles.sheet}
+        onLayout={(e) => {
+          const h = Math.round(e.nativeEvent.layout.height);
+          if (h > 0 && Math.abs(h - sheetH) > 2) setSheetH(h);
+        }}
+      >
         <BlurView tint="dark" intensity={38} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <View style={styles.sheetHandle} />
 
@@ -2692,9 +2718,9 @@ const scoutInviteStyles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.16)',
     borderRadius: 14,
     paddingHorizontal: 14,
-    paddingVertical: 14,
-    marginTop: 14,
-    marginBottom: 6,
+    paddingVertical: 11,
+    marginTop: 10,
+    marginBottom: 4,
   },
   left: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   iconWrap: {
@@ -3035,7 +3061,7 @@ const styles = StyleSheet.create({
   recentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
     gap: 12,
   },
   recentIconWrap: {
