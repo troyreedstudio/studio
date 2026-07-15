@@ -2,7 +2,7 @@
 
 Premium Bali lifestyle guide and booking app. Curated discovery of clubs, restaurants, beach clubs, and gyms with instant booking. Tells tourists which night to go to which venue, with precision on times and genres. Think Monocle meets Time Out meets a local insider's WhatsApp group.
 
-**Status**: LIVE on App Store + Google Play. Current build 1.2.0+8 (TestFlight). Backend, dashboard, Flutter app all deployed to Hostinger.
+**Status**: LIVE on App Store + Google Play. Current build 1.3.2+27 (TestFlight). Backend, dashboard, Flutter app all deployed to Hostinger.
 
 ---
 
@@ -67,13 +67,14 @@ Premium Bali lifestyle guide and booking app. Curated discovery of clubs, restau
 | API       | `https://api.pinkpineapple.app/api/v1` |
 | WebSocket | `wss://api.pinkpineapple.app` |
 | Dashboard | `https://dashboard.pinkpineapple.app` |
-| Database  | MongoDB Atlas (via Prisma) |
+| Database  | MongoDB via Prisma — note: a local `mongod` runs on the VPS itself (127.0.0.1:27017); verify which DB is live (`DATABASE_URL` in server `.env`) before any DB work |
 | Files     | DigitalOcean Spaces + Cloudinary |
 | SSH       | `ssh -i ~/.ssh/pink_gitea root@145.79.6.151` |
 | Server paths | Backend `/var/www/troyreed1725-backend/` · Dashboard `/var/www/troyreed1725-dashboard/` |
-| Node      | v18.17.1 via nvm (PM2 not on root PATH — use `npx pm2`) |
-| PM2       | `server` (id 1, port 5020, stable) · `frontend` (id 0, port 3000, flaky — 43+ restarts) |
+| Node      | v18.17.1 via nvm; `pm2` v7 installed globally (on PATH) since 2026-07-15 |
+| PM2       | `server` (port 5020) · `frontend` (port 3000) · boot auto-restart ENABLED (`pm2-root` systemd unit, added 2026-07-15 after the Jul 7 reboot outage) — run `pm2 save` after any process change |
 | Deploy    | SCP-patch changed files + rebuild in place. See **Deployment** section below. |
+| Monitoring | `/root/pp-watchdog.sh` via root cron every 5 min — checks API + dashboard, self-heals (`pm2 resurrect`), emails Troy via Brevo. Repo copy: `scripts/pp-watchdog.sh` |
 
 ---
 
@@ -243,7 +244,7 @@ Same flow on `/var/www/troyreed1725-dashboard/`, end with `npx pm2 restart front
 
 ### Known gaps
 - **Android keystore missing locally** — cannot sign Play Store builds from this machine. Ask Troy before first Play Store push.
-- **No CI/CD, no monitoring, no Sentry, no uptime checks.** SSH in to verify health.
+- **No CI/CD, no Sentry.** Uptime: on-VPS watchdog cron (5-min checks + Brevo email alerts + pm2 self-heal) since 2026-07-15; external-vantage check still absent.
 - **Rollback is manual** — snapshot `dist/` before risky deploys (`cp -r dist dist.backup.$(date +%s)`).
 
 ---
@@ -252,8 +253,8 @@ Same flow on `/var/www/troyreed1725-dashboard/`, end with `npx pm2 restart front
 
 ### High priority
 - [ ] End-to-end test of full sign-up flow (email → OTP → profile setup with country/DOB/Instagram/gender) on simulator
-- [ ] **OTP sender email** — currently uses Fiverr dev's personal email. Migrate to a Pink Pineapple address.
-- [ ] **Credential rotation** — follow `docs/CREDENTIAL-ROTATION.md`. Fiverr team had access to JWT, DB, Stripe, email, Cloudinary, AWS, Firebase.
+- [x] **OTP sender email** — DONE: sends via Brevo SMTP relay (`smtp-relay.brevo.com:2525`, creds in server `.env`, see `backend/src/shared/emailSender.ts`). No longer the Fiverr dev's personal email.
+- [ ] **Credential rotation** — follow `docs/CREDENTIAL-ROTATION.md`. Fiverr team had access to JWT, DB, email, Cloudinary, AWS, Firebase. (Stripe EXCLUDED — not wired up, no live payments; confirmed by Troy 2026-07-15.)
 
 ### Medium
 - [ ] **Android keystore recovery** — required for any Play Store deploy from this machine. Keystore + passwords (`keyAlias`, `keyPassword`, `storeFile`, `storePassword`) likely on Fiverr dev's machine / Troy's 1Password / lost
@@ -267,7 +268,7 @@ Same flow on `/var/www/troyreed1725-dashboard/`, end with `npx pm2 restart front
 - [ ] Stripe payments integration (checkout sessions + webhooks)
 - [ ] **Firebase project for push notifications** — DEFERRED to post-launch. Zero infrastructure exists today (no Flutter `firebase_core`/`firebase_messaging`, no `GoogleService-Info.plist`/`google-services.json`, no `firebase-admin` on backend, no service account JSON, no `FIREBASE_*` env vars, `fcmToken` payload literally empty string at login). Setup needs: Firebase project + iOS app + Android app + APNs key + service account JSON (Troy steps, ~30 min) then code wiring (Rocky steps, ~1 day). Defer until v1.3 when there's content velocity to justify (booking confirms via Stripe, weekly venue digests, etc.).
 - [ ] Remove or gate legacy social features (newsfeed, posts, followers, likes, comments)
-- [ ] Basic monitoring — Sentry for backend, uptime check on `api.pinkpineapple.app`
+- [x] Uptime watchdog — DONE 2026-07-15: root cron on VPS every 5 min checks API + dashboard, self-heals via `pm2 resurrect`, emails Troy via Brevo on down/recovery (script `/root/pp-watchdog.sh`, repo copy `scripts/pp-watchdog.sh`). Still open: Sentry error tracking + an external-vantage checker (UptimeRobot) since the watchdog dies if the whole VPS dies
 - [ ] Stabilise `frontend` PM2 process (43+ restarts — root cause not diagnosed)
 
 ---
