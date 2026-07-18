@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, TextInput, ActivityIndicator, Animated, Easing, Share, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, TextInput, ActivityIndicator, Animated, Easing, Share, StatusBar, SafeAreaView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useRef } from 'react';
@@ -204,59 +204,60 @@ export default function DeliveryScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
 
-      {/* Full-bleed video — fills the whole screen. Tap toggles play/pause. */}
-      {videoSrc ? (
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: reveal }]}>
-          <TouchableOpacity activeOpacity={1} style={StyleSheet.absoluteFill} onPress={togglePlay}>
-            <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />
-          </TouchableOpacity>
-          {paused && (
-            <View style={styles.pauseOverlay} pointerEvents="none">
-              <View style={styles.pausePill}><Ionicons name="play" size={30} color="#fff" style={{ marginLeft: 3 }} /></View>
-            </View>
-          )}
-        </Animated.View>
-      ) : (
-        <View style={styles.processingWrap}>
-          <ActivityIndicator color="#fff" />
-          <Text style={styles.processingText}>Preparing your video…</Text>
-        </View>
-      )}
-
-      {/* Top scrim + floating header */}
-      <LinearGradient colors={['rgba(0,0,0,0.7)', 'transparent']} style={styles.topScrim} pointerEvents="none" />
-      <View style={styles.topBar}>
+      {/* Header — on the white canvas */}
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backFab} onPress={() => router.replace('/(seeker)/home')} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <View style={styles.topTitleWrap}>
+        <View style={styles.headerTitleWrap}>
           <Text style={styles.readyEyebrow}>YOUR CHECK IS READY</Text>
-          <Text style={styles.topVenue} numberOfLines={1}>{locationLabel}</Text>
+          <Text style={styles.headerVenue} numberOfLines={1}>{locationLabel}</Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
-      {/* Trust line floats on the video (GPS verified · faces blurred · filmed-ago) */}
-      <View style={styles.trustFloat} pointerEvents="none">
-        {clip?.gps_verified === true && (
-          <View style={styles.verifiedChip}>
-            <Ionicons name="shield-checkmark" size={11} color={colors.verified} />
-            <Text style={styles.verifiedChipText}>GPS VERIFIED · FACES BLURRED</Text>
+
+      {/* Video card — the only dark surface: a contained rounded player. */}
+      <View style={styles.videoCard}>
+        {videoSrc ? (
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: reveal }]}>
+            <TouchableOpacity activeOpacity={1} style={StyleSheet.absoluteFill} onPress={togglePlay}>
+              <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />
+            </TouchableOpacity>
+            {paused && (
+              <View style={styles.pauseOverlay} pointerEvents="none">
+                <View style={styles.pausePill}><Ionicons name="play" size={28} color="#fff" style={{ marginLeft: 3 }} /></View>
+              </View>
+            )}
+            {/* Trust line floats at the bottom of the video (GPS · faces · filmed-ago) */}
+            <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.videoBottomScrim} pointerEvents="none" />
+            <View style={styles.trustFloat} pointerEvents="none">
+              {clip?.gps_verified === true && (
+                <View style={styles.verifiedChip}>
+                  <Ionicons name="shield-checkmark" size={11} color={colors.verified} />
+                  <Text style={styles.verifiedChipText}>GPS VERIFIED · FACES BLURRED</Text>
+                </View>
+              )}
+              <View style={styles.filmedRow}>
+                <View style={[styles.liveBlip, stale && styles.liveBlipStale]} />
+                <Text style={[styles.filmedText, stale && styles.filmedTextStale]}>
+                  {stale ? `${filmedLine} · conditions may have changed` : filmedLine}
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        ) : (
+          <View style={styles.processingWrap}>
+            <ActivityIndicator color="#fff" />
+            <Text style={styles.processingText}>Preparing your video…</Text>
           </View>
         )}
-        <View style={styles.filmedRow}>
-          <View style={[styles.liveBlip, stale && styles.liveBlipStale]} />
-          <Text style={[styles.filmedText, stale && styles.filmedTextStale]}>
-            {stale ? `${filmedLine} · conditions may have changed` : filmedLine}
-          </Text>
-        </View>
       </View>
 
-      {/* Bottom scrim + control sheet floating over the video */}
-      <LinearGradient colors={['transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.92)']} style={styles.bottomScrim} pointerEvents="none" />
-      <View style={styles.bottomSheet}>
+      {/* Controls — on the white canvas below the video */}
+      <View style={styles.controls}>
         {/* Rate — framed around the Scout's VIDEO (clear? on location? well filmed?),
             NOT the venue's later conditions, so a place changing by the time the
             Seeker arrives can't unfairly tank the Scout or justify a refund. */}
@@ -265,7 +266,7 @@ export default function DeliveryScreen() {
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity key={star} onPress={() => handleRate(star)} disabled={submitting} activeOpacity={0.7}>
-              <Ionicons name="star" size={34} color={star <= rating ? colors.amber : 'rgba(255,255,255,0.28)'} />
+              <Ionicons name="star" size={32} color={star <= rating ? colors.amber : colors.border} />
             </TouchableOpacity>
           ))}
         </View>
@@ -283,12 +284,12 @@ export default function DeliveryScreen() {
         <View style={styles.actionsRow}>
           {hasCoord && (
             <TouchableOpacity style={styles.actionBtn} onPress={handleSavePlace} activeOpacity={0.75}>
-              <Ionicons name={placeSaved ? 'bookmark' : 'bookmark-outline'} size={20} color={placeSaved ? colors.red : '#fff'} />
+              <Ionicons name={placeSaved ? 'bookmark' : 'bookmark-outline'} size={19} color={placeSaved ? colors.red : colors.textPrimary} />
               <Text style={styles.actionLabel}>{placeSaved ? 'Saved' : 'Save'}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.actionBtn} onPress={handleShare} activeOpacity={0.75}>
-            <Ionicons name="share-outline" size={20} color="#fff" />
+            <Ionicons name="share-outline" size={19} color={colors.textPrimary} />
             <Text style={styles.actionLabel}>Share</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/(seeker)/home')} activeOpacity={0.85}>
@@ -306,61 +307,62 @@ export default function DeliveryScreen() {
           {checkId ? <ReportSheet checkId={checkId} onClose={() => setReportOpen(false)} /> : null}
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: colors.bg },
 
+  // Header
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12 },
+  backFab: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignItems: 'center' },
+  headerTitleWrap: { flex: 1, alignItems: 'center' },
+  readyEyebrow: { fontFamily: 'Inter_700Bold', fontSize: 9.5, color: colors.red, letterSpacing: 2.4, marginBottom: 3 },
+  headerVenue: { fontFamily: 'Inter_700Bold', fontSize: 17, color: colors.textPrimary, letterSpacing: 0.2, maxWidth: 240 },
+
+  // Video card — the one dark surface
+  videoCard: { flex: 1, marginHorizontal: 16, borderRadius: 22, overflow: 'hidden', backgroundColor: '#000' },
   processingWrap: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', gap: 12 },
   processingText: { fontFamily: 'Inter_500Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.3 },
-
   pauseOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
-  pausePill: { width: 74, height: 74, borderRadius: 37, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' },
+  pausePill: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' },
 
-  // Top chrome
-  topScrim: { position: 'absolute', top: 0, left: 0, right: 0, height: 170 },
-  topBar: { position: 'absolute', top: 54, left: 16, right: 16, flexDirection: 'row', alignItems: 'center' },
-  backFab: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'center', alignItems: 'center' },
-  topTitleWrap: { flex: 1, alignItems: 'center' },
-  readyEyebrow: { fontFamily: 'Inter_700Bold', fontSize: 9.5, color: 'rgba(255,255,255,0.75)', letterSpacing: 2.4, marginBottom: 3 },
-  topVenue: { fontFamily: 'Inter_700Bold', fontSize: 17, color: '#fff', letterSpacing: 0.2, maxWidth: 240 },
-
-  trustFloat: { position: 'absolute', top: 108, left: 0, right: 0, alignItems: 'center', gap: 8 },
-  verifiedChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 100, paddingHorizontal: 11, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)' },
-  verifiedChipText: { fontFamily: 'Inter_700Bold', fontSize: 9, color: 'rgba(255,255,255,0.9)', letterSpacing: 1.2 },
+  // Trust line — sits ON the (dark) video, so it stays light-on-dark
+  videoBottomScrim: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 96 },
+  trustFloat: { position: 'absolute', bottom: 12, left: 0, right: 0, alignItems: 'center', gap: 7 },
+  verifiedChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 100, paddingHorizontal: 11, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)' },
+  verifiedChipText: { fontFamily: 'Inter_700Bold', fontSize: 9, color: 'rgba(255,255,255,0.92)', letterSpacing: 1.2 },
   filmedRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   liveBlip: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.verified },
   liveBlipStale: { backgroundColor: colors.amber },
-  filmedText: { fontFamily: 'Inter_600SemiBold', fontSize: 10.5, color: 'rgba(255,255,255,0.7)', letterSpacing: 0.4 },
+  filmedText: { fontFamily: 'Inter_600SemiBold', fontSize: 10.5, color: 'rgba(255,255,255,0.82)', letterSpacing: 0.4 },
   filmedTextStale: { color: colors.amber },
 
-  // Bottom chrome
-  bottomScrim: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 340 },
-  bottomSheet: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 24, paddingBottom: 40, paddingTop: 8 },
-  rateLabel: { fontFamily: 'Inter_700Bold', fontSize: 10.5, color: 'rgba(255,255,255,0.6)', letterSpacing: 3, marginBottom: 6, textAlign: 'center' },
-  rateSub: { fontFamily: 'Inter_400Regular', fontSize: 11.5, color: 'rgba(255,255,255,0.5)', letterSpacing: 0.2, textAlign: 'center', marginBottom: 16 },
-  starsRow: { flexDirection: 'row', gap: 12, marginBottom: 22, alignSelf: 'center' },
+  // Controls — on the white canvas
+  controls: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 20 },
+  rateLabel: { fontFamily: 'Inter_700Bold', fontSize: 10.5, color: colors.textTertiary, letterSpacing: 3, marginBottom: 4, textAlign: 'center' },
+  rateSub: { fontFamily: 'Inter_400Regular', fontSize: 11.5, color: colors.textTertiary, letterSpacing: 0.2, textAlign: 'center', marginBottom: 14 },
+  starsRow: { flexDirection: 'row', gap: 12, marginBottom: 18, alignSelf: 'center' },
 
-  scoutRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
-  scoutAvatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.14)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  scoutAvatarText: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 16 },
+  scoutRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  scoutAvatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  scoutAvatarText: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 16 },
   scoutInfo: { flex: 1 },
-  scoutName: { fontFamily: 'Inter_700Bold', color: '#fff', fontSize: 16, letterSpacing: 0.2, marginBottom: 2 },
-  scoutMeta: { fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.65)', fontSize: 11.5, letterSpacing: 0.3 },
+  scoutName: { fontFamily: 'Inter_700Bold', color: colors.textPrimary, fontSize: 16, letterSpacing: 0.2, marginBottom: 2 },
+  scoutMeta: { fontFamily: 'Inter_400Regular', color: colors.textSecondary, fontSize: 11.5, letterSpacing: 0.3 },
 
-  actionsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  actionBtn: { alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' },
-  actionLabel: { fontFamily: 'Inter_600SemiBold', color: '#fff', fontSize: 11, letterSpacing: 0.3 },
+  actionsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
+  actionBtn: { alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  actionLabel: { fontFamily: 'Inter_600SemiBold', color: colors.textPrimary, fontSize: 11, letterSpacing: 0.3 },
   doneBtn: { flex: 1, backgroundColor: colors.red, borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
   doneBtnText: { fontFamily: 'Inter_700Bold', color: colors.onRed, fontSize: 13, letterSpacing: 2.5 },
 
-  reportLink: { alignItems: 'center', paddingVertical: 12 },
-  reportLinkText: { fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 12, textDecorationLine: 'underline' },
+  reportLink: { alignItems: 'center', paddingVertical: 10 },
+  reportLinkText: { fontFamily: 'Inter_400Regular', color: colors.textTertiary, fontSize: 12, textDecorationLine: 'underline' },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.72)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
 });
 
 // Sheet-specific styles kept separate so the main StyleSheet stays scannable.

@@ -6,7 +6,11 @@ import { useEffect } from 'react';
 import { SessionProvider, useSession, hubRouteForRole } from './lib/session';
 import { MAPBOX_TOKEN, STRIPE_PUBLISHABLE_KEY } from './lib/config';
 import { StripeProvider } from '@stripe/stripe-react-native';
-import { View } from 'react-native';
+import { View, LogBox } from 'react-native';
+
+// Hide the in-app dev warning overlay (keeps demo/marketing captures clean).
+// No effect on production behavior — LogBox only renders in dev.
+LogBox.ignoreAllLogs(true);
 
 // Token comes from the always-bundled config module (Release builds do NOT inline
 // .env, and ExponentConstants is unreliable on device-release — see config.ts).
