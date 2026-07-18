@@ -1,0 +1,33 @@
+name: Supabase Keepalive (LMC)
+
+# Free Supabase projects PAUSE after ~7 days of inactivity, which breaks Apple/
+# Google sign-in until something wakes the backend. This pings the LMC project's
+# auth endpoint on a schedule so it never goes idle. The anon key below is the
+# public, RLS-protected key (already shipped in the app bundle) — NOT a secret.
+#
+# Removes the need to manually wake the project. At launch, upgrading Supabase to
+# the Pro plan removes pausing entirely and this workflow can be deleted.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # every day ~06:17 UTC
+    - cron: "17 18 * * *"  # and ~18:17 UTC (twice daily = safe margin)
+  workflow_dispatch: {}      # allow a manual run from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping LMC Supabase auth (keeps the free project awake)
+        run: |
+          URL="https://cawqasszfbzvbtunamda.supabase.co"
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhd3Fhc3N6ZmJ6dmJ0dW5hbWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MjAwMjUsImV4cCI6MjA5NzQ5NjAyNX0.h2y8PmDXKJodAgFOzHdxtg-6UCZvvu9WEZyJWV1n_S0"
+          echo "Pinging $URL/auth/v1/settings ..."
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "apikey: $ANON" "$URL/auth/v1/settings")
+          echo "auth/settings -> HTTP $CODE"
+          # also touch the REST layer so DB activity is registered
+          curl -s -o /dev/null -H "apikey: $ANON" "$URL/rest/v1/" || true
+          if [ "$CODE" != "200" ]; then
+            echo "::warning::Supabase auth did not return 200 (got $CODE) — project may be waking or down."
+          fi
+          echo "Keepalive done."
