@@ -24,11 +24,12 @@ import { logEvent, setCurrentRole, type Role } from './api';
 import { registerPushToken, upsertPushToken, deletePushToken } from './push';
 
 /**
- * Master switch for the phone-OTP path. Keep false until the SMS provider +
- * A2P 10DLC registration are live and that provider is configured in the
- * Supabase Auth dashboard. Flip to true (and nothing else) to enable phone.
+ * Master switch for the phone-OTP path. Twilio is now configured in the Supabase
+ * Auth dashboard (Account SID + Message Service SID + Auth Token, phone provider
+ * enabled). Full nationwide US delivery still depends on A2P 10DLC approval, but
+ * the flow is wired and testable to registered/verified numbers.
  */
-export const PHONE_AUTH_ENABLED = false;
+export const PHONE_AUTH_ENABLED = true;
 
 // ── Apple (live) ──────────────────────────────────────────────────────────────
 
