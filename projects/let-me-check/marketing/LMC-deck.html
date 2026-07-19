@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Let Me Check — Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#DA251D; --red-dark:#9E0E07; --ink:#0A0A0A; --white:#fff;
+    --grey:#8A8A8E; --line:#1E1E1E; --green:#22c55e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',-apple-system,sans-serif;background:#000;color:#fff;-webkit-font-smoothing:antialiased}
+  .slide{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
+    padding:70px 32px;position:relative;overflow:hidden;text-align:center;page-break-after:always}
+  .eyebrow{font-size:12px;letter-spacing:4px;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:18px}
+  h1{font-size:clamp(38px,7vw,84px);font-weight:900;line-height:.98;letter-spacing:-.03em}
+  h2{font-size:clamp(30px,5vw,56px);font-weight:900;line-height:1;letter-spacing:-.02em;margin-bottom:14px}
+  .lead{font-size:clamp(17px,2.4vw,24px);color:#C9C9CE;max-width:640px;margin:22px auto 0;line-height:1.5;font-weight:400}
+  .brand{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:.14em}
+
+  .phone{width:280px;max-width:74vw;border-radius:42px;padding:11px;background:linear-gradient(160deg,#2a2a2e,#0c0c0e);
+    box-shadow:0 40px 90px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.06);flex-shrink:0}
+  .phone img{width:100%;display:block;border-radius:32px}
+  .phones{display:flex;gap:28px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:8px}
+
+  .cover{background:radial-gradient(120% 90% at 50% 8%,#12233f 0%,#060608 46%,#000 100%)}
+  .cover .globe-glow{position:absolute;inset:0;background:radial-gradient(50% 34% at 50% 30%,rgba(58,118,235,.28),transparent 70%);pointer-events:none}
+  .logo-lockup{display:inline-flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:8px}
+  .logo-mark{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(30px,6vw,58px);letter-spacing:.1em}
+  .tag{font-size:clamp(15px,2vw,20px);letter-spacing:.28em;text-transform:uppercase;color:#fff;font-weight:600;margin-top:16px}
+  .tag .r{color:var(--red)}
+
+  .red{background:linear-gradient(155deg,var(--red) 0%,var(--red-dark) 100%)}
+  .red .eyebrow{color:#fff;opacity:.85}
+
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;max-width:980px;margin:40px auto 0;width:100%}
+  .step{background:#0d0d10;border:1px solid var(--line);border-radius:20px;padding:26px 20px;text-align:left}
+  .step .n{font-family:'Orbitron',sans-serif;font-weight:900;color:var(--red);font-size:15px;letter-spacing:.1em}
+  .step h3{font-size:19px;font-weight:800;margin:10px 0 8px}
+  .step p{color:var(--grey);font-size:14px;line-height:1.5}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:40px;max-width:1000px;width:100%;align-items:center}
+  .split .copy{text-align:left}
+  .split ul{list-style:none;margin-top:18px}
+  .split li{padding:9px 0 9px 26px;position:relative;color:#D6D6DA;font-size:16px;line-height:1.45}
+  .split li::before{content:"";position:absolute;left:0;top:15px;width:9px;height:9px;border-radius:50%;background:var(--red)}
+  .pill{display:inline-block;font-size:11px;letter-spacing:3px;font-weight:700;text-transform:uppercase;
+    padding:6px 14px;border-radius:20px;border:1px solid var(--red);color:var(--red);margin-bottom:14px}
+
+  table.price{border-collapse:collapse;margin:34px auto 0;width:100%;max-width:640px;font-size:15px}
+  table.price th,table.price td{padding:15px 14px;border-bottom:1px solid var(--line);text-align:center}
+  table.price th{color:var(--grey);font-weight:600;font-size:12px;letter-spacing:2px;text-transform:uppercase}
+  table.price td:first-child,table.price th:first-child{text-align:left}
+  table.price .big{font-family:'Orbitron',sans-serif;font-weight:900;font-size:20px}
+  .net{color:var(--green);font-weight:800}
+
+  .stat-row{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+  .stat .num{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(30px,4vw,46px);color:#fff}
+  .stat .lbl{color:var(--grey);font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+  .cta{display:inline-block;margin-top:34px;background:#fff;color:#000;font-weight:800;font-size:16px;
+    padding:16px 40px;border-radius:14px;text-decoration:none;letter-spacing:.02em}
+  .foot{position:absolute;bottom:24px;left:0;right:0;text-align:center;color:#4a4a4e;font-size:12px;letter-spacing:2px}
+  @media(max-width:720px){.grid3{grid-template-columns:1fr}.split{grid-template-columns:1fr}.split .copy{text-align:center}.split li{display:inline-block;text-align:left}}
+  @media print{.slide{min-height:auto;height:100vh}body{background:#000}}
+</style>
+</head>
+<body>
+
+<section class="slide cover">
+  <div class="globe-glow"></div>
+  <div class="logo-lockup"><div class="logo-mark">LET ME CHECK</div></div>
+  <img src="./screenshots/01-globe.png" alt="LMC globe" style="width:260px;max-width:70vw;border-radius:30px;margin:26px 0;box-shadow:0 30px 80px rgba(0,0,0,.6)">
+  <div class="tag">Real Eyes. <span class="r">Right Now.</span> Anywhere.</div>
+  <div class="foot">VISUAL VERIFICATION ON DEMAND</div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">The Problem</div>
+  <h1>Old photos lie.<br>Reviews are yesterday.</h1>
+  <p class="lead">Before you drive across town, rent it sight-unseen, or trust a stranger's listing — you're guessing. Everybody has felt it: <em>"I wish someone could just go look for me, right now."</em></p>
+</section>
+
+<section class="slide cover">
+  <div class="globe-glow"></div>
+  <div class="eyebrow">The Solution</div>
+  <h1>So we built eyes.<br>Everywhere.</h1>
+  <p class="lead">Search any venue or place. A real person nearby films it live and sends it back in minutes. Not a photo. Not a review. <strong>The truth, right now — through someone else's eyes.</strong></p>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">How It Works</div>
+  <h2>Three taps to ground truth</h2>
+  <div class="phones">
+    <div class="phone"><img src="./screenshots/02-book-tier.png" alt="Pick a place"></div>
+    <div class="phone"><img src="./screenshots/03-live-check.png" alt="Scout on site"></div>
+    <div class="phone"><img src="./screenshots/06-delivery.png" alt="Watch it"></div>
+  </div>
+  <div class="grid3">
+    <div class="step"><div class="n">01 — REQUEST</div><h3>Search, pick a tier</h3><p>Search any venue or place. Standard or Priority. Confirm.</p></div>
+    <div class="step"><div class="n">02 — LIVE</div><h3>A Scout films it now</h3><p>A verified person on the ground gets pinged, walks up, and records a 15-second clip — GPS-stamped and real.</p></div>
+    <div class="step"><div class="n">03 — WATCH</div><h3>In your hand in minutes</h3><p>The clip lands in the app in 7–10 minutes. See it before you go. Rate your Scout.</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="split">
+    <div class="phone" style="justify-self:center"><img src="./screenshots/01-globe.png" alt="Seeker globe"></div>
+    <div class="copy">
+      <span class="pill">For Seekers</span>
+      <h2>Know before you go.</h2>
+      <ul>
+        <li>See any venue, line, or location in real time</li>
+        <li>Check apartments, cars &amp; deals before you commit</li>
+        <li>Peace of mind — is it busy, safe, worth it, real?</li>
+        <li>Delivered in 7–10 minutes, anywhere on Earth</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="slide red">
+  <div class="split">
+    <div class="copy">
+      <span class="pill" style="border-color:#fff;color:#fff">For Scouts</span>
+      <h2>Get paid to be<br>the eyes of your city.</h2>
+      <ul>
+        <li style="color:#fff">Walk. Film. Earn — on your own schedule</li>
+        <li style="color:#fff">$8–$12 per clip, cash out anytime</li>
+        <li style="color:#fff">Your neighborhood is the office</li>
+        <li style="color:#fff">No boss, no shifts, just your phone</li>
+      </ul>
+    </div>
+    <div class="phone" style="justify-self:center;background:linear-gradient(160deg,#eee,#fff)"><img src="./screenshots/05-scout-dashboard.png" alt="Scout dashboard"></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">The Model</div>
+  <h2>Simple, tiered, profitable</h2>
+  <table class="price">
+    <tr><th>Tier</th><th>Seeker Pays</th><th>Scout Earns</th><th>Delivery</th><th>Our Net</th></tr>
+    <tr><td>Standard</td><td class="big">$15</td><td>$8</td><td>~10 min</td><td class="net">$7</td></tr>
+    <tr><td>Priority</td><td class="big">$20</td><td>$12</td><td>~7 min</td><td class="net">$8</td></tr>
+    <tr><td>+ Partner Interior</td><td class="big">+$5</td><td>—</td><td>30-sec inside</td><td class="net">+</td></tr>
+  </table>
+  <div class="stat-row">
+    <div class="stat"><div class="num">$1.5T</div><div class="lbl">Live events</div></div>
+    <div class="stat"><div class="num">$900B</div><div class="lbl">Restaurants</div></div>
+    <div class="stat"><div class="num">$9T</div><div class="lbl">Travel &amp; hospitality</div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">The Moat</div>
+  <h2>Built on trust you can't fake</h2>
+  <p class="lead">Every clip is GPS-geofenced, timestamped on submission, and AI-checked for the venue's signage. Faces blurred. Off-location clips auto-rejected. The truth — verified.</p>
+  <div class="stat-row">
+    <div class="stat"><div class="num">GPS</div><div class="lbl">Geofenced &amp; stamped</div></div>
+    <div class="stat"><div class="num">AI</div><div class="lbl">Signage verified</div></div>
+    <div class="stat"><div class="num">15s</div><div class="lbl">Live, on demand</div></div>
+  </div>
+</section>
+
+<section class="slide cover">
+  <div class="globe-glow"></div>
+  <div class="logo-mark" style="font-size:clamp(26px,5vw,44px)">LET ME CHECK</div>
+  <div class="tag" style="margin-top:22px">Real Eyes. <span class="r">Right Now.</span> Anywhere.</div>
+  <p class="lead" style="margin-top:20px">Launching September 2026 — in a city near you.</p>
+  <a class="cta" href="#">Know Before You Go</a>
+  <div class="foot">© Let Me Check</div>
+</section>
+
+</body>
+</html>

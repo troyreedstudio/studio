@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Let Me Check — Visual verification, on demand</title>
+<meta name="description" content="Let Me Check lets you pay a real person nearby to film a live 15-second video of any place — and get it back in minutes. Know before you go. Real eyes, right now, anywhere.">
+<meta property="og:title" content="Let Me Check — Visual verification, on demand">
+<meta property="og:description" content="Real eyes. Right now. Anywhere. See any place live before you go.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --red:#DA251D; --red-dark:#9E0E07; --ink:#0A0A0A; --g2:#4B5563; --g3:#6B7280; --line:#E5E7EB; --surface:#F5F5F7; --green:#16A34A; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',-apple-system,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased;line-height:1.55}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  .brand{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:.12em}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .row{display:flex;align-items:center;justify-content:space-between;height:64px}
+  nav .logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:19px;letter-spacing:.1em}
+  nav .cta{background:var(--red);color:#fff;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;text-decoration:none}
+
+  /* hero */
+  .hero{padding:70px 0 40px;text-align:center}
+  .eyebrow{display:inline-block;font-size:11px;letter-spacing:3px;font-weight:800;color:var(--red);text-transform:uppercase;
+    border:1px solid var(--line);border-radius:20px;padding:7px 15px;margin-bottom:22px}
+  h1{font-size:clamp(38px,7vw,72px);font-weight:900;letter-spacing:-.035em;line-height:1}
+  .hero p.lead{font-size:clamp(17px,2.2vw,22px);color:var(--g2);max-width:620px;margin:22px auto 0;font-weight:500}
+  .hero .tag{margin-top:26px;font-size:13px;letter-spacing:.26em;text-transform:uppercase;font-weight:700}
+  .hero .tag .r{color:var(--red)}
+  .btns{display:flex;gap:12px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+  .btn-primary{background:var(--red);color:#fff;font-weight:800;font-size:16px;padding:15px 30px;border-radius:13px;text-decoration:none}
+  .btn-ghost{border:1px solid var(--line);color:var(--ink);font-weight:700;font-size:16px;padding:15px 26px;border-radius:13px;text-decoration:none;background:#fff}
+  .hero-phone{margin:44px auto 0;width:300px;max-width:80vw;border-radius:38px;padding:10px;background:linear-gradient(160deg,#1a1a1e,#000);
+    box-shadow:0 40px 90px rgba(0,0,0,.35)}
+  .hero-phone img{width:100%;display:block;border-radius:30px}
+
+  /* sections */
+  section.band{padding:72px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(28px,4.4vw,44px);font-weight:900;letter-spacing:-.02em;text-align:center}
+  .sub{color:var(--g2);text-align:center;max-width:600px;margin:14px auto 0;font-size:17px}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:46px}
+  .step{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px 22px}
+  .step .n{font-family:'Orbitron',sans-serif;font-weight:900;color:var(--red);font-size:14px;letter-spacing:.08em}
+  .step h3{font-size:19px;font-weight:800;margin:10px 0 7px}
+  .step p{color:var(--g3);font-size:14.5px}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-top:40px}
+  .split.rev .copy{order:2}
+  .split .phone{justify-self:center;width:260px;max-width:72vw;border-radius:34px;padding:9px;border:1px solid var(--line);
+    background:linear-gradient(160deg,#eef0f3,#fff);box-shadow:0 24px 50px rgba(0,0,0,.12)}
+  .split .phone img{width:100%;display:block;border-radius:26px}
+  .pill{display:inline-block;font-size:11px;letter-spacing:2.5px;font-weight:800;text-transform:uppercase;color:var(--red);
+    border:1px solid var(--red);border-radius:20px;padding:6px 13px;margin-bottom:14px}
+  .copy h2{text-align:left;font-size:clamp(26px,3.6vw,38px)}
+  ul.clean{list-style:none;margin-top:16px}
+  ul.clean li{padding:8px 0 8px 24px;position:relative;color:#1f2937;font-size:16px}
+  ul.clean li::before{content:"";position:absolute;left:0;top:14px;width:8px;height:8px;border-radius:50%;background:var(--red)}
+
+  .trust{display:flex;gap:34px;justify-content:center;flex-wrap:wrap;margin-top:40px}
+  .trust .t{text-align:center}
+  .trust .t .n{font-family:'Orbitron',sans-serif;font-weight:900;font-size:26px}
+  .trust .t .l{color:var(--g3);font-size:13px;letter-spacing:.5px;margin-top:4px}
+
+  .cta-band{background:var(--ink);color:#fff;text-align:center;border-radius:26px;padding:56px 28px;margin:20px auto 0;max-width:1080px}
+  .cta-band h2{color:#fff}
+  .cta-band .tag{margin-top:16px;letter-spacing:.26em;text-transform:uppercase;font-size:13px;font-weight:700;color:#cfcfd4}
+  .cta-band .tag .r{color:#ff6a60}
+  .cta-band a.btn-primary{margin-top:26px;display:inline-block}
+
+  footer{padding:46px 0;border-top:1px solid var(--line);color:var(--g3);font-size:14px}
+  footer .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;align-items:center}
+  footer a{color:var(--g2);text-decoration:none;margin-left:18px}
+  footer a:hover{color:var(--red)}
+
+  @media(max-width:760px){.steps{grid-template-columns:1fr}.split{grid-template-columns:1fr;gap:26px}.split.rev .copy{order:0}.copy h2{text-align:center}ul.clean li{max-width:340px;margin:0 auto}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap row">
+  <div class="logo">LET ME CHECK</div>
+  <a class="cta" href="#waitlist">Get Early Access</a>
+</div></nav>
+
+<!-- HERO -->
+<header class="hero"><div class="wrap">
+  <span class="eyebrow">Visual verification, on demand</span>
+  <h1>Know before<br>you go.</h1>
+  <p class="lead">Pay a real person nearby to film a live 15-second video of any place on Earth — and get it back in minutes. Not old photos. Not stale reviews. The truth, right now.</p>
+  <div class="btns">
+    <a class="btn-primary" href="#waitlist">Get Early Access</a>
+    <a class="btn-ghost" href="#how">See how it works</a>
+  </div>
+  <div class="tag">Real Eyes. <span class="r">Right Now.</span> Anywhere.</div>
+  <div class="hero-phone"><img src="./assets/globe.png" alt="Let Me Check app — the live globe"></div>
+</div></header>
+
+<!-- HOW IT WORKS -->
+<section class="band" id="how"><div class="wrap">
+  <h2>Three taps to ground truth</h2>
+  <p class="sub">Search any venue or place, a real person films it live, and you watch it before you go.</p>
+  <div class="steps">
+    <div class="step"><div class="n">01 — SEARCH</div><h3>Pick any place</h3><p>Search any venue or address in the app and choose how fast you want it.</p></div>
+    <div class="step"><div class="n">02 — LIVE</div><h3>A Scout films it now</h3><p>A verified person nearby walks up and records a live 15-second clip — GPS-stamped and real.</p></div>
+    <div class="step"><div class="n">03 — WATCH</div><h3>In your hand in minutes</h3><p>The clip lands in your app in 7–10 minutes. See it before you go.</p></div>
+  </div>
+</div></section>
+
+<!-- SEEKER -->
+<section class="band"><div class="wrap">
+  <div class="split">
+    <div class="phone"><img src="./assets/seeker.png" alt="Request a live check"></div>
+    <div class="copy">
+      <span class="pill">For Seekers</span>
+      <h2>See it live, before you commit.</h2>
+      <ul class="clean">
+        <li>Check any venue, line, or location in real time</li>
+        <li>Scope apartments, cars &amp; deals before you go</li>
+        <li>Peace of mind — is it busy, safe, worth it, real?</li>
+        <li>Delivered in minutes, anywhere on Earth</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- SCOUT -->
+<section class="band"><div class="wrap">
+  <div class="split rev">
+    <div class="copy">
+      <span class="pill">For Scouts</span>
+      <h2>Get paid to be the eyes of your city.</h2>
+      <ul class="clean">
+        <li>Walk. Film. Earn — on your own schedule</li>
+        <li>$8–$12 per clip, paid straight to your bank</li>
+        <li>Sign up in minutes with your phone number</li>
+        <li>No boss, no shifts — just your phone</li>
+      </ul>
+    </div>
+    <div class="phone"><img src="./assets/scout.png" alt="Be a Scout, get paid"></div>
+  </div>
+</div></section>
+
+<!-- TRUST -->
+<section class="band"><div class="wrap">
+  <h2>Built on trust you can't fake</h2>
+  <p class="sub">Every clip is location-verified, timestamped, and checked — with faces blurred for privacy.</p>
+  <div class="trust">
+    <div class="t"><div class="n">GPS</div><div class="l">Geofenced &amp; stamped</div></div>
+    <div class="t"><div class="n">15s</div><div class="l">Live, on demand</div></div>
+    <div class="t"><div class="n">Faces</div><div class="l">Blurred for privacy</div></div>
+  </div>
+</div></section>
+
+<!-- CTA -->
+<section class="band" id="waitlist"><div class="wrap">
+  <div class="cta-band">
+    <h2>Coming to a city near you.</h2>
+    <p class="sub" style="color:#cfcfd4">Launching September 2026. Be first to know — and first to earn.</p>
+    <a class="btn-primary" href="mailto:hello@letmecheckapp.com?subject=Early%20Access%20—%20Let%20Me%20Check">Get Early Access</a>
+    <div class="tag">Real Eyes. <span class="r">Right Now.</span> Anywhere.</div>
+  </div>
+</div></section>
+
+<footer><div class="wrap row">
+  <div>© <span id="yr">2026</span> Let Me Check. All rights reserved.</div>
+  <div>
+    <a href="mailto:hello@letmecheckapp.com">hello@letmecheckapp.com</a>
+    <a href="./privacy.html">Privacy</a>
+    <a href="./terms.html">Terms</a>
+  </div>
+</div></footer>
+
+<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+</body>
+</html>

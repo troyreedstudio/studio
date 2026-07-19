@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Let Me Check — Creative Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#DA251D; --ink:#0A0A0A; --g2:#4B5563; --g3:#6B7280;
+    --line:#E5E7EB; --surface:#F5F5F7; --green:#16A34A; --amber:#FFCB47;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',-apple-system,sans-serif;background:#fff;color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:900px;margin:0 auto;padding:0 28px}
+  section{padding:64px 0;border-bottom:1px solid var(--line)}
+  .eyebrow{font-size:11px;letter-spacing:3px;font-weight:800;color:var(--red);text-transform:uppercase;margin-bottom:14px}
+  h1{font-size:clamp(34px,6vw,60px);font-weight:900;letter-spacing:-.03em;line-height:1}
+  h2{font-size:clamp(24px,4vw,38px);font-weight:900;letter-spacing:-.02em;margin-bottom:8px}
+  h3{font-size:19px;font-weight:800;margin-bottom:6px}
+  p{color:#1f2937;font-size:16px;margin-bottom:12px}
+  .muted{color:var(--g2)}
+  .brand{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:.12em}
+
+  /* HERO */
+  .hero{background:#fff;padding-top:80px;padding-bottom:56px}
+  .hero .logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(26px,5vw,42px);letter-spacing:.1em;margin-bottom:8px}
+  .hero .rule{width:52px;height:4px;background:var(--red);border-radius:2px;margin:18px 0 22px}
+  .tag{font-size:14px;letter-spacing:.24em;text-transform:uppercase;font-weight:700;color:var(--ink)}
+  .tag .r{color:var(--red)}
+  .kicker{display:inline-block;background:var(--red);color:#fff;font-weight:800;font-size:12px;letter-spacing:2px;
+    text-transform:uppercase;padding:7px 14px;border-radius:8px;margin-bottom:20px}
+
+  .lead{font-size:20px;color:#111;font-weight:500;max-width:680px}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:28px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .card .tagrole{font-size:11px;letter-spacing:2px;font-weight:800;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+  ul.clean{list-style:none;margin-top:8px}
+  ul.clean li{padding:7px 0 7px 22px;position:relative;color:#1f2937;font-size:15px}
+  ul.clean li::before{content:"";position:absolute;left:0;top:14px;width:7px;height:7px;border-radius:50%;background:var(--red)}
+
+  /* steps */
+  .steps{counter-reset:s;margin-top:24px}
+  .steprow{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .steprow:last-child{border-bottom:none}
+  .steprow .num{font-family:'Orbitron',sans-serif;font-weight:900;color:var(--red);font-size:22px;min-width:44px}
+
+  /* screenshots */
+  .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:26px}
+  .shot{text-align:center}
+  .phone{border-radius:26px;padding:8px;background:linear-gradient(160deg,#eef0f3,#fff);
+    border:1px solid var(--line);box-shadow:0 18px 40px rgba(0,0,0,.12)}
+  .phone img{width:100%;display:block;border-radius:20px}
+  .shot .cap{font-size:13px;font-weight:700;margin-top:10px}
+  .shot .sub{font-size:12px;color:var(--g3);margin-top:2px}
+
+  /* brand swatches */
+  .swatches{display:flex;gap:14px;flex-wrap:wrap;margin-top:20px}
+  .sw{border:1px solid var(--line);border-radius:12px;overflow:hidden;width:132px}
+  .sw .chip{height:64px}
+  .sw .meta{padding:9px 11px}
+  .sw .name{font-size:12px;font-weight:800}
+  .sw .hex{font-size:11px;color:var(--g3);font-family:'Orbitron',sans-serif;letter-spacing:.03em}
+
+  .pillrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .pill{border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:8px 15px;font-size:13px;font-weight:600}
+
+  .do-dont{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+  .do-dont .box{border-radius:14px;padding:20px;border:1px solid var(--line)}
+  .do{background:#F0FBF4}.dont{background:#FEF2F2}
+  .do h3{color:var(--green)}.dont h3{color:var(--red)}
+  .do-dont li{font-size:14px;padding:5px 0 5px 20px;position:relative;list-style:none;color:#1f2937}
+  .do li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:800}
+  .dont li::before{content:"✕";position:absolute;left:0;color:var(--red);font-weight:800}
+
+  .foot{padding:36px 0 60px;text-align:center;color:var(--g3);font-size:13px}
+  @media(max-width:720px){.two,.shots,.do-dont{grid-template-columns:1fr}}
+  @media print{section{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="wrap">
+    <div class="logo">LET ME CHECK</div>
+    <div class="rule"></div>
+    <div class="kicker">Creative Brief — Video &amp; Design</div>
+    <h1>Visual verification,<br>on demand.</h1>
+    <div class="tag" style="margin-top:22px">Real Eyes. <span class="r">Right Now.</span> Anywhere.</div>
+  </div>
+</div>
+
+<!-- WHAT IT IS -->
+<section><div class="wrap">
+  <div class="eyebrow">What the app does</div>
+  <h2>The one-liner</h2>
+  <p class="lead">Let Me Check lets anyone pay to have a real person nearby film a short, live video of any place on Earth — and get it back in minutes.</p>
+  <p class="muted" style="margin-top:18px">Think Uber, but instead of moving people, we move <strong>eyes</strong>. A <strong>Seeker</strong> wants to know what somewhere looks like <em>right now</em> — a club, a restaurant line, an apartment, a used car, a beach, a street after a storm. They <strong>search for the venue or place</strong> in the app. A <strong>Scout</strong> (a real person on the ground nearby) gets the request, walks up, films a 15-second clip, and sends it back — GPS-verified and timestamped. Delivered in 7–10 minutes. No staged photos. No old reviews. The truth, live.</p>
+</div></section>
+
+<!-- WHERE THE VIDEO LIVES -->
+<section><div class="wrap">
+  <div class="eyebrow">For the videographer — read this first</div>
+  <h2>Where your video lives</h2>
+  <p class="lead">This is the very first thing a new user sees.</p>
+  <p class="muted" style="margin-top:14px">When someone downloads Let Me Check and opens it, the <strong>red brand screen loads</strong>, then <strong>your promo video plays</strong>. When it finishes, it hands them straight to <strong>"Choose your profile"</strong> — where they sign up as a Seeker, a Scout, or both.</p>
+  <p class="muted" style="margin-top:10px">So the video has one job: <strong>explain the app fast and make them want to pick a profile and sign up.</strong> It's the launch pad — not a trailer buried in a menu. End it pointing at that choice.</p>
+  <div class="shots" style="grid-template-columns:repeat(3,1fr)">
+    <div class="shot"><div class="phone"><img src="./screenshots/A-red-splash.png"></div><div class="cap">1 · App opens</div><div class="sub">Red brand screen loads</div></div>
+    <div class="shot"><div class="phone" style="background:linear-gradient(160deg,#DA251D,#9E0E07)"><div style="aspect-ratio:9/19.5;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;border-radius:20px"><div style="font-size:40px;line-height:1">▶</div><div style="font-weight:800;margin-top:14px;letter-spacing:1.5px;font-size:15px">YOUR VIDEO<br>PLAYS HERE</div><div style="opacity:.8;font-size:11px;margin-top:8px">~60 sec, auto-play</div></div></div><div class="cap">2 · Video plays</div><div class="sub">Right after the splash</div></div>
+    <div class="shot"><div class="phone"><img src="./screenshots/D-role.png"></div><div class="cap">3 · Choose profile</div><div class="sub">Sign up: Seeker / Scout / both</div></div>
+  </div>
+</div></section>
+
+<!-- WHY -->
+<section><div class="wrap">
+  <div class="eyebrow">The problem we solve</div>
+  <h2>Old photos lie. Reviews are yesterday.</h2>
+  <p>Before we drive across town, book sight-unseen, or trust a stranger's listing, we're all guessing. Everyone has thought it: <em>"I wish someone could just go look for me, right now."</em> That's the entire product — ground truth, on demand, anywhere.</p>
+</div></section>
+
+<!-- TWO USERS -->
+<section><div class="wrap">
+  <div class="eyebrow">Two sides, one app</div>
+  <h2>Seekers &amp; Scouts</h2>
+  <div class="two">
+    <div class="card">
+      <div class="tagrole">The Seeker</div>
+      <h3>Knows before they go</h3>
+      <ul class="clean">
+        <li>Searches for any venue or place in the app</li>
+        <li>Picks a tier, pays, and waits a few minutes</li>
+        <li>Watches a real, live clip of that exact spot</li>
+        <li>Rates the Scout</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="tagrole">The Scout</div>
+      <h3>Gets paid to be the eyes of their city</h3>
+      <ul class="clean">
+        <li>Goes online when they want to earn</li>
+        <li>Accepts nearby requests, films a short clip</li>
+        <li>Earns $8–$12 per clip, cashes out anytime</li>
+        <li>No boss, no shifts — just their phone</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- HOW IT WORKS -->
+<section><div class="wrap">
+  <div class="eyebrow">The flow</div>
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="steprow"><div class="num">01</div><div><h3>Request</h3><p class="muted">The Seeker searches for any venue or place and picks Standard ($15) or Priority ($20). Confirm.</p></div></div>
+    <div class="steprow"><div class="num">02</div><div><h3>Dispatch</h3><p class="muted">A verified Scout near that spot is pinged. Only Scouts inside the geofence can accept.</p></div></div>
+    <div class="steprow"><div class="num">03</div><div><h3>Film</h3><p class="muted">The Scout walks up and records a live 15-second clip (30 sec for partner interiors), GPS-stamped on submission.</p></div></div>
+    <div class="steprow"><div class="num">04</div><div><h3>Deliver</h3><p class="muted">The clip lands in the Seeker's app in 7–10 minutes. Faces auto-blurred. Off-location clips auto-rejected.</p></div></div>
+  </div>
+</div></section>
+
+<!-- SEEKER SCREENS -->
+<section><div class="wrap">
+  <div class="eyebrow">Key screens — Seeker side</div>
+  <h2>What the customer sees</h2>
+  <p class="muted" style="margin-bottom:6px">The person requesting a check. Use these for the "search → request → watch it live → get the video" story.</p>
+  <div class="shots" style="grid-template-columns:repeat(5,1fr)">
+    <div class="shot"><div class="phone"><img src="./screenshots/01-globe.png"></div><div class="cap">1 · The Globe</div><div class="sub">Home — the live planet</div></div>
+    <div class="shot"><div class="phone"><img src="./screenshots/E-search.png"></div><div class="cap">2 · Search a place</div><div class="sub">Search any venue (or voice)</div></div>
+    <div class="shot"><div class="phone"><img src="./screenshots/02-book-tier.png"></div><div class="cap">3 · Request a Check</div><div class="sub">Choose a tier, confirm</div></div>
+    <div class="shot"><div class="phone"><img src="./screenshots/03-live-check.png"></div><div class="cap">4 · Scout On Site</div><div class="sub">Live tracking as it films</div></div>
+    <div class="shot"><div class="phone" style="background:#111"><div style="aspect-ratio:9/19.5;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;border-radius:20px"><div style="font-size:34px">▶</div><div style="font-weight:800;margin-top:12px;letter-spacing:1px;font-size:13px">THE 15-SEC<br>CLIP PLAYS</div><div style="opacity:.75;font-size:10px;margin-top:8px">then rate your Scout</div></div></div><div class="cap">5 · Delivered</div><div class="sub">Watch it, rate the Scout</div></div>
+  </div>
+  <p class="muted" style="margin-top:16px;font-size:14px">Screen 5 (the delivered video) is a video player — the Seeker's 15-second clip plays here, then they rate the Scout. <strong>Only the video itself is dark; the surrounding app stays on the white brand.</strong></p>
+</div></section>
+
+<!-- SCOUT SCREENS -->
+<section><div class="wrap">
+  <div class="eyebrow">Key screens — Scout side</div>
+  <h2>What the earner sees</h2>
+  <p class="muted" style="margin-bottom:6px">The person on the ground getting paid. Use these for the "go online → film → get paid" story.</p>
+  <div class="shots">
+    <div class="shot"><div class="phone"><img src="./screenshots/05-scout-dashboard.png"></div><div class="cap">1 · Scout Mode</div><div class="sub">Go online, start earning</div></div>
+    <div class="shot"><div class="phone"><img src="./screenshots/07-scout-filming.png"></div><div class="cap">2 · Filming</div><div class="sub">GPS verified, 15-sec clip</div></div>
+    <div class="shot"><div class="phone"><img src="./screenshots/08-scout-submitted.png"></div><div class="cap">3 · Paid</div><div class="sub">Video sent, earnings clear</div></div>
+  </div>
+  <p class="muted" style="margin-top:22px;font-size:14px">Note: the Home <strong>globe map is intentionally dark</strong> — it's the one dark "live planet" surface. <strong>Every other screen is the light white / red / grey brand.</strong> Keep that contrast; don't lighten the globe or darken the rest.</p>
+</div></section>
+
+<!-- BRAND -->
+<section><div class="wrap">
+  <div class="eyebrow">Brand — stay on this</div>
+  <h2>Look &amp; feel</h2>
+  <p class="muted">Clean, editorial, confident. White canvas. Supreme red as the one loud accent. Black text. Grey for support. Premium and modern — think Apple meets a bold streetwear label.</p>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#DA251D"></div><div class="meta"><div class="name">Brand Red</div><div class="hex">#DA251D</div></div></div>
+    <div class="sw"><div class="chip" style="background:#FFFFFF;border-bottom:1px solid var(--line)"></div><div class="meta"><div class="name">Canvas White</div><div class="hex">#FFFFFF</div></div></div>
+    <div class="sw"><div class="chip" style="background:#0A0A0A"></div><div class="meta"><div class="name">Ink Black</div><div class="hex">#0A0A0A</div></div></div>
+    <div class="sw"><div class="chip" style="background:#6B7280"></div><div class="meta"><div class="name">Grey</div><div class="hex">#6B7280</div></div></div>
+    <div class="sw"><div class="chip" style="background:#16A34A"></div><div class="meta"><div class="name">Verified</div><div class="hex">#16A34A</div></div></div>
+  </div>
+  <div class="pillrow">
+    <span class="pill"><strong>Logo font:</strong> Orbitron</span>
+    <span class="pill"><strong>Headlines &amp; body:</strong> Inter</span>
+    <span class="pill"><strong>Numbers:</strong> JetBrains Mono</span>
+    <span class="pill"><strong>Tagline:</strong> Real Eyes. Right Now. Anywhere.</span>
+    <span class="pill"><strong>Lead line:</strong> Know Before You Go.</span>
+  </div>
+
+  <div class="do-dont">
+    <div class="box do"><h3>Do</h3><ul>
+      <li>White backgrounds, red for the one thing that matters</li>
+      <li>Keep the globe dark &amp; glowing — it's the hero</li>
+      <li>Fast cuts, real people, real streets, big personality</li>
+      <li>Verified green ONLY for "online / success / verified"</li>
+    </ul></div>
+    <div class="box dont"><h3>Don't</h3><ul>
+      <li>No all-black layouts (that's the old brand)</li>
+      <li>No blue anywhere — it's retired from the palette</li>
+      <li>No green for buttons/actions — red owns actions</li>
+      <li>Don't position it as a "nightlife app" — it's universal</li>
+    </ul></div>
+  </div>
+</div></section>
+
+<!-- VIDEO DIRECTION -->
+<section><div class="wrap">
+  <div class="eyebrow">For the videographer</div>
+  <h2>The 60-second spot</h2>
+  <p>Energy: cinematic, kinetic, trendy — Uber × Apple, Super-Bowl budget feel. Hard cuts on the beat, real people in real cities. A full <strong>:60 script exists</strong> (separate doc) with beat-by-beat visuals and voiceover.</p>
+  <ul class="clean" style="margin-top:10px">
+    <li><strong>Hook (0–11s):</strong> people frozen mid-decision → the problem montage (bad apartment, dead club, hidden car dent)</li>
+    <li><strong>Reveal (11–16s):</strong> black → the glowing globe spins up → "So we built eyes. Everywhere."</li>
+    <li><strong>Seeker (16–30s):</strong> tap the map → a real person films it live → clip lands in hand</li>
+    <li><strong>Scout (30–40s):</strong> flip energy — young creator earning, walking their city</li>
+    <li><strong>Anywhere (40–52s):</strong> machine-gun montage: beach, apartment, car, airport, restaurant</li>
+    <li><strong>Close (52–60s):</strong> collapse into the globe → logo → "Real Eyes. Right Now. Anywhere."</li>
+  </ul>
+  <p class="muted" style="margin-top:14px;font-size:14px"><strong>Protect this line:</strong> "Real Eyes. Right Now. Anywhere." — it's the "Just Do It." End every asset on the globe → logo lockup.</p>
+</div></section>
+
+<div class="foot">
+  <div class="brand" style="font-size:16px;color:var(--ink)">LET ME CHECK</div>
+  <div style="margin-top:6px">Creative brief for videographer &amp; designer · Know Before You Go.</div>
+</div>
+
+</body>
+</html>
