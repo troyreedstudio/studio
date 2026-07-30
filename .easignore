@@ -1,0 +1,46 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# EAS Build archive scope (Let Me Check)
+# The whole studio monorepo shares one git repo, and EAS uploads the entire repo.
+# Only projects/let-me-check/lmc-app is built via EAS, so exclude everything else
+# to keep the upload small and fast. (This does NOT delete or modify any files —
+# it only tells the LMC cloud build which files it can skip uploading.)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Studio-wide, not needed by the app build
+/docs/
+/skills/
+/.github/
+
+# Sibling projects (not the LMC app)
+/projects/agape/
+/projects/pink-pineapple/
+/projects/ideas/
+
+# Let Me Check non-app files (business docs, decks, marketing, reference images, media)
+/projects/let-me-check/docs/
+/projects/let-me-check/marketing/
+/projects/let-me-check/old-png-images*/
+/projects/let-me-check/images/
+/projects/let-me-check/*.mp4
+/projects/let-me-check/*.mov
+/projects/let-me-check/*.mp3
+/projects/let-me-check/*.png
+/projects/let-me-check/*.pdf
+
+# The app's own regenerable caches (EAS rebuilds these on its servers)
+/projects/let-me-check/lmc-app/ios/
+/projects/let-me-check/lmc-app/android/
+/projects/let-me-check/lmc-app/node_modules/
+/projects/let-me-check/lmc-app/.expo/
+/projects/let-me-check/lmc-app/_archive/
+/projects/let-me-check/lmc-app/*.bak
+
+# Repo tooling / junk that never belongs in a build
+/.claude-flow/
+/.claude/
+/.swarm/
+/.mcp.json
+/ruvector.db
+SECURITY_*.json
+*.log
+.DS_Store
