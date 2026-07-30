@@ -49,21 +49,22 @@ const PLACEHOLDER_HINTS = [
 // Mapbox uses [longitude, latitude] order
 const MIAMI_CENTER: [number, number] = [-80.1918, 25.7617];
 const MIAMI_ZOOM = 14.5;
+// The globe teaser opens on the transatlantic corridor: New York + Miami sit
+// prominent on the west, London + Paris on the east (the location pill still shows
+// the user's real city).
+const LAUNCH_CENTER: [number, number] = [-52, 37];
 
 // Decorative "activity" hotspots for the globe-teaser heatmap — a lit-up globe
 // like the Snap Map reference (no real check-volume data yet; roughly world metros).
 const GLOBE_HOTSPOTS: [number, number, number][] = [
-  // LMC launch markets — the hottest (red) spots
-  [-80.19, 25.76, 1.35], [-74.0, 40.71, 1.35],
-  // US metros where LMC grows next
-  [-118.24, 34.05, 1.0], [-87.63, 41.88, 0.9], [-122.42, 37.77, 0.9], [-95.37, 29.76, 0.8],
-  [-84.39, 33.75, 0.85], [-96.8, 32.78, 0.75], [-75.16, 39.95, 0.75], [-77.04, 38.9, 0.75],
-  [-115.14, 36.17, 0.78], [-112.07, 33.45, 0.65], [-90.07, 29.95, 0.65], [-71.06, 42.36, 0.72],
-  [-104.99, 39.74, 0.6], [-97.74, 30.27, 0.65], [-81.38, 28.54, 0.72],
-  // Global majors — real cities that keep the globe alive
-  [-0.12, 51.5, 0.95], [2.35, 48.85, 0.85], [-99.13, 19.43, 0.7], [-46.63, -23.55, 0.7],
-  [55.27, 25.2, 0.9], [77.2, 28.6, 0.8], [139.69, 35.68, 0.9], [121.47, 31.23, 0.8],
-  [-58.38, -34.6, 0.6], [28.98, 41.0, 0.65], [151.2, -33.87, 0.6], [103.8, 1.35, 0.7],
+  [-80.19, 25.76, 1.35], [-74.0, 40.71, 1.35],                          // Miami, NYC (hottest)
+  [-118.24, 34.05, 1.0], [-87.63, 41.88, 0.9], [-122.42, 37.77, 0.9],  // LA, Chicago, SF
+  [-95.37, 29.76, 0.8], [-84.39, 33.75, 0.85], [-77.04, 38.9, 0.75],   // Houston, Atlanta, DC
+  [-115.14, 36.17, 0.78], [-71.06, 42.36, 0.72], [-81.38, 28.54, 0.72],// Vegas, Boston, Orlando
+  [-0.12, 51.5, 0.95], [2.35, 48.85, 0.85], [55.27, 25.2, 0.9],        // London, Paris, Dubai
+  [139.69, 35.68, 0.9], [103.8, 1.35, 0.7], [151.2, -33.87, 0.6],      // Tokyo, Singapore, Sydney
+  [-46.63, -23.55, 0.7], [-99.13, 19.43, 0.7], [-58.38, -34.6, 0.6],   // São Paulo, Mexico City, BA
+  [77.2, 28.6, 0.8], [116.4, 39.9, 0.78], [28.98, 41.0, 0.65],         // Delhi, Beijing, Istanbul
 ];
 const HOTSPOTS_GEOJSON = {
   type: 'FeatureCollection' as const,
@@ -91,13 +92,196 @@ const CITY_LIGHTS: [number, number][] = [
   // Oceania
   [151.2, -33.9], [144.96, -37.8], [174.76, -36.85],
 ];
+// Densify each anchor city into a small cluster so the globe reads like the
+// NASA "earth at night" glow (clusters of light, not lone dots).
+const CITY_CLUSTER_OFFSETS: [number, number][] = [
+  [0, 0], [0.45, 0.3], [-0.4, 0.35], [0.3, -0.45], [-0.45, -0.3],
+];
+const CITY_LIGHTS_DENSE: [number, number][] = CITY_LIGHTS.flatMap(([lon, lat]) =>
+  CITY_CLUSTER_OFFSETS.map(([dx, dy]) => [lon + dx, lat + dy] as [number, number]),
+);
 const CITY_LIGHTS_GEOJSON = {
   type: 'FeatureCollection' as const,
-  features: CITY_LIGHTS.map(([lon, lat]) => ({
+  features: CITY_LIGHTS_DENSE.map(([lon, lat]) => ({
     type: 'Feature' as const,
     geometry: { type: 'Point' as const, coordinates: [lon, lat] },
     properties: {},
   })),
+};
+
+// Great-circle arc between two [lon,lat] points, as a smooth line on the sphere —
+// powers the glowing "global live network" arcs across the globe.
+function greatCircleArc(a: [number, number], b: [number, number], n = 54): number[][] {
+  const R = Math.PI / 180, D = 180 / Math.PI;
+  const lat1 = a[1] * R, lon1 = a[0] * R, lat2 = b[1] * R, lon2 = b[0] * R;
+  const d = 2 * Math.asin(Math.sqrt(
+    Math.sin((lat2 - lat1) / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin((lon2 - lon1) / 2) ** 2,
+  ));
+  if (d === 0) return [a, b];
+  const pts: number[][] = [];
+  for (let i = 0; i <= n; i++) {
+    const f = i / n;
+    const A = Math.sin((1 - f) * d) / Math.sin(d);
+    const B = Math.sin(f * d) / Math.sin(d);
+    const x = A * Math.cos(lat1) * Math.cos(lon1) + B * Math.cos(lat2) * Math.cos(lon2);
+    const y = A * Math.cos(lat1) * Math.sin(lon1) + B * Math.cos(lat2) * Math.sin(lon2);
+    const z = A * Math.sin(lat1) + B * Math.sin(lat2);
+    pts.push([Math.atan2(y, x) * D, Math.atan2(z, Math.sqrt(x * x + y * y)) * D]);
+  }
+  return pts;
+}
+const ARC_PAIRS: [[number, number], [number, number]][] = [
+  [[-74, 40.7], [-0.12, 51.5]],    // NYC ↔ London
+  [[-80.2, 25.8], [-118.2, 34]],   // Miami ↔ LA
+  [[-74, 40.7], [-80.2, 25.8]],    // NYC ↔ Miami
+  [[-0.12, 51.5], [55.3, 25.2]],   // London ↔ Dubai
+  [[55.3, 25.2], [103.8, 1.35]],   // Dubai ↔ Singapore
+  [[103.8, 1.35], [139.7, 35.7]],  // Singapore ↔ Tokyo
+  [[-118.2, 34], [139.7, 35.7]],   // LA ↔ Tokyo
+  [[2.35, 48.85], [-74, 40.7]],    // Paris ↔ NYC
+  [[151.2, -33.9], [103.8, 1.35]], // Sydney ↔ Singapore
+  [[-46.6, -23.5], [-0.12, 51.5]], // São Paulo ↔ London
+  [[-80.2, 25.8], [-74, 4.7]],     // Miami ↔ Bogotá
+];
+const ARCS_GEOJSON = {
+  type: 'FeatureCollection' as const,
+  features: ARC_PAIRS.map(([a, b]) => ({
+    type: 'Feature' as const,
+    geometry: { type: 'LineString' as const, coordinates: greatCircleArc(a, b) },
+    properties: {},
+  })),
+};
+
+// ── Live globe FX + city chips (ported from the globe demo) ────────────────────
+// Great-circle distance in degrees — tells if a city is on the visible hemisphere.
+function angularDistanceDeg(a: [number, number], b: [number, number]): number {
+  const R = Math.PI / 180;
+  const lat1 = a[1] * R, lat2 = b[1] * R, dlon = (a[0] - b[0]) * R;
+  const c = Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(dlon);
+  return Math.acos(Math.max(-1, Math.min(1, c))) / R;
+}
+const ARCS_PTS = ARC_PAIRS.map(([a, b]) => greatCircleArc(a, b, 64));
+const PING_CITIES: [number, number][] = [
+  [-80.19, 25.76], [-74.0, 40.71], [-118.24, 34.05], [-0.12, 51.5],
+  [2.35, 48.85], [55.27, 25.2], [139.69, 35.68], [-46.63, -23.55], [103.8, 1.35],
+];
+// The world's most check-worthy cities — chips that pop up as each rotates into view.
+const CHIP_CITIES: { id: string; coord: [number, number]; label: string; dx?: number; dy?: number }[] = [
+  { id: 'mia', coord: [-80.19, 25.76], label: 'Miami' },
+  { id: 'nyc', coord: [-74.0, 40.71], label: 'New York' },
+  { id: 'lax', coord: [-118.24, 34.05], label: 'Los Angeles', dy: -20 },
+  { id: 'las', coord: [-115.14, 36.17], label: 'Las Vegas', dy: 12 },
+  { id: 'lon', coord: [-0.12, 51.5], label: 'London', dy: -20 },
+  { id: 'par', coord: [2.35, 48.85], label: 'Paris', dy: 12 },
+  { id: 'dxb', coord: [55.27, 25.2], label: 'Dubai' },
+  { id: 'tok', coord: [139.69, 35.68], label: 'Tokyo' },
+  { id: 'sin', coord: [103.8, 1.35], label: 'Singapore' },
+  { id: 'hkg', coord: [114.17, 22.32], label: 'Hong Kong' },
+  { id: 'syd', coord: [151.2, -33.87], label: 'Sydney' },
+  { id: 'rio', coord: [-43.2, -22.91], label: 'Rio de Janeiro' },
+];
+
+// Isolated animation host — pings ripple + dots travel the arcs. Kept as its own
+// component so its 90ms state updates DON'T re-render the heavy home screen.
+function LiveGlobeFx() {
+  const [pings, setPings] = useState<any>({ type: 'FeatureCollection', features: [] });
+  const [travelers, setTravelers] = useState<any>({ type: 'FeatureCollection', features: [] });
+  useEffect(() => {
+    let tick = 0;
+    const id = setInterval(() => {
+      tick += 1;
+      setPings({
+        type: 'FeatureCollection',
+        features: PING_CITIES.map(([lon, lat], i) => {
+          const phase = ((tick * 0.02) + i / PING_CITIES.length) % 1;
+          return { type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties: { r: 3 + phase * 24, o: Math.max(0, 0.75 * (1 - phase)) } };
+        }),
+      });
+      setTravelers({
+        type: 'FeatureCollection',
+        features: ARCS_PTS.map((pts, i) => {
+          const p = ((tick * 0.014) + i * 0.13) % 1;
+          const idx = Math.floor(p * (pts.length - 1));
+          return { type: 'Feature', geometry: { type: 'Point', coordinates: pts[idx] }, properties: {} };
+        }),
+      });
+    }, 90);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <>
+      <Mapbox.ShapeSource id="live-travelers" shape={travelers}>
+        <Mapbox.CircleLayer id="live-traveler-glow" style={{ circleColor: 'rgba(120,210,255,0.55)', circleRadius: 7, circleBlur: 1 }} />
+        <Mapbox.CircleLayer id="live-traveler-core" style={{ circleColor: 'rgb(230,248,255)', circleRadius: 2.4, circleBlur: 0.1 }} />
+      </Mapbox.ShapeSource>
+      <Mapbox.ShapeSource id="live-pings" shape={pings}>
+        <Mapbox.CircleLayer id="live-ping-ring" style={{ circleColor: 'rgba(0,0,0,0)', circleRadius: ['get', 'r'], circleStrokeColor: 'rgb(255,120,90)', circleStrokeWidth: 1.6, circleStrokeOpacity: ['get', 'o'] }} />
+      </Mapbox.ShapeSource>
+    </>
+  );
+}
+
+const chipStyles = StyleSheet.create({
+  wrap: { alignItems: 'center' },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(12,12,14,0.9)', borderWidth: 1, borderColor: 'rgba(218,37,29,0.6)', paddingLeft: 6, paddingRight: 4, paddingVertical: 3.5, borderRadius: 11 },
+  dot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#DA251D' },
+  text: { color: '#fff', fontSize: 9.5, fontWeight: '700', letterSpacing: 0.1 },
+  stem: { width: 1, height: 7, backgroundColor: 'rgba(255,255,255,0.45)' },
+  pin: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#DA251D', borderWidth: 1, borderColor: '#fff' },
+});
+
+// Live stats ticker (checks + scouts) — own component so its ticker doesn't
+// re-render the heavy home screen. Sits just above the bottom sheet.
+function LiveStatsHud({ top }: { top: number }) {
+  const [checks, setChecks] = useState(12480);
+  const [scouts, setScouts] = useState(847);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setChecks((c) => c + 1 + Math.floor(Math.random() * 3));
+      setScouts((s) => Math.max(780, Math.min(999, s + (Math.floor(Math.random() * 7) - 3))));
+    }, 900);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <View style={[liveHudStyles.row, { top }]} pointerEvents="none">
+      <View style={liveHudStyles.chip}>
+        <View style={liveHudStyles.dot} />
+        <Text style={liveHudStyles.num}>{checks.toLocaleString()}</Text>
+        <Text style={liveHudStyles.label}>CHECKS TODAY</Text>
+      </View>
+      <View style={liveHudStyles.chip}>
+        <View style={[liveHudStyles.dot, { backgroundColor: '#16A34A' }]} />
+        <Text style={liveHudStyles.num}>{scouts}</Text>
+        <Text style={liveHudStyles.label}>SCOUTS ONLINE</Text>
+      </View>
+    </View>
+  );
+}
+const liveHudStyles = StyleSheet.create({
+  row: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 8 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.5)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 11 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#DA251D' },
+  num: { color: '#fff', fontSize: 13, fontFamily: 'JetBrainsMono_700Bold', letterSpacing: 0.4 },
+  label: { color: 'rgba(255,255,255,0.55)', fontSize: 8.5, letterSpacing: 1.1, fontWeight: '700' },
+});
+
+// Rough continental-US outline — we tint our home market in a faint brand red so
+// America glows warmer than the rest of the world (the "this is where we are" cue).
+const US_HIGHLIGHT_GEOJSON = {
+  type: 'FeatureCollection' as const,
+  features: [{
+    type: 'Feature' as const,
+    properties: {},
+    geometry: {
+      type: 'Polygon' as const,
+      coordinates: [[
+        [-124.5, 48.4], [-124, 40.5], [-120, 34.5], [-117, 32.6], [-111, 31.3], [-106, 31.8],
+        [-103, 29], [-99, 27], [-97, 26], [-93.5, 29.7], [-89, 29], [-84.5, 30], [-81, 25.2],
+        [-80.2, 26.5], [-80.5, 32], [-75.5, 35], [-73.9, 40.7], [-70, 43], [-67, 45], [-71, 45],
+        [-77, 44], [-83, 45.5], [-88, 47.5], [-95, 49], [-104, 49], [-117, 49], [-123, 48.5], [-124.5, 48.4],
+      ]],
+    },
+  }],
 };
 
 // Decorative bright stars scattered in the black space around the globe — the
@@ -1665,6 +1849,11 @@ export default function HomeScreen() {
   const demo = DEMO_BY_MARKET[market.id] ?? null;
   const conesShape = conesToGeoJSON(demo?.scouts ?? []);
   const cameraRef = useRef<Mapbox.Camera>(null);
+  // Auto-rotation state: spinCenter tracks the globe's current [lon,lat]; while the
+  // user is actively dragging (interactingRef) the spin pauses so manual spin works.
+  const spinCenter = useRef<[number, number] | null>(null);
+  const interactingRef = useRef(false);
+  const interactTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Responsive globe: it sits centered in the clear band ABOVE the bottom sheet.
   // We MEASURE the sheet's real height (it grows with recent/saved rows) and the
@@ -1699,6 +1888,10 @@ export default function HomeScreen() {
 
   // ── Search overlay state ──────────────────────────────────────────────────
   const [searchOpen, setSearchOpen] = useState(false);
+  // Live city chips visible on the front-facing hemisphere of the teaser globe.
+  // Opens on the NY/Miami launch view — show the Atlantic-facing chips right away.
+  const [visibleChips, setVisibleChips] = useState<string[]>(['mia', 'nyc', 'lax', 'las', 'lon', 'par']);
+  const visibleChipsRef = useRef<string[]>(['mia', 'nyc', 'lax', 'las', 'lon', 'par']);
 
   // When marketId changes → re-orient the globe teaser to that market (stay on
   // the full globe at the same centered position; never dive into a city here).
@@ -1748,9 +1941,24 @@ export default function HomeScreen() {
     const zoom = e?.properties?.zoom;
     if (Array.isArray(center) && center.length === 2) {
       setCurrentCenter([center[0], center[1]]);
+      // Keep the auto-spin origin synced to wherever the map is now, so a manual
+      // drag/spin is never fought and the rotation resumes from the new position.
+      spinCenter.current = [center[0], center[1]];
+      // Show only the city chips on the visible front hemisphere.
+      const vis = CHIP_CITIES.filter((ct) => angularDistanceDeg(ct.coord, [center[0], center[1]]) < 62).map((ct) => ct.id);
+      if (vis.join(',') !== visibleChipsRef.current.join(',')) {
+        visibleChipsRef.current = vis;
+        setVisibleChips(vis);
+      }
     }
     if (typeof zoom === 'number') {
       setCurrentZoom(zoom);
+    }
+    // Pause the auto-rotation while the user is actively gesturing (drag to spin).
+    if (e?.gestures?.isGestureActive) {
+      interactingRef.current = true;
+      if (interactTimer.current) clearTimeout(interactTimer.current);
+      interactTimer.current = setTimeout(() => { interactingRef.current = false; }, 1200);
     }
   };
 
@@ -1761,15 +1969,10 @@ export default function HomeScreen() {
   // Skips when arriving via an explicit pin/search so we don't override it.
   useEffect(() => {
     if (params.pinLat || params.marketId) return;
-    const coords = getUserCoords();
-    if (!coords) return;
-    setCurrentCenter(coords);
-    // Home rests on the full globe (the teaser), but rotate it so the user's
-    // own region faces front — they open the map already looking at their part
-    // of the world, so a local search barely moves and only far places spin.
-    // We stay zoomed out (still the round globe), just re-orient the ball.
+    // Always open the globe oriented on the NY/Miami launch market (the hero shot).
+    setCurrentCenter(LAUNCH_CENTER);
     cameraRef.current?.setCamera({
-      centerCoordinate: coords,
+      centerCoordinate: LAUNCH_CENTER,
       zoomLevel: globeZoom,
       pitch: 0,
       padding: globePad,
@@ -1795,9 +1998,8 @@ export default function HomeScreen() {
       return;
     }
     if (params.pinLat || params.marketId) return;
-    const c = getUserCoords() ?? market.center;
     cameraRef.current?.setCamera({
-      centerCoordinate: c as [number, number],
+      centerCoordinate: LAUNCH_CENTER,
       zoomLevel: globeZoom,
       pitch: 0,
       padding: globePad,
@@ -1806,6 +2008,33 @@ export default function HomeScreen() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetH, winH]);
+
+  // Slow, cinematic auto-rotation of the teaser globe — the "wow" moment. Gently
+  // spins east while resting on the full globe; stops the instant a location is
+  // chosen (droppedPin) so the dive-in and tier sheet are never disturbed.
+  useEffect(() => {
+    if (droppedPin || params.pinLat || params.marketId) return;
+    if (spinCenter.current === null) {
+      spinCenter.current = [LAUNCH_CENTER[0], LAUNCH_CENTER[1]];
+    }
+    const id = setInterval(() => {
+      // Paused while the user is dragging the globe (manual spin wins).
+      if (interactingRef.current || spinCenter.current === null) return;
+      let lon = spinCenter.current[0] + 0.26; // another notch faster (~4°/sec)
+      if (lon > 180) lon -= 360;
+      spinCenter.current = [lon, spinCenter.current[1]];
+      cameraRef.current?.setCamera({
+        centerCoordinate: spinCenter.current,
+        zoomLevel: globeZoom,
+        pitch: 0,
+        padding: globePad,
+        animationDuration: 100,
+        animationMode: 'linear',
+      });
+    }, 100);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [droppedPin, params.pinLat, params.marketId, sheetH, winH]);
 
   // If no coords are resolved yet when home mounts, request location now so
   // the pill shows the user's real city instead of "Set your location".
@@ -1824,6 +2053,10 @@ export default function HomeScreen() {
     const [lon, lat] = appCoord;
     setDroppedPin([lon, lat]);
     setPinName(name);
+    // Haptic "whoosh" ramp as the globe dives in (felt on a real device).
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {}), 1600);
+    setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {}), 3600);
     // Step 1 — spin the globe so the target rotates to the middle.
     cameraRef.current?.setCamera({
       centerCoordinate: [lon, lat],
@@ -1923,10 +2156,10 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      {/* Edge-to-edge map — dark globe canvas (Snap Map style: red overlays glow) */}
+      {/* Edge-to-edge map — REAL satellite Earth globe (photo-real land + ocean) */}
       <Mapbox.MapView
         style={StyleSheet.absoluteFillObject}
-        styleURL="mapbox://styles/mapbox/dark-v11"
+        styleURL="mapbox://styles/mapbox/satellite-streets-v12"
         projection="globe"
         compassEnabled={false}
         scaleBarEnabled={false}
@@ -1939,15 +2172,15 @@ export default function HomeScreen() {
       >
         <Mapbox.Camera
           ref={cameraRef}
+          // Cap at the sharpest satellite level so a deep zoom never blurs.
+          maxZoomLevel={18.5}
           defaultSettings={{
-            // Start on the right spot so a freshly-loaded map opens correctly —
-            // a selected venue (pin) wins, then the user's live coords, then the market.
+            // Start on the right spot: a selected venue (pin) wins, otherwise the
+            // globe always opens on the NY/Miami launch market (the hero shot).
             centerCoordinate:
               params.pinLat && params.pinLon
                 ? [parseFloat(params.pinLon), parseFloat(params.pinLat)]
-                : usingRealLocation && userCoords
-                ? userCoords
-                : market.center,
+                : LAUNCH_CENTER,
             // Cold-load rests on the FULL globe (the teaser — a small round ball
             // in space); a selected pin skips straight to the place. The user
             // dives into their area by searching or tapping.
@@ -1963,33 +2196,41 @@ export default function HomeScreen() {
         {/* Space atmosphere — the glowing halo around the globe (the Snap Map look) */}
         <Mapbox.Atmosphere
           style={{
-            color: 'rgb(58, 118, 235)',
-            highColor: 'rgb(200, 224, 255)',
-            horizonBlend: 0.032,
+            color: 'rgb(80, 150, 255)',
+            highColor: 'rgb(170, 210, 255)',
+            horizonBlend: 0.10,
             spaceColor: 'rgb(0, 0, 0)',
             starIntensity: 1.0,
           }}
         />
 
-        {/* Illuminated activity hotspots — the glowing globe surface (Snap Map look):
-            blue → cyan → neon green → yellow → red, like the reference. */}
+        {/* Illuminated activity hotspots on the real Earth (glowing nodes). */}
         <Mapbox.ShapeSource id="globe-hotspots" shape={HOTSPOTS_GEOJSON}>
-          <Mapbox.HeatmapLayer
-            id="globe-hotspots-heat"
+          {/* No heatmap — clean red/orange glowing nodes only (matches the demo). */}
+          {/* Red-biased glow halo around each node. */}
+          <Mapbox.CircleLayer
+            id="globe-hotspots-glow"
             style={{
-              heatmapWeight: ['interpolate', ['linear'], ['get', 'intensity'], 0, 0.45, 1, 1.2],
-              heatmapIntensity: 2.2,
-              heatmapRadius: 44,
-              heatmapOpacity: 0.9,
-              heatmapColor: [
-                'interpolate', ['linear'], ['heatmap-density'],
-                0, 'rgba(0,0,0,0)',
-                0.08, 'rgba(30,90,255,0.5)',
-                0.28, 'rgba(0,210,255,0.72)',
-                0.48, 'rgba(50,255,120,0.86)',
-                0.68, 'rgba(255,225,0,0.95)',
-                1, 'rgba(255,45,30,1)',
-              ],
+              circleColor: ['interpolate', ['linear'], ['get', 'intensity'],
+                0.5, 'rgba(255,180,60,0.55)', 0.85, 'rgba(255,110,40,0.7)', 1, 'rgba(218,37,29,0.85)'],
+              circleRadius: ['interpolate', ['linear'], ['zoom'],
+                1, ['interpolate', ['linear'], ['get', 'intensity'], 0.5, 6, 1.35, 13],
+                4, ['interpolate', ['linear'], ['get', 'intensity'], 0.5, 12, 1.35, 24]],
+              circleBlur: 0.6,
+              circleOpacity: 0.6,
+            }}
+          />
+          {/* Sharp, warm core — the crisp, authentic hotspot point. */}
+          <Mapbox.CircleLayer
+            id="globe-hotspots-core"
+            style={{
+              circleColor: ['interpolate', ['linear'], ['get', 'intensity'],
+                0.5, 'rgb(255,225,180)', 0.85, 'rgb(255,180,120)', 1, 'rgb(255,120,90)'],
+              circleRadius: ['interpolate', ['linear'], ['zoom'],
+                1, ['interpolate', ['linear'], ['get', 'intensity'], 0.5, 1.4, 1.35, 3],
+                4, ['interpolate', ['linear'], ['get', 'intensity'], 0.5, 3, 1.35, 6]],
+              circleBlur: 0.05,
+              circleOpacity: 1,
             }}
           />
         </Mapbox.ShapeSource>
@@ -2001,26 +2242,54 @@ export default function HomeScreen() {
           <Mapbox.CircleLayer
             id="city-lights-glow"
             style={{
-              circleColor: 'rgb(255, 214, 130)',
-              circleRadius: ['interpolate', ['linear'], ['zoom'], 1, 5, 4, 12],
-              circleOpacity: 0.28,
-              circleBlur: 1,
+              circleColor: 'rgb(255, 205, 110)',
+              circleRadius: ['interpolate', ['linear'], ['zoom'], 1, 4.5, 4, 11],
+              circleOpacity: 0.3,
+              circleBlur: 0.9,
             }}
           />
-          {/* Bright warm core — the actual "city light" point. */}
+          {/* Bright warm core — a crisp, sharp point (minimal blur) so the lights
+              read clean and defined, not soft/blurry. */}
           <Mapbox.CircleLayer
             id="city-lights-core"
             style={{
-              circleColor: 'rgb(255, 236, 179)',
-              circleRadius: ['interpolate', ['linear'], ['zoom'], 1, 1.7, 4, 3],
-              circleOpacity: 0.95,
-              circleBlur: 0.4,
+              circleColor: 'rgb(255, 244, 205)',
+              circleRadius: ['interpolate', ['linear'], ['zoom'], 1, 1.3, 4, 2.4],
+              circleOpacity: 1,
+              circleBlur: 0.08,
             }}
           />
         </Mapbox.ShapeSource>
 
-        {/* Brighten the stock place labels to white (like the Snap Map reference)
-            so cities/countries read crisply instead of dim gray. */}
+        {/* Glowing "global live network" arcs across the globe — the eyes-everywhere,
+            all-connected story, and a futuristic HUD feel. Cyan complements the rim. */}
+        <Mapbox.ShapeSource id="net-arcs-src" shape={ARCS_GEOJSON}>
+          <Mapbox.LineLayer
+            id="net-arcs-glow"
+            style={{
+              lineColor: 'rgba(90, 195, 255, 0.26)',
+              lineWidth: ['interpolate', ['linear'], ['zoom'], 0.5, 2.6, 3, 4.5],
+              lineBlur: 2.2,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+          />
+          <Mapbox.LineLayer
+            id="net-arcs-core"
+            style={{
+              lineColor: 'rgba(190, 232, 255, 0.6)',
+              lineWidth: ['interpolate', ['linear'], ['zoom'], 0.5, 0.6, 3, 1.3],
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+          />
+        </Mapbox.ShapeSource>
+
+        {/* Live pings + traveling arc dots — isolated so home doesn't re-render. */}
+        <LiveGlobeFx />
+
+        {/* Brighten the stock place labels to white so cities/countries read crisply
+            over the satellite imagery. (No land/water recolour — the real photo is the land.) */}
         <Mapbox.SymbolLayer id="continent-label" existing style={{ textColor: 'rgba(255,255,255,0.82)', textHaloColor: 'rgba(0,0,0,0.5)', textHaloWidth: 1 }} />
         <Mapbox.SymbolLayer id="country-label" existing style={{ textColor: '#ffffff', textHaloColor: 'rgba(0,0,0,0.5)', textHaloWidth: 1 }} />
         <Mapbox.SymbolLayer id="state-label" existing style={{ textColor: 'rgba(255,255,255,0.88)', textHaloColor: 'rgba(0,0,0,0.5)', textHaloWidth: 1 }} />
@@ -2032,24 +2301,20 @@ export default function HomeScreen() {
         <Mapbox.SymbolLayer id="road-label" existing style={{ textColor: '#ffffff', textHaloColor: 'rgba(0,0,0,0.85)', textHaloWidth: 1.5 }} />
         <Mapbox.SymbolLayer id="poi-label" existing style={{ textColor: 'rgba(255,255,255,0.72)', textHaloColor: 'rgba(0,0,0,0.6)', textHaloWidth: 1 }} />
 
-        {/* 3D buildings — only render once zoomed into a location (dive-in), so the
-            spot has real depth like the waiting screen. Hidden on the globe teaser. */}
-        <Mapbox.FillExtrusionLayer
-          id="buildings-3d"
-          sourceID="composite"
-          sourceLayerID="building"
-          minZoomLevel={14}
-          style={{
-            fillExtrusionColor: '#2b2f3d',
-            fillExtrusionHeight: ['get', 'height'],
-            fillExtrusionBase: ['get', 'min_height'],
-            fillExtrusionOpacity: 0.85,
-          }}
-        />
+        {/* Hide the base satellite style's own building footprints/extrusions — those
+            grey shapes were the "silhouettes" over the real rooftops on zoom-in. */}
+        <Mapbox.FillLayer id="building" existing style={{ fillOpacity: 0 }} />
+        <Mapbox.FillExtrusionLayer id="building-extrusion" existing style={{ visibility: 'none' }} />
+
+        {/* No 3D building overlay — flat boxes hide the real rooftops. We keep the
+            raw satellite photo (real rooftops) plus the real 3D terrain below. */}
+        <Mapbox.RasterDemSource id="terrain-dem" url="mapbox://mapbox.mapbox-terrain-dem-v1">
+          <Mapbox.Terrain style={{ exaggeration: 1.3 }} />
+        </Mapbox.RasterDemSource>
 
         {/* User location pin — real GPS, not the demo market centre */}
         {zoomedIn && usingRealLocation && userCoords && <UserPin coordinate={userCoords} />}
-        {demo && (
+        {demo && droppedPin && (
           <>
             {demo.venues.map((v) => (
               <VenuePin key={v.name} name={v.name} coordinate={v.coord} />
@@ -2057,7 +2322,7 @@ export default function HomeScreen() {
           </>
         )}
 
-        {demo && (
+        {demo && droppedPin && (
           <>
             {/* Scout vision cones — HUD field-of-view */}
             <Mapbox.ShapeSource id="cones-src" shape={conesShape}>
@@ -2192,10 +2457,30 @@ export default function HomeScreen() {
             </View>
           </Mapbox.MarkerView>
         )}
+
+        {/* Iconic city chips on the teaser globe — tap to dive straight in. Hidden
+            once a location is selected. */}
+        {!droppedPin && !zoomedIn && CHIP_CITIES.filter((c) => visibleChips.includes(c.id)).map((c) => (
+          <Mapbox.MarkerView key={c.id} id={`chip-${c.id}`} coordinate={c.coord} anchor={{ x: 0.5, y: 1.15 }} allowOverlap>
+            <View style={[chipStyles.wrap, (c.dx || c.dy) ? { transform: [{ translateX: c.dx || 0 }, { translateY: c.dy || 0 }] } : null]}>
+              <TouchableOpacity style={chipStyles.chip} activeOpacity={0.85} onPress={() => handleOverlaySelect(c.coord, c.label)}>
+                <View style={chipStyles.dot} />
+                <Text style={chipStyles.text}>{c.label}</Text>
+                <Ionicons name="chevron-forward" size={11} color="rgba(255,255,255,0.65)" />
+              </TouchableOpacity>
+              <View style={chipStyles.stem} />
+              <View style={chipStyles.pin} />
+            </View>
+          </Mapbox.MarkerView>
+        ))}
       </Mapbox.MapView>
 
       {/* Bright decorative stars in the black space around the globe */}
       <StarField />
+
+      {/* Live stats ticker on the teaser globe (checks + scouts) — hidden once you dive in.
+          Sits low over the globe, clear of the top pills/banner and above the sheet. */}
+      {!droppedPin && !zoomedIn && <LiveStatsHud top={Math.round(winH * 0.60)} />}
 
       {/* Top gradient overlay — dark fade so the white pills pop on the dark globe */}
       <LinearGradient
