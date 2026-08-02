@@ -2,7 +2,7 @@
 
 Premium Bali lifestyle guide and booking app. Curated discovery of clubs, restaurants, beach clubs, and gyms with instant booking. Tells tourists which night to go to which venue, with precision on times and genres. Think Monocle meets Time Out meets a local insider's WhatsApp group.
 
-**Status**: LIVE on App Store + Google Play. Current build 1.3.2+27 (TestFlight). Backend, dashboard, Flutter app all deployed to Hostinger.
+**Status**: LIVE on App Store + Google Play. Current TestFlight build 1.3.3+31 (push-notification fixes, builds 28–31 — see pubspec log). Live App Store version 1.3.2 has broken push + an endless "Update App?" nag (stale 1.3.1 binary inside); submit 1.3.3 for review once push is verified end-to-end. Last blocker: APNs key is sandbox-only — Troy to create unrestricted key + re-upload to Firebase console. Backend, dashboard, Flutter app all deployed to Hostinger.
 
 ---
 
@@ -67,7 +67,7 @@ Premium Bali lifestyle guide and booking app. Curated discovery of clubs, restau
 | API       | `https://api.pinkpineapple.app/api/v1` |
 | WebSocket | `wss://api.pinkpineapple.app` |
 | Dashboard | `https://dashboard.pinkpineapple.app` |
-| Database  | MongoDB via Prisma — note: a local `mongod` runs on the VPS itself (127.0.0.1:27017); verify which DB is live (`DATABASE_URL` in server `.env`) before any DB work |
+| Database  | MongoDB **Atlas** via Prisma (cluster0.uexjs2h, db `troyreed1725`) — VERIFIED live 2026-07-15 (79 venues, 73 users). A local `mongod` also runs on the VPS (127.0.0.1:27017) but is NOT the production DB — don't confuse them |
 | Files     | DigitalOcean Spaces + Cloudinary |
 | SSH       | `ssh -i ~/.ssh/pink_gitea root@145.79.6.151` |
 | Server paths | Backend `/var/www/troyreed1725-backend/` · Dashboard `/var/www/troyreed1725-dashboard/` |

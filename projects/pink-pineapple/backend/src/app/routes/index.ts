@@ -22,6 +22,10 @@ import { GooglePlacesRoutes } from "../modules/GooglePlaces/GooglePlaces.routes"
 import { HealthRoutes } from "../modules/Health/Health.routes";
 import { VipBookingRoutes } from "../modules/VipBooking/VipBooking.routes";
 import { NightPlanRoutes } from "../modules/NightPlan/NightPlan.routes";
+// 2026-08-02: this import was missing since the module shipped on June 1 —
+// the notification routes (broadcast/schedule/scheduled) existed but were
+// never mounted, so every dashboard send returned API NOT FOUND.
+import { notificationsRoute } from "../modules/Notification/Notification.routes";
 
 const router = express.Router();
 
@@ -36,6 +40,10 @@ const moduleRoutes = [
   {
     path: "/users",
     route: userRoutes,
+  },
+  {
+    path: "/notifications",
+    route: notificationsRoute,
   },
   {
     path: "/auth",

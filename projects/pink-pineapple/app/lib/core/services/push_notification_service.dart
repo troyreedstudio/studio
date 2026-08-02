@@ -94,16 +94,22 @@ class PushNotificationService {
         debugPrint('[push] notification opened: ${message.notification?.title}');
       });
 
-      // Cold-start: the user might have tapped a notification while
-      // the app was fully killed. Read the launch message and log.
-      final initial = await _messaging.getInitialMessage();
-      if (initial != null) {
-        debugPrint('[push] cold-start notification: ${initial.notification?.title}');
-      }
-
       // Try registering the current token immediately. Handles the
       // returning-user-with-JWT case. Silently no-ops if not signed in.
+      // v1.3.3+31: MUST run before getInitialMessage() — see below.
       await registerCurrentToken();
+
+      // Cold-start: the user might have tapped a notification while
+      // the app was fully killed. v1.3.3+31: getInitialMessage() can
+      // hang forever on iOS with the implicit-engine AppDelegate
+      // (device syslog showed init() prints stop exactly here in both
+      // build-29 and build-30 captures, blocking token registration).
+      // Never await it in the init chain.
+      unawaited(_messaging.getInitialMessage().then((initial) {
+        if (initial != null) {
+          debugPrint('[push] cold-start notification: ${initial.notification?.title}');
+        }
+      }));
     } catch (e) {
       debugPrint('[push] init failed: $e');
     }
@@ -115,10 +121,41 @@ class PushNotificationService {
   /// init() will retry on next app start.
   static Future<void> registerCurrentToken() async {
     try {
+      debugPrint('[push] registerCurrentToken starting');
       final jwt = await _localService.getValue<String>(PreferenceKey.token);
-      if (jwt == null || jwt.isEmpty) return;
+      if (jwt == null || jwt.isEmpty) {
+        debugPrint('[push] no JWT yet — skipping registration');
+        return;
+      }
 
-      final token = await _messaging.getToken();
+      // v1.3.3+29: on iOS the APNs token can arrive several seconds
+      // after launch. Calling getToken() before it exists throws
+      // apns-token-not-set, and a single failed call means no token is
+      // ever generated — so onTokenRefresh never fires either and the
+      // device never registers. Wait for APNs (up to 30s), then fetch
+      // the FCM token with retries. Callers are all fire-and-forget,
+      // so the wait never blocks UI.
+      if (Platform.isIOS) {
+        String? apns;
+        for (var i = 0; i < 30 && apns == null; i++) {
+          apns = await _messaging.getAPNSToken();
+          if (apns == null) {
+            await Future.delayed(const Duration(seconds: 1));
+          }
+        }
+        debugPrint('[push] apns token after wait: ${apns != null}');
+        if (apns == null) return;
+      }
+
+      String? token;
+      for (var i = 0; i < 3 && (token == null || token.isEmpty); i++) {
+        try {
+          token = await _messaging.getToken();
+        } catch (e) {
+          debugPrint('[push] getToken attempt ${i + 1} failed: $e');
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      }
       if (token == null || token.isEmpty) return;
       await _postToBackend(token);
     } catch (e) {
