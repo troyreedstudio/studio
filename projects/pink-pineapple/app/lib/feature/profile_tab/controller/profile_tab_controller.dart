@@ -7,6 +7,7 @@ import 'package:pineapple/feature/auth/ui/1.login_ui.dart';
 
 import '../../favorites/ui/favorite_event_screen.dart';
 import '../../favorites/ui/favorite_venues_screen.dart';
+import '../../notifications/ui/notifications_screen.dart';
 import '../subflow/profile_edit/ui/profile_edit_ui.dart';
 import '../ui/privacy_policy_page.dart';
 import '../ui/terms_conditions_page.dart';
@@ -24,6 +25,13 @@ class ProfileTabController extends GetxController {
   // redundant with the header card tap (which now goes straight to
   // ProfileEditScreen). One profile area, one tap.
   final List<ProfileMenuItem> menuItems = [
+    // v1.3.3+32: inbox for push announcements. Empty iconPath → the tile
+    // renders a built-in bell icon (no bell asset exists).
+    ProfileMenuItem(
+      title: 'Notifications',
+      iconPath: '',
+      onTap: () => _onNotificationsTap(),
+    ),
     ProfileMenuItem(
       title: 'My Wishlist',
       iconPath: 'assets/icons/fav.png',
@@ -63,6 +71,10 @@ class ProfileTabController extends GetxController {
   // Menu item tap handlers
   static void _onEditProfileTap() {
     Get.to(() => ProfileEditScreen());
+  }
+
+  static void _onNotificationsTap() {
+    Get.to(() => const NotificationsScreen());
   }
 
   static void _onFavTap() {

@@ -465,14 +465,19 @@ class ProfileTabPage extends StatelessWidget {
                       color: AppColors.accentRoseGold.withOpacity(0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: Image.asset(
-                      item.iconPath,
-                      width: 18.w,
-                      height: 18.h,
-                      color: AppColors.accentRoseGold,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Icon(Icons.settings, size: 18.w, color: AppColors.accentRoseGold),
-                    ),
+                    child: item.iconPath.isEmpty
+                        // v1.3.3+32: items without a PNG asset (Notifications)
+                        // render a built-in icon instead.
+                        ? Icon(Icons.notifications_none_rounded,
+                            size: 18.w, color: AppColors.accentRoseGold)
+                        : Image.asset(
+                            item.iconPath,
+                            width: 18.w,
+                            height: 18.h,
+                            color: AppColors.accentRoseGold,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Icon(Icons.settings, size: 18.w, color: AppColors.accentRoseGold),
+                          ),
                   ),
 
                   SizedBox(width: 14.w),

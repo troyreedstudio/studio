@@ -5,10 +5,12 @@ import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:pineapple/core/local/local_data.dart';
 import 'package:pineapple/core/network_caller/endpoints.dart';
 import 'package:pineapple/core/network_caller/network_config.dart';
+import 'package:pineapple/feature/notifications/ui/notifications_screen.dart';
 
 /// FCM lifecycle (v1.3.2+27).
 ///
@@ -36,6 +38,22 @@ class PushNotificationService {
   static Future<void> init() async {
     if (_initialised) return;
     _initialised = true;
+
+    // v1.3.3+34: the direct tap wire from AppDelegate. iOS notification
+    // taps arrive here via our own MethodChannel because the plugin's
+    // onMessageOpenedApp never fires under the implicit-engine template.
+    // Registered before anything async so a cold-start delivery (sent
+    // ~2.5s after engine init by the native side) always finds us.
+    const MethodChannel('pp/push_taps').setMethodCallHandler((call) async {
+      if (call.method == 'tapped') {
+        debugPrint('[push] tap wire fired — opening inbox');
+        // Guard against double-delivery (native retries): don't stack
+        // a second inbox on top of an open one.
+        if (!Get.currentRoute.contains('NotificationsScreen')) {
+          Get.to(() => const NotificationsScreen());
+        }
+      }
+    });
 
     try {
       // Ask for permission. iOS needs this before any token works; on
@@ -82,6 +100,8 @@ class PushNotificationService {
             borderRadius: 16,
             snackPosition: SnackPosition.TOP,
             isDismissible: true,
+            // v1.3.3+32: tapping the in-app banner opens the inbox
+            onTap: (_) => Get.to(() => const NotificationsScreen()),
           ),
         );
       });
@@ -92,6 +112,9 @@ class PushNotificationService {
       // the team decides the URL scheme.
       FirebaseMessaging.onMessageOpenedApp.listen((message) {
         debugPrint('[push] notification opened: ${message.notification?.title}');
+        // v1.3.3+32: land the user in the inbox so they can read the
+        // full message (and everything they missed).
+        Get.to(() => const NotificationsScreen());
       });
 
       // Try registering the current token immediately. Handles the
@@ -108,6 +131,11 @@ class PushNotificationService {
       unawaited(_messaging.getInitialMessage().then((initial) {
         if (initial != null) {
           debugPrint('[push] cold-start notification: ${initial.notification?.title}');
+          // v1.3.3+32: app was launched from a notification tap — open
+          // the inbox once the widget tree has had time to mount.
+          Future.delayed(const Duration(seconds: 2), () {
+            Get.to(() => const NotificationsScreen());
+          });
         }
       }));
     } catch (e) {

@@ -49,6 +49,11 @@ class Urls {
   // row for the broadcast worker to fan out from.
   static const String fcmToken = '$baseUrl/users/fcm-token'; // POST
 
+  /// notifications (v1.3.3+32 inbox)
+  // GET = list for current user; GET '$notifications/<id>' fetches one
+  // and marks it read server-side.
+  static const String notifications = '$baseUrl/notifications';
+
   /// bookings
   static const String bookingList = '$baseUrl/booking/my-booking?status=';
   static const String createBooking = '$baseUrl/booking'; // POST
