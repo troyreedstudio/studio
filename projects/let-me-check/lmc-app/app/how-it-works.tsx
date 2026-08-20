@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
@@ -41,9 +41,9 @@ export default function HowItWorksScreen() {
   const router = useRouter();
 
   // Placeholder combined trailer — autoplays, loops, muted (Netflix-hero style).
-  const player = useVideoPlayer(require('../assets/concept-demo.mp4'), (p) => {
-    p.loop = true;
-    p.muted = true;
+  const player = useVideoPlayer(require('../assets/intro-video.mp4'), (p) => {
+    p.loop = false; // play once, no annoying repeat
+    p.muted = false; // sound ON for the investor demo
   });
 
   // Start true: the clip muted-autoplays, so assume playing — this avoids the
@@ -66,6 +66,15 @@ export default function HowItWorksScreen() {
     };
   }, [player]);
 
+  // Stop the promo (and its audio) the instant we leave this screen; replay from
+  // the top when we come back. Fixes the video/sound continuing on the menu.
+  useFocusEffect(
+    useCallback(() => {
+      try { player.currentTime = 0; player.play(); } catch { /* noop */ }
+      return () => { try { player.pause(); } catch { /* noop */ } };
+    }, [player])
+  );
+
   return (
     <View style={styles.bg}>
       <StatusBar barStyle="light-content" />
@@ -80,7 +89,7 @@ export default function HowItWorksScreen() {
         <VideoView
           style={StyleSheet.absoluteFillObject}
           player={player}
-          contentFit="cover"
+          contentFit="contain"
           nativeControls={false}
         />
 
@@ -111,7 +120,7 @@ export default function HowItWorksScreen() {
 
         <TouchableOpacity
           style={styles.primaryBtn}
-          onPress={() => router.push('/onboarding/role')}
+          onPress={() => router.replace('/demo-menu')}
           activeOpacity={0.85}
         >
           <Text style={styles.primaryBtnText}>Choose your profile</Text>
@@ -152,10 +161,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Combined-trailer frame — fills the top, branding overlaid at its base
+  // Combined-trailer frame — video band centered on a WHITE surround so the
+  // letterbox edges around the clip read white (balanced), not red bleed-through.
   videoFrame: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
