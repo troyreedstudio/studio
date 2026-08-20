@@ -101,6 +101,7 @@ export default function BootSplash() {
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }).start(() => {
+        // Splash → promo video (how-it-works) → its CTA flows into the demo menu.
         router.replace('/how-it-works');
       });
     }, 3800);

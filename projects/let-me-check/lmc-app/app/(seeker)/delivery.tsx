@@ -103,9 +103,17 @@ function ReportSheet({ checkId, onClose }: { checkId: string; onClose: () => voi
 }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
+// Bundled sample clip so the investor-demo delivery screen plays a real video.
+// Uses an H.264 mp4 (the .mov is HEVC and won't decode on the iOS Simulator).
+const DEMO_CLIP = require('../../assets/concept-demo.mp4');
+// The iOS Simulator won't composite live video (expo-video/AVPlayer), so the demo
+// shows a real venue frame with a subtle Ken-Burns drift — reads as the delivered clip.
+const DEMO_POSTER = require('../../assets/demo-clip.jpg');
+
 export default function DeliveryScreen() {
   const router = useRouter();
   const { checkId, venue = 'Komodo', city = 'Miami' } = useLocalSearchParams<{ checkId: string; venue: string; city: string }>();
+  const isDemo = checkId === 'demo-check';
   const { toggle, isSaved } = useSavedPlaces();
   const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -118,6 +126,15 @@ export default function DeliveryScreen() {
 
   // Reveal fade — the video + chrome fade in on arrival (the "reveal" moment).
   const reveal = useRef(new Animated.Value(0)).current;
+  // Demo-only slow zoom on the venue frame so it feels alive.
+  const kenBurns = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!isDemo) return;
+    Animated.loop(Animated.sequence([
+      Animated.timing(kenBurns, { toValue: 1.08, duration: 8000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(kenBurns, { toValue: 1.0, duration: 8000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ])).start();
+  }, [isDemo, kenBurns]);
 
   useEffect(() => {
     if (!checkId) return;
@@ -146,13 +163,24 @@ export default function DeliveryScreen() {
   }, [checkId, clip?.mux_playback_id]);
 
   // Autoplay + loop — the video reveals and plays on arrival (no tap-to-play).
-  const player = useVideoPlayer(videoSrc, (p) => { p.loop = true; p.muted = false; p.play(); });
+  const player = useVideoPlayer(isDemo ? DEMO_CLIP : videoSrc, (p) => { p.loop = true; p.muted = true; p.play(); });
+
+  // Demo: play the sample clip once it's ready to render (calling play() only in
+  // setup fires too early to stick on the simulator — same pattern as how-it-works).
+  useEffect(() => {
+    if (!isDemo || !player) return;
+    player.play();
+    const sub = player.addListener('statusChange', ({ status }) => {
+      if (status === 'readyToPlay') player.play();
+    });
+    return () => sub.remove();
+  }, [isDemo, player]);
 
   // Fade the whole screen in once the source resolves — the cinematic reveal.
   useEffect(() => {
-    if (!videoSrc) return;
+    if (!videoSrc && !isDemo) return;
     Animated.timing(reveal, { toValue: 1, duration: 550, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-  }, [videoSrc, reveal]);
+  }, [videoSrc, isDemo, reveal]);
 
   const togglePlay = () => {
     try {
@@ -221,12 +249,14 @@ export default function DeliveryScreen() {
 
       {/* Video card — the only dark surface: a contained rounded player. */}
       <View style={styles.videoCard}>
-        {videoSrc ? (
+        {(isDemo || videoSrc) ? (
           <Animated.View style={[StyleSheet.absoluteFill, { opacity: reveal }]}>
-            <TouchableOpacity activeOpacity={1} style={StyleSheet.absoluteFill} onPress={togglePlay}>
-              <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />
-            </TouchableOpacity>
-            {paused && (
+            {(
+              <TouchableOpacity activeOpacity={1} style={StyleSheet.absoluteFill} onPress={togglePlay}>
+                <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />
+              </TouchableOpacity>
+            )}
+            {paused && !isDemo && (
               <View style={styles.pauseOverlay} pointerEvents="none">
                 <View style={styles.pausePill}><Ionicons name="play" size={28} color="#fff" style={{ marginLeft: 3 }} /></View>
               </View>
@@ -234,7 +264,7 @@ export default function DeliveryScreen() {
             {/* Trust line floats at the bottom of the video (GPS · faces · filmed-ago) */}
             <LinearGradient colors={['transparent', 'rgba(0,0,0,0.6)']} style={styles.videoBottomScrim} pointerEvents="none" />
             <View style={styles.trustFloat} pointerEvents="none">
-              {clip?.gps_verified === true && (
+              {(isDemo || clip?.gps_verified === true) && (
                 <View style={styles.verifiedChip}>
                   <Ionicons name="shield-checkmark" size={11} color={colors.verified} />
                   <Text style={styles.verifiedChipText}>GPS VERIFIED · FACES BLURRED</Text>

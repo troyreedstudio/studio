@@ -43,6 +43,7 @@ export default function FindingScreen() {
   }>();
   const checkId = params.checkId;
   const venue = params.venue || 'this venue';
+  const isDemo = checkId === 'demo-check';
 
   const [elapsed, setElapsed] = useState(0);
   const [statusIdx, setStatusIdx] = useState(0);
@@ -56,7 +57,7 @@ export default function FindingScreen() {
   // Watch the real check row live (DISP-04). Initial getCheck() then subscribe;
   // onError re-fetches so a transition missed while disconnected reconciles.
   useEffect(() => {
-    if (!checkId) return;
+    if (!checkId || isDemo) return; // demo: no live check / realtime subscription
     getCheck(checkId).then(setCheck).catch(() => {});
     const unsub = subscribeToCheck(
       checkId,
@@ -64,7 +65,7 @@ export default function FindingScreen() {
       () => getCheck(checkId).then(setCheck).catch(() => {}),
     );
     return unsub;
-  }, [checkId]);
+  }, [checkId, isDemo]);
 
   // Route off the REAL status — never a faked timer.
   useEffect(() => {

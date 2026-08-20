@@ -6,7 +6,8 @@ import { useEffect } from 'react';
 import { SessionProvider, useSession, hubRouteForRole } from './lib/session';
 import { MAPBOX_TOKEN, STRIPE_PUBLISHABLE_KEY } from './lib/config';
 import { StripeProvider } from '@stripe/stripe-react-native';
-import { View, LogBox } from 'react-native';
+import { View, LogBox, TouchableOpacity, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Hide the in-app dev warning overlay (keeps demo/marketing captures clean).
 // No effect on production behavior — LogBox only renders in dev.
@@ -119,12 +120,15 @@ export default function RootLayout() {
       <SessionProvider>
         <StatusBar style="dark" />
         <BootGate />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#FFFFFF' },
-          }}
-        />
+        <View style={{ flex: 1 }}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#FFFFFF' },
+            }}
+          />
+          <DemoMenuButton />
+        </View>
       </SessionProvider>
     </StripeProvider>
   );
@@ -167,5 +171,34 @@ function BootGate() {
   }, [loading, session, profile, segments, router]);
 
   return null;
+}
+
+// TEMP (investor demo): a floating button on every screen that returns to the
+// Demo Menu, so navigation never dead-ends. Remove with the rest of the demo
+// scaffolding before launch.
+function DemoMenuButton() {
+  const router = useRouter();
+  const segments = useSegments();
+  const here = segments.join('/');
+  // Hide on the splash and on the menu itself.
+  if (here === '' || here === 'index' || here.includes('demo-menu')) return null;
+  return (
+    <TouchableOpacity
+      onPress={() => router.navigate('/demo-menu')}
+      activeOpacity={0.85}
+      style={{
+        position: 'absolute', right: 14, bottom: 46,
+        backgroundColor: 'rgba(10,10,10,0.86)',
+        paddingHorizontal: 14, paddingVertical: 10, borderRadius: 22,
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+        shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
+        zIndex: 9999, elevation: 12,
+      }}
+    >
+      <Ionicons name="grid" size={13} color="#fff" />
+      <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', letterSpacing: 0.2 }}>Menu</Text>
+    </TouchableOpacity>
+  );
 }
 

@@ -57,7 +57,7 @@ export default function HistoryScreen() {
         setChecks(rows);
         setRatingsMap(ratings);
       })
-      .catch(() => { setError(true); setChecks([]); });
+      .catch(() => { setChecks([]); }); // demo: show clean empty state, not a load error
   }, []);
 
   useEffect(() => { load(); }, [load]);

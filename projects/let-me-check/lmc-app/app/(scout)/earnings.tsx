@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,15 +29,31 @@ const DAY_ABBR: Record<string, string> = {
   friday: 'FRI', saturday: 'SAT', sunday: 'SUN',
 };
 
+// Investor-demo: canned earnings so step 9 shows a real dashboard, not an error.
+const DEMO_EARNINGS = {
+  allTimeCents: 128400,
+  availableCents: 4200,
+  weeklyByDay: [
+    { day: 'monday', cents: 1600 }, { day: 'tuesday', cents: 2400 },
+    { day: 'wednesday', cents: 800 }, { day: 'thursday', cents: 3200 },
+    { day: 'friday', cents: 4800 }, { day: 'saturday', cents: 6400 },
+    { day: 'sunday', cents: 2000 },
+  ],
+  payouts: [],
+} as unknown as ScoutEarnings;
+
 export default function EarningsScreen() {
   const router = useRouter();
   const earnings = useScoutEarnings();
 
-  const [data, setData] = useState<ScoutEarnings | null>(null);
-  const [loading, setLoading] = useState(true);
+  const params = useLocalSearchParams<{ demo?: string }>();
+  const isDemo = params.demo === '1';
+  const [data, setData] = useState<ScoutEarnings | null>(isDemo ? DEMO_EARNINGS : null);
+  const [loading, setLoading] = useState(!isDemo);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isDemo) return; // demo: use canned earnings, skip the backend
     let cancelled = false;
     setLoading(true);
     setLoadError(null);

@@ -9,7 +9,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,11 +29,21 @@ const TIER_PAYOUT: Record<string, number> = { standard: 8, priority: 12 };
 const payoutForTier = (tier: string | null | undefined) =>
   TIER_PAYOUT[tier ?? 'standard'] ?? 8;
 
+// Investor-demo: a canned incoming job so step 5 opens online with a request.
+const DEMO_REQUEST = {
+  id: 'demo-check',
+  location_label: 'Komodo, Miami',
+  tier: 'priority',
+  status: 'open',
+} as unknown as CheckRow;
+
 export default function ScoutDashboard() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ demo?: string }>();
+  const isDemo = params.demo === '1';
   const earnings = useScoutEarnings();
-  const [online, setOnline] = useState(false);
-  const [openChecks, setOpenChecks] = useState<CheckRow[]>([]);
+  const [online, setOnline] = useState(isDemo);
+  const [openChecks, setOpenChecks] = useState<CheckRow[]>(isDemo ? [DEMO_REQUEST] : []);
   const [taken, setTaken] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
 
@@ -48,6 +58,7 @@ export default function ScoutDashboard() {
   // Stripe payouts are set up — otherwise they'd work jobs they can't be paid for.
   // Verified fresh at toggle time; blocked with a prompt to finish payout setup.
   const handleToggleOnline = useCallback(async (next: boolean) => {
+    if (isDemo) { setOnline(next); return; } // demo: no payout gate
     if (!next) { setOnline(false); return; }
     try {
       const status = await getConnectStatus();
@@ -74,6 +85,7 @@ export default function ScoutDashboard() {
   // Pull geo-filtered open checks. Uses listOpenChecksForScout (DISP-01) when a
   // coord is known; shows empty when location is unknown (not yet fixed).
   const refresh = useCallback(async () => {
+    if (isDemo) return; // keep the canned demo job; don't hit the backend
     try {
       if (lastCoord.current) {
         const checks = await listOpenChecksForScout(
@@ -96,6 +108,7 @@ export default function ScoutDashboard() {
   // every ~30 s (timeInterval) or after 20 m of movement (distanceInterval).
   // The geo-filtered refresh() runs on each tick so the job list stays current.
   useEffect(() => {
+    if (isDemo) return; // demo: no live GPS watch; the canned job is already shown
     let cancelled = false;
 
     const startWatch = async () => {
@@ -162,6 +175,13 @@ export default function ScoutDashboard() {
 
   const handleAccept = async () => {
     if (!request) return;
+    if (isDemo) {
+      router.push({
+        pathname: '/(scout)/filming',
+        params: { checkId: 'demo-check', venue: 'Komodo', city: 'Miami', tier: 'priority', payout: '10' },
+      });
+      return;
+    }
     setTaken(false);
     try {
       // Atomic claim (accept_check). A lost race throws -> show "taken" + refresh.
