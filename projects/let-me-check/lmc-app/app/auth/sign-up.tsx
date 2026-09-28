@@ -318,6 +318,10 @@ export default function SignUpScreen() {
                   </Text>
                 </TouchableOpacity>
 
+                <Text style={{ color: colors.textTertiary, fontSize: 11, lineHeight: 15, textAlign: 'center', marginTop: 12, paddingHorizontal: 10 }}>
+                  By tapping Send Code, you agree to receive a one-time verification code by SMS from Let Me Check. Message and data rates may apply. Reply STOP to opt out, HELP for help.
+                </Text>
+
                 {error && <Text style={styles.errorText}>{error}</Text>}
 
                 <Text style={styles.disclaimer}>
