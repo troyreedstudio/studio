@@ -46,8 +46,13 @@ export default function PaymentScreen() {
   }>();
 
   const isPriority = tier === 'priority';
-  const fee = isPriority ? '$2.00' : '$1.50';
-  const total = isPriority ? '$22.00' : '$16.50';
+  // Derive everything from ONE base so the summary always adds up:
+  // base check fee (from the venue, incl. any interior add-on) + flat $2 platform fee.
+  const PLATFORM_FEE = 2;
+  const baseNum = parseFloat(String(price).replace(/[^0-9.]/g, '')) || (isPriority ? 20 : 15);
+  const baseLabel = Number.isInteger(baseNum) ? `$${baseNum}` : `$${baseNum.toFixed(2)}`;
+  const fee = `$${PLATFORM_FEE.toFixed(2)}`;
+  const total = `$${(baseNum + PLATFORM_FEE).toFixed(2)}`;
 
   // Opens the Stripe PaymentSheet, authorizes a hold, then creates the check.
   // A declined / cancelled card blocks the booking (D-02, Uber-style).
@@ -184,7 +189,7 @@ export default function PaymentScreen() {
 
         <View style={styles.row}>
           <Text style={styles.rowLabel}>Check Fee</Text>
-          <Text style={styles.rowValue}>{price}</Text>
+          <Text style={styles.rowValue}>{baseLabel}</Text>
         </View>
         <View style={styles.divider} />
 

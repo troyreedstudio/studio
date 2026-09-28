@@ -768,7 +768,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(48,78,152,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.82)', // Sheet Black — matches home globe sheet (legacy blue retired)
     overflow: 'hidden',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,

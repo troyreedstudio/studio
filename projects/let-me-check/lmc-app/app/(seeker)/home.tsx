@@ -3259,7 +3259,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.2)',
-    backgroundColor: 'rgba(48,78,152,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.82)',
     overflow: 'hidden',
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: -4 },

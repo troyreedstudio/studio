@@ -56,13 +56,8 @@ export default function PersonalInfoScreen({ backFallback }: { backFallback: str
       setPhone(ph);
       setInitPhone(ph);
       setEmail(em);
-    } catch {
-      // demo: no live session — show the form pre-filled instead of an auth error
-      setDisplayName('Troy Reed');
-      setInitName('Troy Reed');
-      setPhone('+1 (305) 555-0142');
-      setInitPhone('+1 (305) 555-0142');
-      setEmail('hello@letmecheckapp.com');
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Could not load profile.');
     } finally {
       setLoading(false);
     }

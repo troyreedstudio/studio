@@ -120,7 +120,7 @@ export default function HowItWorksScreen() {
 
         <TouchableOpacity
           style={styles.primaryBtn}
-          onPress={() => router.replace('/demo-menu')}
+          onPress={() => router.push('/onboarding/role')}
           activeOpacity={0.85}
         >
           <Text style={styles.primaryBtnText}>Choose your profile</Text>

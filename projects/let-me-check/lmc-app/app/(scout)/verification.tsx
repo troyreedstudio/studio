@@ -44,9 +44,11 @@ export default function VerificationScreen() {
           setState({ phase: 'action_needed' });
         }
       })
-      .catch(() => {
-        // demo: no live Stripe backend — show the Scout as verified instead of an error
-        setState({ phase: 'verified' });
+      .catch((e) => {
+        setState({
+          phase: 'error',
+          message: e instanceof Error ? e.message : 'Could not check verification status.',
+        });
       });
   };
 
