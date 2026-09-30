@@ -3,7 +3,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import Mapbox from '@rnmapbox/maps';
 import { useEffect } from 'react';
-import { SessionProvider, useSession, hubRouteForRole } from './lib/session';
+import { SessionProvider, useSession } from './lib/session';
 import { MAPBOX_TOKEN, STRIPE_PUBLISHABLE_KEY } from './lib/config';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { View, LogBox } from 'react-native';
@@ -135,7 +135,7 @@ export default function RootLayout() {
 // onboarding, auth). We only redirect INTO a hub from a non-hub group, so we
 // never trap the user or fight their in-app navigation.
 function BootGate() {
-  const { session, profile, loading } = useSession();
+  const { session, loading } = useSession();
   const router = useRouter();
   const segments = useSegments();
 
@@ -166,9 +166,11 @@ function BootGate() {
       group === 'scout' ||
       group === 'legal';
     if (!inHub && !inEntryFlow) {
-      router.replace(hubRouteForRole(profile?.current_role) as never);
+      // Always open to the Seeker globe (home base), Uber-style — Scout is a
+      // deliberate toggle, never the default landing screen. (Product decision.)
+      router.replace('/(seeker)/home' as never);
     }
-  }, [loading, session, profile, segments, router]);
+  }, [loading, session, segments, router]);
 
   return null;
 }

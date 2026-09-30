@@ -68,6 +68,16 @@ export function waitForSession(timeoutMs = 40000): Promise<void> {
 
 // ── Apple (live) ──────────────────────────────────────────────────────────────
 
+// Apple only returns the user's name on the VERY FIRST authorization ever, and
+// only in the credential object (never in the idToken). If we don't grab it here,
+// it's gone forever. Stash it so the quick-finish screen can pre-fill it.
+let pendingAppleName: { first: string; last: string } | null = null;
+export function consumeAppleName(): { first: string; last: string } | null {
+  const n = pendingAppleName;
+  pendingAppleName = null;
+  return n;
+}
+
 export async function signInWithApple(): Promise<void> {
   const cred = await AppleAuthentication.signInAsync({
     requestedScopes: [
@@ -76,6 +86,14 @@ export async function signInWithApple(): Promise<void> {
     ],
   });
   if (!cred.identityToken) throw new Error('Apple sign-in did not return an identity token');
+
+  // Capture Apple's one-time name before it's lost (see note above).
+  if (cred.fullName?.givenName || cred.fullName?.familyName) {
+    pendingAppleName = {
+      first: cred.fullName.givenName ?? '',
+      last: cred.fullName.familyName ?? '',
+    };
+  }
 
   const { error } = await supabase.auth.signInWithIdToken({
     provider: 'apple',

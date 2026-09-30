@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getIntendedRole } from '../state/intended-role';
 import { recordOnboardingConsents } from '../lib/consent';
 import { supabase } from '../lib/supabase';
+import { consumeAppleName } from '../lib/auth';
 import { setIntendedRoleFlags, updateProfile } from '../lib/api';
 import { applyReferralCode } from '../lib/referrals';
 import { colors } from '../lib/theme';
@@ -40,24 +41,35 @@ export default function QuickFinishScreen() {
   );
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const meta = data?.user?.user_metadata ?? {};
+    // Read from the LOCAL session (instant + reliable with processLock) rather than
+    // a network getUser() call, which could hang/fail and leave the fields blank.
+    supabase.auth.getSession().then(({ data }) => {
+      const user = data?.session?.user;
+      const meta = user?.user_metadata ?? {};
       const rawFull: string =
         (meta.full_name as string | undefined) ??
         (meta.name as string | undefined) ??
         '';
-      const firstName: string =
+      let firstName: string =
         (meta.given_name as string | undefined) ??
         (meta.first_name as string | undefined) ??
         rawFull.split(' ')[0] ??
         '';
-      const lastName: string =
+      let lastName: string =
         (meta.family_name as string | undefined) ??
         (meta.last_name as string | undefined) ??
         rawFull.split(' ').slice(1).join(' ') ??
         '';
+
+      // Apple's one-time name (captured at sign-in) fills in what the idToken lacks.
+      const apple = consumeAppleName();
+      if (apple && (apple.first || apple.last)) {
+        firstName = apple.first || firstName;
+        lastName = apple.last || lastName;
+      }
+
       const rawEmail: string =
-        (data?.user?.email as string | undefined) ??
+        (user?.email as string | undefined) ??
         (meta.email as string | undefined) ??
         '';
 
