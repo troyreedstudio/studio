@@ -31,6 +31,41 @@ import { registerPushToken, upsertPushToken, deletePushToken } from './push';
  */
 export const PHONE_AUTH_ENABLED = true;
 
+/**
+ * Resolves as soon as a Supabase session exists (or rejects after `timeoutMs`).
+ *
+ * WHY: on React Native there is no browser Web Locks API, and in release builds
+ * `supabase.auth.signInWithIdToken(...)` can leave its promise pending even though
+ * the session was created, persisted, and broadcast via onAuthStateChange. That
+ * stranded users on the sign-in screen (the post-sign-in navigation never fired,
+ * then the 40s timeout showed a false "provider never responded" error — while the
+ * user was, in fact, signed in). Reacting to the session state is reliable, so the
+ * sign-in/sign-up screens race the provider call against this.
+ */
+export function waitForSession(timeoutMs = 40000): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const finish = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      sub.data.subscription.unsubscribe();
+      fn();
+    };
+    const sub = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) finish(resolve);
+    });
+    const timer = setTimeout(
+      () => finish(() => reject(new Error('Sign-in timed out — the provider never responded. Tap to try again.'))),
+      timeoutMs,
+    );
+    // Cover the case where a session already exists the moment we start listening.
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session) finish(resolve);
+    });
+  });
+}
+
 // ── Apple (live) ──────────────────────────────────────────────────────────────
 
 export async function signInWithApple(): Promise<void> {

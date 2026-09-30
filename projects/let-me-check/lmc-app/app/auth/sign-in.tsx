@@ -19,6 +19,7 @@ import {
   signInWithGoogle,
   sendPhoneOtp,
   verifyPhoneOtp,
+  waitForSession,
   PHONE_AUTH_ENABLED,
 } from '../lib/auth';
 import { colors } from '../lib/theme';
@@ -44,15 +45,10 @@ export default function SignInScreen() {
     setError(null);
     setBusy(true);
     try {
-      await Promise.race([
-        fn(),
-        new Promise<never>((_, reject) =>
-          setTimeout(
-            () => reject(new Error('Sign-in timed out — the provider never responded. Tap to try again.')),
-            40000,
-          ),
-        ),
-      ]);
+      // Race the provider call against the SESSION actually appearing. On RN the
+      // signInWithIdToken promise can hang even after the session lands, so we
+      // proceed as soon as either resolves (waitForSession carries the 40s timeout).
+      await Promise.race([fn(), waitForSession()]);
       // On success, carry the returning user forward. The sign-in screen lives in
       // the 'auth' group, which BootGate deliberately never redirects from — so
       // without an explicit next() the user was STRANDED here after a SUCCESSFUL

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSession } from '../lib/session';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
@@ -39,6 +40,16 @@ const DEMO_REQUEST = {
 
 export default function ScoutDashboard() {
   const router = useRouter();
+  const { profile } = useSession();
+  // Real Scout initials for the header pill (was hardcoded "TR").
+  const initials = profile?.display_name
+    ? profile.display_name
+        .trim()
+        .split(/\s+/)
+        .map((w) => (w[0] ?? '').toUpperCase())
+        .slice(0, 2)
+        .join('')
+    : '?';
   const params = useLocalSearchParams<{ demo?: string }>();
   const isDemo = params.demo === '1';
   const earnings = useScoutEarnings();
@@ -240,7 +251,7 @@ export default function ScoutDashboard() {
               onPress={() => router.push('/(scout)/profile')}
               activeOpacity={0.8}
             >
-              <Text style={styles.profileInitials}>TR</Text>
+              <Text style={styles.profileInitials}>{initials}</Text>
             </TouchableOpacity>
           </View>
 

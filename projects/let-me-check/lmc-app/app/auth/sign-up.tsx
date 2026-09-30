@@ -22,6 +22,7 @@ import {
   signInWithGoogle,
   sendPhoneOtp,
   verifyPhoneOtp,
+  waitForSession,
   PHONE_AUTH_ENABLED,
 } from '../lib/auth';
 import { colors } from '../lib/theme';
@@ -93,17 +94,10 @@ export default function SignUpScreen() {
     setError(null);
     setSubmitting(true);
     try {
-      // Timeout guard: a native sign-in that never returns must not lock the
-      // buttons forever (submitting stuck true). Surface it instead.
-      await Promise.race([
-        fn(),
-        new Promise<never>((_, reject) =>
-          setTimeout(
-            () => reject(new Error('Sign-in timed out — the provider never responded. Tap to try again.')),
-            40000,
-          ),
-        ),
-      ]);
+      // Race the provider call against the SESSION actually appearing. On RN the
+      // signInWithIdToken promise can hang even after the session lands, so we
+      // proceed as soon as either resolves (waitForSession carries the 40s timeout).
+      await Promise.race([fn(), waitForSession()]);
       next();
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Sign up failed. Please try again.';
