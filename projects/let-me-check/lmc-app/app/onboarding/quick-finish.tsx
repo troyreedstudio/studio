@@ -96,32 +96,27 @@ export default function QuickFinishScreen() {
     ? 'Enter a valid email address'
     : 'Tick "I am 18 or older" to continue';
 
-  const handleFinish = async () => {
+  const handleFinish = () => {
     if (submitting) return;
     setSubmitting(true);
-    try {
-      const role = getIntendedRole();
-      if (role) {
-        await setIntendedRoleFlags(role);
-      }
 
-      const displayName = `${first.trim()} ${last.trim()}`.trim();
-      if (displayName) {
-        await updateProfile({ displayName });
-      }
+    const role = getIntendedRole();
 
-      void recordOnboardingConsents();
+    // Fire ALL server writes in the BACKGROUND and move the user forward
+    // immediately. On React Native these Supabase calls can hang (same lock quirk
+    // as sign-in), and awaiting them stranded the user on "Creating account..."
+    // forever. The next route is decided locally, so we never need the network here.
+    if (role) void setIntendedRoleFlags(role).catch(() => {});
 
-      if (referralCode.length >= 1) {
-        void applyReferralCode(referralCode);
-      }
-    } catch {
-      // Non-blocking — a transient network error should not strand the user.
-    } finally {
-      setSubmitting(false);
-      const next = getIntendedRole() === 'scout' ? '/scout/become' : '/seeker/rules';
-      router.replace(next);
-    }
+    const displayName = `${first.trim()} ${last.trim()}`.trim();
+    if (displayName) void updateProfile({ displayName }).catch(() => {});
+
+    void recordOnboardingConsents();
+
+    if (referralCode.trim().length >= 1) void applyReferralCode(referralCode);
+
+    const next = role === 'scout' ? '/scout/become' : '/seeker/rules';
+    router.replace(next);
   };
 
   return (

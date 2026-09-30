@@ -14,7 +14,7 @@
 // that splits the value across multiple keys. Verify on-device.
 
 import 'react-native-url-polyfill/auto';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, processLock } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { AppState } from 'react-native';
 import type { Database } from './database.types';
@@ -79,6 +79,11 @@ export const supabase = createClient<Database>(
   {
     auth: {
       storage: SecureStoreAdapter,
+      // processLock is the React-Native-safe auth lock. Without it, supabase-js
+      // defaults to navigatorLock (the browser Web Locks API, absent in RN), which
+      // lets concurrent auth calls deadlock — the cause of signInWithIdToken /
+      // profile writes hanging on-device and stranding users mid-flow.
+      lock: processLock,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false, // React Native has no URL bar
