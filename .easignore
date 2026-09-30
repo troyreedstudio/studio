@@ -1,46 +1,33 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# EAS Build archive scope (Let Me Check)
-# The whole studio monorepo shares one git repo, and EAS uploads the entire repo.
-# Only projects/let-me-check/lmc-app is built via EAS, so exclude everything else
-# to keep the upload small and fast. (This does NOT delete or modify any files —
-# it only tells the LMC cloud build which files it can skip uploading.)
+# EAS Build archive scope — ALLOWLIST (studio monorepo)
+#
+# The whole studio shares ONE git repo, and EAS uploads from the repo root.
+# THE RULE: ignore EVERYTHING, then re-include ONLY the one app being built.
+# This means any NEW sibling project (or its .venv / node_modules / backups) is
+# excluded automatically — you never have to add it here.
+#
+# To build a DIFFERENT project in future: change the single app path in section 2
+# (and its inner-exclusions in section 3) to point at that project's app folder.
+#
+# This only controls what the cloud build UPLOADS. It never deletes local files.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Studio-wide, not needed by the app build
-/docs/
-/skills/
-/.github/
+# 1) Ignore everything, at every level.
+/*
 
-# Sibling projects (not the LMC app)
-/projects/agape/
-/projects/pink-pineapple/
-/projects/ideas/
+# 2) Walk back down and re-include ONLY the app we build (currently: Let Me Check).
+#    Each parent level must be re-included before its child (gitignore rule).
+!/projects/
+/projects/*
+!/projects/let-me-check/
+/projects/let-me-check/*
+!/projects/let-me-check/lmc-app/
 
-# Let Me Check non-app files (business docs, decks, marketing, reference images, media)
-/projects/let-me-check/docs/
-/projects/let-me-check/marketing/
-/projects/let-me-check/old-png-images*/
-/projects/let-me-check/images/
-/projects/let-me-check/*.mp4
-/projects/let-me-check/*.mov
-/projects/let-me-check/*.mp3
-/projects/let-me-check/*.png
-/projects/let-me-check/*.pdf
-
-# The app's own regenerable caches (EAS rebuilds these on its servers)
+# 3) Inside that app, still skip regenerable / heavy dirs — EAS rebuilds these
+#    on its servers, so they never need uploading.
 /projects/let-me-check/lmc-app/ios/
 /projects/let-me-check/lmc-app/android/
 /projects/let-me-check/lmc-app/node_modules/
 /projects/let-me-check/lmc-app/.expo/
 /projects/let-me-check/lmc-app/_archive/
 /projects/let-me-check/lmc-app/*.bak
-
-# Repo tooling / junk that never belongs in a build
-/.claude-flow/
-/.claude/
-/.swarm/
-/.mcp.json
-/ruvector.db
-SECURITY_*.json
-*.log
-.DS_Store
