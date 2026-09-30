@@ -1647,12 +1647,14 @@ const reqStyles = StyleSheet.create({
     elevation: 6,
   },
   tierCardActive: {
-    borderColor: colors.white,
+    borderColor: colors.red,
     borderWidth: 1.5,
+    backgroundColor: '#4E3A3D', // subtle red-tinted raise so the selection reads clearly on the dark sheet
   },
   tierCardPriorityActive: {
     borderColor: colors.red,
     borderWidth: 1.5,
+    backgroundColor: '#4E3A3D',
   },
   priorityBadge: {
     backgroundColor: 'rgba(255,255,255,0.18)',
