@@ -155,9 +155,13 @@ function BootGate() {
     //   legal       — terms/privacy/AUP opened mid-onboarding
     // BootGate still routes a cold-launched signed-in user from the splash/marketing
     // screens to their hub (that's the case it's for).
+    // NOTE: 'auth' is deliberately NOT in this list. During signup the user has no
+    // session yet, so BootGate's `if (!session) return` above leaves them alone.
+    // But once signed in, landing back on a sign-in/sign-up screen (e.g. by backing
+    // out of onboarding) is wrong — so we let BootGate bounce a SIGNED-IN user from
+    // the auth group into their hub instead of stranding them on the sign-up page.
     const inEntryFlow =
       group === 'onboarding' ||
-      group === 'auth' ||
       group === 'seeker' ||
       group === 'scout' ||
       group === 'legal';

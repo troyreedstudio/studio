@@ -280,8 +280,16 @@ export default function ScoutPayoutScreen() {
             </View>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.skipBtn}
+            onPress={() => router.replace('/(seeker)/home')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.skipText}>Set up payouts later</Text>
+          </TouchableOpacity>
+
           <Text style={styles.foot}>
-            Stripe handles onboarding in about 5 minutes. Your data goes directly to them. Let Me Check never sees it.
+            Stripe handles onboarding in about 5 minutes. Your data goes directly to them. Let Me Check never sees it. You can finish payout setup anytime from your Scout dashboard.
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -550,6 +558,18 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
 
+  skipBtn: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  skipText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 13,
+    color: colors.textSecondary,
+    letterSpacing: 0.3,
+    textDecorationLine: 'underline',
+  },
   foot: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11,
