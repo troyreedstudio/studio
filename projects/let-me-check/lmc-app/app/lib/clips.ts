@@ -47,7 +47,7 @@ import {
   deleteAsync,
   FileSystemUploadType,
 } from 'expo-file-system/legacy';
-import { supabase } from './supabase';
+import { getAccessToken } from './supabase';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
 // STEP 5 (08-05): the post-record on-device blur step + its master flag. The blur
 // runs INSIDE submit() between "have the file" and "upload the file" when the flag
@@ -63,8 +63,9 @@ async function invokeEdgeFunction(
   functionName: string,
   body: unknown,
 ): Promise<unknown> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData?.session?.access_token ?? SUPABASE_ANON_KEY;
+  // Cached token (kept current via onAuthStateChange) — no getSession() in the hot
+  // path, which can stall on RN and cause a 401 anon fallback.
+  const accessToken = getAccessToken() ?? SUPABASE_ANON_KEY;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30_000);

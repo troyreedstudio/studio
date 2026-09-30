@@ -96,3 +96,23 @@ AppState.addEventListener('change', (state) => {
   if (state === 'active') supabase.auth.startAutoRefresh();
   else supabase.auth.stopAutoRefresh();
 });
+
+// ── Access-token cache ──────────────────────────────────────────────────────────
+// Edge-function calls need the user's access token in the Authorization header.
+// Calling supabase.auth.getSession() in that hot path can STALL on React Native
+// (the auth-lock quirk), which made the timeout guard fall back to the anon key →
+// HTTP 401 "not authenticated". Instead we cache the token here: onAuthStateChange
+// fires on initial load, sign-in, and every token refresh, so this stays current
+// and can be read synchronously with zero chance of hanging.
+let cachedAccessToken: string | null = null;
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedAccessToken = session?.access_token ?? null;
+});
+void supabase.auth.getSession().then(({ data }) => {
+  if (data.session?.access_token) cachedAccessToken = data.session.access_token;
+});
+
+/** Current user access token (or null if signed out). Synchronous, never hangs. */
+export function getAccessToken(): string | null {
+  return cachedAccessToken;
+}

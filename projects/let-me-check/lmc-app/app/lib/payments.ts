@@ -20,7 +20,7 @@
 // fetch with an explicit AbortController timeout guarantees the call always
 // resolves or rejects within 30 seconds.
 
-import { supabase } from './supabase';
+import { getAccessToken } from './supabase';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
 
 // ── Shared Edge Function fetch helper ─────────────────────────────────────────
@@ -40,20 +40,10 @@ async function invokeEdgeFunction(
   functionName: string,
   body: unknown,
 ): Promise<unknown> {
-  // getSession reads local storage, but the auth lock can stall it on RN — never
-  // let the token lookup hang the whole edge-function call. Race it against a short
-  // timeout; on timeout we proceed (the call then fails fast instead of hanging
-  // forever, so the user sees a retryable error rather than a frozen screen).
-  let accessToken = SUPABASE_ANON_KEY;
-  try {
-    const sessionResult = (await Promise.race([
-      supabase.auth.getSession(),
-      new Promise((resolve) => setTimeout(() => resolve(null), 8000)),
-    ])) as { data?: { session?: { access_token?: string } } } | null;
-    accessToken = sessionResult?.data?.session?.access_token ?? SUPABASE_ANON_KEY;
-  } catch {
-    /* fall back to anon key */
-  }
+  // Read the cached user token synchronously (kept current via onAuthStateChange).
+  // We deliberately do NOT call getSession() here — that call can stall on RN and
+  // was forcing an anon-key fallback -> HTTP 401 "not authenticated".
+  const accessToken = getAccessToken() ?? SUPABASE_ANON_KEY;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30_000);

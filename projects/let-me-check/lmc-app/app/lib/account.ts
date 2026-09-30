@@ -7,7 +7,7 @@
 // on Hermes/Release builds. Plain fetch + AbortController always resolves or rejects
 // within 30 seconds. This is the same pattern as app/lib/payments.ts invokeEdgeFunction.
 
-import { supabase } from './supabase';
+import { getAccessToken } from './supabase';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
 import { signOut } from './auth';
 
@@ -20,8 +20,9 @@ async function invokeEdgeFunction(
   functionName: string,
   body: unknown,
 ): Promise<unknown> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData?.session?.access_token ?? SUPABASE_ANON_KEY;
+  // Cached token (kept current via onAuthStateChange) — no getSession() in the hot
+  // path, which can stall on RN and cause a 401 anon fallback.
+  const accessToken = getAccessToken() ?? SUPABASE_ANON_KEY;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30_000);
