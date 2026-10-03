@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { setIntendedRole, getIntendedRole } from '../state/intended-role';
+import { useSession } from '../lib/session';
 import { colors } from '../lib/theme';
 import { CtaGlow, ctaGlowShadow } from '../components/CtaGlow';
 
@@ -24,11 +25,19 @@ const BOTH_PERKS = [
 
 export default function RoleScreen() {
   const router = useRouter();
+  const { session } = useSession();
   const [selected, setSelected] = useState<Role>(getIntendedRole() ?? 'both');
 
   const handleContinue = () => {
     setIntendedRole(selected);
-    router.replace({ pathname: '/auth/sign-up', params: { role: selected } });
+    // Already signed in (a new user who authenticated first, e.g. phone sign-in)?
+    // Skip /auth/sign-up — it would re-trigger BootGate and loop back here. Go
+    // straight to finishing the profile (name).
+    if (session) {
+      router.replace({ pathname: '/onboarding/quick-finish', params: { from: 'phone' } });
+    } else {
+      router.replace({ pathname: '/auth/sign-up', params: { role: selected } });
+    }
   };
 
   return (

@@ -14,19 +14,23 @@ Everything else runs in parallel.
 - 🟢 Payment summary math fixed — Total now = Check Fee + $2 platform (Standard $15→$17, Priority $20→$22); self-correcting. (2026-09-23)
 - 🟢 Waiting screen legacy blue → Sheet Black (matches globe). (2026-09-28)
 - 🟢 Home globe venue sheet legacy blue → Sheet Black `rgba(0,0,0,0.82)`. (2026-09-23)
-- 🔴 Verify on a REAL phone: camera capture, GPS dispatch, voice search (all placeholder/simulated in the simulator)
+- 🟢 SMS consent line added to phone sign-in + sign-up (A2P compliance). (2026-09-28)
+- 🟢 Core Seeker loop VERIFIED on real device (build 43, 2026-10-03): sign-in → request → pay (test card) → createCheck → delivery video (GPS-verified + face-blurred) + rating. Root-cause auth-lock hang fixed (no-op lock) — see [[project_lmc_rn_auth_lock_fix]].
+- 🟢 New-user PHONE sign-up flow VERIFIED on sim (2026-10-03): Choose profile → role → phone → OTP → Almost done → app, in one shot. Fixed the role-picker loop (role.tsx routes signed-in users to quick-finish; BootGate no longer bounces mid-auth users off the auth screen) and carried the verified phone number through to the Almost-done screen + profile.
+- 🟡 Still to verify on a real device IN a live market: a Scout filming a FRESH clip (camera pipeline itself was verified on-device 2026-07-01). Everything else validated via the dummy-scout method.
 
 ## 2. Go-live switches (services)
 - 🔴 Stripe: test → **live keys** (LLC + EIN in place, ready)
 - 🔴 Mux: upgrade off free video plan
 - 🔴 Supabase: confirm production footing (paid tier / keepalive)
-- 🟡 Twilio phone sign-in: finish A2P 10DLC approval — NOT a launch blocker (launch on Apple/Google)
+- 🟢 Twilio phone sign-in: A2P 10DLC Brand + Campaign APPROVED 2026-10-03. Phone/SMS OTP now usable for real US delivery. (Worth a one-time real-device test with a real number.)
 
 ## 3. Apple paperwork
-- 🔴 Privacy Policy + Terms of Service (also legal)
-- 🔴 App Store Connect listing: screenshots, description, keywords, age rating, support URL
+- 🟢 Privacy Policy + Terms LIVE at letmecheckapp.com (privacy has compliant SMS section §9)
+- 🟡 App Store Connect listing — copy/description/keywords/subtitle DRAFTED in docs/APP-STORE-LISTING.md; screenshots pending (capture on iPhone 17 Pro Max = 6.9"/1320×2868)
+- 🟢 Reviewer test-login configured — Supabase Test OTP: phone (305) 555-0100 / code 123456 (3-month expiry — EXTEND before it lapses). Reviewer notes drafted; add demo-video + sample check at submission time.
 - 🔴 App privacy questionnaire + encryption compliance
-- 🔴 TestFlight on real device → submit for review (~1–3 days)
+- 🟢 EAS production build shipped to TestFlight (2026-09-28). NEXT: verify Apple/Google sign-in on a real device before inviting testers / submitting for review.
 - 🟢 EAS build + Apple submit credentials set up (App Store Connect API key, cert, provisioning). (2026-08-20)
 
 ## 4. Legal / ops

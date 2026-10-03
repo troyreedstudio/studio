@@ -154,10 +154,21 @@ function BootGate() {
       group === 'legal';
     if (inOnboardingFlow) return;
 
+    const profileComplete = !!profile?.display_name;
+
+    // Mid-auth on the sign-up/sign-in screen: a new user's session can appear a
+    // beat BEFORE the auth screen navigates forward (to quick-finish / welcome-
+    // back). Don't yank an incomplete-profile user to /onboarding/role in that
+    // gap — it dumps them back on the role picker they just left (the "pick a
+    // role twice" loop). Let the auth flow own its own forward navigation.
+    if (group === 'auth') {
+      if (profileComplete) router.replace('/(seeker)/home' as never); // returning user stranded on auth → rescue
+      return;
+    }
+
     // A signed-in user with NO completed profile is brand new (e.g. first phone/
     // OAuth sign-in). They MUST go through onboarding — pick a role, set their name —
     // never get dumped straight into the app with an empty profile.
-    const profileComplete = !!profile?.display_name;
     if (!profileComplete) {
       router.replace('/onboarding/role' as never);
       return;

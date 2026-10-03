@@ -22,6 +22,21 @@ import { BackButton } from '../components/BackButton';
 
 type AuthSource = 'apple' | 'google' | 'phone';
 
+// Supabase hands phone numbers back as bare E.164 digits (e.g. "13055550100").
+// Pretty-print US numbers as +1 (305) 555-0100; fall back to a leading-+ for
+// anything else so the user still recognises the number they verified.
+function formatE164(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length === 11 && digits.startsWith('1')) {
+    const d = digits.slice(1);
+    return `+1 (${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  }
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return raw.startsWith('+') ? raw : `+${digits}`;
+}
+
 export default function QuickFinishScreen() {
   const router = useRouter();
   const { from, ref: refCode } = useLocalSearchParams<{ from?: AuthSource; ref?: string }>();
@@ -31,6 +46,7 @@ export default function QuickFinishScreen() {
   const [first, setFirst] = useState('');
   const [last, setLast] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [autoFilledName, setAutoFilledName] = useState(false);
   const [autoFilledEmail, setAutoFilledEmail] = useState(false);
   const [consented, setConsented] = useState(false);
@@ -72,6 +88,15 @@ export default function QuickFinishScreen() {
         (user?.email as string | undefined) ??
         (meta.email as string | undefined) ??
         '';
+
+      // Phone verified at sign-up lives on the auth user (Supabase stores it in
+      // E.164, e.g. "13055550100"). Surface it so the user sees the number they
+      // just verified, and persist it to their profile on finish.
+      const rawPhone: string =
+        (user?.phone as string | undefined) ??
+        (meta.phone as string | undefined) ??
+        '';
+      if (rawPhone) setPhone(rawPhone);
 
       if (firstName || lastName) {
         setFirst(firstName);
@@ -121,7 +146,10 @@ export default function QuickFinishScreen() {
     if (role) void setIntendedRoleFlags(role).catch(() => {});
 
     const displayName = `${first.trim()} ${last.trim()}`.trim();
-    if (displayName) void updateProfile({ displayName }).catch(() => {});
+    const profileFields: { displayName?: string; phone?: string } = {};
+    if (displayName) profileFields.displayName = displayName;
+    if (phone.trim()) profileFields.phone = phone.trim();
+    if (Object.keys(profileFields).length) void updateProfile(profileFields).catch(() => {});
 
     void recordOnboardingConsents();
 
@@ -260,8 +288,10 @@ export default function QuickFinishScreen() {
                 <Ionicons name="phone-portrait-outline" size={18} color={colors.verified} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.phoneTitle}>Phone verified</Text>
-                <Text style={styles.phoneWhy}>From your sign-up. You can update it later in profile.</Text>
+                <Text style={styles.phoneTitle}>
+                  {phone ? formatE164(phone) : 'Phone verified'}
+                </Text>
+                <Text style={styles.phoneWhy}>Verified at sign-up. You can update it later in profile.</Text>
               </View>
               <Ionicons name="checkmark-circle" size={18} color={colors.verified} />
             </View>
