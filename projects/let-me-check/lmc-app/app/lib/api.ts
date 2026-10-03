@@ -10,7 +10,7 @@
 // the server-owned transition RPC/Edge Function. The wrappers here only touch
 // user-owned rows.
 
-import { supabase } from './supabase';
+import { supabase, getUserId } from './supabase';
 import type { Database } from './database.types';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
@@ -23,9 +23,11 @@ export type Role = 'seeker' | 'scout';
 
 /** Resolve the current authed user id, or throw if signed out. */
 async function requireUserId(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error('Not authenticated');
-  return data.user.id;
+  // Cached user id (kept current via onAuthStateChange) — avoids the network
+  // getUser() call, which can stall on RN and hang profile loads/saves.
+  const uid = getUserId();
+  if (!uid) throw new Error('Not authenticated');
+  return uid;
 }
 
 // ── Event log ───────────────────────────────────────────────────────────────

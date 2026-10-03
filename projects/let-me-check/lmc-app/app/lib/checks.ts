@@ -12,7 +12,7 @@
 // Reads are RLS-scoped: a Seeker sees their own checks, a Scout additionally sees
 // open (dispatching, unclaimed) + own-assigned checks (migration 0009).
 
-import { supabase } from './supabase';
+import { supabase, getUserId } from './supabase';
 import type { Database } from './database.types';
 
 export type CheckRow = Database['public']['Tables']['checks']['Row'];
@@ -21,9 +21,11 @@ export type CheckTier = 'standard' | 'priority';
 
 /** Resolve the current authed user id, or throw if signed out (mirrors api.ts). */
 async function requireUserId(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error('Not authenticated');
-  return data.user.id;
+  // Cached user id (kept current via onAuthStateChange) — avoids the network
+  // getUser() call, which can stall on RN and hang createCheck mid-booking.
+  const uid = getUserId();
+  if (!uid) throw new Error('Not authenticated');
+  return uid;
 }
 
 export type CreateCheckInput = {

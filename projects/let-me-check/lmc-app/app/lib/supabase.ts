@@ -105,14 +105,25 @@ AppState.addEventListener('change', (state) => {
 // fires on initial load, sign-in, and every token refresh, so this stays current
 // and can be read synchronously with zero chance of hanging.
 let cachedAccessToken: string | null = null;
+let cachedUserId: string | null = null;
 supabase.auth.onAuthStateChange((_event, session) => {
   cachedAccessToken = session?.access_token ?? null;
+  cachedUserId = session?.user?.id ?? null;
 });
 void supabase.auth.getSession().then(({ data }) => {
-  if (data.session?.access_token) cachedAccessToken = data.session.access_token;
+  if (data.session) {
+    cachedAccessToken = data.session.access_token ?? null;
+    cachedUserId = data.session.user?.id ?? null;
+  }
 });
 
 /** Current user access token (or null if signed out). Synchronous, never hangs. */
 export function getAccessToken(): string | null {
   return cachedAccessToken;
+}
+
+/** Current user id (or null if signed out). Synchronous — avoids the network
+ *  getUser() call, which can stall on RN and hang whatever awaits it. */
+export function getUserId(): string | null {
+  return cachedUserId;
 }
