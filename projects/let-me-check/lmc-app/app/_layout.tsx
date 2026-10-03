@@ -135,42 +135,41 @@ export default function RootLayout() {
 // onboarding, auth). We only redirect INTO a hub from a non-hub group, so we
 // never trap the user or fight their in-app navigation.
 function BootGate() {
-  const { session, loading } = useSession();
+  const { session, profile, loading } = useSession();
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
-    if (loading) return;
-    if (!session) return; // signed out: entry flow owns routing
+    if (loading) return;      // wait until session AND profile are loaded
+    if (!session) return;     // signed out: entry flow owns routing
 
     const group = segments[0]; // e.g. '(seeker)', '(scout)', 'auth', 'onboarding'
     const inHub = group === '(seeker)' || group === '(scout)';
-    // Let the whole post-signup ONBOARDING flow own its own routing — otherwise
-    // BootGate bounces it to the hub and the user skips setup ("signed in but no
-    // onboarding screens"). The flow spans several route groups:
-    //   auth        — sign-up / sign-in
-    //   onboarding  — Almost done, country/city/permissions, both-fork ("which side first?")
-    //   seeker      — Service Standards (app/seeker/rules) — NOTE: NOT the '(seeker)' hub
-    //   scout       — Scout activation (become → identity → payout → approved) — NOT '(scout)' hub
-    //   legal       — terms/privacy/AUP opened mid-onboarding
-    // BootGate still routes a cold-launched signed-in user from the splash/marketing
-    // screens to their hub (that's the case it's for).
-    // NOTE: 'auth' is deliberately NOT in this list. During signup the user has no
-    // session yet, so BootGate's `if (!session) return` above leaves them alone.
-    // But once signed in, landing back on a sign-in/sign-up screen (e.g. by backing
-    // out of onboarding) is wrong — so we let BootGate bounce a SIGNED-IN user from
-    // the auth group into their hub instead of stranding them on the sign-up page.
-    const inEntryFlow =
+    // Let the post-signup ONBOARDING flow own its own routing (role → almost-done →
+    // activation). These groups span the flow; don't interrupt them.
+    const inOnboardingFlow =
       group === 'onboarding' ||
-      group === 'seeker' ||
-      group === 'scout' ||
+      group === 'seeker' ||  // Service Standards (app/seeker/rules), NOT the '(seeker)' hub
+      group === 'scout' ||   // Scout activation (become→payout→approved), NOT '(scout)' hub
       group === 'legal';
-    if (!inHub && !inEntryFlow) {
-      // Always open to the Seeker globe (home base), Uber-style — Scout is a
-      // deliberate toggle, never the default landing screen. (Product decision.)
+    if (inOnboardingFlow) return;
+
+    // A signed-in user with NO completed profile is brand new (e.g. first phone/
+    // OAuth sign-in). They MUST go through onboarding — pick a role, set their name —
+    // never get dumped straight into the app with an empty profile.
+    const profileComplete = !!profile?.display_name;
+    if (!profileComplete) {
+      router.replace('/onboarding/role' as never);
+      return;
+    }
+
+    // Returning user (complete profile) not already in a hub → open the Seeker globe
+    // (home base, Uber-style — Scout is a deliberate toggle). This also rescues a
+    // signed-in user who lands back on the sign-up screen (no stranding).
+    if (!inHub) {
       router.replace('/(seeker)/home' as never);
     }
-  }, [loading, session, segments, router]);
+  }, [loading, session, profile, segments, router]);
 
   return null;
 }

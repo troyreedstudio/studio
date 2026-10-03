@@ -8,8 +8,10 @@ import {
   StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
+import { useSession } from '../lib/session';
 
 // Shown after a returning user signs in via /auth/sign-in.
 // For prototype, every signed-in user sees both options. In production,
@@ -17,6 +19,15 @@ import { colors } from '../lib/theme';
 
 export default function WelcomeBackScreen() {
   const router = useRouter();
+  const { profile, loading } = useSession();
+
+  // Safety net: a brand-new user (no completed profile) must never land on the
+  // returning-user picker — route them through onboarding (role → name) instead.
+  useEffect(() => {
+    if (!loading && !profile?.display_name) router.replace('/onboarding/role');
+  }, [loading, profile, router]);
+
+  const firstName = profile?.display_name?.trim().split(/\s+/)[0] ?? '';
 
   return (
     <View style={styles.bg}>
@@ -25,7 +36,7 @@ export default function WelcomeBackScreen() {
         <View style={styles.header} />
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Welcome back, Troy</Text>
+          <Text style={styles.title}>Welcome back{firstName ? `, ${firstName}` : ''}</Text>
           <Text style={styles.subtitle}>
             Where do you want to pick up today?
           </Text>
