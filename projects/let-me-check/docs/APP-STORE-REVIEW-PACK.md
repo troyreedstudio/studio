@@ -13,7 +13,7 @@
 - ✅ **No microphone** — clips are silent by design (consent/privacy), filming is video-only. Omit mic permission.
 - ✅ Paste reviewer notes (§2), privacy answers (§6), encryption answer (§7).
 - ✅ Upload the 6 screenshots from `marketing/app-store-screenshots/final/`.
-- ⚠️ ONE last check: open the test account's delivered check once before submit to confirm the Mux clip still plays (free-plan asset longevity).
+- ✅ VERIFIED 2026-10-03: fresh TestFlight install, signed in as the test account (305-555-0100), Activity → the check → the Bangkok clip plays (black poster until Play is tapped, then it plays — normal).
 
 ---
 
