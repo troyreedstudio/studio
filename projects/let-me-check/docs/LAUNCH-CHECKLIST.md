@@ -21,16 +21,18 @@ Everything else runs in parallel.
 
 ## 2. Go-live switches (services)
 - 🔴 Stripe: test → **live keys** (LLC + EIN in place, ready)
-- 🔴 Mux: upgrade off free video plan
-- 🔴 Supabase: confirm production footing (paid tier / keepalive)
+- 🟢 Mux: OFF the free/trial tier — on **pay-as-you-go** with a credit card attached + $20 credit (confirmed 2026-10-03). Removes watermark/quality/retention limits; demo clip stays live. Pay only for usage.
+- 🟢 Supabase: on **Pro** (~$25/mo) as of 2026-10-03 — backend no longer auto-pauses. (Keepalive GitHub Action can be deleted now, optional.)
 - 🟢 Twilio phone sign-in: A2P 10DLC Brand + Campaign APPROVED 2026-10-03. Phone/SMS OTP now usable for real US delivery. (Worth a one-time real-device test with a real number.)
 
 ## 3. Apple paperwork
 - 🟢 Privacy Policy + Terms LIVE at letmecheckapp.com (privacy has compliant SMS section §9)
 - 🟡 App Store Connect listing — copy/description/keywords/subtitle DRAFTED in docs/APP-STORE-LISTING.md; screenshots pending (capture on iPhone 17 Pro Max = 6.9"/1320×2868)
 - 🟢 Reviewer test-login configured — Supabase Test OTP: phone (305) 555-0100 / code 123456 (3-month expiry — EXTEND before it lapses). Reviewer notes drafted; add demo-video + sample check at submission time.
-- 🔴 App privacy questionnaire + encryption compliance
-- 🟢 EAS production build shipped to TestFlight (2026-09-28). NEXT: verify Apple/Google sign-in on a real device before inviting testers / submitting for review.
+- 🟡 App privacy questionnaire + encryption compliance — ANSWERS DRAFTED in docs/APP-STORE-REVIEW-PACK.md (full nutrition-label table, encryption exemption, reviewer notes, UGC + payments-not-IAP compliance). Open items: seed a demo completed-check for the reviewer, extend test-OTP expiry, confirm no analytics SDK, confirm mic permission.
+- 🟢 App Store screenshots — 6 designed red-template slides at 6.9" in marketing/app-store-screenshots/final/ (real NY/Miami footage to swap later). (2026-10-03)
+- 🟢 **SUBMITTED to App Review 2026-10-03** — build 44, status "Waiting for Review." On Stripe TEST keys (so reviewer can test), MANUAL release selected. Age rating 13+. Review pack in docs/APP-STORE-REVIEW-PACK.md; metadata in docs/APP-STORE-SUBMISSION-SHEET.md.
+- 🟢 EAS production build shipped to TestFlight (2026-09-28).
 - 🟢 EAS build + Apple submit credentials set up (App Store Connect API key, cert, provisioning). (2026-08-20)
 
 ## 4. Legal / ops
