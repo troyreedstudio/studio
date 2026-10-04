@@ -1,12 +1,16 @@
-apply plugin: 'expo-module-gradle-plugin'
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
 
 group = 'expo.modules.lmcblur'
 version = '0.1.0'
 
 android {
-  namespace = "expo.modules.lmcblur"
+  namespace "expo.modules.lmcblur"
   defaultConfig {
-    minSdkVersion safeExtGet("minSdkVersion", 24)
+    versionCode 1
+    versionName '0.1.0'
   }
 }
 

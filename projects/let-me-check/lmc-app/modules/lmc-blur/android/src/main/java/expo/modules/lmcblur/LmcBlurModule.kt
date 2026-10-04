@@ -3,6 +3,14 @@ package expo.modules.lmcblur
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import expo.modules.kotlin.records.Field
+import expo.modules.kotlin.records.Record
+
+/** Mirrors the JS BlurOptions ({ radius?, mode? }). Ignored by the Phase 1 stub. */
+class BlurOptions : Record {
+  @Field var radius: Double? = null
+  @Field var mode: String? = null
+}
 
 /**
  * Android face-blur native module — registered as `LmcBlur`, mirroring the iOS
@@ -22,7 +30,7 @@ class LmcBlurModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("LmcBlur")
 
-    AsyncFunction("blurFaces") { inputPath: String, _options: Map<String, Any?>?, promise: Promise ->
+    AsyncFunction("blurFaces") { inputPath: String, _options: BlurOptions?, promise: Promise ->
       // Fail-safe until the real pipeline (Phase 2+) is implemented.
       promise.resolve(
         mapOf(
