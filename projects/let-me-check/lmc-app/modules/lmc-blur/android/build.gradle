@@ -1,0 +1,16 @@
+apply plugin: 'expo-module-gradle-plugin'
+
+group = 'expo.modules.lmcblur'
+version = '0.1.0'
+
+android {
+  namespace = "expo.modules.lmcblur"
+  defaultConfig {
+    minSdkVersion safeExtGet("minSdkVersion", 24)
+  }
+}
+
+dependencies {
+  // On-device face detection (bundled model). Used by the blur pipeline (Phase 2+).
+  implementation "com.google.mlkit:face-detection:16.1.7"
+}

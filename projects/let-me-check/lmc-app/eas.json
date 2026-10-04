@@ -25,6 +25,12 @@
       "ios": {
         "simulator": false
       }
+    },
+    "production-apk": {
+      "extends": "production",
+      "android": {
+        "buildType": "apk"
+      }
     }
   },
   "submit": {

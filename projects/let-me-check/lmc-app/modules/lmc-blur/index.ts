@@ -16,6 +16,14 @@ export function blurFaces(
   inputPath: string,
   opts?: BlurOptions,
 ): Promise<BlurResult> {
+  // Android (or any build without the native module): reject so the caller's
+  // fallback chain (blur-native.ts blurFacesWithFallback) resolves 'failed'
+  // instead of the whole module crashing. Never reached on the Seeker path.
+  if (!LmcBlurModule) {
+    return Promise.reject(
+      new Error('lmc-blur: native module unavailable on this platform'),
+    );
+  }
   return LmcBlurModule.blurFaces(inputPath, opts);
 }
 

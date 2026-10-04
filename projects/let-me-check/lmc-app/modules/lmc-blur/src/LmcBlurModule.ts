@@ -1,4 +1,4 @@
-import { requireNativeModule } from 'expo';
+import { requireOptionalNativeModule } from 'expo';
 
 import type { BlurOptions, BlurResult } from './LmcBlur.types';
 
@@ -7,8 +7,11 @@ declare class LmcBlurNativeModule {
   blurFaces(inputPath: string, options?: BlurOptions): Promise<BlurResult>;
 }
 
-// requireNativeModule throws if the native module is not linked into the binary —
-// surfaced cleanly at the Step-1 device build (the whole point of this plan).
-const LmcBlurModule = requireNativeModule<LmcBlurNativeModule>('LmcBlur');
+// OPTIONAL require: returns null when the native module isn't in the binary
+// (Android — lmc-blur is iOS-only for now). This MUST NOT throw at import time:
+// any screen that transitively imports this (e.g. the Seeker delivery screen via
+// clips.ts) would otherwise crash on Android with "Cannot find native module
+// 'LmcBlur'". Callers guard the null (see ../index.ts blurFaces).
+const LmcBlurModule = requireOptionalNativeModule<LmcBlurNativeModule>('LmcBlur');
 
 export default LmcBlurModule;
