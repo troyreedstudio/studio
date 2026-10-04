@@ -17,28 +17,36 @@ class BlurOptions : Record {
  * module's `blurFaces(inputPath, options)` → BlurResult contract
  * (see ../../src/LmcBlur.types.ts — the LOCKED contract).
  *
- * PHASE 1 (scaffold): the module now exists on Android, so the JS side resolves
- * the native module instead of hitting the optional-null path. blurFaces is a
- * FAIL-SAFE stub: it returns status 'failed' so the caller's fallback
- * (blur-native.ts blurFacesWithFallback) NEVER delivers an unblurred clip.
- * Android Scout delivery stays blocked BY DESIGN until the real pipeline ships.
+ * PHASE 2 (current): real on-device face DETECTION via ML Kit (LmcFaceDetect).
+ *  - No faces found  -> 'no_faces'  (safe to deliver the original, matches iOS).
+ *  - Faces found     -> 'failed'    (FAIL-SAFE: on-device blur/re-encode isn't
+ *                                    built yet, so NEVER deliver an unblurred clip
+ *                                    — blur-native.ts routes 'failed' to the hold).
  *
- * PHASE 2+: real on-device blur — ML Kit Face Detection + MediaCodec/OpenGL
- * decode→blur→encode at 720p (see docs/ANDROID-BLUR-BUILD-PLAN.md).
+ * PHASE 3+: blur + re-encode the detected rects (MediaCodec/OpenGL at 720p), then
+ * return 'blurred'. See docs/ANDROID-BLUR-BUILD-PLAN.md.
  */
 class LmcBlurModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("LmcBlur")
 
     AsyncFunction("blurFaces") { inputPath: String, _options: BlurOptions?, promise: Promise ->
-      // Fail-safe until the real pipeline (Phase 2+) is implemented.
-      promise.resolve(
-        mapOf(
-          "outputPath" to inputPath,
-          "facesBlurred" to 0,
-          "status" to "failed",
-        ),
-      )
+      try {
+        val det = LmcFaceDetect.detect(inputPath)
+        val status = if (det.faceCount == 0) "no_faces" else "failed" // Phase 3 -> "blurred"
+        promise.resolve(
+          mapOf(
+            "outputPath" to inputPath,
+            "facesBlurred" to 0,
+            "status" to status,
+          ),
+        )
+      } catch (e: Exception) {
+        // Any detection failure -> fail-safe 'failed' (never deliver unblurred).
+        promise.resolve(
+          mapOf("outputPath" to inputPath, "facesBlurred" to 0, "status" to "failed"),
+        )
+      }
     }
   }
 }
