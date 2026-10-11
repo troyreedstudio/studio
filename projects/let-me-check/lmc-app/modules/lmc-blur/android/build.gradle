@@ -11,10 +11,15 @@ android {
   defaultConfig {
     versionCode 1
     versionName '0.1.0'
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
 }
 
 dependencies {
   // On-device face detection (bundled model). Used by the blur pipeline (Phase 2+).
   implementation "com.google.mlkit:face-detection:16.1.7"
+
+  // Instrumented-test deps (emulator validation of the blur pipeline).
+  androidTestImplementation "androidx.test:runner:1.5.2"
+  androidTestImplementation "androidx.test.ext:junit:1.1.5"
 }

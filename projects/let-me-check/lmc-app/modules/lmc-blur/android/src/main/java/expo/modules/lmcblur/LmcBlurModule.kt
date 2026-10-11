@@ -5,6 +5,7 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
+import java.io.File
 
 /** Mirrors the JS BlurOptions ({ radius?, mode? }). Ignored by the Phase 1 stub. */
 class BlurOptions : Record {
@@ -17,32 +18,44 @@ class BlurOptions : Record {
  * module's `blurFaces(inputPath, options)` → BlurResult contract
  * (see ../../src/LmcBlur.types.ts — the LOCKED contract).
  *
- * PHASE 2 (current): real on-device face DETECTION via ML Kit (LmcFaceDetect).
- *  - No faces found  -> 'no_faces'  (safe to deliver the original, matches iOS).
- *  - Faces found     -> 'failed'    (FAIL-SAFE: on-device blur/re-encode isn't
- *                                    built yet, so NEVER deliver an unblurred clip
- *                                    — blur-native.ts routes 'failed' to the hold).
+ * PHASE 3 (current): full on-device DETECT + BLUR + re-encode.
+ *  - No faces found  -> 'no_faces'  (original returned; safe to deliver, matches iOS).
+ *  - Faces found     -> LmcVideoBlur blurs every face rect + re-encodes at 720p
+ *                       -> 'blurred' with the new outputPath + facesBlurred count.
+ *  - Any failure     -> 'failed'    (FAIL-SAFE: never deliver an unblurred clip —
+ *                       blur-native.ts routes 'failed' to gaussian→pixelate retry,
+ *                       then the server-side hold).
  *
- * PHASE 3+: blur + re-encode the detected rects (MediaCodec/OpenGL at 720p), then
- * return 'blurred'. See docs/ANDROID-BLUR-BUILD-PLAN.md.
+ * See docs/ANDROID-BLUR-BUILD-PLAN.md.
  */
 class LmcBlurModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("LmcBlur")
 
-    AsyncFunction("blurFaces") { inputPath: String, _options: BlurOptions?, promise: Promise ->
+    AsyncFunction("blurFaces") { inputPath: String, options: BlurOptions?, promise: Promise ->
       try {
         val det = LmcFaceDetect.detect(inputPath)
-        val status = if (det.faceCount == 0) "no_faces" else "failed" // Phase 3 -> "blurred"
+        if (det.faceCount == 0) {
+          // No faces — the original is safe to deliver (matches iOS 'no_faces').
+          promise.resolve(
+            mapOf("outputPath" to inputPath, "facesBlurred" to 0, "status" to "no_faces"),
+          )
+          return@AsyncFunction
+        }
+        val mode = options?.mode ?: "gaussian"
+        val ctx = appContext.reactContext
+          ?: throw IllegalStateException("lmc-blur: no app context for cache dir")
+        val outFile = File(ctx.cacheDir, "lmc-blur-${System.nanoTime()}.mp4")
+        val faces = LmcVideoBlur.blur(inputPath, outFile.absolutePath, det, mode)
         promise.resolve(
           mapOf(
-            "outputPath" to inputPath,
-            "facesBlurred" to 0,
-            "status" to status,
+            "outputPath" to "file://${outFile.absolutePath}",
+            "facesBlurred" to faces,
+            "status" to "blurred",
           ),
         )
       } catch (e: Exception) {
-        // Any detection failure -> fail-safe 'failed' (never deliver unblurred).
+        // Any detection/blur/encode failure -> fail-safe 'failed' (never deliver unblurred).
         promise.resolve(
           mapOf("outputPath" to inputPath, "facesBlurred" to 0, "status" to "failed"),
         )
